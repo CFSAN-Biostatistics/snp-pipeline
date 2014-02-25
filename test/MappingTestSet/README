@@ -1,0 +1,9 @@
+Test dataset of four samples consisting of reads simulated based on the virus_lambda.fa reference sequence.
+
+Reads were simulated using the simulate.pl script provided with the Bowtie2 distribution; the reference also came from that package.
+
+Within each sample folder are uniquely named readsX.bam and varX.flt.vcf files where X is the sample number.
+
+There are also non-unique reads.bam and var.flt.vcf files in each folder.
+
+

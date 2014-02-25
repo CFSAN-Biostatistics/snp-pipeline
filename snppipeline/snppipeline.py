@@ -2,7 +2,7 @@
 #from var.flt.vcf to construct SNP position list; from reads.pileup to extract the nucleotide base at each SNP position for each sample to construct the SNP fasta file. Multiple threads.
 
 from Bio import SeqIO
-from optparse import OptionParser
+from optparse import OptionParser #TODO: Replace deprecated optparse with argparse
 import sys,string,os,shutil
 import re
 import operator
@@ -16,161 +16,6 @@ from datetime import datetime
 import threading
 import time
 
-class FuncThread(threading.Thread):
-    def __init__(self,target,*args):
-        self._target = target
-        self._args = args
-        threading.Thread.__init__(self)
-
-    def run(self):
-        self._target(*self._args)
-
-
-###from the pileup file, call the base for each SNP position.
-
-def get_value_from_data(base,length,data):
-    """Call the base for eash SNP position
-    
-    Calls the bases for each SNP position from a given pileup file.    
-    
-    Args:
-        base: Reference base
-        length: 
-        data: 
-        
-    Returns:
-        
-    
-    Raises:
-    
-    """
-    
-    ret = ""
-    charHash = dict()
-    charHash[".,"] = 0
-    charHash["A"] = 0
-    charHash["C"] = 0
-    charHash["T"] = 0
-    charHash["G"] = 0
-    charHash["N"] = 0
-
-    i = 0
-    while i < len(data):
-        char = data[i]
-        if char == '.' or char == ',':
-            charHash[".,"] += 1
-        elif char == 'A' or char == 'a':
-            charHash["A"] += 1
-        elif char == 'C' or char == 'c':
-            charHash["C"] += 1
-        elif char == 'T' or char == 't':
-            charHash["T"] += 1
-        elif char == 'G' or char == 'g':
-            charHash["G"] += 1
-        elif char == 'N' or char == 'n':
-            charHash["N"] += 1
-        elif char == '+' or char == '-':
-            countStr = ""
-            count = 1
-            while re.match("\d" ,data[i + 1]):
-                countStr += data[i + 1]
-                i += 1
-            if countStr != "":
-                count = int(countStr)
-            i += count
-        elif char == '^':
-            if data[i+1] != "." and data[i+1] != ',':
-                i +=1
-        i += 1
-            
-    ret = max(charHash.iteritems(), key=operator.itemgetter(1))[0]
-    if charHash[ret] <= (int(length)/2):
-         ret = "-" 
-    elif ret ==".,":
-         ret = base
-    return ret
-
-###store each pileup information to a Hash.
-def createPositionValueHash(pileupFilePath):
-    positionValueHash = dict()
-    pileupFile = open(pileupFilePath, "r")
-    while 1:
-        curpileupFileLine = pileupFile.readline()
-        if not curpileupFileLine:
-            break
-        seqString = ""
-        curLineData = curpileupFileLine.split()
-        if len(curLineData) <5:
-            continue
-        positionValueHash[curLineData[0] + ":" + curLineData[1]] = get_value_from_data(curLineData[2],curLineData[3],curLineData[4])
-    pileupFile.close()
-    return positionValueHash
-
-def pileup(filePath,snplistFilePath,dirName):
-    """
-    
-    Retrieves rows pertaining to the given keys from the Table instance
-    represented by big_table.  Silly things may happen if
-    other_silly_variable is not None.
-
-    Args:
-        file_path: 
-        snp_list_file_path: A sequence of strings representing the key of each table row
-            to fetch.
-        dir_name: 
-
-    Returns:
-        A dict mapping keys to the corresponding table row data
-        fetched. Each row is represented as a tuple of strings. For
-        example:
-
-        {'Serak': ('Rigel VII', 'Preparer'),
-         'Zim': ('Irk', 'Invader'),
-         'Lrrr': ('Omicron Persei 8', 'Emperor')}
-
-        If a key from the keys argument is missing from the dictionary,
-        then that row was not found in the table.
-
-    Raises:
-        IOError: An error occurred accessing the bigtable.Table object.
-
-    """
-    seqString = ""
-    os.chdir(filePath)
-
-    ####generate pileup files, using snplist file and the reference fasta file.
-    subprocess.call("samtools mpileup -l " + opts.mainPath + opts.snplistFileName + " -f " + opts.mainPath + opts.Reference + " reads.bam > reads.pileup",shell=True )
-
-    ####read in pileup file and store information to a hash
-    positionValueHash = createPositionValueHash(filePath + "/reads.pileup")
-
-    ####append the nucleotide to the record
-    snplistFile_r = open(snplistFilePath, "r")
-    snplistFile_r.seek(0)
-    i = 0
-    while 1:
-        curSnplistLine = snplistFile_r.readline()
-        if not curSnplistLine:
-            break
-        i = i+1
-        curSnplistData = curSnplistLine.split()
-        if  len(curSnplistData) <2:
-            print "snplistfile: bad line# "+i+" line="+curSnplistLine
-            continue
-        chrom = curSnplistData[0]
-        pos = curSnplistData[1]
-
-        if positionValueHash.has_key(chrom + ":" + pos):
-            seqString += positionValueHash[chrom + ":" + pos]
-        else:
-            seqString += "-"
-    print "length of seqRecordString="+str(len(seqString))
-    seq = Seq(seqString)
-    seqRecord = SeqRecord(seq,id=dirName)
-    records.append(seqRecord)
-    snplistFile_r.close()
-
-
 #### Command line usage
 usage = "usage: %prog -n 10 -d /home/yan.luo/Desktop/ -f path.txt -r reference -l snplist.txt -a snpma.fasta"
 
@@ -182,7 +27,6 @@ p.add_option ("-f","--pathFileName",dest="pathFileName",default="path.txt",help=
 p.add_option ("-l","--snplistFileName",dest="snplistFileName",default="snplist.txt",help="Snplist file name")
 p.add_option ("-a","--snpmaFileName",dest="snpmaFileName",default="snpma.fa",help="fasta file name")
 (opts,args)=p.parse_args()
-
 
 pathFile = open(opts.mainPath + opts.pathFileName, "r")
 snplistFile = open(opts.mainPath + opts.snplistFileName, "w")
@@ -266,3 +110,4 @@ for thread in threads:
 ####write the records to fasta file           
 SeqIO.write(records, fastaFile, "fasta")
 fastaFile.close()
+
