@@ -1,6 +1,8 @@
 #!/usr/local/bin/python
 #from var.flt.vcf to construct SNP position list; from reads.pileup to extract the nucleotide base at each SNP position for each sample to construct the SNP fasta file. Multiple threads.
 
+
+
 from Bio import SeqIO
 from optparse import OptionParser
 import sys,string,os,shutil
@@ -127,7 +129,10 @@ def pileup(filePath,snplistFilePath,dirName):
     records.append(seqRecord)
     snplistFile_r.close()
 
-
+#
+#Example useage
+#  python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/reference -f path.txt -r reference -l snplist.txt -a snpma.fasta
+#
 #### Command line usage
 usage = "usage: %prog -n 10 -d /home/yan.luo/Desktop/ -f path.txt -r reference -l snplist.txt -a snpma.fasta"
 
@@ -150,10 +155,9 @@ snplistHash = dict()
 while 1:
     filePath = pathFile.readline()[:-1]
     dirName = filePath.split(os.sep)[-1]
+    #print("Processing:"+filePath)
     if not filePath:
         break
-    print filePath
-    print dirName
     vcfFile = open(filePath + "/var.flt.vcf","r") 
     while 1:
         curVcfFileLine = vcfFile.readline()
@@ -188,7 +192,7 @@ while 1:
                 record[0] += 1
                 record.append(dirName)
     vcfFile.close()
-        
+
 for key in sorted(snplistHash.iterkeys()):
     snplistFile.write(key)
     values = snplistHash[key]
@@ -196,7 +200,6 @@ for key in sorted(snplistHash.iterkeys()):
         snplistFile.write("\t" + str(value))
     snplistFile.write("\n")
 snplistFile.close()
-
 
 pathFile.seek(0)
 snplistFilePath = opts.mainPath + opts.snplistFileName 

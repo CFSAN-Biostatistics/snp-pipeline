@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Created on Thu Feb 20 09:00:07 2014
+Utility classes and functions for snp pipeline code.
 
 @author: hugh.rand
 """
@@ -118,19 +118,8 @@ def pileup(filePath,snplistFilePath,dirName):
         dir_name: 
 
     Returns:
-        A dict mapping keys to the corresponding table row data
-        fetched. Each row is represented as a tuple of strings. For
-        example:
-
-        {'Serak': ('Rigel VII', 'Preparer'),
-         'Zim': ('Irk', 'Invader'),
-         'Lrrr': ('Omicron Persei 8', 'Emperor')}
-
-        If a key from the keys argument is missing from the dictionary,
-        then that row was not found in the table.
-
+ 
     Raises:
-        IOError: An error occurred accessing the bigtable.Table object.
 
     """
     seqString = ""

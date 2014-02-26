@@ -1,0 +1,4 @@
+/home/hugh.rand/projects/snppipeline/test/testForOriginalCode/sample1
+/home/hugh.rand/projects/snppipeline/test/testForOriginalCode/sample2
+/home/hugh.rand/projects/snppipeline/test/testForOriginalCode/sample3
+/home/hugh.rand/projects/snppipeline/test/testForOriginalCode/sample4
