@@ -131,7 +131,7 @@ def pileup(filePath,snplistFilePath,dirName):
 
 #
 #Example useage
-#  python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/reference -f path.txt -r reference -l snplist.txt -a snpma.fasta
+#  python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
 #
 #### Command line usage
 usage = "usage: %prog -n 10 -d /home/yan.luo/Desktop/ -f path.txt -r reference -l snplist.txt -a snpma.fasta"
