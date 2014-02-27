@@ -89,7 +89,7 @@ def get_consensus_base_from_pileup(base,length,data):
 
 def create_position_value_hash(pileupFilePath):
     """Store each pileup information to a Hash.
-    """"
+    """
     positionValueHash = dict()
     pileupFile = open(pileupFilePath, "r")
     while 1:
