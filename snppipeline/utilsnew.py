@@ -37,18 +37,18 @@ def get_consensus_base_from_pileup(base,length,data):
 
 
     Examples:
-    >>> get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A')
-    'T'
+    >>> print(get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A'))
+    T
     """
 
     ret = ""
     charHash = dict()
     charHash[".,"] = 0
-    charHash["A"] = 0
-    charHash["C"] = 0
-    charHash["T"] = 0
-    charHash["G"] = 0
-    charHash["N"] = 0
+    charHash["A"]  = 0
+    charHash["C"]  = 0
+    charHash["T"]  = 0
+    charHash["G"]  = 0
+    charHash["N"]  = 0
 
     i = 0
     while i < len(data):
