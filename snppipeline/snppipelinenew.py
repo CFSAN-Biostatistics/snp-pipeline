@@ -7,11 +7,11 @@ from optparse import OptionParser
 import sys,string,os,shutil
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from os.path import join
-from operator import itemgetter
+#from os.path import join
+#from operator import itemgetter
 import subprocess
-from subprocess import call
-from datetime import datetime
+#from subprocess import call
+#from datetime import datetime
 import time
 import imp
 utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py')
