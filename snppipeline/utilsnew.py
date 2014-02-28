@@ -19,8 +19,9 @@ import operator
 
 
 def get_consensus_base_from_pileup(base,length,data):
-    """Call the base for eash SNP position
+    """Call the base for each SNP position
     
+    Description:
     Calls the base based on the pipelup data for a SNP position with a given
         length cutoff and with a given reference base.    
     
