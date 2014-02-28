@@ -70,7 +70,6 @@ def get_consensus_base_from_pileup(base,length,data):
             while re.match("\d" ,data[i + 1]):
                 countStr += data[i + 1]
                 i += 1
-#            print countStr
             if countStr != "":
                 count = int(countStr)
             i += count
@@ -89,31 +88,32 @@ def get_consensus_base_from_pileup(base,length,data):
 
 ###store each pileup information to a Hash.
 def createPositionValueHash(pileup_file_path):
-    """Store each pileup information to a Hash.
+    """Create a dict based on the information in a pileup file.
     
-    Calls the base based on the pipelup data for a SNP position with a given
-        length cutoff and with a given reference base.    
+    Given a path to a pileup file, create a dictionary based on the pileup
+        data in that file.    
     
     Args:
-        base: Reference base.
-        length: length cutoff.
-        data: information from alignment in pileup format.
+        pileup_file_path: full path to a pileup file.
         
     Returns:
-    
-    
+        A dict mapping a key formed from a sequence and position to a 
+        consensus sequence base. For example:
+
+        {'gi|9626243|ref|NC_001416.1|:46842': 'G',
+         'gi|9626243|ref|NC_001416.1|:47425': 'T',
+         'gi|9626243|ref|NC_001416.1|:47893': 'A'}
+
     Raises:
 
 
     Examples:
-    >>> get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A')
-    'T'
     """
-    positionValueHash = dict()
-    pileupFile = open(pileup_file_path, "r")
-    for curpileupFileLine in pileupFile:
-        curLineData = curpileupFileLine.split()
-        if len(curLineData) >5:   #don't process lines without 5 pieces of information or less
-            positionValueHash[curLineData[0] + ":" + curLineData[1]] = get_consensus_base_from_pileup(curLineData[2],curLineData[3],curLineData[4])
-    pileupFile.close()
-    return positionValueHash
+    position_value_dict = dict()
+    pileup_file_object  = open(pileup_file_path, "r")
+    for pileup_line in pileup_file_object:
+        curLineData = pileup_line.split()
+        if len(curLineData) >5:   #don't process lines without 5 pieces of information or more
+            position_value_dict[curLineData[0] + ":" + curLineData[1]] = get_consensus_base_from_pileup(curLineData[2],curLineData[3],curLineData[4])
+    pileup_file_object.close()
+    return position_value_dict
