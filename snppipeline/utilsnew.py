@@ -37,8 +37,25 @@ def get_consensus_base_from_pileup(base,length,data):
 
 
     Examples:
+    
     >>> print(get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A'))
     T
+    >>> print(get_consensus_base_from_pileup('A',10,',.$.....,,.,.,...,,,.,..^+.'))
+    A
+    >>> print(get_consensus_base_from_pileup('C',10,',.....,,.,.,...,,,.,..A'))
+    C
+    >>> print(get_consensus_base_from_pileup('T',10,',.$....,,.,.,...,,,.,...'))
+    T
+    >>> print(get_consensus_base_from_pileup('G',10,',$....,,.,.,...,,,.,...^l.'))
+    G
+    >>> print(get_consensus_base_from_pileup('G',10,'...T,,.,.,...,,,.,....'))
+    G
+    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,.C.,,,.,..G.'))
+    T
+    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,...,,,.,....^k.'))
+    T
+    >>> print(get_consensus_base_from_pileup('A',10,'A..T,,.,.,...,,,.,.....'))
+    A
     """
 
     ret = ""
