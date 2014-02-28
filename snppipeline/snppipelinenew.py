@@ -4,7 +4,8 @@
 
 from Bio import SeqIO
 from optparse import OptionParser
-import sys,string,os,shutil
+#import sys,string,shutil
+import os
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 #from os.path import join
