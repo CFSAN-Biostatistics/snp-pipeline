@@ -18,7 +18,7 @@ import operator
 
 
 
-def get_value_from_data(base,length,data):
+def get_consensus_base_from_pileup(base,length,data):
     """Call the base for eash SNP position
     
     Calls the base based on the pipelup data for a SNP position with a given
@@ -88,18 +88,32 @@ def get_value_from_data(base,length,data):
 
 
 ###store each pileup information to a Hash.
-def createPositionValueHash(pileupFilePath):
+def createPositionValueHash(pileup_file_path):
     """Store each pileup information to a Hash.
+    
+    Calls the base based on the pipelup data for a SNP position with a given
+        length cutoff and with a given reference base.    
+    
+    Args:
+        base: Reference base.
+        length: length cutoff.
+        data: information from alignment in pileup format.
+        
+    Returns:
+    
+    
+    Raises:
+
+
+    Examples:
+    >>> get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A')
+    'T'
     """
     positionValueHash = dict()
-    pileupFile = open(pileupFilePath, "r")
-    while 1:
-        curpileupFileLine = pileupFile.readline()
-        if not curpileupFileLine:
-            break
+    pileupFile = open(pileup_file_path, "r")
+    for curpileupFileLine in pileupFile:
         curLineData = curpileupFileLine.split()
-        if len(curLineData) <5:
-            continue
-        positionValueHash[curLineData[0] + ":" + curLineData[1]] = get_value_from_data(curLineData[2],curLineData[3],curLineData[4])
+        if len(curLineData) >5:   #don't process lines without 5 pieces of information or less
+            positionValueHash[curLineData[0] + ":" + curLineData[1]] = get_consensus_base_from_pileup(curLineData[2],curLineData[3],curLineData[4])
     pileupFile.close()
     return positionValueHash
