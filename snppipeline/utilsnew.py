@@ -59,14 +59,8 @@ def get_consensus_base_from_pileup(base,length,data):
     """
 
     ret = ""
-    charHash = dict()
-    charHash[".,"] = 0
-    charHash["A"]  = 0
-    charHash["C"]  = 0
-    charHash["T"]  = 0
-    charHash["G"]  = 0
-    charHash["N"]  = 0
-
+    charHash = {'.,': 0, 'A': 0, 'C': 0, 'G': 0, 'N': 0, 'T': 0}
+    
     i = 0
     while i < len(data):
         char = data[i]
