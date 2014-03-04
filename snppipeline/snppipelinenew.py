@@ -97,8 +97,6 @@ while 1:
     vcf_file_object  = open(filePath + "/var.flt.vcf","r")
     for curVcfFileLine in vcf_file_object:
 
-        curVcfFileLine = vcf_file_object.readline()
-
         if curVcfFileLine.startswith("#"):
             continue
 
