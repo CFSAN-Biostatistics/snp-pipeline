@@ -36,7 +36,7 @@ def pileup(filePath,snplistFilePath,dirName):
     subprocess.call("samtools mpileup -l " + opts.mainPath + opts.snplistFileName + " -f " + opts.mainPath + opts.Reference + " reads.bam > reads.pileup",shell=True )
 
     ####read in pileup file and store information to a hash
-    positionValueHash = utilsnew.createPositionValueHash(filePath + "/reads.pileup")
+    positionValueHash = utilsnew.create_consensus_dict(filePath + "/reads.pileup")
 
     ####append the nucleotide to the record
     snplistFile_r = open(snplistFilePath, "r")
@@ -64,8 +64,6 @@ def pileup(filePath,snplistFilePath,dirName):
     records.append(seqRecord)
     snplistFile_r.close()
 
-
-
 #
 #Example useage
 #  python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
@@ -82,7 +80,7 @@ p.add_option ("-l","--snplistFileName",dest="snplistFileName",default="snplist.t
 p.add_option ("-a","--snpmaFileName",dest="snpmaFileName",default="snpma.fa",help="fasta file name")
 (opts,args)=p.parse_args()
 
-
+print(opts)
 pathFile = open(opts.mainPath + opts.pathFileName, "r")
 snplistFile = open(opts.mainPath + opts.snplistFileName, "w")
 snplistHash = dict()

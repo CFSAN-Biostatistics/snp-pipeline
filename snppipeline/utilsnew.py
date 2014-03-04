@@ -100,11 +100,12 @@ def get_consensus_base_from_pileup(base,length,data):
 
 
 ###store each pileup information to a Hash.
-def createPositionValueHash(pileup_file_path):
+def create_consensus_dict(pileup_file_path):
     """Create a dict based on the information in a pileup file.
     
-    Given a path to a pileup file, create a dictionary based on the pileup
-        data in that file.    
+    Given a path to a pileup file, create a dict based on the pileup
+        data in that file. The dict contains the consensus
+        base calls for positions in the reference sequence.
     
     Args:
         pileup_file_path: full path to a pileup file.
@@ -118,7 +119,6 @@ def createPositionValueHash(pileup_file_path):
          'gi|9626243|ref|NC_001416.1|:47893': 'A'}
 
     Raises:
-
 
     Examples:
     """
