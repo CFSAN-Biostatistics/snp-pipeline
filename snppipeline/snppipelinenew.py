@@ -93,11 +93,12 @@ while 1:
     print("Processing:"+filePath)
     if not filePath:
         break
-    vcfFile = open(filePath + "/var.flt.vcf","r") 
-    while 1:
-        curVcfFileLine = vcfFile.readline()
-        if not curVcfFileLine:
-            break
+
+    vcf_file_object  = open(filePath + "/var.flt.vcf","r")
+    for curVcfFileLine in vcf_file_object:
+
+        curVcfFileLine = vcf_file_object.readline()
+
         if curVcfFileLine.startswith("#"):
             continue
 
@@ -126,7 +127,7 @@ while 1:
                 record = snplistHash[chrom + "\t" + pos]
                 record[0] += 1
                 record.append(dirName)
-    vcfFile.close()
+    vcf_file_object.close()
 
 for key in sorted(snplistHash.iterkeys()):
     snplistFile.write(key)
