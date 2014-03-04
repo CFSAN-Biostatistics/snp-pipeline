@@ -28,18 +28,17 @@ class FuncThread(threading.Thread):
     def run(self):
         self._target(*self._args)
 
-def pileup(filePath,snplistFilePath,dirName):
+def pileup(file_path,snp_list_file_path,directory_name):
     seqString = ""
-    os.chdir(filePath)
-
+    os.chdir(file_path)
     ####generate pileup files, using snplist file and the reference fasta file.
     subprocess.call("samtools mpileup -l " + opts.mainPath + opts.snplistFileName + " -f " + opts.mainPath + opts.Reference + " reads.bam > reads.pileup",shell=True )
 
     ####read in pileup file and store information to a hash
-    positionValueHash = utilsnew.create_consensus_dict(filePath + "/reads.pileup")
+    positionValueHash = utilsnew.create_consensus_dict(file_path + "/reads.pileup")
 
     ####append the nucleotide to the record
-    snplistFile_r = open(snplistFilePath, "r")
+    snplistFile_r = open(snp_list_file_path, "r")
     snplistFile_r.seek(0)
     i = 0
     while 1:
@@ -60,7 +59,7 @@ def pileup(filePath,snplistFilePath,dirName):
             seqString += "-"
     print "length of seqRecordString="+str(len(seqString))
     seq = Seq(seqString)
-    seqRecord = SeqRecord(seq,id=dirName)
+    seqRecord = SeqRecord(seq,id=directory_name)
     records.append(seqRecord)
     snplistFile_r.close()
 
@@ -101,13 +100,13 @@ while 1:
             continue
 
         curLineData = curVcfFileLine.split()
-        chrom = curLineData[0]
-        pos = curLineData[1]
-        info = curLineData[7]
+        chrom       = curLineData[0]
+        pos         = curLineData[1]
+        info        = curLineData[7]
         if str("INDEL") in curLineData[7]:
             continue
         infoFields = info.split(";")
-        dpFlag = False
+        dpFlag  = False
         af1Flag = False
         for infoField in infoFields:
             infoPair = infoField.split("=")
@@ -115,7 +114,7 @@ while 1:
                 dpFlag = True
             elif (infoPair[0] == "AF1" and infoPair[1] == "1" ) or (infoPair[0] == "AR" and infoPair[1] == "1.00"):
                 af1Flag = True
-  # find a good record fo SNP position, save data to hash
+        # find a good record fo SNP position, save data to hash
         if dpFlag and af1Flag:
             if not snplistHash.has_key(chrom + "\t" + pos):
                 record = [1]
