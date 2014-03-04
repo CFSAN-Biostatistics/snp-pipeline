@@ -90,7 +90,7 @@ snplistHash = dict()
 while 1:
     filePath = pathFile.readline()[:-1]
     dirName = filePath.split(os.sep)[-1]
-    #print("Processing:"+filePath)
+    print("Processing:"+filePath)
     if not filePath:
         break
     vcfFile = open(filePath + "/var.flt.vcf","r") 
