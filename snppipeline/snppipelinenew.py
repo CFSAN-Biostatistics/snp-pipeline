@@ -28,7 +28,7 @@ class FuncThread(threading.Thread):
     def run(self):
         self._target(*self._args)
 
-def pileup(file_path,snp_list_file_path,directory_name):
+def pileup(file_path,snp_list_file_path,directory_name,opts):
     seqString = ""
     os.chdir(file_path)
     ####generate pileup files, using snplist file and the reference fasta file.
@@ -147,7 +147,7 @@ while 1:
     if not filePath:
         break
 
-    t1 = FuncThread(pileup,filePath,snplistFilePath,dirName)
+    t1 = FuncThread(pileup,filePath,snplistFilePath,dirName,opts)
     threads.append(t1)
     while threading.activeCount() > opts.maxThread:
         time.sleep(15)
