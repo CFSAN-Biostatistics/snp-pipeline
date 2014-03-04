@@ -31,7 +31,7 @@ def get_consensus_base_from_pileup(base,length,data):
         data: information from alignment in pileup format.
         
     Returns:
-    
+        consensus_base: Consensus base from alignment.
     
     Raises:
 
@@ -95,6 +95,7 @@ def get_consensus_base_from_pileup(base,length,data):
          consensus_base = "-" 
     elif consensus_base ==".,":
          consensus_base = base
+
     return consensus_base
 
 
