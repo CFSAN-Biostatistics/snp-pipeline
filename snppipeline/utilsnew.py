@@ -58,24 +58,24 @@ def get_consensus_base_from_pileup(base,length,data):
     A
     """
 
-    ret = ""
-    charHash = {'.,': 0, 'A': 0, 'C': 0, 'G': 0, 'N': 0, 'T': 0}
+    consensus_base = ""
+    base_count_dict = {'.,': 0, 'A': 0, 'C': 0, 'G': 0, 'N': 0, 'T': 0}
     
     i = 0
     while i < len(data):
         char = data[i]
         if char == '.' or char == ',':
-            charHash[".,"] += 1
+            base_count_dict[".,"] += 1
         elif char == 'A' or char == 'a':
-            charHash["A"] += 1
+            base_count_dict["A"] += 1
         elif char == 'C' or char == 'c':
-            charHash["C"] += 1
+            base_count_dict["C"] += 1
         elif char == 'T' or char == 't':
-            charHash["T"] += 1
+            base_count_dict["T"] += 1
         elif char == 'G' or char == 'g':
-            charHash["G"] += 1
+            base_count_dict["G"] += 1
         elif char == 'N' or char == 'n':
-            charHash["N"] += 1
+            base_count_dict["N"] += 1
         elif char == '+' or char == '-':
             countStr = ""
             count = 1
@@ -90,12 +90,12 @@ def get_consensus_base_from_pileup(base,length,data):
                 i +=1
         i += 1
             
-    ret = max(charHash.iteritems(), key=operator.itemgetter(1))[0]
-    if charHash[ret] <= (int(length)/2):
-         ret = "-" 
-    elif ret ==".,":
-         ret = base
-    return ret
+    consensus_base = max(base_count_dict.iteritems(), key=operator.itemgetter(1))[0]
+    if base_count_dict[consensus_base] <= (int(length)/2):
+         consensus_base = "-" 
+    elif consensus_base ==".,":
+         consensus_base = base
+    return consensus_base
 
 
 ###store each pileup information to a Hash.
@@ -124,8 +124,8 @@ def createPositionValueHash(pileup_file_path):
     position_value_dict = dict()
     pileup_file_object  = open(pileup_file_path, "r")
     for pileup_line in pileup_file_object:
-        curLineData = pileup_line.split()
-        if len(curLineData) >5:   #don't process lines without 5 pieces of information or more
-            position_value_dict[curLineData[0] + ":" + curLineData[1]] = get_consensus_base_from_pileup(curLineData[2],curLineData[3],curLineData[4])
+        current_line_data = pileup_line.split()
+        if len(current_line_data) >5:   #don't process lines without 5 pieces of information or more
+            position_value_dict[current_line_data[0] + ":" + current_line_data[1]] = get_consensus_base_from_pileup(current_line_data[2],current_line_data[3],current_line_data[4])
     pileup_file_object.close()
     return position_value_dict
