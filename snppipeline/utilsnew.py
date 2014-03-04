@@ -121,6 +121,11 @@ def create_consensus_dict(pileup_file_path):
     Raises:
 
     Examples:
+    >>> consensus_dict = create_consensus_dict("/home/hugh.rand/projects/snppipeline/test/testForOriginalCode/sample2/reads.pileup")
+    >>> consensus_dict['gi|9626243|ref|NC_001416.1|:3678']
+    'T'
+    >>> consensus_dict['gi|9626243|ref|NC_001416.1|:40984']
+    'A'
     """
     position_value_dict = dict()
     pileup_file_object  = open(pileup_file_path, "r")
