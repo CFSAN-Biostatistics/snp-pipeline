@@ -13,11 +13,6 @@ import imp
 utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py')
 utils2 = imp.load_source('utils2', '/home/hugh.rand/projects/snppipeline/snppipeline/utils2.py')
 import threading
-#import sys,string,shutil
-#from os.path import join
-#from operator import itemgetter
-#from subprocess import call
-#from datetime import datetime
 
 class FuncThread(threading.Thread):
     def __init__(self,target,*args):
@@ -72,14 +67,16 @@ def pileup(file_path,snp_list_file_path,directory_name,opts):
 #     
 #     Args:
 #         maxThread: Max number of cocurrent threads (default=15)
-#         mainPath:  Path for all files (default=)
-#         Reference: Reference for mapping (default=)
-#         pathFileName: name of file containing full paths to directories
-#             containing information for each sequence (default=).
-#         snplistFileName: Snplist file name (default="snplist.txt")
-#         snpmaFileName: fasta file name (default="snpma.fa")
+#         mainPath:  Directory containing all input files (no default). Output
+#             files will also be written here.
+#         Reference: File name for reference sequence (in fasta format) for
+#             mapping (no default)
+#         pathFileName: Name of file containing full paths to directories
+#             containing information for each sequence (default="path.txt").
+#         snplistFileName: Snplist file name (default="snplist.txt") #TODO: finish this one up
+#         snpmaFileName: Name of file containing snp matrix in fasta format
+#             (default="snpma.fa"). Written to mainPath directory
 #        
-#     Returns:
 #         SNP matrix
 #     
 #     Side effects:
@@ -186,4 +183,4 @@ for thread in threads:          #Wait for threads to finish?
 ####write the records to fasta file           
 SeqIO.write(records, fastaFile, "fasta")
 fastaFile.close()
-utils2.testme(4)
+print('Records written to fastaFile: '+opts.mainPath + opts.snpmaFileName)
