@@ -38,8 +38,8 @@ def pileup(file_path,snp_list_file_path,directory_name,opts):
     positionValueHash = utilsnew.create_consensus_dict(file_path + "/reads.pileup")
 
     ####append the nucleotide to the record
-    snplistFile_r = open(snp_list_file_path, "r")
-    snplistFile_r.seek(0)
+    snplistFile_r = open(snp_list_file_path, "r")   #Conflict with other threads?
+    snplistFile_r.seek(0)             #Why is this necessary?
     i = 0
     while 1:
         curSnplistLine = snplistFile_r.readline()
@@ -109,18 +109,13 @@ p.add_option ("-l","--snplistFileName",dest="snplistFileName",default="snplist.t
 p.add_option ("-a","--snpmaFileName",dest="snpmaFileName",default="snpma.fa",help="fasta file name")
 (opts,args)=p.parse_args()
 
-print(opts)
-print(opts.mainPath + opts.pathFileName)
 sample_directories_list_file_object = open(opts.mainPath + opts.pathFileName, "r")
-snplistFile = open(opts.mainPath + opts.snplistFileName, "w")
+snp_list_file_object = open(opts.mainPath + opts.snplistFileName, "w")
 snplistHash = dict()
 
-#    pileup_file_object  = open(pileup_file_path, "r")
-#    for pileup_line in pileup_file_object:
 while 1:
     filePath = sample_directories_list_file_object.readline()[:-1]
     dirName = filePath.split(os.sep)[-1]
-    print("Processing:"+filePath)
     if not filePath:
         break
 
@@ -159,12 +154,12 @@ while 1:
     vcf_file_object.close()
 
 for key in sorted(snplistHash.iterkeys()):
-    snplistFile.write(key)
+    snp_list_file_object.write(key)
     values = snplistHash[key]
     for value in values:
-        snplistFile.write("\t" + str(value))
-    snplistFile.write("\n")
-snplistFile.close()
+        snp_list_file_object.write("\t" + str(value))
+    snp_list_file_object.write("\n")
+snp_list_file_object.close()
 
 sample_directories_list_file_object.seek(0)
 snplistFilePath = opts.mainPath + opts.snplistFileName 
@@ -185,7 +180,7 @@ while 1:
         time.sleep(15)
     t1.start()
 
-for thread in threads:
+for thread in threads:          #Wait for threads to finish?
     thread.join()
 
 ####write the records to fasta file           
