@@ -4,20 +4,20 @@
 
 from Bio import SeqIO
 from optparse import OptionParser
-#import sys,string,shutil
 import os
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-#from os.path import join
-#from operator import itemgetter
 import subprocess
-#from subprocess import call
-#from datetime import datetime
 import time
 import imp
 utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py')
 utils2 = imp.load_source('utils2', '/home/hugh.rand/projects/snppipeline/snppipeline/utils2.py')
 import threading
+#import sys,string,shutil
+#from os.path import join
+#from operator import itemgetter
+#from subprocess import call
+#from datetime import datetime
 
 class FuncThread(threading.Thread):
     def __init__(self,target,*args):
@@ -63,10 +63,40 @@ def pileup(file_path,snp_list_file_path,directory_name,opts):
     records.append(seqRecord)
     snplistFile_r.close()
 
+###read all *vcf file for SNP list
+#==============================================================================
+#     """Create SNP matrix
+#     
+#     Description:
+#     Create a SNP matrix based on TODO    
+#     
+#     Args:
+#         maxThread: Max number of cocurrent threads (default=15)
+#         mainPath:  Path for all files (default=)
+#         Reference: Reference for mapping (default=)
+#         pathFileName: name of file containing full paths to directories
+#             containing information for each sequence (default=).
+#         snplistFileName: Snplist file name (default="snplist.txt")
+#         snpmaFileName: fasta file name (default="snpma.fa")
+#        
+#     Returns:
+#         SNP matrix
+#     
+#     Side effects:
 #
-#Example useage
-#  python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
+#     Raises:
+# 
+#     Note:
+#         (1)Each directory for each sequence is expected to have the following
+#            in it:
 #
+#     Examples:
+#         python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
+#     """
+#==============================================================================
+
+
+
 #### Command line usage
 usage = "usage: %prog -n 10 -d /home/yan.luo/Desktop/ -f path.txt -r reference -l snplist.txt -a snpma.fasta"
 
@@ -80,14 +110,15 @@ p.add_option ("-a","--snpmaFileName",dest="snpmaFileName",default="snpma.fa",hel
 (opts,args)=p.parse_args()
 
 print(opts)
-pathFile = open(opts.mainPath + opts.pathFileName, "r")
+print(opts.mainPath + opts.pathFileName)
+sample_directories_list_file_object = open(opts.mainPath + opts.pathFileName, "r")
 snplistFile = open(opts.mainPath + opts.snplistFileName, "w")
 snplistHash = dict()
 
-###read all *vcf file for SNP list
-
+#    pileup_file_object  = open(pileup_file_path, "r")
+#    for pileup_line in pileup_file_object:
 while 1:
-    filePath = pathFile.readline()[:-1]
+    filePath = sample_directories_list_file_object.readline()[:-1]
     dirName = filePath.split(os.sep)[-1]
     print("Processing:"+filePath)
     if not filePath:
@@ -112,7 +143,8 @@ while 1:
             infoPair = infoField.split("=")
             if infoPair[0] == "DP" and int(infoPair[1]) >= 10:
                 dpFlag = True
-            elif (infoPair[0] == "AF1" and infoPair[1] == "1" ) or (infoPair[0] == "AR" and infoPair[1] == "1.00"):
+            elif ((infoPair[0] == "AF1" and infoPair[1] == "1" ) or
+                  (infoPair[0] == "AR"  and infoPair[1] == "1.00")):
                 af1Flag = True
         # find a good record fo SNP position, save data to hash
         if dpFlag and af1Flag:
@@ -134,7 +166,7 @@ for key in sorted(snplistHash.iterkeys()):
     snplistFile.write("\n")
 snplistFile.close()
 
-pathFile.seek(0)
+sample_directories_list_file_object.seek(0)
 snplistFilePath = opts.mainPath + opts.snplistFileName 
 fastaFile = open(opts.mainPath + opts.snpmaFileName, "w") 
 
@@ -142,7 +174,7 @@ records = []
 threads = []
 
 while 1:
-    filePath = pathFile.readline()[:-1]
+    filePath = sample_directories_list_file_object.readline()[:-1]
     dirName = filePath.split(os.sep)[-1]
     if not filePath:
         break
