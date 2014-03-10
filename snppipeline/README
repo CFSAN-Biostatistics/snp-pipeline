@@ -1,0 +1,15 @@
+Notes:
+20140310-har: To run snp pipeline code with Jamie agona example, I did the following:
+  1. ln -s /home/hugh.rand/mnt /Volumes
+  2. cd /Volumes/gnome/gnome3/Papers/AgonaMOM/ReferenceBased
+  3. #little one
+     python 4snplist_matrix_P_02262014.py -n 1 -d /Volumes/gnome/gnome3/Papers/AgonaMOM/ReferenceBased/ -r NC_011149.fasta -f pathsToBamTest.txt
+     #big one
+     python 4snplist_matrix_P_02262014.py -n 1 -d /Volumes/gnome/gnome3/Papers/AgonaMOM/ReferenceBased/ -r NC_011149.fasta -f pathsToBamTest.txt
+20130310-har: To run snp pipline code with simple virus example, do:
+  1. cd ~/projects/snppipeline/snppipeline/
+  2. python snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
+20130310-har: As well, to run with old code with simple virus example, do:
+  2. python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
+20130310-har: As well, to run with Yan's new code with simple virus example, do:
+  2. python 4snplist_matrix_P_02262014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
