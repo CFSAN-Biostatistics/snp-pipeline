@@ -3,14 +3,6 @@
 import re
 import operator
 
-#Used in pileup:
-#from Bio.Seq import Seq
-#from Bio.SeqRecord import SeqRecord
-#import subprocess
-#import os
-
-
-
 def get_consensus_base_from_pileup(base,length,data):
     """Call the base for each SNP position
     
@@ -92,7 +84,6 @@ def get_consensus_base_from_pileup(base,length,data):
     return consensus_base
 
 
-###store each pileup information to a Hash.
 def create_consensus_dict(pileup_file_path):
     """Create a dict based on the information in a pileup file.
     

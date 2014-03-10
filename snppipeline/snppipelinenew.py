@@ -105,6 +105,7 @@ p.add_option ("-l","--snplistFileName",dest="snplistFileName",default="snplist.t
 p.add_option ("-a","--snpmaFileName",dest="snpmaFileName",default="snpma.fa",help="fasta file name")
 (opts,args)=p.parse_args()
 
+print("here it is: "+opts.mainPath + opts.pathFileName)
 sample_directories_list_file_object = open(opts.mainPath + opts.pathFileName, "r")
 snp_list_file_object = open(opts.mainPath + opts.snplistFileName, "w")
 snplistHash = dict()
@@ -167,6 +168,7 @@ threads = []
 while 1:
     filePath = sample_directories_list_file_object.readline()[:-1]
     dirName = filePath.split(os.sep)[-1]
+    print(filePath+"  "+dirName)
     if not filePath:
         break
 
