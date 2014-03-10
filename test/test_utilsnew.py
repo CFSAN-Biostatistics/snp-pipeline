@@ -1,10 +1,4 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Feb 21 08:42:02 2014
-
-@author: hugh.rand
-"""
+#!/usr/bin/env python2.7
 
 import unittest
 import doctest

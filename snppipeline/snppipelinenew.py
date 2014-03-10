@@ -1,6 +1,5 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python2.7
 #from var.flt.vcf to construct SNP position list; from reads.pileup to extract the nucleotide base at each SNP position for each sample to construct the SNP fasta file. Multiple threads.
-
 
 from Bio import SeqIO
 from optparse import OptionParser

@@ -1,11 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Feb 27 08:35:42 2014
-
-@author: hugh.rand
-"""
-
-###from the pileup file, call the base for each SNP position.
+#!/usr/bin/env python2.7
 
 import re
 import operator
