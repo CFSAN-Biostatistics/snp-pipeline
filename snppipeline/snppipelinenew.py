@@ -40,7 +40,7 @@ def pileup(filePath,snplistFilePath,dirName):
 #     """Create SNP matrix
 #     
 #     Description:
-#     Create a SNP matrix based on TODO    
+#     Create a SNP matrix based on #TODO - finish this    
 #     
 #     Args:
 #         maxThread: Max number of cocurrent threads (default=15)
