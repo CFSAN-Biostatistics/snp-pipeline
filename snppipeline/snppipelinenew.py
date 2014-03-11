@@ -84,19 +84,17 @@ p.add_option ("-p","--pileupFileName",dest="pileupFileName",default="reads.pileu
 (opts,args)=p.parse_args()
 
 
-pathFile = open(opts.mainPath + opts.pathFileName, "r")
+pathFile_file_object = open(opts.mainPath + opts.pathFileName, "r")
 snplistFile = open(opts.mainPath + opts.snplistFileName, "w")
 snplistHash = dict()
+print('snplistFile '+opts.mainPath + opts.snplistFileName)
 
-###read all *vcf file for SNP list
-
-while 1:
-    filePath = pathFile.readline()[:-1]
+#read in all vcf files and process into list of SNPs passing various criteria.
+#  Do this for each sample. 
+for pathFile_file_line in pathFile_file_object:
+    filePath = pathFile_file_line[:-1]
     dirName = filePath.split(os.sep)[-1]
-    if not filePath:
-        break
-    print filePath
-    print dirName
+    print 'Here  ' + filePath+'  '+ dirName
     vcfFile = open(filePath+ "/var.flt.vcf","r") 
     while 1:
         curVcfFileLine = vcfFile.readline()
@@ -131,7 +129,9 @@ while 1:
                 record[0] += 1
                 record.append(dirName)
     vcfFile.close()
-        
+pathFile_file_object.close()
+    
+#write out list of snps for all samples to a single file        
 for key in sorted(snplistHash.iterkeys()):
     snplistFile.write(key)
     values = snplistHash[key]
@@ -141,15 +141,17 @@ for key in sorted(snplistHash.iterkeys()):
 snplistFile.close()
 
 
-pathFile.seek(0)
+#Generate Pileups of samples (in parallel)
+
+pathFile_file_object = open(opts.mainPath + opts.pathFileName, "r")
 snplistFilePath = opts.mainPath + opts.snplistFileName 
 fastaFile = open(opts.mainPath + opts.snpmaFileName, "w") 
 
 records = []
 threads = []
 
-while 1:
-    filePath = pathFile.readline()[:-1]
+for pathFile_file_line in pathFile_file_object:
+    filePath = pathFile_file_line[:-1]
     dirName = filePath.split(os.sep)[-1]
     if not filePath:
         break
@@ -177,9 +179,9 @@ for thread in threads:
 
 print "all commands are finished"
 
-pathFile.seek(0)
+pathFile_file_object.seek(0)
 while 1:
-    filePath = pathFile.readline()[:-1]
+    filePath = pathFile_file_object.readline()[:-1]
     dirName = filePath.split(os.sep)[-1]
     if not filePath:
         break
@@ -214,7 +216,6 @@ while 1:
     seqRecord = SeqRecord(seq,id=dirName)
     records.append(seqRecord)
     snplistFile_r.close()
-
 
 ####write the records to fasta file           
 SeqIO.write(records, fastaFile, "fasta")
