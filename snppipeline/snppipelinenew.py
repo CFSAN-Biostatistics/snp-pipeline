@@ -32,12 +32,15 @@ def pileup(filePath,opts):
         print('Removing old pileup file '+pileupFile)
         os.remove(pileupFile)
     
-    command_line = ('samtools mpileup -l ' + opts.mainPath + opts.snplistFileName +
+    command_line = (
+        'samtools mpileup -l ' + opts.mainPath + opts.snplistFileName +
         ' -f ' + opts.mainPath + opts.Reference + ' ' +opts.bamFileName +
-        ' > ' + opts.pileupFileName)
+        ' > ' + opts.pileupFileName
+    )
     print('Executing: '+command_line)
 
     os.system(command_line)  #TODO - replace with subprocess call at some point
+    #subprocess.call(command_line,cwd=filePath)  #TODO - need to make this work
 
     if not os.path.isfile(pileupFile):
         print('Pileup file not created: '+pileupFile)
