@@ -6,48 +6,10 @@ from optparse import OptionParser
 import os
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-import subprocess
 import imp
 from multiprocessing import Pool
-
-
-
 utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py')
 
-def pileup_wrapper(args):
-    "Wraps pileup to use multiple arguments with multiprocessing package."
-    print('got to pileup_wrapper')
-    #return('got here')
-    return pileup(*args)
-
-def pileup(filePath,opts):
-    """Run samtools to generate pileup.
-    Generate pileup files, using snplist file and the reference fasta file.
-    """
-    
-    os.chdir(filePath)
-    print('Generating pileup file '+opts.pileupFileName+ ' in '+filePath)
-    pileupFile = filePath + "/reads.pileup"
-    if os.path.isfile(pileupFile):
-        print('Removing old pileup file '+pileupFile)
-        os.remove(pileupFile)
-    
-    command_line = (
-        'samtools mpileup -l ' + opts.mainPath + opts.snplistFileName +
-        ' -f ' + opts.mainPath + opts.Reference + ' ' +opts.bamFileName +
-        ' > ' + opts.pileupFileName
-    )
-    print('Executing: '+command_line)
-
-    os.system(command_line)  #TODO - replace with subprocess call at some point
-    #subprocess.call(command_line,cwd=filePath)  #TODO - need to make this work
-
-    if not os.path.isfile(pileupFile):
-        print('Pileup file not created: '+pileupFile)
-    
-    print('pileup function exit')
-    
-    return(pileupFile)
 
 
 #==============================================================================
@@ -106,20 +68,18 @@ snplistHash = dict()
 #  Do this for each sample. 
 for pathFile_file_line in pathFile_file_object:
     filePath = pathFile_file_line[:-1]
-    dirName = filePath.split(os.sep)[-1]
-    vcfFile = open(filePath+ "/var.flt.vcf","r") 
-    while 1:
-        curVcfFileLine = vcfFile.readline()
-        if not curVcfFileLine:
-            break
+    dirName  = filePath.split(os.sep)[-1]
+
+    for line in open(filePath+ "/var.flt.vcf","r"):
+        curVcfFileLine=line.strip()
         if curVcfFileLine.startswith("#"):
             continue
-
+        print(curVcfFileLine)
         curLineData = curVcfFileLine.split()
         chrom = curLineData[0]
         pos = curLineData[1]
         info = curLineData[7]
-        if str("INDEL") in curLineData[7]:
+        if str("INDEL") in info:
             continue
         infoFields = info.split(";")
         dpFlag = False
@@ -140,7 +100,7 @@ for pathFile_file_line in pathFile_file_object:
                 record = snplistHash[chrom + "\t" + pos]
                 record[0] += 1
                 record.append(dirName)
-    vcfFile.close()
+#    vcfFile.close()
 pathFile_file_object.close()
     
 #write out list of snps for all samples to a single file        
@@ -166,7 +126,7 @@ parameter_list = zip(list_of_sample_directories,[opts,opts,opts,opts])
 #  until all the pileups are done (or bad things will happen in subsequent
 #  parts of the code).
 pool        = Pool(processes=opts.maxThread) # start pool
-result_many = pool.map(pileup_wrapper, parameter_list) #parallel
+result_many = pool.map(utilsnew.pileup_wrapper, parameter_list) #parallel
 #print result_many.get()
 
 print "all commands are finished"
@@ -183,7 +143,7 @@ while 1:
         break
 
     pileupFile = filePath + "/reads.pileup"
-    ###read in pileup file and store information to a hash
+    ###read in pileup file and store information to a dict
     positionValueHash = utilsnew.create_consensus_dict(pileupFile)
 
     ####append the nucleotide to the record

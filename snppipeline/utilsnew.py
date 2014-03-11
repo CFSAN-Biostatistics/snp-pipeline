@@ -2,6 +2,50 @@
 
 import re
 import operator
+import os
+#import subprocess
+
+
+def pileup_wrapper(args):
+    "Wraps pileup to use multiple arguments with multiprocessing package."
+    print('got to pileup_wrapper')
+    #return('got here')
+    return pileup(*args)
+
+def pileup(filePath,opts):
+    """Run samtools to generate pileup.
+    
+    Description:
+    Generate pileup files, using snplist file and the reference fasta file.
+    
+    Args:
+        filePath: Path   #TODO - finish
+        opts: Specified command-line options #TODO - finish
+    """
+    
+    os.chdir(filePath)
+    print('Generating pileup file '+opts.pileupFileName+ ' in '+filePath)
+    pileupFile = filePath + "/reads.pileup"
+    if os.path.isfile(pileupFile):
+        print('Removing old pileup file '+pileupFile)
+        os.remove(pileupFile)
+    
+    command_line = (
+        'samtools mpileup -l ' + opts.mainPath + opts.snplistFileName +
+        ' -f ' + opts.mainPath + opts.Reference + ' ' +opts.bamFileName +
+        ' > ' + opts.pileupFileName
+    )
+    print('Executing: '+command_line)
+
+    os.system(command_line)  #TODO - replace with subprocess call at some point
+    #subprocess.call(command_line,cwd=filePath)  #TODO - need to make this work
+
+    if not os.path.isfile(pileupFile):
+        print('Pileup file not created: '+pileupFile)
+    
+    print('pileup function exit')
+    
+    return(pileupFile)
 
 def get_consensus_base_from_pileup(base,length,data):
     """Call the base for each SNP position
