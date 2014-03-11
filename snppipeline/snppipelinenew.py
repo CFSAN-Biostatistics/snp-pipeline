@@ -7,18 +7,18 @@ import os
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import subprocess
-import threading
 import imp
+from multiprocessing import Pool
+
+
+
 utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py')
 
-class FuncThread(threading.Thread):
-    def __init__(self,target,*args):
-        self._target = target
-        self._args = args
-        threading.Thread.__init__(self)
-
-    def run(self):
-        self._target(*self._args)
+def pileup_wrapper(args):
+    "Wraps pileup to use multiple arguments with multiprocessing package."
+    print('got to pileup_wrapper')
+    #return('got here')
+    return pileup(*args)
 
 def pileup(filePath,opts):
     """Run samtools to generate pileup.
@@ -26,7 +26,6 @@ def pileup(filePath,opts):
     """
     
     os.chdir(filePath)
-
     print('Generating pileup file '+opts.pileupFileName+ ' in '+filePath)
     pileupFile = filePath + "/reads.pileup"
     if os.path.isfile(pileupFile):
@@ -44,6 +43,8 @@ def pileup(filePath,opts):
         print('Pileup file not created: '+pileupFile)
     
     print('pileup function exit')
+    
+    return(pileupFile)
 
 
 #==============================================================================
@@ -97,14 +98,12 @@ p.add_option ("-p","--pileupFileName",dest="pileupFileName",default="reads.pileu
 pathFile_file_object = open(opts.mainPath + opts.pathFileName, "r")
 snplistFile = open(opts.mainPath + opts.snplistFileName, "w")
 snplistHash = dict()
-print('snplistFile '+opts.mainPath + opts.snplistFileName)
 
 #read in all vcf files and process into list of SNPs passing various criteria.
 #  Do this for each sample. 
 for pathFile_file_line in pathFile_file_object:
     filePath = pathFile_file_line[:-1]
     dirName = filePath.split(os.sep)[-1]
-    print 'Here  ' + filePath+'  '+ dirName
     vcfFile = open(filePath+ "/var.flt.vcf","r") 
     while 1:
         curVcfFileLine = vcfFile.readline()
@@ -150,45 +149,30 @@ for key in sorted(snplistHash.iterkeys()):
     snplistFile.write("\n")
 snplistFile.close()
 
-
 #Generate Pileups of samples (in parallel)
 
-pathFile_file_object = open(opts.mainPath + opts.pathFileName, "r")
-snplistFilePath = opts.mainPath + opts.snplistFileName 
-fastaFile = open(opts.mainPath + opts.snpmaFileName, "w") 
+#get list of sample directories to run samtools pileup in
+list_of_sample_directories = [line.rstrip() for line in
+                                  open(opts.mainPath + opts.pathFileName, "r")]
+    
+#create a list of tuples containing values need for pileup code (as passed
+#  via pileup code wrapper)
+parameter_list = zip(list_of_sample_directories,[opts,opts,opts,opts])
 
-
-threads = []
-
-for pathFile_file_line in pathFile_file_object:
-    filePath = pathFile_file_line[:-1]
-    dirName = filePath.split(os.sep)[-1]
-
-    athread = FuncThread(pileup,filePath,opts)
-    threads.append(athread)
-    athread.start()
-
-    #print "current thread cnt="+str(threading.activeCount())
-    #while threading.activeCount() > opts.maxThread:
-    #    time.sleep(15)
-
-    cmdProcess = subprocess.Popen("ps -al | grep -c samtools", stdout=subprocess.PIPE, shell=True)
-    threadCnt = cmdProcess.communicate()[0]
-    print "current thread cnt="+threadCnt
-    #while int(threadCnt) > opts.maxThread:
-    #    time.sleep(15)
-    #    cmdProcess = subprocess.Popen("ps -al | grep -c samtools", stdout=subprocess.PIPE, shell=True)
-#	threadCnt = cmdProcess.communicate()[0]
-
-print "multi-thread loop end"
-
-for thread in threads:
-    thread.join()
+#the parallel bit. Note that we use map and not map_async so that we block
+#  until all the pileups are done (or bad things will happen in subsequent
+#  parts of the code).
+pool        = Pool(processes=opts.maxThread) # start pool
+result_many = pool.map(pileup_wrapper, parameter_list) #parallel
+#print result_many.get()
 
 print "all commands are finished"
 
+#Next stuff
+
+snplistFilePath = opts.mainPath + opts.snplistFileName 
 records = []
-pathFile_file_object.seek(0)
+pathFile_file_object = open(opts.mainPath + opts.pathFileName, "r")
 while 1:
     filePath = pathFile_file_object.readline()[:-1]
     dirName = filePath.split(os.sep)[-1]
@@ -227,5 +211,6 @@ while 1:
     snplistFile_r.close()
 
 ####write the records to fasta file           
+fastaFile = open(opts.mainPath + opts.snpmaFileName, "w") 
 SeqIO.write(records, fastaFile, "fasta")
 fastaFile.close()
