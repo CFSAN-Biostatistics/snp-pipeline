@@ -11,7 +11,6 @@ import threading
 import imp
 utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py')
 
-
 class FuncThread(threading.Thread):
     def __init__(self,target,*args):
         self._target = target
@@ -21,23 +20,30 @@ class FuncThread(threading.Thread):
     def run(self):
         self._target(*self._args)
 
-def pileup(filePath,snplistFilePath,dirName):
-    """Run samtools to generate pileup."""
-    ####generate pileup files, using snplist file and the reference fasta file.
+def pileup(filePath,opts):
+    """Run samtools to generate pileup.
+    Generate pileup files, using snplist file and the reference fasta file.
+    """
     
     os.chdir(filePath)
 
     print('Generating pileup file '+opts.pileupFileName+ ' in '+filePath)
     pileupFile = filePath + "/reads.pileup"
     if os.path.isfile(pileupFile):
+        print('Removing old pileup file '+pileupFile)
         os.remove(pileupFile)
+    
+    command_line = ('samtools mpileup -l ' + opts.mainPath + opts.snplistFileName +
+        ' -f ' + opts.mainPath + opts.Reference + ' ' +opts.bamFileName +
+        ' > ' + opts.pileupFileName)
+    print('Executing: '+command_line)
 
-    #subprocess.call("samtools mpileup -l " + opts.mainPath + opts.snplistFileName + " -f " + opts.mainPath + opts.Reference + " reads.bam > reads.pileup", shell=True)
-    os.system("samtools mpileup -l " + opts.mainPath + opts.snplistFileName + " -f " + opts.mainPath + opts.Reference + " " +opts.bamFileName +" > " + opts.pileupFileName)
+    os.system(command_line)  #TODO - replace with subprocess call at some point
 
     if not os.path.isfile(pileupFile):
-        print "pleup::tileup file not created: "+pileupFile
-    print "pileup function exit"
+        print('Pileup file not created: '+pileupFile)
+    
+    print('pileup function exit')
 
 
 #==============================================================================
@@ -151,16 +157,14 @@ pathFile_file_object = open(opts.mainPath + opts.pathFileName, "r")
 snplistFilePath = opts.mainPath + opts.snplistFileName 
 fastaFile = open(opts.mainPath + opts.snpmaFileName, "w") 
 
-records = []
+
 threads = []
 
 for pathFile_file_line in pathFile_file_object:
     filePath = pathFile_file_line[:-1]
     dirName = filePath.split(os.sep)[-1]
-    if not filePath:
-        break
 
-    athread = FuncThread(pileup,filePath,snplistFilePath,dirName)
+    athread = FuncThread(pileup,filePath,opts)
     threads.append(athread)
     athread.start()
 
@@ -183,6 +187,7 @@ for thread in threads:
 
 print "all commands are finished"
 
+records = []
 pathFile_file_object.seek(0)
 while 1:
     filePath = pathFile_file_object.readline()[:-1]
