@@ -22,9 +22,12 @@ class FuncThread(threading.Thread):
         self._target(*self._args)
 
 def pileup(filePath,snplistFilePath,dirName):
+    """Run samtools to generate pileup."""
+    ####generate pileup files, using snplist file and the reference fasta file.
+    
     os.chdir(filePath)
 
-    ####generate pileup files, using snplist file and the reference fasta file.
+    print('Generating pileup file '+opts.pileupFileName+ ' in '+filePath)
     pileupFile = filePath + "/reads.pileup"
     if os.path.isfile(pileupFile):
         os.remove(pileupFile)
@@ -35,6 +38,7 @@ def pileup(filePath,snplistFilePath,dirName):
     if not os.path.isfile(pileupFile):
         print "pleup::tileup file not created: "+pileupFile
     print "pileup function exit"
+
 
 #==============================================================================
 #     """Create SNP matrix
