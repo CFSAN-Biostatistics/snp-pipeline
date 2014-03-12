@@ -55,20 +55,6 @@ import utilsnew
 #    """
 #==============================================================================
 
-#### Command line usage
-#usage = "usage: %prog -n 15 -d /home/yan.luo/Desktop/ -f path.txt -r reference -l snplist.txt -a snpma.fasta -b reads.bam -p reads.pileup"
-
-#p = OptionParser(usage)
-#p.add_option ("-n","--cpu",dest="maxThread",type="int",default=15,help="Max count of cocurrent thread (default=15)")
-#p.add_option ("-d","--mainPath",dest="mainPath",default="/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/",help="Path for all files")
-#p.add_option ("-r","--Reference",dest="Reference",default="CFSAN001339_pacbio.fasta",help="reference for mapping")
-#p.add_option ("-f","--pathFileName",dest="pathFileName",default="path.txt",help="Path file name")
-#p.add_option ("-l","--snplistFileName",dest="snplistFileName",default="snplist.txt",help="Snplist file name")
-#p.add_option ("-a","--snpmaFileName",dest="snpmaFileName",default="snpma.fa",help="fasta file name")
-#p.add_option ("-b","--bamFileName",dest="bamFileName",default="reads.bam",help="bam file name")
-#p.add_option ("-p","--pileupFileName",dest="pileupFileName",default="reads.pileup",help="pileup file name")
-#(opts,args)=p.parse_args()
-
 def run_snp_pipeline(options_dict):
     
     pathFile_file_object = open(options_dict['mainPath'] + options_dict['pathFileName'], "r")
@@ -110,7 +96,7 @@ def run_snp_pipeline(options_dict):
                     record = snplistHash[chrom + "\t" + pos]
                     record[0] += 1
                     record.append(dirName)
-    #    vcfFile.close()
+    #    vcfFile.close()    #TODO - did this get closed or not?
     pathFile_file_object.close()
         
     #write out list of snps for all samples to a single file        
@@ -123,7 +109,9 @@ def run_snp_pipeline(options_dict):
         snplistFile.write("\n")
     snplistFile.close()
     
-    #Generate Pileups of samples (in parallel)
+    #==============================================================================
+    #   Generate Pileups of samples (in parallel)
+    #==============================================================================
     
     #get list of sample directories to run samtools pileup in
     list_of_sample_directories = [line.rstrip() for line in
@@ -141,18 +129,19 @@ def run_snp_pipeline(options_dict):
     result_many = pool.map(utilsnew.pileup_wrapper, parameter_list) #parallel
     #print result_many.get()
     
-    print "all commands are finished"
+    print "all pileups are finished"
     
-    #Create snp matrix
+    #==============================================================================
+    #   Create snp matrix
+    #==============================================================================
     
     snplistFilePath = options_dict['mainPath'] + options_dict['snplistFileName'] 
     records = []
     pathFile_file_object = open(options_dict['mainPath'] + options_dict['pathFileName'], "r")
-    while 1:
-        filePath = pathFile_file_object.readline()[:-1]
-        dirName = filePath.split(os.sep)[-1]
-        if not filePath:
-            break
+
+    for pathFile_file_line in pathFile_file_object:
+        filePath = pathFile_file_line[:-1]
+        dirName  = filePath.split(os.sep)[-1]
     
         pileupFile = filePath + "/reads.pileup"
         ###read in pileup file and store information to a dict
