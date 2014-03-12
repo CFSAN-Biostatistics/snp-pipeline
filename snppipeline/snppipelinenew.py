@@ -70,6 +70,7 @@ for pathFile_file_line in pathFile_file_object:
     filePath = pathFile_file_line[:-1]
     dirName  = filePath.split(os.sep)[-1]
 
+    #TODO - look at use of PyVCF to process vcf file
     for line in open(filePath+ "/var.flt.vcf","r"):
         curVcfFileLine=line.strip()
         if curVcfFileLine.startswith("#"):
@@ -120,7 +121,8 @@ list_of_sample_directories = [line.rstrip() for line in
     
 #create a list of tuples containing values need for pileup code (as passed
 #  via pileup code wrapper)
-parameter_list = zip(list_of_sample_directories,[opts,opts,opts,opts])
+parameter_list = zip(list_of_sample_directories,
+                     len(list_of_sample_directories)*[opts])
 
 #the parallel bit. Note that we use map and not map_async so that we block
 #  until all the pileups are done (or bad things will happen in subsequent
@@ -177,3 +179,29 @@ while 1:
 fastaFile = open(opts.mainPath + opts.snpmaFileName, "w") 
 SeqIO.write(records, fastaFile, "fasta")
 fastaFile.close()
+
+#==============================================================================
+# 
+#==============================================================================
+#if __name__=='__main__':
+#    parser = argparse.ArgumentParser(description='Run SNP pipeline.')
+#    parser.add_argument('-n', '--n-processes',type=int,
+#                        help='Max number of concurrent jobs.',default=1)
+#
+#    p = OptionParser(usage)
+#    p.add_argument ('-n','--cpu',dest='maxThread',type='int',default=15,help='Max count of cocurrent thread (default=15)')
+#    p.add_argument ('-d','--mainPath',dest='mainPath',default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/',help='Path for all files')
+#    p.add_argument ('-r','--Reference',dest='Reference',default='CFSAN001339_pacbio.fasta',help='reference for mapping')
+#    p.add_argument ('-f','--pathFileName',dest='pathFileName',default='path.txt',help='Path file name')
+#    p.add_argument ('-l','--snplistFileName',dest='snplistFileName',default='snplist.txt',help='Snplist file name')
+#    p.add_argument ('-a','--snpmaFileName',dest='snpmaFileName',default='snpma.fa',help='fasta file name')
+#    p.add_argument ('-b','--bamFileName',dest='bamFileName',default='reads.bam',help='bam file name')
+#    p.add_argument ('-p','--pileupFileName',dest='pileupFileName',default='reads.pileup',help='pileup file name')
+#    (opts,args)=p.parse_args()
+#    args = parser.parse_args()
+#    argsdict = vars(args)
+#    run_snp_pipeline(argsdict)
+#    
+#def run_snp_pipeline(argsdict):
+#    ...
+        
