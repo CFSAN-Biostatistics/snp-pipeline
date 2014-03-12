@@ -146,14 +146,15 @@ def run_snp_pipeline(options_dict):
         pileupFile = filePath + "/reads.pileup"
         ###read in pileup file and store information to a dict
         positionValueHash = utilsnew.create_consensus_dict(pileupFile)
-    
+        print(positionValueHash)
         ####append the nucleotide to the record
         snplistFile_r = open(snplistFilePath, "r")
-        snplistFile_r.seek(0)
+        #snplistFile_r.seek(0)
         i = 0
         seqString = ""
         while 1:
             curSnplistLine = snplistFile_r.readline()
+            print(curSnplistLine)
             if not curSnplistLine:
                 break
             i = i+1
