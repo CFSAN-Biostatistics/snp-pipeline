@@ -1,13 +1,10 @@
 #!/usr/bin/env python2.7
-#from var.flt.vcf to construct SNP position list; from reads.pileup to extract the nucleotide base at each SNP position for each sample to construct the SNP fasta file. Multiple threads.
 
 from Bio import SeqIO
 from optparse import OptionParser
 import os
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-#import imp
-#utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py') #TODO - fix this
 from multiprocessing import Pool
 import utilsnew
 
@@ -15,7 +12,10 @@ import utilsnew
 #     """Create SNP matrix
 #     
 #     Description:
-#     Create a SNP matrix based on #TODO - finish this    
+#     Create a SNP matrix. Use variant file var.flt.vcf to construct SNP
+#         position list. Use reads.pileup to extract the nucleotide base at
+#         each SNP position for each sample to construct the SNP fasta file.
+#         Pileups are run in parallel to speed the whole thing up.
 #     
 #     Args:
 #         maxThread: Max number of cocurrent threads (default=15)
@@ -25,11 +25,11 @@ import utilsnew
 #             mapping (no default)
 #         pathFileName: Name of file containing full paths to directories
 #             containing information for each sequence (default="path.txt").
-#         snplistFileName: Snplist file name (default="snplist.txt") #TODO: finish this one up
+#         snplistFileName: Snplist file name (default="snplist.txt") #TODO - finish this one up
 #         snpmaFileName: Name of file containing snp matrix in fasta format
 #             (default="snpma.fa"). Written to mainPath directory
 #        
-#         SNP matrix
+#         SNP matrix #TODO - finish this one
 #     
 #     Side effects:
 #
@@ -37,7 +37,7 @@ import utilsnew
 # 
 #     Note:
 #         (1)Each directory for each sequence is expected to have the following
-#            in it:
+#            in it:  #TODO - finish it
 #
 #     Examples:
 #         python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
@@ -60,7 +60,6 @@ p.add_option ("-p","--pileupFileName",dest="pileupFileName",default="reads.pileu
 
 
 pathFile_file_object = open(opts.mainPath + opts.pathFileName, "r")
-snplistFile = open(opts.mainPath + opts.snplistFileName, "w")
 snplistHash = dict()
 
 #read in all vcf files and process into list of SNPs passing various criteria.
@@ -74,11 +73,10 @@ for pathFile_file_line in pathFile_file_object:
         curVcfFileLine=line.strip()
         if curVcfFileLine.startswith("#"):
             continue
-        print(curVcfFileLine)
         curLineData = curVcfFileLine.split()
         chrom = curLineData[0]
-        pos = curLineData[1]
-        info = curLineData[7]
+        pos   = curLineData[1]
+        info  = curLineData[7]
         if str("INDEL") in info:
             continue
         infoFields = info.split(";")
@@ -90,7 +88,7 @@ for pathFile_file_line in pathFile_file_object:
                 dpFlag = True
             elif (infoPair[0] == "AF1" and infoPair[1] == "1" ) or (infoPair[0] == "AR" and infoPair[1] == "1.00"):
                 af1Flag = True
-  # find a good record fo SNP position, save data to hash
+        # find a good record fo SNP position, save data to hash
         if dpFlag and af1Flag:
             if not snplistHash.has_key(chrom + "\t" + pos):
                 record = [1]
@@ -104,6 +102,7 @@ for pathFile_file_line in pathFile_file_object:
 pathFile_file_object.close()
     
 #write out list of snps for all samples to a single file        
+snplistFile = open(opts.mainPath + opts.snplistFileName, "w")
 for key in sorted(snplistHash.iterkeys()):
     snplistFile.write(key)
     values = snplistHash[key]
