@@ -202,4 +202,13 @@ fastaFile.close()
 #    
 #def run_snp_pipeline(argsdict):
 #    ...
-#        
+#argsdics = {'maxThread':2,
+#            'mainPath':'',
+#            'Reference':'',
+#            'pathFileName':'path.txt',
+#            'snplistFileName':'snplist.txt',
+#            'snpmaFileName':'snpma.fa',
+#            'bamFileName':'reads.bam',
+#            'pileupFileName':'reads.pileup'
+#           }
+# 
