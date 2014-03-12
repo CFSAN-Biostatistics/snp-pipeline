@@ -6,11 +6,10 @@ from optparse import OptionParser
 import os
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-import imp
+#import imp
+#utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py') #TODO - fix this
 from multiprocessing import Pool
-utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py')
-
-
+import utilsnew
 
 #==============================================================================
 #     """Create SNP matrix
@@ -133,7 +132,7 @@ result_many = pool.map(utilsnew.pileup_wrapper, parameter_list) #parallel
 
 print "all commands are finished"
 
-#Next stuff
+#Create snp matrix
 
 snplistFilePath = opts.mainPath + opts.snplistFileName 
 records = []
@@ -181,7 +180,7 @@ SeqIO.write(records, fastaFile, "fasta")
 fastaFile.close()
 
 #==============================================================================
-# 
+# Command line driver
 #==============================================================================
 #if __name__=='__main__':
 #    parser = argparse.ArgumentParser(description='Run SNP pipeline.')
@@ -204,4 +203,4 @@ fastaFile.close()
 #    
 #def run_snp_pipeline(argsdict):
 #    ...
-        
+#        
