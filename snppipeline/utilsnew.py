@@ -12,7 +12,7 @@ def pileup_wrapper(args):
     #return('got here')
     return pileup(*args)
 
-def pileup(filePath,opts):
+def pileup(filePath,options_dict):
     """Run samtools to generate pileup.
     
     Description:
@@ -20,20 +20,20 @@ def pileup(filePath,opts):
     
     Args:
         filePath: Path   #TODO - finish
-        opts: Specified command-line options #TODO - finish
+        options_dict: Specified command-line options #TODO - finish
     """
     
     os.chdir(filePath)
-    print('Generating pileup file '+opts.pileupFileName+ ' in '+filePath)
+    print('Generating pileup file '+options_dict['pileupFileName']+ ' in '+filePath)
     pileupFile = filePath + "/reads.pileup"
     if os.path.isfile(pileupFile):
         print('Removing old pileup file '+pileupFile)
         os.remove(pileupFile)
     
     command_line = (
-        'samtools mpileup -l ' + opts.mainPath + opts.snplistFileName +
-        ' -f ' + opts.mainPath + opts.Reference + ' ' +opts.bamFileName +
-        ' > ' + opts.pileupFileName
+        'samtools mpileup -l ' + options_dict['mainPath'] + options_dict['snplistFileName'] +
+        ' -f ' + options_dict['mainPath'] + options_dict['Reference'] + ' ' +options_dict['bamFileName'] +
+        ' > ' + options_dict['pileupFileName']
     )
     print('Executing: '+command_line)
 
