@@ -70,7 +70,6 @@ def run_snp_pipeline(options_dict):
     #==========================================================================
     snplistHash = dict()
     
-    print(options_dict['mainPath'] + options_dict['pathFileName'])
     for filePath in list_of_sample_directories:
         dirName  = filePath.split(os.sep)[-1]
     
@@ -106,7 +105,9 @@ def run_snp_pipeline(options_dict):
                     record.append(dirName)
     #    vcfFile.close()    #TODO - did this get closed or not?
         
-    #write out list of snps for all samples to a single file        
+    #==========================================================================
+    #     write out list of snps for all samples to a single file.
+    #==========================================================================
     snplistFile = open(options_dict['mainPath'] + options_dict['snplistFileName'], "w")
     for key in sorted(snplistHash.iterkeys()):
         snplistFile.write(key)
@@ -150,6 +151,7 @@ def run_snp_pipeline(options_dict):
 
         ####append the nucleotide to the record
         seqString = ""
+        print("Processing "+snplistFilePath)
         with open(snplistFilePath,'r') as snplist_file_object:
             for curSnplistLine in snplist_file_object:
                 curSnplistData = curSnplistLine.split()
@@ -163,6 +165,17 @@ def run_snp_pipeline(options_dict):
                     seqString += positionValueHash[chrom + ":" + pos]
                 else:
                     seqString += "-"
+        print(seqString)
+# TODO - candidate replacement code for above
+#        seqString = ""
+#        for key in sorted(snplistHash.iterkeys()):  #ToDo - Why is sorting what we want to do?
+#            chrom,pos   = key.split()
+#            if positionValueHash.has_key(chrom + ":" + pos):
+#                seqString += positionValueHash[chrom + ":" + pos]
+#            else:
+#                seqString += "-"
+#        print(seqString)
+
         seq = Seq(seqString)
         seqRecord = SeqRecord(seq,id=dirName)
         records.append(seqRecord)
