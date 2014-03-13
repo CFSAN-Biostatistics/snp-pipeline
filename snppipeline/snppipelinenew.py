@@ -103,7 +103,6 @@ def run_snp_pipeline(options_dict):
                     record = snplistHash[chrom + "\t" + pos]
                     record[0] += 1
                     record.append(dirName)
-    #    vcfFile.close()    #TODO - did this get closed or not?
         
     #==========================================================================
     #     write out list of snps for all samples to a single file.
@@ -166,7 +165,7 @@ def run_snp_pipeline(options_dict):
                 else:
                     seqString += "-"
         print(seqString)
-# TODO - candidate replacement code for above
+# TODO - candidate replacement code for above code
 #        seqString = ""
 #        for key in sorted(snplistHash.iterkeys()):  #ToDo - Why is sorting what we want to do?
 #            chrom,pos   = key.split()

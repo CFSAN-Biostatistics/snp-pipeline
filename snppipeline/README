@@ -13,3 +13,48 @@ Notes:
   2. python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
 20130310-har: As well, to run with Yan's new code with simple virus example, do:
   2. python 4snplist_matrix_P_02262014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
+20140313-har: Jamie found a problem comparing the current code to the old code. I think
+  this is not picked up in the current test becuase there are no gaps in it and the
+  problem is with the handling of gaps. Currently, I can compare the following runs
+  and get different results:
+    ./snppipelinenew.py -n 10 -d /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/ -f pathsToBamYanForHugh.txt -r NC_011149.fasta -l Agona_127_SNPlistYan -a Agona_127_SNPmaYanWithHughCode.fa
+    python 4snplist_matrix_P_02262014.py -n 10 -d /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/ -f pathsToBamYanForHugh.txt -r NC_011149.fasta -l Agona_127_SNPlistYan -a Agona_127_SNPmaYanWithYanCode.fa
+    diff /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithHughCode.fa /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithYanCode.fa
+  These runs take too long, so I need to make a shorter test case and try it. Make file
+  with fewer samples:
+    /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/pathsToBamYanForHughShort.txt
+  Try running this one:
+    ./snppipelinenew.py -n 1 -d /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/ -f pathsToBamYanForHughShort.txt -r NC_011149.fasta -l Agona_127_SNPlistYan -a Agona_127_SNPmaYanWithHughCodeShort.fa
+    python 4snplist_matrix_P_02262014.py -n 10 -d /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/ -f pathsToBamYanForHughShort.txt -r NC_011149.fasta -l Agona_127_SNPlistYan -a Agona_127_SNPmaYanWithYanCodeShort.fa
+    diff /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithHughCodeShort.fa /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithYanCodeShort.fa
+  Hmm... With this shorter case, I don't get a difference. Time to look more carefully
+    at the differences.
+  Having looked at the differences, it is not just gaps. Hmm... Not too clear
+    what the problem is.
+20140313-har: Let's think about this.
+  Each run of the code produces:
+    1. List of SNPs for all samples (the -l flag argument).
+    2. A fasta file of the SNPs.
+  We now have 4 runs (my code vs. yan, full vs. short case). How do these files compare? Well,
+    first let us make a list of them:
+      List of SNPs file         
+        my code   short           Agona_127_SNPlistYanFullHughShort
+        yan       short           Agona_127_SNPlistYanFullShort
+        my code   full            Agona_127_SNPlistYanFullHugh
+        yan       full            Agona_127_SNPlistYanFull
+      Fasta file
+        my code   short           Agona_127_SNPmaYanWithHughCodeShort.fa
+        yan       short           Agona_127_SNPmaYanWithYanCodeShort.fa
+        my code   full            Agona_127_SNPmaYanWithHughCode.fa
+        yan       full            Agona_127_SNPmaYanWithYanCode.fa
+  We didn't keep all these, so time to re-run and create them.
+    ./snppipelinenew.py -n 14 -d /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/ -f pathsToBamYanForHughShort.txt -r NC_011149.fasta -l Agona_127_SNPlistYanFullHughShort -a Agona_127_SNPmaYanWithHughCodeShort.fa
+    python 4snplist_matrix_P_02262014.py -n 14 -d /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/ -f pathsToBamYanForHughShort.txt -r NC_011149.fasta -l Agona_127_SNPlistYanFullShort -a Agona_127_SNPmaYanWithYanCodeShort.fa
+    ./snppipelinenew.py -n 14 -d /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/ -f pathsToBamYanForHugh.txt -r NC_011149.fasta -l Agona_127_SNPlistYanFullHugh -a Agona_127_SNPmaYanWithHughCode.fa
+    python 4snplist_matrix_P_02262014.py -n 14 -d /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/ -f pathsToBamYanForHugh.txt -r NC_011149.fasta -l Agona_127_SNPlistYanFull -a Agona_127_SNPmaYanWithYanCode.fa
+  Compare files with:
+    diff /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPlistYanFullHughShort /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPlistYanFullShort
+    diff /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithHughCodeShort.fa /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithYanCodeShort.fa
+    diff /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPlistYanFullHugh /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPlistYanFull
+    diff /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithHughCode.fa /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithYanCode.fa
+ 
