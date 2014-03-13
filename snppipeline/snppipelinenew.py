@@ -59,6 +59,10 @@ def run_snp_pipeline(options_dict):
     #Prep work     
     #==========================================================================
 
+    list_of_sample_directories = [line.rstrip() for line in
+                                      open(options_dict['mainPath'] + options_dict['pathFileName'], "r")]
+    #remove any blank rows that were read in
+    list_of_sample_directories = filter(None,list_of_sample_directories)
 
     #==========================================================================
     #read in all vcf files and process into list of SNPs passing various
@@ -67,46 +71,39 @@ def run_snp_pipeline(options_dict):
     snplistHash = dict()
     
     print(options_dict['mainPath'] + options_dict['pathFileName'])
-    with open(options_dict['mainPath'] + options_dict['pathFileName'],'r') as pathFile_file_object:
-        for pathFile_file_line in pathFile_file_object:
-            if len(pathFile_file_line)==0: #skip blank lines
+    for filePath in list_of_sample_directories:
+        dirName  = filePath.split(os.sep)[-1]
+    
+        #TODO - look at use of PyVCF to process vcf file
+        for line in open(filePath+ "/var.flt.vcf","r"):
+            curVcfFileLine=line.strip()
+            if curVcfFileLine.startswith("#"):
                 continue
-            print('HERE'+pathFile_file_line)
-            filePath = pathFile_file_line[:-1]
-            dirName  = filePath.split(os.sep)[-1]
-            print('filePath '+filePath)
-            print('dirName '+dirName)
-        
-            #TODO - look at use of PyVCF to process vcf file
-            for line in open(filePath+ "/var.flt.vcf","r"):
-                curVcfFileLine=line.strip()
-                if curVcfFileLine.startswith("#"):
-                    continue
-                curLineData = curVcfFileLine.split()
-                chrom = curLineData[0]
-                pos   = curLineData[1]
-                info  = curLineData[7]
-                if str("INDEL") in info:
-                    continue
-                infoFields = info.split(";")
-                dpFlag = False
-                af1Flag = False
-                for infoField in infoFields:
-                    infoPair = infoField.split("=")
-                    if infoPair[0] == "DP" and int(infoPair[1]) >= 10:
-                        dpFlag = True
-                    elif (infoPair[0] == "AF1" and infoPair[1] == "1" ) or (infoPair[0] == "AR" and infoPair[1] == "1.00"):
-                        af1Flag = True
-                # find a good record fo SNP position, save data to hash
-                if dpFlag and af1Flag:
-                    if not snplistHash.has_key(chrom + "\t" + pos):
-                        record = [1]
-                        record.append(dirName)
-                        snplistHash[chrom + "\t" + pos] = record
-                    else:
-                        record = snplistHash[chrom + "\t" + pos]
-                        record[0] += 1
-                        record.append(dirName)
+            curLineData = curVcfFileLine.split()
+            chrom = curLineData[0]
+            pos   = curLineData[1]
+            info  = curLineData[7]
+            if str("INDEL") in info:
+                continue
+            infoFields = info.split(";")
+            dpFlag = False
+            af1Flag = False
+            for infoField in infoFields:
+                infoPair = infoField.split("=")
+                if infoPair[0] == "DP" and int(infoPair[1]) >= 10:
+                    dpFlag = True
+                elif (infoPair[0] == "AF1" and infoPair[1] == "1" ) or (infoPair[0] == "AR" and infoPair[1] == "1.00"):
+                    af1Flag = True
+            # find a good record fo SNP position, save data to hash
+            if dpFlag and af1Flag:
+                if not snplistHash.has_key(chrom + "\t" + pos):
+                    record = [1]
+                    record.append(dirName)
+                    snplistHash[chrom + "\t" + pos] = record
+                else:
+                    record = snplistHash[chrom + "\t" + pos]
+                    record[0] += 1
+                    record.append(dirName)
     #    vcfFile.close()    #TODO - did this get closed or not?
         
     #write out list of snps for all samples to a single file        
@@ -123,9 +120,6 @@ def run_snp_pipeline(options_dict):
     #   Generate Pileups of samples (in parallel)
     #==========================================================================
     
-    #get list of sample directories to run samtools pileup in
-    list_of_sample_directories = [line.rstrip() for line in
-                                      open(options_dict['mainPath'] + options_dict['pathFileName'], "r")]
     #create a list of tuples containing values need for pileup code (as passed
     #  via pileup code wrapper)
     parameter_list = zip(list_of_sample_directories,
@@ -146,19 +140,15 @@ def run_snp_pipeline(options_dict):
     
     snplistFilePath = options_dict['mainPath'] + options_dict['snplistFileName'] 
     records = []
-    pathFile_file_object = open(options_dict['mainPath'] + options_dict['pathFileName'], "r")
 
-    for pathFile_file_line in pathFile_file_object:
-        filePath = pathFile_file_line[:-1]
-        dirName  = filePath.split(os.sep)[-1]
-        print('filePath '+filePath)
-        print('dirName '+dirName)
-    
+    for filePath in list_of_sample_directories:
+        dirName    = filePath.split(os.sep)[-1]
         pileupFile = filePath + "/reads.pileup"
+
         ###read in pileup file and store information to a dict
         positionValueHash = utilsnew.create_consensus_dict(pileupFile)
-        ####append the nucleotide to the record
 
+        ####append the nucleotide to the record
         seqString = ""
         with open(snplistFilePath,'r') as snplist_file_object:
             for curSnplistLine in snplist_file_object:
