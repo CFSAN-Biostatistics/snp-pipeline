@@ -55,17 +55,27 @@ import utilsnew
 #==============================================================================
 
 def run_snp_pipeline(options_dict):
-    
+    #==========================================================================
+    #Prep work     
+    #==========================================================================
+
+
+    #==========================================================================
+    #read in all vcf files and process into list of SNPs passing various
+    #  criteria. Do this for each sample.
+    #==========================================================================
     snplistHash = dict()
     
-    #read in all vcf files and process into list of SNPs passing various criteria.
-    #  Do this for each sample.
-    
+    print(options_dict['mainPath'] + options_dict['pathFileName'])
     with open(options_dict['mainPath'] + options_dict['pathFileName'],'r') as pathFile_file_object:
         for pathFile_file_line in pathFile_file_object:
+            if len(pathFile_file_line)==0: #skip blank lines
+                continue
             print('HERE'+pathFile_file_line)
             filePath = pathFile_file_line[:-1]
             dirName  = filePath.split(os.sep)[-1]
+            print('filePath '+filePath)
+            print('dirName '+dirName)
         
             #TODO - look at use of PyVCF to process vcf file
             for line in open(filePath+ "/var.flt.vcf","r"):
@@ -116,7 +126,6 @@ def run_snp_pipeline(options_dict):
     #get list of sample directories to run samtools pileup in
     list_of_sample_directories = [line.rstrip() for line in
                                       open(options_dict['mainPath'] + options_dict['pathFileName'], "r")]
-        
     #create a list of tuples containing values need for pileup code (as passed
     #  via pileup code wrapper)
     parameter_list = zip(list_of_sample_directories,
@@ -142,6 +151,8 @@ def run_snp_pipeline(options_dict):
     for pathFile_file_line in pathFile_file_object:
         filePath = pathFile_file_line[:-1]
         dirName  = filePath.split(os.sep)[-1]
+        print('filePath '+filePath)
+        print('dirName '+dirName)
     
         pileupFile = filePath + "/reads.pileup"
         ###read in pileup file and store information to a dict

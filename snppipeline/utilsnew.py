@@ -8,8 +8,6 @@ import os
 
 def pileup_wrapper(args):
     "Wraps pileup to use multiple arguments with multiprocessing package."
-    print('got to pileup_wrapper')
-    #return('got here')
     return pileup(*args)
 
 def pileup(filePath,options_dict):
@@ -31,9 +29,12 @@ def pileup(filePath,options_dict):
         os.remove(pileupFile)
     
     command_line = (
-        'samtools mpileup -l ' + options_dict['mainPath'] + options_dict['snplistFileName'] +
-        ' -f ' + options_dict['mainPath'] + options_dict['Reference'] + ' ' +options_dict['bamFileName'] +
-        ' > ' + options_dict['pileupFileName']
+        'samtools mpileup -l ' +
+            options_dict['mainPath'] + options_dict['snplistFileName'] +
+            ' -f ' + options_dict['mainPath'] +
+            options_dict['Reference'] + ' ' +
+            options_dict['bamFileName'] +
+            ' > ' + options_dict['pileupFileName']
     )
     print('Executing: '+command_line)
 
