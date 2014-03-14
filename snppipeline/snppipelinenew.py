@@ -149,31 +149,31 @@ def run_snp_pipeline(options_dict):
         positionValueHash = utilsnew.create_consensus_dict(pileupFile)
 
         ####append the nucleotide to the record
-        seqString = ""
-        print("Processing "+snplistFilePath)
-        with open(snplistFilePath,'r') as snplist_file_object:
-            for curSnplistLine in snplist_file_object:
-                curSnplistData = curSnplistLine.split()
-                if  len(curSnplistData) <2:
-                    print('snplistfile: bad line: '+curSnplistLine)
-                    continue
-                chrom = curSnplistData[0]
-                pos   = curSnplistData[1]
-        
-                if positionValueHash.has_key(chrom + ":" + pos):
-                    seqString += positionValueHash[chrom + ":" + pos]
-                else:
-                    seqString += "-"
-        print(seqString)
-# TODO - candidate replacement code for above code
 #        seqString = ""
-#        for key in sorted(snplistHash.iterkeys()):  #ToDo - Why is sorting what we want to do?
-#            chrom,pos   = key.split()
-#            if positionValueHash.has_key(chrom + ":" + pos):
-#                seqString += positionValueHash[chrom + ":" + pos]
-#            else:
-#                seqString += "-"
+#        print("Processing "+snplistFilePath)
+#        with open(snplistFilePath,'r') as snplist_file_object:
+#            for curSnplistLine in snplist_file_object:
+#                curSnplistData = curSnplistLine.split()
+#                if  len(curSnplistData) <2:
+#                    print('snplistfile: bad line: '+curSnplistLine)
+#                    continue
+#                chrom = curSnplistData[0]
+#                pos   = curSnplistData[1]
+#        
+#                if positionValueHash.has_key(chrom + ":" + pos):
+#                    seqString += positionValueHash[chrom + ":" + pos]
+#                else:
+#                    seqString += "-"
 #        print(seqString)
+# TODO - candidate replacement code for above code
+        seqString = ""
+        for key in sorted(snplistHash.iterkeys()):  #ToDo - Why is sorting what we want to do?
+            chrom,pos   = key.split()
+            if positionValueHash.has_key(chrom + ":" + pos):
+                seqString += positionValueHash[chrom + ":" + pos]
+            else:
+                seqString += "-"
+        print(seqString)
 
         seq = Seq(seqString)
         seqRecord = SeqRecord(seq,id=dirName)

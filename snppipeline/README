@@ -57,4 +57,49 @@ Notes:
     diff /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithHughCodeShort.fa /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithYanCodeShort.fa
     diff /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPlistYanFullHugh /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPlistYanFull
     diff /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithHughCode.fa /home/hugh.rand/mnt/gnome3/Papers/AgonaMOM/ReferenceBased/Agona_127_SNPmaYanWithYanCode.fa
- 
+20140314-har: Starting to move to a more careful check of new code runs. Remember that a run
+  of old code is done by:
+    python 4snplist_matrix_P_02262014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
+  This then produces the following files:
+     ../test/testForOriginalCode/snplist.txt
+     ../test/testForOriginalCode/snpma.fasta
+     ../test/testForOriginalCode/sample1/reads.pileup
+     ../test/testForOriginalCode/sample2/reads.pileup
+     ../test/testForOriginalCode/sample3/reads.pileup
+     ../test/testForOriginalCode/sample4/reads.pileup
+  We want to check that these are the same with each new run. The least elegant way to do this
+  might be to copy the files to a directory:
+    ../test/codeComparisonFiles
+  Then, when we run the code:
+    ./snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
+  Do a set of diffs each time we run the code:
+     diff ../test/testForOriginalCode/snplist.txt ../test/codeComparisonFiles/snplist.txt
+     diff ../test/testForOriginalCode/snpma.fasta ../test/codeComparisonFiles/snpma.fasta
+     diff ../test/testForOriginalCode/sample1/reads.pileup ../test/codeComparisonFiles/sample1/reads.pileup
+     diff ../test/testForOriginalCode/sample2/reads.pileup ../test/codeComparisonFiles/sample2/reads.pileup
+     diff ../test/testForOriginalCode/sample3/reads.pileup ../test/codeComparisonFiles/sample3/reads.pileup
+     diff ../test/testForOriginalCode/sample4/reads.pileup ../test/codeComparisonFiles/sample4/reads.pileup
+  Also built another test case from five Agona samples
+    python 4snplist_matrix_P_02262014.py -n 10 -d ~/projects/snppipeline/test/testAgonaMOM/ -f path.txt -r NC_011149.fasta -l snplist.txt -a snpma.fasta
+  And restructured the data for test comparisons. Thus, when we need to run the test:
+    #run two tests
+    ./snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
+    ./snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testAgonaMOM/        -f path.txt -r NC_011149.fasta -l snplist.txt -a snpma.fasta
+    
+    #diff on first test
+    diff ../test/testForOriginalCode/snplist.txt ../test/codeComparisonFiles/testForOriginalCode/snplist.txt
+    diff ../test/testForOriginalCode/snpma.fasta ../test/codeComparisonFiles/testForOriginalCode/snpma.fasta
+    diff ../test/testForOriginalCode/sample1/reads.pileup ../test/codeComparisonFiles/testForOriginalCode/sample1/reads.pileup
+    diff ../test/testForOriginalCode/sample2/reads.pileup ../test/codeComparisonFiles/testForOriginalCode/sample2/reads.pileup
+    diff ../test/testForOriginalCode/sample3/reads.pileup ../test/codeComparisonFiles/testForOriginalCode/sample3/reads.pileup
+    diff ../test/testForOriginalCode/sample4/reads.pileup ../test/codeComparisonFiles/testForOriginalCode/sample4/reads.pileup
+
+    #diff on second test
+    diff ../test/testAgonaMOM/snplist.txt ../test/codeComparisonFiles/testAgonaMOM/snplist.txt
+    diff ../test/testAgonaMOM/snpma.fasta ../test/codeComparisonFiles/testAgonaMOM/snpma.fasta
+    diff ../test/testAgonaMOM/samples/CFSAN_genomes/CFSAN000448/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/CFSAN_genomes/CFSAN000448/reads.pileup
+    diff ../test/testAgonaMOM/samples/CFSAN_genomes/CFSAN000449/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/CFSAN_genomes/CFSAN000449/reads.pileup
+    diff ../test/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup
+    diff ../test/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup
+
+
