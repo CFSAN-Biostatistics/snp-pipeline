@@ -102,4 +102,26 @@ Notes:
     diff ../test/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup
     diff ../test/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup
 
+20140317-har:Restructured the data for test comparisons. Thus, when we need to run the test:
+
+    #run two tests
+    ./snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
+    ./snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testAgonaMOM/        -f path.txt -r NC_011149.fasta -l snplist.txt -a snpma.fasta
+    
+    #diff on first test
+    diff ../test/testLambdaVirus/snplist.txt ../test/codeComparisonFiles/testLambdaVirus/snplist.txt
+    diff ../test/testLambdaVirus/snpma.fasta ../test/codeComparisonFiles/testLambdaVirus/snpma.fasta
+    diff ../test/testLambdaVirus/sample1/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample1/reads.pileup
+    diff ../test/testLambdaVirus/sample2/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample2/reads.pileup
+    diff ../test/testLambdaVirus/sample3/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample3/reads.pileup
+    diff ../test/testLambdaVirus/sample4/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample4/reads.pileup
+
+    #diff on second test
+    diff ../test/testAgonaMOM/snplist.txt ../test/codeComparisonFiles/testAgonaMOM/snplist.txt
+    diff ../test/testAgonaMOM/snpma.fasta ../test/codeComparisonFiles/testAgonaMOM/snpma.fasta
+    diff ../test/testAgonaMOM/samples/CFSAN_genomes/CFSAN000448/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/CFSAN_genomes/CFSAN000448/reads.pileup
+    diff ../test/testAgonaMOM/samples/CFSAN_genomes/CFSAN000449/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/CFSAN_genomes/CFSAN000449/reads.pileup
+    diff ../test/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup
+    diff ../test/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup
+
 
