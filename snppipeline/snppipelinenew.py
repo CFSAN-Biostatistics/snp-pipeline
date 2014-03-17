@@ -26,14 +26,16 @@ def run_snp_pipeline(options_dict):
                 sample_name_one/reads.pileup (*)
                 sample_name_one/var.flt.vcf
   
-   The files are used as follows:
+    The files are used as follows:
         1. Use variant file var.flt.vcf to construct SNP position list. 
         2. Use reads.pileup to extract the nucleotide base at each SNP position
             for each sample to construct the SNP fasta file.
     Note that pileups are run in parallel to speed the whole thing up.
-     
+    
+    #TODO - discuss how the vcf files might be created.    
+    
     Args:
-        maxThread: (15) Max number of cocurrent threads (default=15)
+        maxThread: (15) Max number of cocurrent threads.
         mainPath:  (no default) Directory containing all input files. Output
             files will also be written here.
         Reference: (no default) File name for reference sequence (in fasta
@@ -66,6 +68,8 @@ def run_snp_pipeline(options_dict):
     #==========================================================================
     #Prep work     
     #==========================================================================
+    verbose = False
+    verbose_print = print if verbose else lambda *a, **k: None
 
     list_of_sample_directories = [line.rstrip() for line in
                                       open(options_dict['mainPath'] + options_dict['pathFileName'], "r")]
@@ -149,11 +153,12 @@ def run_snp_pipeline(options_dict):
     #Parallel pileups. Note that we use map and not map_async so that we block
     #  until all the pileups are done (or bad things will happen in subsequent
     #  parts of the code).
+    verbose_print("Starting Pileups.")
     pool        = Pool(processes=options_dict['maxThread']) # start pool
     result_many = pool.map(utilsnew.pileup_wrapper, parameter_list) #parallel
     
-    #print(result_many.get())
-    print("Pileups are finished.")
+    #verbose_print(result_many.get())
+    verbose_print("Pileups are finished.")
     
     #==========================================================================
     #   Create snp matrix
@@ -189,17 +194,17 @@ def run_snp_pipeline(options_dict):
 if __name__=='__main__':
 
     parser = argparse.ArgumentParser(description='Run SNP pipeline.')
-    parser.add_argument('-n','--n-processes',      dest='maxThread',type=int,default=4,help='Max number of concurrent jobs.')
-    parser.add_argument('-d','--mainPath',         dest='mainPath', type=str,default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/',help='Path for all files')
-    parser.add_argument('-r','--Reference',        dest='Reference',type=str,default='reference.fasta',help='reference for mapping')
-    parser.add_argument('-f','--pathFileName',     dest='pathFileName',type=str,default='path.txt',help='Path file name')
-    parser.add_argument('-l','--snplistFileName',  dest='snplistFileName',type=str,default='snplist.txt',help='Snplist file name')
-    parser.add_argument('-a','--snpmaFileName',    dest='snpmaFileName',type=str,default='snpma.fa',help='fasta file name')
-    parser.add_argument('-b','--bamFileName',      dest='bamFileName',type=str,default='reads.bam',help='bam file name')
-    parser.add_argument('-p','--pileupFileName',   dest='pileupFileName',type=str,default='reads.pileup',help='pileup file name')
-    parser.add_argument('-v','--verbose',          dest='verbose',       type=int,default=1,help='Verbose flag (0=no info, 5=lots')
+    parser.add_argument('-n','--n-processes',      dest='maxThread',       type=int,default=4,help='Max number of concurrent jobs.')
+    parser.add_argument('-d','--mainPath',         dest='mainPath',        type=str,default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/',help='Path for all files')
+    parser.add_argument('-r','--Reference',        dest='Reference',       type=str,default='reference.fasta',help='reference for mapping')
+    parser.add_argument('-f','--pathFileName',     dest='pathFileName',    type=str,default='path.txt',help='Path file name')
+    parser.add_argument('-l','--snplistFileName',  dest='snplistFileName', type=str,default='snplist.txt',help='Snplist file name')
+    parser.add_argument('-a','--snpmaFileName',    dest='snpmaFileName',   type=str,default='snpma.fa',help='fasta file name')
+    parser.add_argument('-b','--bamFileName',      dest='bamFileName',     type=str,default='reads.bam',help='bam file name')
+    parser.add_argument('-p','--pileupFileName',   dest='pileupFileName',  type=str,default='reads.pileup',help='pileup file name')
+    parser.add_argument('-v','--verbose',          dest='verbose',         type=int,default=1,help='Verbose flag (0=no info, 5=lots')
     parser.add_argument('-i','--includeReference', dest='includeReference',type=bool,default=False,help='include reference sequence in SNP matrix.')
-    parser.add_argument('-o','--useOldPileups',    dest='useOldPileups',type=bool,default=False,help='Use available pileup files.')
+    parser.add_argument('-o','--useOldPileups',    dest='useOldPileups',   type=bool,default=False,help='Use available pileup files.')
     args = parser.parse_args()
     argsdict = vars(args)
 

@@ -21,15 +21,17 @@ def pileup(filePath,options_dict):
         filePath: Path   #TODO - finish
         options_dict: Specified command-line options #TODO - finish
     """
+    verbose = False
+    verbose_print = print if verbose else lambda *a, **k: None
     
     os.chdir(filePath)
-    print('Generating pileup file '+options_dict['pileupFileName']+ ' in '+filePath)
+    verbose_print('Generating pileup file '+options_dict['pileupFileName']+ ' in '+filePath)
     pileup_file  = filePath + "/reads.pileup"
     snplist_file = options_dict['mainPath'] + options_dict['snplistFileName']
     
     #TODO - allow for reading of already done pileup?
     if os.path.isfile(pileup_file):
-        print('Removing old pileup file '+pileup_file)
+        verbose_print('Removing old pileup file '+pileup_file)
         os.remove(pileup_file)
     
     command_line = (
@@ -40,15 +42,15 @@ def pileup(filePath,options_dict):
             options_dict['bamFileName'] +
             ' > ' + options_dict['pileupFileName']
     )
-    print('Executing: '+command_line)
-
-    os.system(command_line)  #TODO - replace with subprocess call at some point
+    verbose_print('Executing: '+command_line)
+    
+    return_code = os.system(command_line)  #TODO - replace with subprocess call at some point
     #subprocess.call(command_line,cwd=filePath)  #TODO - need to make this work
 
     if not os.path.isfile(pileup_file):
         print('Pileup file not created: '+pileup_file)
     
-    print('pileup function exit')
+    verbose_print('pileup function exit')
     
     return(pileup_file)
 
