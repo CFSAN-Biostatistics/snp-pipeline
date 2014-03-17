@@ -8,63 +8,59 @@ import os
 from multiprocessing import Pool
 import utilsnew
 
-#==============================================================================
-#     """Create SNP matrix
-#     
-#    Description:
-#    Create a SNP matrix. This function expects or creates ('*') the following
-#        files arranged in the following way:
-#            snplist.txt
-#            reference.fasta
-#            path.txt
-#            samples/sample_name_one/reads.pileup
-#            samples/sample_name_one/var.flt.vcf
-#               ...
-#            snplist.txt
-#            snpma.fasta
-#    The files are used as follows. Use variant file var.flt.vcf to construct
-#        SNP position list. Use reads.pileup to extract the nucleotide base at
-#         each SNP position for each sample to construct the SNP fasta file.
-#    Note that pileups are run in parallel to speed the whole thing up.
-#     
-#     Args:
-#         maxThread: Max number of cocurrent threads (default=15)
-#         mainPath:  Directory containing all input files (no default). Output
-#             files will also be written here.
-#         Reference: File name for reference sequence (in fasta format) for
-#             mapping (no default)
-#         pathFileName: Name of file containing full paths to directories
-#             containing information for each sequence (default="path.txt").
-#         snplistFileName: Snplist file name (default="snplist.txt") #TODO - finish this one up
-#         snpmaFileName: Name of file containing snp matrix in fasta format
-#             (default="snpma.fa"). Written to mainPath directory
-#        
-#         SNP matrix #TODO - finish this one
-#     
-#     Side effects:
-#
-#     Raises:
-# 
-#     Note:
-#         (1)Each directory for each sequence is expected to have the following
-#            in it:  #TODO - finish it
-#
-#     Examples:
-#         python 4snplist_matrix_P_01022014.py -n 10 -d ~/projects/snppipeline/test/testForOriginalCode/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
-# args_dict = {'maxThread':2,
-#             'mainPath':'',
-#             'Reference':'',
-#             'pathFileName':'path.txt',
-#             'snplistFileName':'snplist.txt',
-#             'snpmaFileName':'snpma.fa',
-#             'bamFileName':'reads.bam',
-#             'pileupFileName':'reads.pileup'
-#            }
-# run_snp_pipeline(options_dict) 
-#    """
-#==============================================================================
-
 def run_snp_pipeline(options_dict):
+    """Create SNP matrix
+     
+    Description:
+    Create a SNP matrix. This function expects or creates '(*)' the following
+        files arranged in the following way:
+            mainPath            
+                snplist.txt
+                reference.fasta
+                path.txt
+                snplist.txt (*)
+                snpma.fasta (*)
+            samples
+                sample_name_one/reads.pileup (*)
+                sample_name_one/var.flt.vcf
+  
+   The files are used as follows:
+        1. Use variant file var.flt.vcf to construct SNP position list. 
+        2. Use reads.pileup to extract the nucleotide base at each SNP position
+            for each sample to construct the SNP fasta file.
+    Note that pileups are run in parallel to speed the whole thing up.
+     
+    Args:
+        maxThread: (15) Max number of cocurrent threads (default=15)
+        mainPath:  (no default) Directory containing all input files. Output
+            files will also be written here.
+        Reference: (no default) File name for reference sequence (in fasta
+            format) for mapping.
+        pathFileName: ("path.txt") Name of file containing full paths to
+            directories containing information for each sequence.
+        snplistFileName: Text format list of SNP positions in samples.
+        snpmaFileName: File name for snp matrix, formatted as a fasta file,
+            with each sequence (all of identical length) corresponding to the
+            SNPs in the correspondingly named sequence.
+        bamFileNAme: #TODO - do we actually ever use this?
+        pileupFileName: Name for pileup files. One is generated for each
+            sample, and placed in the corresponding directory for each sample.
+     
+    Raises:
+ 
+    Examples:
+    args_dict = {'maxThread':2,
+                 'mainPath':'',
+                 'Reference':'',
+                 'pathFileName':'path.txt',
+                 'snplistFileName':'snplist.txt',
+                 'snpmaFileName':'snpma.fa',
+                 'bamFileName':'reads.bam',
+                 'pileupFileName':'reads.pileup'
+                }
+    run_snp_pipeline(options_dict) 
+    """
+
     #==========================================================================
     #Prep work     
     #==========================================================================
@@ -171,7 +167,7 @@ def run_snp_pipeline(options_dict):
         positionValueHash = utilsnew.create_consensus_dict(pileup_file_name)
 
         seqString = ""
-        for key in sorted(snp_list_dict.iterkeys()):  #ToDo - Why is sorting what we want to do?
+        for key in sorted(snp_list_dict.iterkeys()):  #TODO - Why is sorting what we want to do?
             chrom,pos   = key.split()
             if positionValueHash.has_key(chrom + ":" + pos):
                 seqString += positionValueHash[chrom + ":" + pos]
@@ -193,16 +189,34 @@ def run_snp_pipeline(options_dict):
 if __name__=='__main__':
 
     parser = argparse.ArgumentParser(description='Run SNP pipeline.')
-    parser.add_argument('-n','--n-processes',dest='maxThread',type=int,default=4,help='Max number of concurrent jobs.')
-    parser.add_argument('-d','--mainPath',dest='mainPath',type=str,default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/',help='Path for all files')
-    parser.add_argument('-r','--Reference',dest='Reference',type=str,default='CFSAN001339_pacbio.fasta',help='reference for mapping')
-    parser.add_argument('-f','--pathFileName',dest='pathFileName',type=str,default='path.txt',help='Path file name')
-    parser.add_argument('-l','--snplistFileName',dest='snplistFileName',type=str,default='snplist.txt',help='Snplist file name')
-    parser.add_argument('-a','--snpmaFileName',dest='snpmaFileName',type=str,default='snpma.fa',help='fasta file name')
-    parser.add_argument('-b','--bamFileName',dest='bamFileName',type=str,default='reads.bam',help='bam file name')
-    parser.add_argument('-p','--pileupFileName',dest='pileupFileName',type=str,default='reads.pileup',help='pileup file name')
+    parser.add_argument('-n','--n-processes',      dest='maxThread',type=int,default=4,help='Max number of concurrent jobs.')
+    parser.add_argument('-d','--mainPath',         dest='mainPath', type=str,default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/',help='Path for all files')
+    parser.add_argument('-r','--Reference',        dest='Reference',type=str,default='reference.fasta',help='reference for mapping')
+    parser.add_argument('-f','--pathFileName',     dest='pathFileName',type=str,default='path.txt',help='Path file name')
+    parser.add_argument('-l','--snplistFileName',  dest='snplistFileName',type=str,default='snplist.txt',help='Snplist file name')
+    parser.add_argument('-a','--snpmaFileName',    dest='snpmaFileName',type=str,default='snpma.fa',help='fasta file name')
+    parser.add_argument('-b','--bamFileName',      dest='bamFileName',type=str,default='reads.bam',help='bam file name')
+    parser.add_argument('-p','--pileupFileName',   dest='pileupFileName',type=str,default='reads.pileup',help='pileup file name')
+    parser.add_argument('-v','--verbose',          dest='verbose',       type=int,default=1,help='Verbose flag (0=no info, 5=lots')
+    parser.add_argument('-i','--includeReference', dest='includeReference',type=bool,default=False,help='include reference sequence in SNP matrix.')
+    parser.add_argument('-o','--useOldPileups',    dest='useOldPileups',type=bool,default=False,help='Use available pileup files.')
     args = parser.parse_args()
     argsdict = vars(args)
 
     run_snp_pipeline(argsdict)
     
+
+#if verbose:
+#    def verboseprint(*args):
+#        # Print each argument separately so caller doesn't need to
+#        # stuff everything to be printed into a single string
+#        for arg in args:
+#           print arg,
+#        print
+#else:   
+#    verboseprint = lambda *a: None      # do-nothing function
+#
+#
+#If you're using Python 3, where print is already a function (or if you're willing to use print as a function in 2.x using from __future__ import print_function) it's even simpler:
+#
+#verboseprint = print if verbose else lambda *a, **k: None
