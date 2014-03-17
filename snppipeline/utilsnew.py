@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
 
+from __future__ import print_function
 import re
 import operator
 import os
@@ -26,6 +27,7 @@ def pileup(filePath,options_dict):
     pileup_file  = filePath + "/reads.pileup"
     snplist_file = options_dict['mainPath'] + options_dict['snplistFileName']
     
+    #TODO - allow for reading of already done pileup?
     if os.path.isfile(pileup_file):
         print('Removing old pileup file '+pileup_file)
         os.remove(pileup_file)

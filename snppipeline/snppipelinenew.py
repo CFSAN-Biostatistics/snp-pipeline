@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
 
+from __future__ import print_function
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -7,6 +8,7 @@ import argparse
 import os
 from multiprocessing import Pool
 import utilsnew
+import pprint
 
 def run_snp_pipeline(options_dict):
     """Create SNP matrix
@@ -97,7 +99,6 @@ def run_snp_pipeline(options_dict):
             curVcfFileLine=line.strip()
             if curVcfFileLine.startswith("#"):
                 continue
-            print(curVcfFileLine)
             curLineData = curVcfFileLine.split()
             chrom = curLineData[0]
             pos   = curLineData[1]
@@ -142,18 +143,17 @@ def run_snp_pipeline(options_dict):
     
     #create a list of tuples containing values need for pileup code (as passed
     #  via pileup code wrapper)
-    #TODO - maybe allow for reading of already done pileup?
     parameter_list = zip(list_of_sample_directories,
                          len(list_of_sample_directories)*[options_dict])
     
-    #the parallel bit. Note that we use map and not map_async so that we block
+    #Parallel pileups. Note that we use map and not map_async so that we block
     #  until all the pileups are done (or bad things will happen in subsequent
     #  parts of the code).
     pool        = Pool(processes=options_dict['maxThread']) # start pool
     result_many = pool.map(utilsnew.pileup_wrapper, parameter_list) #parallel
-    #print result_many.get()
     
-    print "all pileups are finished"
+    #print(result_many.get())
+    print("Pileups are finished.")
     
     #==========================================================================
     #   Create snp matrix
@@ -203,8 +203,9 @@ if __name__=='__main__':
     args = parser.parse_args()
     argsdict = vars(args)
 
+    print("Running SNP pipeline with arguments:")
+    pprint.pprint(argsdict)
     run_snp_pipeline(argsdict)
-    
 
 #if verbose:
 #    def verboseprint(*args):
