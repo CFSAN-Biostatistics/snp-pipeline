@@ -1,21 +1,31 @@
 #!/usr/bin/env python2.7
 
 from Bio import SeqIO
-import argparse
-import os
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import argparse
+import os
 from multiprocessing import Pool
 import utilsnew
 
 #==============================================================================
 #     """Create SNP matrix
 #     
-#     Description:
-#     Create a SNP matrix. Use variant file var.flt.vcf to construct SNP
-#         position list. Use reads.pileup to extract the nucleotide base at
+#    Description:
+#    Create a SNP matrix. This function expects or creates ('*') the following
+#        files arranged in the following way:
+#            snplist.txt
+#            reference.fasta
+#            path.txt
+#            samples/sample_name_one/reads.pileup
+#            samples/sample_name_one/var.flt.vcf
+#               ...
+#            snplist.txt
+#            snpma.fasta
+#    The files are used as follows. Use variant file var.flt.vcf to construct
+#        SNP position list. Use reads.pileup to extract the nucleotide base at
 #         each SNP position for each sample to construct the SNP fasta file.
-#         Pileups are run in parallel to speed the whole thing up.
+#    Note that pileups are run in parallel to speed the whole thing up.
 #     
 #     Args:
 #         maxThread: Max number of cocurrent threads (default=15)
@@ -68,16 +78,30 @@ def run_snp_pipeline(options_dict):
     #read in all vcf files and process into list of SNPs passing various
     #  criteria. Do this for each sample.
     #==========================================================================
-    snplistHash = dict()
+#----
+#The header line names the 8 fixed, mandatory columns. These columns are as follows:
+#
+#    CHROM,POS,ID,REF,ALT,QUAL,FILTER,INFO,extra = string.split(current_line_data,maxsplit=9)
+#
+#If genotype data is present in the file, these are followed by a FORMAT column header, then an arbitrary number of sample IDs. The header line is tab-delimited.
+#data_line = 'gi|9626243|ref|NC_001416.1|	43852	.	ACCT	A	214	.	INDEL;DP=40;VDB=0.0160;AF1=1;AC1=2;DP4=0,0,15,16;MQ=42;FQ=-128	GT:PL:GQ	1/1:255,93,0:99'
+#gi|9626243|ref|NC_001416.1|	44530	.	GCAACA	GCA	214	.	INDEL;DP=48;VDB=0.0193;AF1=1;AC1=2;DP4=0,0,16,15;MQ=42;FQ=-128	GT:PL:GQ	1/1:255,93,0:99
+#gi|9626243|ref|NC_001416.1|	46842	.	G	C	207	.	DP=41;VDB=0.0147;AF1=1;AC1=2;DP4=0,0,14,8;MQ=42;FQ=-90	GT:PL:GQ	1/1:240,63,0:99
+#----
+
+
+
+    snp_list_dict = dict()
     
-    for filePath in list_of_sample_directories:
-        dirName  = filePath.split(os.sep)[-1]
+    for sample_directory in list_of_sample_directories:
+        sample_name  = sample_directory.split(os.sep)[-1]
     
         #TODO - look at use of PyVCF to process vcf file
-        for line in open(filePath+ "/var.flt.vcf","r"):
+        for line in open(sample_directory+ "/var.flt.vcf","r"):
             curVcfFileLine=line.strip()
             if curVcfFileLine.startswith("#"):
                 continue
+            print(curVcfFileLine)
             curLineData = curVcfFileLine.split()
             chrom = curLineData[0]
             pos   = curLineData[1]
@@ -95,22 +119,22 @@ def run_snp_pipeline(options_dict):
                     af1Flag = True
             # find a good record fo SNP position, save data to hash
             if dpFlag and af1Flag:
-                if not snplistHash.has_key(chrom + "\t" + pos):
+                if not snp_list_dict.has_key(chrom + "\t" + pos):
                     record = [1]
-                    record.append(dirName)
-                    snplistHash[chrom + "\t" + pos] = record
+                    record.append(sample_name)
+                    snp_list_dict[chrom + "\t" + pos] = record
                 else:
-                    record = snplistHash[chrom + "\t" + pos]
+                    record = snp_list_dict[chrom + "\t" + pos]
                     record[0] += 1
-                    record.append(dirName)
+                    record.append(sample_name)
         
     #==========================================================================
     #     write out list of snps for all samples to a single file.
     #==========================================================================
     snplistFile = open(options_dict['mainPath'] + options_dict['snplistFileName'], "w")
-    for key in sorted(snplistHash.iterkeys()):
+    for key in sorted(snp_list_dict.iterkeys()):
         snplistFile.write(key)
-        values = snplistHash[key]
+        values = snp_list_dict[key]
         for value in values:
             snplistFile.write("\t" + str(value))
         snplistFile.write("\n")
@@ -122,6 +146,7 @@ def run_snp_pipeline(options_dict):
     
     #create a list of tuples containing values need for pileup code (as passed
     #  via pileup code wrapper)
+    #TODO - maybe allow for reading of already done pileup?
     parameter_list = zip(list_of_sample_directories,
                          len(list_of_sample_directories)*[options_dict])
     
@@ -138,48 +163,26 @@ def run_snp_pipeline(options_dict):
     #   Create snp matrix
     #==========================================================================
     
-    snplistFilePath = options_dict['mainPath'] + options_dict['snplistFileName'] 
     records = []
 
-    for filePath in list_of_sample_directories:
-        dirName    = filePath.split(os.sep)[-1]
-        pileupFile = filePath + "/reads.pileup"
+    for sample_directory in list_of_sample_directories:
+        sample_name       = sample_directory.split(os.sep)[-1]
+        pileup_file_name  = sample_directory + "/reads.pileup"
+        positionValueHash = utilsnew.create_consensus_dict(pileup_file_name)
 
-        ###read in pileup file and store information to a dict
-        positionValueHash = utilsnew.create_consensus_dict(pileupFile)
-
-        ####append the nucleotide to the record
-#        seqString = ""
-#        print("Processing "+snplistFilePath)
-#        with open(snplistFilePath,'r') as snplist_file_object:
-#            for curSnplistLine in snplist_file_object:
-#                curSnplistData = curSnplistLine.split()
-#                if  len(curSnplistData) <2:
-#                    print('snplistfile: bad line: '+curSnplistLine)
-#                    continue
-#                chrom = curSnplistData[0]
-#                pos   = curSnplistData[1]
-#        
-#                if positionValueHash.has_key(chrom + ":" + pos):
-#                    seqString += positionValueHash[chrom + ":" + pos]
-#                else:
-#                    seqString += "-"
-#        print(seqString)
-# TODO - candidate replacement code for above code
         seqString = ""
-        for key in sorted(snplistHash.iterkeys()):  #ToDo - Why is sorting what we want to do?
+        for key in sorted(snp_list_dict.iterkeys()):  #ToDo - Why is sorting what we want to do?
             chrom,pos   = key.split()
             if positionValueHash.has_key(chrom + ":" + pos):
                 seqString += positionValueHash[chrom + ":" + pos]
             else:
                 seqString += "-"
-        print(seqString)
 
         seq = Seq(seqString)
-        seqRecord = SeqRecord(seq,id=dirName)
+        seqRecord = SeqRecord(seq,id=sample_name)
         records.append(seqRecord)
     
-    ####write the records to fasta file           
+    ####write bases for snps for each sequence to a fasta file           
     fastaFile = open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") 
     SeqIO.write(records, fastaFile, "fasta")
     fastaFile.close()
