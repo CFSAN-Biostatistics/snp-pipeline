@@ -23,14 +23,16 @@ def pileup(filePath,options_dict):
     
     os.chdir(filePath)
     print('Generating pileup file '+options_dict['pileupFileName']+ ' in '+filePath)
-    pileupFile = filePath + "/reads.pileup"
-    if os.path.isfile(pileupFile):
-        print('Removing old pileup file '+pileupFile)
-        os.remove(pileupFile)
+    pileup_file  = filePath + "/reads.pileup"
+    snplist_file = options_dict['mainPath'] + options_dict['snplistFileName']
+    
+    if os.path.isfile(pileup_file):
+        print('Removing old pileup file '+pileup_file)
+        os.remove(pileup_file)
     
     command_line = (
-        'samtools mpileup -l ' +
-            options_dict['mainPath'] + options_dict['snplistFileName'] +
+        'samtools mpileup ' +
+            '-l ' + snplist_file +
             ' -f ' + options_dict['mainPath'] +
             options_dict['Reference'] + ' ' +
             options_dict['bamFileName'] +
@@ -41,12 +43,12 @@ def pileup(filePath,options_dict):
     os.system(command_line)  #TODO - replace with subprocess call at some point
     #subprocess.call(command_line,cwd=filePath)  #TODO - need to make this work
 
-    if not os.path.isfile(pileupFile):
-        print('Pileup file not created: '+pileupFile)
+    if not os.path.isfile(pileup_file):
+        print('Pileup file not created: '+pileup_file)
     
     print('pileup function exit')
     
-    return(pileupFile)
+    return(pileup_file)
 
 def get_consensus_base_from_pileup(base,length,data):
     """Call the base for each SNP position
