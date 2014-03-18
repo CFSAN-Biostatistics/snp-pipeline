@@ -4,11 +4,11 @@ from __future__ import print_function
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from multiprocessing import Pool
 import argparse
 import os
-from multiprocessing import Pool
-import utilsnew
 import pprint
+import utilsnew
 
 def run_snp_pipeline(options_dict):
     """Create SNP matrix
@@ -17,7 +17,6 @@ def run_snp_pipeline(options_dict):
     Create a SNP matrix. This function expects or creates '(*)' the following
         files arranged in the following way:
             mainPath            
-                snplist.txt
                 reference.fasta
                 path.txt
                 snplist.txt (*)
@@ -27,12 +26,23 @@ def run_snp_pipeline(options_dict):
                 sample_name_one/var.flt.vcf
   
     The files are used as follows:
-        1. Use variant file var.flt.vcf to construct SNP position list. 
-        2. Use reads.pileup to extract the nucleotide base at each SNP position
-            for each sample to construct the SNP fasta file.
-    Note that pileups are run in parallel to speed the whole thing up.
+        1. The reference.fasta file is used for alignment of the sequence
+            data in the running of the samtools pileup.
+        2. The path.txt file contains a list of the paths to the sample
+            directories.
+        3. The snplist.txt file contains the list of SNPs extracted from the
+            var.flt.vcf file.            
+        4. The snpma.fasta file contains the SNP calls for each sequence,
+            arranged as a fasta file with one sequence per sample.
+        5. The reads.pileup files are used to determine the nucleotide base at
+            each SNP position for each sample to construct the SNP fasta file.
+        6. The variant file var.flt.vcf is used to construct the SNP position
+            list. 
     
-    #TODO - discuss how the vcf files might be created.    
+    The samtool pileups are run in parallel using the python multiprocessing
+        package.
+    
+    The vcf files are created outside of this function. #TODO - add detail.    
     
     Args:
         maxThread: (15) Max number of cocurrent threads.
@@ -68,11 +78,13 @@ def run_snp_pipeline(options_dict):
     #==========================================================================
     #Prep work     
     #==========================================================================
-    verbose = False
-    verbose_print = print if verbose else lambda *a, **k: None
+    verbose = True
+    verbose_print  = print if verbose else lambda *a, **k: None
+    verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
 
-    list_of_sample_directories = [line.rstrip() for line in
-                                      open(options_dict['mainPath'] + options_dict['pathFileName'], "r")]
+    sample_directories_list_filename = (options_dict['mainPath'] +
+                                        options_dict['pathFileName'])
+    list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
     #remove any blank rows that were read in
     list_of_sample_directories = filter(None,list_of_sample_directories)
 
@@ -157,7 +169,7 @@ def run_snp_pipeline(options_dict):
     pool        = Pool(processes=options_dict['maxThread']) # start pool
     result_many = pool.map(utilsnew.pileup_wrapper, parameter_list) #parallel
     
-    #verbose_print(result_many.get())
+    verbose_pprint(result_many)
     verbose_print("Pileups are finished.")
     
     #==========================================================================
@@ -205,12 +217,11 @@ if __name__=='__main__':
     parser.add_argument('-v','--verbose',          dest='verbose',         type=int,default=1,help='Verbose flag (0=no info, 5=lots')
     parser.add_argument('-i','--includeReference', dest='includeReference',type=bool,default=False,help='include reference sequence in SNP matrix.')
     parser.add_argument('-o','--useOldPileups',    dest='useOldPileups',   type=bool,default=False,help='Use available pileup files.')
-    args = parser.parse_args()
-    argsdict = vars(args)
+    args_dict = vars(parser.parse_args())
 
     print("Running SNP pipeline with arguments:")
-    pprint.pprint(argsdict)
-    run_snp_pipeline(argsdict)
+    pprint.pprint(args_dict)
+    run_snp_pipeline(args_dict)
 
 #if verbose:
 #    def verboseprint(*args):
