@@ -79,7 +79,7 @@ def run_snp_pipeline(options_dict):
     #Prep work     
     #==========================================================================
     verbose = True
-    verbose_print  = print if verbose else lambda *a, **k: None
+    verbose_print  = print         if verbose else lambda *a, **k: None
     verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
 
     sample_directories_list_filename = (options_dict['mainPath'] +
@@ -90,20 +90,8 @@ def run_snp_pipeline(options_dict):
 
     #==========================================================================
     #read in all vcf files and process into list of SNPs passing various
-    #  criteria. Do this for each sample.
+    #  criteria. Do this for each sample. Write to file
     #==========================================================================
-#----
-#The header line names the 8 fixed, mandatory columns. These columns are as follows:
-#
-#    CHROM,POS,ID,REF,ALT,QUAL,FILTER,INFO,extra = string.split(current_line_data,maxsplit=9)
-#
-#If genotype data is present in the file, these are followed by a FORMAT column header, then an arbitrary number of sample IDs. The header line is tab-delimited.
-#data_line = 'gi|9626243|ref|NC_001416.1|	43852	.	ACCT	A	214	.	INDEL;DP=40;VDB=0.0160;AF1=1;AC1=2;DP4=0,0,15,16;MQ=42;FQ=-128	GT:PL:GQ	1/1:255,93,0:99'
-#gi|9626243|ref|NC_001416.1|	44530	.	GCAACA	GCA	214	.	INDEL;DP=48;VDB=0.0193;AF1=1;AC1=2;DP4=0,0,16,15;MQ=42;FQ=-128	GT:PL:GQ	1/1:255,93,0:99
-#gi|9626243|ref|NC_001416.1|	46842	.	G	C	207	.	DP=41;VDB=0.0147;AF1=1;AC1=2;DP4=0,0,14,8;MQ=42;FQ=-90	GT:PL:GQ	1/1:240,63,0:99
-#----
-
-
 
     snp_list_dict = dict()
     
@@ -141,20 +129,14 @@ def run_snp_pipeline(options_dict):
                     record[0] += 1
                     record.append(sample_name)
         
-    #==========================================================================
-    #     write out list of snps for all samples to a single file.
-    #==========================================================================
-    snplistFile = open(options_dict['mainPath'] + options_dict['snplistFileName'], "w")
-    for key in sorted(snp_list_dict.iterkeys()):
-        snplistFile.write(key)
-        values = snp_list_dict[key]
-        for value in values:
-            snplistFile.write("\t" + str(value))
-        snplistFile.write("\n")
-    snplistFile.close()
+    snp_list_file_path=options_dict['mainPath'] + options_dict['snplistFileName']
+    utilsnew.write_list_of_snps(snp_list_file_path,snp_list_dict)   
     
     #==========================================================================
-    #   Generate Pileups of samples (in parallel)
+    # Generate Pileups of samples (in parallel)
+    # Note that we use map and not map_async so that we block
+    #   until all the pileups are done (or bad things will happen in subsequent
+    #   parts of the code).
     #==========================================================================
     
     #create a list of tuples containing values need for pileup code (as passed
@@ -162,9 +144,6 @@ def run_snp_pipeline(options_dict):
     parameter_list = zip(list_of_sample_directories,
                          len(list_of_sample_directories)*[options_dict])
     
-    #Parallel pileups. Note that we use map and not map_async so that we block
-    #  until all the pileups are done (or bad things will happen in subsequent
-    #  parts of the code).
     verbose_print("Starting Pileups.")
     pool        = Pool(processes=options_dict['maxThread']) # start pool
     result_many = pool.map(utilsnew.pileup_wrapper, parameter_list) #parallel
@@ -173,7 +152,7 @@ def run_snp_pipeline(options_dict):
     verbose_print("Pileups are finished.")
     
     #==========================================================================
-    #   Create snp matrix
+    #   Create snp matrix. Write results to file.
     #==========================================================================
     
     records = []
@@ -223,17 +202,15 @@ if __name__=='__main__':
     pprint.pprint(args_dict)
     run_snp_pipeline(args_dict)
 
-#if verbose:
-#    def verboseprint(*args):
-#        # Print each argument separately so caller doesn't need to
-#        # stuff everything to be printed into a single string
-#        for arg in args:
-#           print arg,
-#        print
-#else:   
-#    verboseprint = lambda *a: None      # do-nothing function
+
+#----VCF file info to work on soon
+#The header line names the 8 fixed, mandatory columns. These columns are as follows:
 #
+#    CHROM,POS,ID,REF,ALT,QUAL,FILTER,INFO,extra = string.split(current_line_data,maxsplit=9)
 #
-#If you're using Python 3, where print is already a function (or if you're willing to use print as a function in 2.x using from __future__ import print_function) it's even simpler:
-#
-#verboseprint = print if verbose else lambda *a, **k: None
+#If genotype data is present in the file, these are followed by a FORMAT column header, then an arbitrary number of sample IDs. The header line is tab-delimited.
+#data_line = 'gi|9626243|ref|NC_001416.1|	43852	.	ACCT	A	214	.	INDEL;DP=40;VDB=0.0160;AF1=1;AC1=2;DP4=0,0,15,16;MQ=42;FQ=-128	GT:PL:GQ	1/1:255,93,0:99'
+#gi|9626243|ref|NC_001416.1|	44530	.	GCAACA	GCA	214	.	INDEL;DP=48;VDB=0.0193;AF1=1;AC1=2;DP4=0,0,16,15;MQ=42;FQ=-128	GT:PL:GQ	1/1:255,93,0:99
+#gi|9626243|ref|NC_001416.1|	46842	.	G	C	207	.	DP=41;VDB=0.0147;AF1=1;AC1=2;DP4=0,0,14,8;MQ=42;FQ=-90	GT:PL:GQ	1/1:240,63,0:99
+#----
+

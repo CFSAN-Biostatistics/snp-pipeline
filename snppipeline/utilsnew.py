@@ -170,3 +170,16 @@ def create_consensus_dict(pileup_file_path):
             position_value_dict[current_line_data[0] + ":" + current_line_data[1]] = get_consensus_base_from_pileup(current_line_data[2],current_line_data[3],current_line_data[4])
     pileup_file_object.close()
     return position_value_dict
+
+
+def write_list_of_snps(file_path,snp_list_dict):    
+    """Write out list of snps for all samples to a single file.
+    """
+    snp_list_file_object = open(file_path, "w")
+    for key in sorted(snp_list_dict.iterkeys()):
+        snp_list_file_object.write(key)
+        values = snp_list_dict[key]
+        for value in values:
+            snp_list_file_object.write("\t" + str(value))
+        snp_list_file_object.write("\n")
+    snp_list_file_object.close()
