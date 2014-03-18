@@ -42,8 +42,25 @@ def run_snp_pipeline(options_dict):
     The samtool pileups are run in parallel using the python multiprocessing
         package.
     
-    The vcf files are created outside of this function. #TODO - add detail.    
-    
+    The vcf files are created outside of this function. Here we provide an
+        example of creating these files based on the lambda_virus sequence
+        that we use as one test for this package:
+        
+        1. Align sequences to reference
+            bowtie2-align -p 11 -q -x /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus -1 reads4_1.fq -2 reads4_2.fq > reads4.sam
+
+        2. Convert to bam file with only mapped positions
+            samtools view -bS -F 4 -o /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reads/reads1_F4.bam reads1.sam
+
+        3. Convert to a sorted bam 
+            samtools sort  reads4_F4.bam reads4_F4.sorted.bam
+
+        4. To get a bcf file from the pileup and bam file
+            samtools mpileup -uf /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus.fa reads1_F4.sorted.bam.bam | bcftools view -bvcg - > reads1_F4.bcf
+
+        5. To convert bcf to vcf
+            bcftools view reads1_F4.bcf | vcfutils.pl varFilter -D1000 > var1_F4.flt.vcf    
+
     Args:
         maxThread: (15) Max number of cocurrent threads.
         mainPath:  (no default) Directory containing all input files. Output
@@ -185,15 +202,15 @@ def run_snp_pipeline(options_dict):
 if __name__=='__main__':
 
     parser = argparse.ArgumentParser(description='Run SNP pipeline.')
-    parser.add_argument('-n','--n-processes',      dest='maxThread',       type=int,default=4,help='Max number of concurrent jobs.')
-    parser.add_argument('-d','--mainPath',         dest='mainPath',        type=str,default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/',help='Path for all files')
-    parser.add_argument('-r','--Reference',        dest='Reference',       type=str,default='reference.fasta',help='reference for mapping')
-    parser.add_argument('-f','--pathFileName',     dest='pathFileName',    type=str,default='path.txt',help='Path file name')
-    parser.add_argument('-l','--snplistFileName',  dest='snplistFileName', type=str,default='snplist.txt',help='Snplist file name')
-    parser.add_argument('-a','--snpmaFileName',    dest='snpmaFileName',   type=str,default='snpma.fa',help='fasta file name')
-    parser.add_argument('-b','--bamFileName',      dest='bamFileName',     type=str,default='reads.bam',help='bam file name')
-    parser.add_argument('-p','--pileupFileName',   dest='pileupFileName',  type=str,default='reads.pileup',help='pileup file name')
-    parser.add_argument('-v','--verbose',          dest='verbose',         type=int,default=1,help='Verbose flag (0=no info, 5=lots')
+    parser.add_argument('-n','--n-processes',      dest='maxThread',       type=int, default=4,help='Max number of concurrent jobs.')
+    parser.add_argument('-d','--mainPath',         dest='mainPath',        type=str, default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/',help='Path for all files')
+    parser.add_argument('-r','--Reference',        dest='Reference',       type=str, default='reference.fasta',help='reference for mapping')
+    parser.add_argument('-f','--pathFileName',     dest='pathFileName',    type=str, default='path.txt',help='Path file name')
+    parser.add_argument('-l','--snplistFileName',  dest='snplistFileName', type=str, default='snplist.txt',help='Snplist file name')
+    parser.add_argument('-a','--snpmaFileName',    dest='snpmaFileName',   type=str, default='snpma.fa',help='fasta file name')
+    parser.add_argument('-b','--bamFileName',      dest='bamFileName',     type=str, default='reads.bam',help='bam file name')
+    parser.add_argument('-p','--pileupFileName',   dest='pileupFileName',  type=str, default='reads.pileup',help='pileup file name')
+    parser.add_argument('-v','--verbose',          dest='verbose',         type=int, default=1,help='Verbose flag (0=no info, 5=lots')
     parser.add_argument('-i','--includeReference', dest='includeReference',type=bool,default=False,help='include reference sequence in SNP matrix.')
     parser.add_argument('-o','--useOldPileups',    dest='useOldPileups',   type=bool,default=False,help='Use available pileup files.')
     args_dict = vars(parser.parse_args())

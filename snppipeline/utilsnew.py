@@ -1,11 +1,11 @@
 #!/usr/bin/env python2.7
 
 from __future__ import print_function
-import re
+from Bio import SeqIO
 import operator
 import os
+import re
 #import subprocess
-
 
 def pileup_wrapper(args):
     "Wraps pileup to use multiple arguments with multiprocessing package."
@@ -183,3 +183,37 @@ def write_list_of_snps(file_path,snp_list_dict):
             snp_list_file_object.write("\t" + str(value))
         snp_list_file_object.write("\n")
     snp_list_file_object.close()
+
+
+#inputDir = "/Volumes/gnome/gnome3/Papers/AgonaMOM/ReferenceBased/"
+#textInputFile = open(inputDir + "agonaSNPlist.txt","r")
+#FastaOutFile  = open(inputDir + "referenceSNP.fasta","w")
+def write_reference_snp_file(textInputFile,FastaOutFile):
+    """Write out the snp fasta file for the reference.fasta using the snp
+    position file ( snplist.txt).
+    """
+     
+    matchHash = dict()
+    positionlist = []
+    IdList=[]
+    
+    while 1:
+        curTextFileLine = textInputFile.readline()
+        if not curTextFileLine:
+            break
+        curSNPData = curTextFileLine.split()   
+        positionlist.append(curSNPData)
+    
+    for seq_record in SeqIO.parse("NC_011149.fasta","fasta"):
+        matchHash[seq_record.id] = seq_record.seq
+        IdList.append(seq_record.id)
+    for orderedId in sorted(IdList):
+        FastaOutFile.write("\n" + ">" + orderedId + "\n")
+        for position in positionlist:
+            ChromID = position[0]
+            PosID = position[1]
+            if ChromID == orderedId:
+                FastaOutFile.write(matchHash[orderedId][int(PosID)-1].upper())
+    
+    textInputFile.close()
+    FastaOutFile.close()
