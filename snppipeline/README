@@ -126,4 +126,15 @@ Notes:
     diff ../test/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup
     diff ../test/testAgonaMOM/referenceSNP.fasta ../test/codeComparisonFiles/testAgonaMOM/referenceSNP.fasta
 
+20140319-har: Having a go at installing PyVCF for use by the code.
+$python -m easy_install PyVCF
+Searching for PyVCF
+Best match: PyVCF 0.6.7
+Processing PyVCF-0.6.7-py2.7-linux-x86_64.egg
+PyVCF 0.6.7 is already the active version in easy-install.pth
+Installing vcf_filter.py script to /home/hugh.rand/anaconda/bin
+Installing vcf_melt script to /home/hugh.rand/anaconda/bin
 
+Using /home/hugh.rand/anaconda/lib/python2.7/site-packages/PyVCF-0.6.7-py2.7-linux-x86_64.egg
+Processing dependencies for PyVCF
+Finished processing dependencies for PyVCF

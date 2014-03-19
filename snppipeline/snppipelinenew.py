@@ -9,6 +9,7 @@ import argparse
 import os
 import pprint
 import utilsnew
+import vcf
 
 def run_snp_pipeline(options_dict):
     """Create SNP matrix
@@ -93,7 +94,8 @@ def run_snp_pipeline(options_dict):
     """
 
     #==========================================================================
-    #Prep work     
+    #Prep work
+    #Note use of filter on list_of_sample_directories to remove blank lines.
     #==========================================================================
     verbose = True
     verbose_print  = print         if verbose else lambda *a, **k: None
@@ -107,45 +109,47 @@ def run_snp_pipeline(options_dict):
 
     #==========================================================================
     #read in all vcf files and process into list of SNPs passing various
-    #  criteria. Do this for each sample. Write to file
+    #  criteria. Do this for each sample. Write to file.
+    #Note use of get to cleanly handle case of missing key w/o exception.
     #==========================================================================
 
     snp_list_dict = dict()
     
     for sample_directory in list_of_sample_directories:
+
         sample_name  = sample_directory.split(os.sep)[-1]
     
-        #TODO - look at use of PyVCF to process vcf file
-        for line in open(sample_directory+ "/var.flt.vcf","r"):
-            curVcfFileLine=line.strip()
-            if curVcfFileLine.startswith("#"):
+        vcf_reader = vcf.Reader(open(sample_directory+ "/var.flt.vcf", 'r'))
+        for vcf_data_line in vcf_reader:
+            verbose_print("vcf file data: ")
+            verbose_print((vcf_data_line.CHROM,
+                           vcf_data_line.POS,
+                           vcf_data_line.INFO.get('DP'),
+                           vcf_data_line.INFO.get('AF1'),
+                           vcf_data_line.INFO.get('AR')))
+            dpFlag = af1Flag = False
+            if 'INDEL' in vcf_data_line.INFO:
                 continue
-            curLineData = curVcfFileLine.split()
-            chrom = curLineData[0]
-            pos   = curLineData[1]
-            info  = curLineData[7]
-            if str("INDEL") in info:
+            if not(('DP' in vcf_data_line.INFO) and (('AF1' in vcf_data_line.INFO) or ('AR' in vcf_data_line.INFO))):
                 continue
-            infoFields = info.split(";")
-            dpFlag = False
-            af1Flag = False
-            for infoField in infoFields:
-                infoPair = infoField.split("=")
-                if infoPair[0] == "DP" and int(infoPair[1]) >= 10:
-                    dpFlag = True
-                elif (infoPair[0] == "AF1" and infoPair[1] == "1" ) or (infoPair[0] == "AR" and infoPair[1] == "1.00"):
-                    af1Flag = True
+            if (vcf_data_line.INFO['DP'] >= 10):
+                dpFlag = True
+            if (('AF1' in vcf_data_line.INFO) and (vcf_data_line.INFO['AF1'] == 1.0)):
+                af1Flag = True
+            if (('AR' in vcf_data_line.INFO) and (vcf_data_line.INFO['AR'] == 1.0)):
+                af1Flag = True
             # find a good record fo SNP position, save data to hash
+            print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
             if dpFlag and af1Flag:
-                if not snp_list_dict.has_key(chrom + "\t" + pos):
+                if not snp_list_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
                     record = [1]
                     record.append(sample_name)
-                    snp_list_dict[chrom + "\t" + pos] = record
+                    snp_list_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)] = record
                 else:
-                    record = snp_list_dict[chrom + "\t" + pos]
+                    record = snp_list_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)]
                     record[0] += 1
                     record.append(sample_name)
-        
+
     snp_list_file_path=options_dict['mainPath'] + options_dict['snplistFileName']
     utilsnew.write_list_of_snps(snp_list_file_path,snp_list_dict)   
     
