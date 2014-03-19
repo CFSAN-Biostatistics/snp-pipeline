@@ -46,7 +46,7 @@ def pileup(filePath,options_dict):
     
     return_code = os.system(command_line)  #TODO - replace with subprocess call at some point
     #subprocess.call(command_line,cwd=filePath)  #TODO - need to make this work
-
+    verbose_print("samtools return code: ",return_code)
     if not os.path.isfile(pileup_file):
         print('Pileup file not created: '+pileup_file)
     
@@ -187,29 +187,19 @@ def write_list_of_snps(file_path,snp_list_dict):
 
 def write_reference_snp_file(reference_file_path,snp_list_file_path,snp_reference_file_path):
     """Write out the snp fasta file for the reference.fasta using the snp
-    position file ( snplist.txt).
+    position file ( snplist.txt). #TODO - actual code is more general - document at some point.
     """
      
-    matchHash    = dict()
-    positionlist = []
-    IdList       = []
-    
-    positionlist = [line.split() for line in open(snp_list_file_path, "r")]
+    position_list = [line.split() for line in open(snp_list_file_path, "r")]
+    match_dict    = SeqIO.to_dict(SeqIO.parse(reference_file_path,"fasta"))
 
-    print(reference_file_path)
-    for seq_record in SeqIO.parse(reference_file_path,"fasta"):
-        matchHash[seq_record.id] = seq_record.seq
-        IdList.append(seq_record.id)
-        
-    print(IdList)        
-        
     snp_reference_file_object  = open(snp_reference_file_path,"w")
-    for orderedId in sorted(IdList):
+    for orderedId in sorted(match_dict.keys()):
         snp_reference_file_object.write(">" + orderedId + "\n")
-        for position in positionlist:
+        for position in position_list:
             ChromID,PosID = position[0:2]
             if ChromID == orderedId:
-                snp_reference_file_object.write(matchHash[orderedId][int(PosID)-1].upper())
+                snp_reference_file_object.write(match_dict[orderedId][int(PosID)-1].upper())
     
     snp_reference_file_object.close()
     
