@@ -124,5 +124,6 @@ Notes:
     diff ../test/testAgonaMOM/samples/CFSAN_genomes/CFSAN000449/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/CFSAN_genomes/CFSAN000449/reads.pileup
     diff ../test/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup
     diff ../test/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup
+    diff ../test/testAgonaMOM/referenceSNP.fasta ../test/codeComparisonFiles/testAgonaMOM/referenceSNP.fasta
 
 
