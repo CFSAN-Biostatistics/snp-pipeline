@@ -197,10 +197,11 @@ def run_snp_pipeline(options_dict):
     fastaFile.close()
     
     #Write reference sequence bases at SNP locations to a fasta file
-    snp_list_file_path       = options_dict['mainPath'] + options_dict['snplistFileName']
-    reference_file_path      = options_dict['mainPath'] + options_dict['Reference']
-    snp_reference_file_path  = options_dict['mainPath'] + "referenceSNP.fasta"   #TODO - should make this configurable
-    utilsnew.write_reference_snp_file(reference_file_path,snp_list_file_path,snp_reference_file_path)
+    if options_dict['includeReference']:
+        snp_list_file_path       = options_dict['mainPath'] + options_dict['snplistFileName']
+        reference_file_path      = options_dict['mainPath'] + options_dict['Reference']
+        snp_reference_file_path  = options_dict['mainPath'] + "referenceSNP.fasta"   #TODO - should make this configurable
+        utilsnew.write_reference_snp_file(reference_file_path,snp_list_file_path,snp_reference_file_path)
 
 
 #==============================================================================
@@ -218,7 +219,7 @@ if __name__=='__main__':
     parser.add_argument('-b','--bamFileName',      dest='bamFileName',     type=str, default='reads.bam',help='bam file name')
     parser.add_argument('-p','--pileupFileName',   dest='pileupFileName',  type=str, default='reads.pileup',help='pileup file name')
     parser.add_argument('-v','--verbose',          dest='verbose',         type=int, default=1,help='Verbose flag (0=no info, 5=lots')
-    parser.add_argument('-i','--includeReference', dest='includeReference',type=bool,default=False,help='include reference sequence in SNP matrix.')
+    parser.add_argument('-i','--includeReference', dest='includeReference',type=bool,default=False,help='Write reference sequence bases at SNP positions in fasta format.')
     parser.add_argument('-o','--useOldPileups',    dest='useOldPileups',   type=bool,default=False,help='Use available pileup files.')
     args_dict = vars(parser.parse_args())
 

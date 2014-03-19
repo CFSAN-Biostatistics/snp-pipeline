@@ -105,8 +105,8 @@ Notes:
 20140317-har:Restructured the data for test comparisons. Thus, when we need to run the test:
 
     #run two tests
-    ./snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta
-    ./snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testAgonaMOM/        -f path.txt -r NC_011149.fasta -l snplist.txt -a snpma.fasta
+    ./snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+    ./snppipelinenew.py -n 10 -d ~/projects/snppipeline/test/testAgonaMOM/        -f path.txt -r NC_011149.fasta -l snplist.txt -a snpma.fasta -i True
     
     #diff on first test
     diff ../test/testLambdaVirus/snplist.txt ../test/codeComparisonFiles/testLambdaVirus/snplist.txt
