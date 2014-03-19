@@ -73,7 +73,7 @@ def run_snp_pipeline(options_dict):
         snpmaFileName: File name for snp matrix, formatted as a fasta file,
             with each sequence (all of identical length) corresponding to the
             SNPs in the correspondingly named sequence.
-        bamFileNAme: #TODO - do we actually ever use this?
+        bamFileName: #TODO - do we actually ever use this?
         pileupFileName: Name for pileup files. One is generated for each
             sample, and placed in the corresponding directory for each sample.
      
@@ -191,10 +191,17 @@ def run_snp_pipeline(options_dict):
         seqRecord = SeqRecord(seq,id=sample_name)
         records.append(seqRecord)
     
-    ####write bases for snps for each sequence to a fasta file           
+    #Write bases for snps for each sequence to a fasta file           
     fastaFile = open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") 
     SeqIO.write(records, fastaFile, "fasta")
     fastaFile.close()
+    
+    #Write reference sequence bases at SNP locations to a fasta file
+    snp_list_file_path       = options_dict['mainPath'] + options_dict['snplistFileName']
+    reference_file_path      = options_dict['mainPath'] + options_dict['Reference']
+    snp_reference_file_path  = options_dict['mainPath'] + "referenceSNP.fasta"   #TODO - should make this configurable
+    utilsnew.write_reference_snp_file(reference_file_path,snp_list_file_path,snp_reference_file_path)
+
 
 #==============================================================================
 # Command line driver

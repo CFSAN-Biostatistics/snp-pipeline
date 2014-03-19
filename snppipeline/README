@@ -115,6 +115,7 @@ Notes:
     diff ../test/testLambdaVirus/sample2/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample2/reads.pileup
     diff ../test/testLambdaVirus/sample3/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample3/reads.pileup
     diff ../test/testLambdaVirus/sample4/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample4/reads.pileup
+    diff ../test/testLambdaVirus/referenceSNP.fasta   ../test/codeComparisonFiles/testLambdaVirus/referenceSNP.fasta
 
     #diff on second test
     diff ../test/testAgonaMOM/snplist.txt ../test/codeComparisonFiles/testAgonaMOM/snplist.txt

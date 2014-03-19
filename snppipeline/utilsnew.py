@@ -185,35 +185,31 @@ def write_list_of_snps(file_path,snp_list_dict):
     snp_list_file_object.close()
 
 
-#inputDir = "/Volumes/gnome/gnome3/Papers/AgonaMOM/ReferenceBased/"
-#textInputFile = open(inputDir + "agonaSNPlist.txt","r")
-#FastaOutFile  = open(inputDir + "referenceSNP.fasta","w")
-def write_reference_snp_file(textInputFile,FastaOutFile):
+def write_reference_snp_file(reference_file_path,snp_list_file_path,snp_reference_file_path):
     """Write out the snp fasta file for the reference.fasta using the snp
     position file ( snplist.txt).
     """
      
-    matchHash = dict()
+    matchHash    = dict()
     positionlist = []
-    IdList=[]
+    IdList       = []
     
-    while 1:
-        curTextFileLine = textInputFile.readline()
-        if not curTextFileLine:
-            break
-        curSNPData = curTextFileLine.split()   
-        positionlist.append(curSNPData)
-    
-    for seq_record in SeqIO.parse("NC_011149.fasta","fasta"):
+    positionlist = [line.split() for line in open(snp_list_file_path, "r")]
+
+    print(reference_file_path)
+    for seq_record in SeqIO.parse(reference_file_path,"fasta"):
         matchHash[seq_record.id] = seq_record.seq
         IdList.append(seq_record.id)
+        
+    print(IdList)        
+        
+    snp_reference_file_object  = open(snp_reference_file_path,"w")
     for orderedId in sorted(IdList):
-        FastaOutFile.write("\n" + ">" + orderedId + "\n")
+        snp_reference_file_object.write(">" + orderedId + "\n")
         for position in positionlist:
-            ChromID = position[0]
-            PosID = position[1]
+            ChromID,PosID = position[0:2]
             if ChromID == orderedId:
-                FastaOutFile.write(matchHash[orderedId][int(PosID)-1].upper())
+                snp_reference_file_object.write(matchHash[orderedId][int(PosID)-1].upper())
     
-    textInputFile.close()
-    FastaOutFile.close()
+    snp_reference_file_object.close()
+    
