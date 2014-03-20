@@ -120,7 +120,7 @@ def run_snp_pipeline(options_dict):
         sample_name  = sample_directory.split(os.sep)[-1]
     
         vcf_reader = vcf.Reader(open(sample_directory+ "/var.flt.vcf", 'r'))
-        for vcf_data_line in vcf_reader:
+        for vcf_data_line in vcf_reader:     #TODO convert to with statement?
             verbose_print("vcf file data: ")
             verbose_print((vcf_data_line.CHROM,
                            vcf_data_line.POS,

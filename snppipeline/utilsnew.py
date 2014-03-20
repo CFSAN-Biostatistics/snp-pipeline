@@ -162,13 +162,15 @@ def create_consensus_dict(pileup_file_path):
     >>> consensus_dict['gi|9626243|ref|NC_001416.1|:40984']
     'A'
     """
+
     position_value_dict = dict()
-    pileup_file_object  = open(pileup_file_path, "r")
-    for pileup_line in pileup_file_object:
-        current_line_data = pileup_line.rstrip().split()
-        if len(current_line_data) >5:   #don't process lines without 5 pieces of information or more
-            position_value_dict[current_line_data[0] + ":" + current_line_data[1]] = get_consensus_base_from_pileup(current_line_data[2],current_line_data[3],current_line_data[4])
-    pileup_file_object.close()
+
+    with open(pileup_file_path, "r") as pileup_file_object:
+        for pileup_line in pileup_file_object:
+            current_line_data = pileup_line.rstrip().split()
+            if len(current_line_data) >5:   #don't process lines without 5 pieces of information or more
+                position_value_dict[current_line_data[0] + ":" + current_line_data[1]] = get_consensus_base_from_pileup(current_line_data[2],current_line_data[3],current_line_data[4])
+
     return position_value_dict
 
 
