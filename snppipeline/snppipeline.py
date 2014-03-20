@@ -8,7 +8,7 @@ from multiprocessing import Pool
 import argparse
 import os
 import pprint
-import utilsnew
+import utils
 import vcf
 
 def run_snp_pipeline(options_dict):
@@ -151,7 +151,7 @@ def run_snp_pipeline(options_dict):
                     record.append(sample_name)
 
     snp_list_file_path=options_dict['mainPath'] + options_dict['snplistFileName']
-    utilsnew.write_list_of_snps(snp_list_file_path,snp_list_dict)   
+    utils.write_list_of_snps(snp_list_file_path,snp_list_dict)   
     
     #==========================================================================
     # Generate Pileups of samples (in parallel)
@@ -167,7 +167,7 @@ def run_snp_pipeline(options_dict):
     
     verbose_print("Starting Pileups.")
     pool        = Pool(processes=options_dict['maxThread']) # start pool
-    result_many = pool.map(utilsnew.pileup_wrapper, parameter_list) #parallel
+    result_many = pool.map(utils.pileup_wrapper, parameter_list) #parallel
     
     verbose_pprint(result_many)
     verbose_print("Pileups are finished.")
@@ -181,7 +181,7 @@ def run_snp_pipeline(options_dict):
     for sample_directory in list_of_sample_directories:
         sample_name       = sample_directory.split(os.sep)[-1]
         pileup_file_name  = sample_directory + "/reads.pileup"
-        positionValueHash = utilsnew.create_consensus_dict(pileup_file_name)
+        positionValueHash = utils.create_consensus_dict(pileup_file_name)
 
         seqString = ""
         for key in sorted(snp_list_dict.iterkeys()):  #TODO - Why is sorting what we want to do?
@@ -205,7 +205,7 @@ def run_snp_pipeline(options_dict):
         snp_list_file_path       = options_dict['mainPath'] + options_dict['snplistFileName']
         reference_file_path      = options_dict['mainPath'] + options_dict['Reference']
         snp_reference_file_path  = options_dict['mainPath'] + "referenceSNP.fasta"   #TODO - should make this configurable
-        utilsnew.write_reference_snp_file(reference_file_path,snp_list_file_path,snp_reference_file_path)
+        utils.write_reference_snp_file(reference_file_path,snp_list_file_path,snp_reference_file_path)
 
 
 #==============================================================================
