@@ -20,6 +20,7 @@ def pileup(filePath,options_dict):
     Args:
         filePath: Path   #TODO - finish
         options_dict: Specified command-line options #TODO - finish
+    #TODO - allow for reading of already done pileup?
     """
     verbose = False
     verbose_print = print if verbose else lambda *a, **k: None
@@ -29,7 +30,6 @@ def pileup(filePath,options_dict):
     pileup_file  = filePath + "/reads.pileup"
     snplist_file = options_dict['mainPath'] + options_dict['snplistFileName']
     
-    #TODO - allow for reading of already done pileup?
     if os.path.isfile(pileup_file):
         verbose_print('Removing old pileup file '+pileup_file)
         os.remove(pileup_file)

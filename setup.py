@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='snppipeline',
@@ -11,24 +11,26 @@ setup(
     #url='http://', #TODO
     packages=['snppipeline'],
     long_description="""
-    'snppipeline' is a pipeline for the production of SNP matrices for the
-    phylogenetic analysis of pathogenic organisms sequenced from various
-    samples of interest to food safety.
+    snppipeline is a pipeline for the production of SNP matrices from 
+    sequence data used in the phylogenetic analysis of pathogenic
+    organisms sequenced from samples of interest to food safety.
     """,
-    #download_url='',#TODE    
+    #download_url='',#TODO    
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'License :: OSI Approved :: MIT License (MIT)',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
-    keywords='networking eventlet nonblocking internet',
+    keywords='bioinformatics NGS',
     license='GPL',
     install_requires=[
+        'biopython',
+        'PyVCF',
         'setuptools',
     ],
 )

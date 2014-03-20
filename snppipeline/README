@@ -138,3 +138,10 @@ Installing vcf_melt script to /home/hugh.rand/anaconda/bin
 Using /home/hugh.rand/anaconda/lib/python2.7/site-packages/PyVCF-0.6.7-py2.7-linux-x86_64.egg
 Processing dependencies for PyVCF
 Finished processing dependencies for PyVCF
+
+20140320-har: Built first egg with:
+python setup.py bdist_egg
+I did this from the directory: /home/hugh.rand/projects/snppipeline
+Not sure all the tests went along for the ride. And what about this file? Probably
+don't want it going out? Need to sort all this out. Also need to sort out
+a virtual machine for testing the egg.
