@@ -16,8 +16,25 @@ class Test(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
     
+    args_dict = {
+        'maxThread':3,      
+        'mainPath':'~/projects/snppipeline/test/testLambdaVirus/',        
+        'Reference':'reference.fasta',     
+        'pathFileName':'path.txt',   
+        'snplistFileName':'snplist.txt', 
+        'snpmaFileName':'snpma.fa',
+        'bamFileName':'reads.bam',
+        'pileupFileName':'reads.pileup',
+        'verbose':False,
+        'includeReference':True,
+        'useOldPileups':False
+    } 
+    run_snp_pipeline(args_dict)
+
+    #compare archived files to expected files
+
+    #remove files from run    
     
-        
 #    def test_run_snp_pipeline(self)    
 #
 #class TestSequenceFunctions(unittest.TestCase):
