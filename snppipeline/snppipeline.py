@@ -112,6 +112,10 @@ def run_snp_pipeline(options_dict):
     #  criteria. Do this for each sample. Write to file.
     #Note use of get to cleanly handle case of missing key w/o exception.
     #==========================================================================
+    #TODO put these in to the command line arguments to replace hard-coded
+    #  values in code below
+    #    options_dict['combinedDepthAcrossSamples']
+    #    options_dict['alleleFrequencyForFirstALTAllele']
 
     snp_list_dict = dict()
     
@@ -132,11 +136,11 @@ def run_snp_pipeline(options_dict):
                 continue
             if not(('DP' in vcf_data_line.INFO) and (('AF1' in vcf_data_line.INFO) or ('AR' in vcf_data_line.INFO))):
                 continue
-            if (vcf_data_line.INFO['DP'] >= 10):
+            if (vcf_data_line.INFO['DP'] >= 10): #TODO move parameter to options_dict
                 dpFlag = True
-            if (('AF1' in vcf_data_line.INFO) and (vcf_data_line.INFO['AF1'] == 1.0)):
+            if (('AF1' in vcf_data_line.INFO) and (vcf_data_line.INFO['AF1'] == 1.0)): #TODO move parameter to options_dict
                 af1Flag = True
-            if (('AR' in vcf_data_line.INFO) and (vcf_data_line.INFO['AR'] == 1.0)):
+            if (('AR' in vcf_data_line.INFO) and (vcf_data_line.INFO['AR'] == 1.0)): #TODO move parameter to options_dict
                 af1Flag = True
             # find a good record fo SNP position, save data to hash
             print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
