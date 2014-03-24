@@ -145,3 +145,27 @@ I did this from the directory: /home/hugh.rand/projects/snppipeline
 Not sure all the tests went along for the ride. And what about this file? Probably
 don't want it going out? Need to sort all this out. Also need to sort out
 a virtual machine for testing the egg.
+
+20140324-har:Renamed code so tests change to:
+
+    #run two tests
+    ./snppipeline.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+    ./snppipeline.py -n 10 -d ~/projects/snppipeline/test/testAgonaMOM/        -f path.txt -r NC_011149.fasta -l snplist.txt -a snpma.fasta -i True
+    
+    #diff on first test
+    diff ../test/testLambdaVirus/snplist.txt ../test/codeComparisonFiles/testLambdaVirus/snplist.txt
+    diff ../test/testLambdaVirus/snpma.fasta ../test/codeComparisonFiles/testLambdaVirus/snpma.fasta
+    diff ../test/testLambdaVirus/sample1/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample1/reads.pileup
+    diff ../test/testLambdaVirus/sample2/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample2/reads.pileup
+    diff ../test/testLambdaVirus/sample3/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample3/reads.pileup
+    diff ../test/testLambdaVirus/sample4/reads.pileup ../test/codeComparisonFiles/testLambdaVirus/sample4/reads.pileup
+    diff ../test/testLambdaVirus/referenceSNP.fasta   ../test/codeComparisonFiles/testLambdaVirus/referenceSNP.fasta
+
+    #diff on second test
+    diff ../test/testAgonaMOM/snplist.txt ../test/codeComparisonFiles/testAgonaMOM/snplist.txt
+    diff ../test/testAgonaMOM/snpma.fasta ../test/codeComparisonFiles/testAgonaMOM/snpma.fasta
+    diff ../test/testAgonaMOM/samples/CFSAN_genomes/CFSAN000448/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/CFSAN_genomes/CFSAN000448/reads.pileup
+    diff ../test/testAgonaMOM/samples/CFSAN_genomes/CFSAN000449/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/CFSAN_genomes/CFSAN000449/reads.pileup
+    diff ../test/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178930/reads.pileup
+    diff ../test/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup ../test/codeComparisonFiles/testAgonaMOM/samples/SRA_data/ERR178931/reads.pileup
+    diff ../test/testAgonaMOM/referenceSNP.fasta ../test/codeComparisonFiles/testAgonaMOM/referenceSNP.fasta

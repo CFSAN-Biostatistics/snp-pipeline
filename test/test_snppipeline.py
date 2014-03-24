@@ -2,9 +2,10 @@
 
 import unittest
 import doctest
+import snppipeline
 
-import imp
-utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/snppipelinenew.py')
+#import imp
+#utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/snppipelinenew.py')
 
 class Test(unittest.TestCase):
     """Unit tests for utilsnew."""
@@ -29,7 +30,7 @@ if __name__ == "__main__":
         'includeReference':True,
         'useOldPileups':False
     } 
-    run_snp_pipeline(args_dict)
+    snppipeline.run_snp_pipeline(args_dict)
 
     #compare archived files to expected files
 
