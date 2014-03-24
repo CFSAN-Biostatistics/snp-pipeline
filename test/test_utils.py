@@ -4,14 +4,14 @@ import unittest
 import doctest
 
 import imp
-utilsnew = imp.load_source('utilsnew', '/home/hugh.rand/projects/snppipeline/snppipeline/utilsnew.py')
+utils = imp.load_source('utils', '/home/hugh.rand/projects/snppipeline/snppipeline/utils.py')
 
 class Test(unittest.TestCase):
-    """Unit tests for utilsnew."""
+    """Unit tests for utils."""
 
     def test_doctests(self):
-        """Run utilsnew doctests"""
-        doctest.testmod(utilsnew)
+        """Run utils doctests"""
+        doctest.testmod(utils)
 
 if __name__ == "__main__":
     unittest.main()
