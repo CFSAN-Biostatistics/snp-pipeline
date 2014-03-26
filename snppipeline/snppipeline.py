@@ -77,6 +77,9 @@ def run_snp_pipeline(options_dict):
         bamFileName: #TODO - do we actually ever use this?
         pileupFileName: Name for pileup files. One is generated for each
             sample, and placed in the corresponding directory for each sample.
+        DP: Combined depth across samples.
+        AF1: Allele frequency for first allele.
+        AR: AR flag value.
      
     Raises:
  
@@ -88,7 +91,10 @@ def run_snp_pipeline(options_dict):
                  'snplistFileName':'snplist.txt',
                  'snpmaFileName':'snpma.fa',
                  'bamFileName':'reads.bam',
-                 'pileupFileName':'reads.pileup'
+                 'pileupFileName':'reads.pileup',
+                 'combinedDepthAcrossSamples':10,
+                 'alleleFrequencyForFirstALTAllele':1.0,
+                 'arFlagValue':1.0
                 }
     run_snp_pipeline(options_dict) 
     """
@@ -97,14 +103,13 @@ def run_snp_pipeline(options_dict):
     #Prep work
     #Note use of filter on list_of_sample_directories to remove blank lines.
     #==========================================================================
-    verbose = True
+    verbose = False
     verbose_print  = print         if verbose else lambda *a, **k: None
     verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
 
     sample_directories_list_filename = (options_dict['mainPath'] +
                                         options_dict['pathFileName'])
     list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
-    #remove any blank rows that were read in
     list_of_sample_directories = filter(None,list_of_sample_directories)
 
     #==========================================================================
@@ -112,10 +117,6 @@ def run_snp_pipeline(options_dict):
     #  criteria. Do this for each sample. Write to file.
     #Note use of get to cleanly handle case of missing key w/o exception.
     #==========================================================================
-    #TODO put these in to the command line arguments to replace hard-coded
-    #  values in code below
-    #    options_dict['combinedDepthAcrossSamples']
-    #    options_dict['alleleFrequencyForFirstALTAllele']
 
     snp_list_dict = dict()
     
@@ -136,14 +137,14 @@ def run_snp_pipeline(options_dict):
                 continue
             if not(('DP' in vcf_data_line.INFO) and (('AF1' in vcf_data_line.INFO) or ('AR' in vcf_data_line.INFO))):
                 continue
-            if (vcf_data_line.INFO['DP'] >= 10): #TODO move parameter to options_dict
+            if (vcf_data_line.INFO['DP'] >= options_dict['combinedDepthAcrossSamples']): #TODO move parameter to options_dict
                 dpFlag = True
-            if (('AF1' in vcf_data_line.INFO) and (vcf_data_line.INFO['AF1'] == 1.0)): #TODO move parameter to options_dict
+            if (('AF1' in vcf_data_line.INFO) and (vcf_data_line.INFO['AF1'] == options_dict['alleleFrequencyForFirstALTAllele'])): #TODO move parameter to options_dict
                 af1Flag = True
-            if (('AR' in vcf_data_line.INFO) and (vcf_data_line.INFO['AR'] == 1.0)): #TODO move parameter to options_dict
+            if (('AR' in vcf_data_line.INFO) and (vcf_data_line.INFO['AR'] == options_dict['arFlagValue'])): #TODO move parameter to options_dict
                 af1Flag = True
             # find a good record fo SNP position, save data to hash
-            print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
+            verbose_print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
             if dpFlag and af1Flag:
                 if not snp_list_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
                     record = [1]
@@ -170,6 +171,7 @@ def run_snp_pipeline(options_dict):
                          len(list_of_sample_directories)*[options_dict])
     
     verbose_print("Starting Pileups.")
+
     pool        = Pool(processes=options_dict['maxThread']) # start pool
     result_many = pool.map(utils.pileup_wrapper, parameter_list) #parallel
     
@@ -183,6 +185,7 @@ def run_snp_pipeline(options_dict):
     records = []
 
     for sample_directory in list_of_sample_directories:
+
         sample_name       = sample_directory.split(os.sep)[-1]
         pileup_file_name  = sample_directory + "/reads.pileup"
         positionValueHash = utils.create_consensus_dict(pileup_file_name)
@@ -218,17 +221,20 @@ def run_snp_pipeline(options_dict):
 if __name__=='__main__':
 
     parser = argparse.ArgumentParser(description='Run SNP pipeline.')
-    parser.add_argument('-n','--n-processes',      dest='maxThread',       type=int, default=4,help='Max number of concurrent jobs.')
-    parser.add_argument('-d','--mainPath',         dest='mainPath',        type=str, default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/',help='Path for all files')
-    parser.add_argument('-r','--Reference',        dest='Reference',       type=str, default='reference.fasta',help='reference for mapping')
-    parser.add_argument('-f','--pathFileName',     dest='pathFileName',    type=str, default='path.txt',help='Path file name')
-    parser.add_argument('-l','--snplistFileName',  dest='snplistFileName', type=str, default='snplist.txt',help='Snplist file name')
-    parser.add_argument('-a','--snpmaFileName',    dest='snpmaFileName',   type=str, default='snpma.fa',help='fasta file name')
-    parser.add_argument('-b','--bamFileName',      dest='bamFileName',     type=str, default='reads.bam',help='bam file name')
-    parser.add_argument('-p','--pileupFileName',   dest='pileupFileName',  type=str, default='reads.pileup',help='pileup file name')
-    parser.add_argument('-v','--verbose',          dest='verbose',         type=int, default=1,help='Verbose flag (0=no info, 5=lots')
-    parser.add_argument('-i','--includeReference', dest='includeReference',type=bool,default=False,help='Write reference sequence bases at SNP positions in fasta format.')
-    parser.add_argument('-o','--useOldPileups',    dest='useOldPileups',   type=bool,default=False,help='Use available pileup files.')
+    parser.add_argument('-n','--n-processes',      dest='maxThread',       type=int,  default=4,help='Max number of concurrent jobs.')
+    parser.add_argument('-d','--mainPath',         dest='mainPath',        type=str,  default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/',help='Path for all files')
+    parser.add_argument('-r','--Reference',        dest='Reference',       type=str,  default='reference.fasta',help='reference for mapping')
+    parser.add_argument('-f','--pathFileName',     dest='pathFileName',    type=str,  default='path.txt',help='Path file name')
+    parser.add_argument('-l','--snplistFileName',  dest='snplistFileName', type=str,  default='snplist.txt',help='Snplist file name')
+    parser.add_argument('-a','--snpmaFileName',    dest='snpmaFileName',   type=str,  default='snpma.fa',help='fasta file name')
+    parser.add_argument('-b','--bamFileName',      dest='bamFileName',     type=str,  default='reads.bam',help='bam file name')
+    parser.add_argument('-p','--pileupFileName',   dest='pileupFileName',  type=str,  default='reads.pileup',help='pileup file name')
+    parser.add_argument('-v','--verbose',          dest='verbose',         type=int,  default=1,help='Verbose flag (0=no info, 5=lots')
+    parser.add_argument('-i','--includeReference', dest='includeReference',type=bool, default=False,help='Write reference sequence bases at SNP positions in fasta format.')
+    parser.add_argument('-o','--useOldPileups',    dest='useOldPileups',   type=bool, default=False,help='Use available pileup files.')
+    parser.add_argument('--DP',                    dest='combinedDepthAcrossSamples',        type=int,  default=10, help='Combined depth across samples.')
+    parser.add_argument('--AF1',                   dest='alleleFrequencyForFirstALTAllele', type=float,default=1.0,help='Allele frequency for first allele.')
+    parser.add_argument('--AR',                    dest='arFlagValue',                       type=float,default=1.0,help='AR flag value.')
     args_dict = vars(parser.parse_args())
 
     print("Running SNP pipeline with arguments:")
