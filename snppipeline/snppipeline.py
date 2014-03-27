@@ -15,7 +15,7 @@ def run_snp_pipeline(options_dict):
     """Create SNP matrix
      
     Description:
-    Create a SNP matrix. This function expects or creates '(*)' the following
+    Create a SNP matrix. This function expects, or creates '(*)', the following
         files arranged in the following way:
             mainPath            
                 reference.fasta
@@ -23,8 +23,10 @@ def run_snp_pipeline(options_dict):
                 snplist.txt (*)
                 snpma.fasta (*)
             samples
+                sample_name_one/reads.bam
                 sample_name_one/reads.pileup (*)
                 sample_name_one/var.flt.vcf
+                ...
   
     The files are used as follows:
         1. The reference.fasta file is used for alignment of the sequence
@@ -74,7 +76,7 @@ def run_snp_pipeline(options_dict):
         snpmaFileName: File name for snp matrix, formatted as a fasta file,
             with each sequence (all of identical length) corresponding to the
             SNPs in the correspondingly named sequence.
-        bamFileName: #TODO - do we actually ever use this?
+        bamFileName: #TODO 
         pileupFileName: Name for pileup files. One is generated for each
             sample, and placed in the corresponding directory for each sample.
         DP: Combined depth across samples.
@@ -106,7 +108,7 @@ def run_snp_pipeline(options_dict):
     verbose = False
     verbose_print  = print         if verbose else lambda *a, **k: None
     verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
-
+    #TODO use os.path.join consistently through code for path creation?
     sample_directories_list_filename = (options_dict['mainPath'] +
                                         options_dict['pathFileName'])
     list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
@@ -232,24 +234,12 @@ if __name__=='__main__':
     parser.add_argument('-v','--verbose',          dest='verbose',         type=int,  default=1,help='Verbose flag (0=no info, 5=lots')
     parser.add_argument('-i','--includeReference', dest='includeReference',type=bool, default=False,help='Write reference sequence bases at SNP positions in fasta format.')
     parser.add_argument('-o','--useOldPileups',    dest='useOldPileups',   type=bool, default=False,help='Use available pileup files.')
-    parser.add_argument('--DP',                    dest='combinedDepthAcrossSamples',        type=int,  default=10, help='Combined depth across samples.')
-    parser.add_argument('--AF1',                   dest='alleleFrequencyForFirstALTAllele', type=float,default=1.0,help='Allele frequency for first allele.')
-    parser.add_argument('--AR',                    dest='arFlagValue',                       type=float,default=1.0,help='AR flag value.')
+    parser.add_argument(     '--DP',               dest='combinedDepthAcrossSamples',        type=int,  default=10, help='Combined depth across samples.')
+    parser.add_argument(     '--AF1',              dest='alleleFrequencyForFirstALTAllele', type=float,default=1.0,help='Allele frequency for first allele.')
+    parser.add_argument(     '--AR',               dest='arFlagValue',                       type=float,default=1.0,help='AR flag value.')
     args_dict = vars(parser.parse_args())
 
     print("Running SNP pipeline with arguments:")
     pprint.pprint(args_dict)
     run_snp_pipeline(args_dict)
-
-
-#----VCF file info to work on soon
-#The header line names the 8 fixed, mandatory columns. These columns are as follows:
-#
-#    CHROM,POS,ID,REF,ALT,QUAL,FILTER,INFO,extra = string.split(current_line_data,maxsplit=9)
-#
-#If genotype data is present in the file, these are followed by a FORMAT column header, then an arbitrary number of sample IDs. The header line is tab-delimited.
-#data_line = 'gi|9626243|ref|NC_001416.1|	43852	.	ACCT	A	214	.	INDEL;DP=40;VDB=0.0160;AF1=1;AC1=2;DP4=0,0,15,16;MQ=42;FQ=-128	GT:PL:GQ	1/1:255,93,0:99'
-#gi|9626243|ref|NC_001416.1|	44530	.	GCAACA	GCA	214	.	INDEL;DP=48;VDB=0.0193;AF1=1;AC1=2;DP4=0,0,16,15;MQ=42;FQ=-128	GT:PL:GQ	1/1:255,93,0:99
-#gi|9626243|ref|NC_001416.1|	46842	.	G	C	207	.	DP=41;VDB=0.0147;AF1=1;AC1=2;DP4=0,0,14,8;MQ=42;FQ=-90	GT:PL:GQ	1/1:240,63,0:99
-#----
 

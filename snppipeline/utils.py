@@ -189,7 +189,7 @@ def write_list_of_snps(file_path,snp_list_dict):
 
 def write_reference_snp_file(reference_file_path,snp_list_file_path,snp_reference_file_path):
     """Write out the snp fasta file for the reference.fasta using the snp
-    position file ( snplist.txt). #TODO - actual code is more general - document at some point.
+    position file ( snplist.txt). #TODO actual code is more general - document at some point.
     """
      
     position_list = [line.split() for line in open(snp_list_file_path, "r")]
