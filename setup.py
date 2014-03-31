@@ -16,6 +16,12 @@ setup(
     organisms sequenced from samples of interest to food safety.
     """,
     #download_url='',#TODO    
+#        exclude_package_data = {
+#            #Exclude any ARCHIVE directories
+#            '': ['ARCHIVE'],
+#            #Exclude miscellaneous development notes
+#            '': ['README_developmentNotes'],
+#        }
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',

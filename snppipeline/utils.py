@@ -11,7 +11,7 @@ def pileup_wrapper(args):
     "Wraps pileup to use multiple arguments with multiprocessing package."
     return pileup(*args)
 
-def pileup(filePath,options_dict):
+def pileup(filePath, options_dict):
     """Run samtools to generate pileup.
     
     Description:
@@ -46,7 +46,7 @@ def pileup(filePath,options_dict):
     
     return_code = os.system(command_line)  #TODO - replace with subprocess call at some point
     #subprocess.call(command_line,cwd=filePath)  #TODO - need to make this work
-    verbose_print("samtools return code: ",return_code)
+    verbose_print("samtools return code: ", return_code)
     if not os.path.isfile(pileup_file):
         print('Pileup file not created: '+pileup_file)
     
@@ -54,7 +54,7 @@ def pileup(filePath,options_dict):
     
     return(pileup_file)
 
-def get_consensus_base_from_pileup(base,length,data):
+def get_consensus_base_from_pileup(base, length, data):
     """Call the base for each SNP position
     
     Description:
@@ -100,6 +100,10 @@ def get_consensus_base_from_pileup(base,length,data):
     i = 0
     while i < len(data):
         char = data[i]
+ #       ---
+ #       if char in Set(['.',',','A','a','C','c','T','t','G','g','N','n']):
+ #           base_count_dict[char.upper()] += 1
+ #       ---
         if char == '.' or char == ',':
             base_count_dict[".,"] += 1
         elif char == 'A' or char == 'a':
@@ -113,24 +117,24 @@ def get_consensus_base_from_pileup(base,length,data):
         elif char == 'N' or char == 'n':
             base_count_dict["N"] += 1
         elif char == '+' or char == '-':
-            countStr = ""
+            count_str = ""
             count = 1
-            while re.match("\d" ,data[i + 1]):
-                countStr += data[i + 1]
+            while re.match("\d" , data[i + 1]):
+                count_str += data[i + 1]
                 i += 1
-            if countStr != "":
-                count = int(countStr)
+            if count_str != "":
+                count = int(count_str)
             i += count
         elif char == '^':
             if data[i+1] != "." and data[i+1] != ',':
-                i +=1
+                i += 1
         i += 1
             
     consensus_base = max(base_count_dict.iteritems(), key=operator.itemgetter(1))[0]
     if base_count_dict[consensus_base] <= (int(length)/2):
-         consensus_base = "-" 
-    elif consensus_base ==".,":
-         consensus_base = base
+        consensus_base =  "-" 
+    elif consensus_base == ".,":
+        consensus_base = base
 
     return consensus_base
 
@@ -169,12 +173,12 @@ def create_consensus_dict(pileup_file_path):
         for pileup_line in pileup_file_object:
             current_line_data = pileup_line.rstrip().split()
             if len(current_line_data) >5:   #don't process lines without 5 pieces of information or more
-                position_value_dict[current_line_data[0] + ":" + current_line_data[1]] = get_consensus_base_from_pileup(current_line_data[2],current_line_data[3],current_line_data[4])
+                position_value_dict[current_line_data[0] + ":" + current_line_data[1]] = get_consensus_base_from_pileup(current_line_data[2], current_line_data[3], current_line_data[4])
 
     return position_value_dict
 
 
-def write_list_of_snps(file_path,snp_list_dict):    
+def write_list_of_snps(file_path, snp_list_dict):    
     """Write out list of snps for all samples to a single file.
     """
     snp_list_file_object = open(file_path, "w")
@@ -187,7 +191,8 @@ def write_list_of_snps(file_path,snp_list_dict):
     snp_list_file_object.close()
 
 
-def write_reference_snp_file(reference_file_path,snp_list_file_path,snp_reference_file_path):
+def write_reference_snp_file(reference_file_path, snp_list_file_path,
+                             snp_reference_file_path):
     """Write out the snp fasta file for the reference.fasta using the snp
     position file ( snplist.txt). #TODO actual code is more general - document at some point.
     """
@@ -199,7 +204,7 @@ def write_reference_snp_file(reference_file_path,snp_list_file_path,snp_referenc
     for orderedId in sorted(match_dict.keys()):
         snp_reference_file_object.write(">" + orderedId + "\n")
         for position in position_list:
-            ChromID,PosID = position[0:2]
+            ChromID, PosID = position[0:2]
             if ChromID == orderedId:
                 snp_reference_file_object.write(match_dict[orderedId][int(PosID)-1].upper())
     
