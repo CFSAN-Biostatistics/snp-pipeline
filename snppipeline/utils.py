@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 from Bio import SeqIO
+from sets import Set
 import operator
 import os
 import re
@@ -100,22 +101,10 @@ def get_consensus_base_from_pileup(base, length, data):
     i = 0
     while i < len(data):
         char = data[i]
- #       ---
- #       if char in Set(['.',',','A','a','C','c','T','t','G','g','N','n']):
- #           base_count_dict[char.upper()] += 1
- #       ---
-        if char == '.' or char == ',':
-            base_count_dict[".,"] += 1
-        elif char == 'A' or char == 'a':
-            base_count_dict["A"] += 1
-        elif char == 'C' or char == 'c':
-            base_count_dict["C"] += 1
-        elif char == 'T' or char == 't':
-            base_count_dict["T"] += 1
-        elif char == 'G' or char == 'g':
-            base_count_dict["G"] += 1
-        elif char == 'N' or char == 'n':
-            base_count_dict["N"] += 1
+        if char in Set(['A','a','C','c','T','t','G','g','N','n']):
+            base_count_dict[char.upper()] += 1
+        elif char == '.' or char == ',':
+            base_count_dict['.,'] += 1      
         elif char == '+' or char == '-':
             count_str = ""
             count = 1

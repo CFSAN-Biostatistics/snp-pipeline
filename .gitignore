@@ -1,0 +1,7 @@
+#Files and directories to ignore by git
+#######################################
+#No compiler produced files
+*.a
+*.pyc
+#No editor backup files
+*~
