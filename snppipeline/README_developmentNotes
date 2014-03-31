@@ -175,7 +175,13 @@ a virtual machine for testing the egg.
     to work with:
         PYTHONPATH="/home/hugh.rand/projects/snppipeline/snppipeline"; export PYTHONPATH 
         ./test/test_snppipeline.py
+        ./test/test_utils.py
 
 20140324-har:Test code works, though will want to change hard-coded paths in future. From
     the directory /home/hugh.rand/projects/snppipeline, can run the snppipeline test by:
     ./test/test_snppipeline.py
+
+20140331-har:Am now running pylint to aid in improving code:
+    pylint snppipeline/snppipeline.py
+    pylint snppipeline/utils.py
+ 
