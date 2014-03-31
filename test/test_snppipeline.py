@@ -54,7 +54,7 @@ class Test(unittest.TestCase):
                               len(mismatch) == 0 and
                               len(errors)   == 0)
 
-        #TODO make this optional?
+        #Remove files generated #TODO make this optional?
         for file_name in files_to_compare:
             os.remove(os.path.join(directory_run_result,file_name)) 
 
@@ -65,7 +65,7 @@ class Test(unittest.TestCase):
 
         args_dict = {
             'maxThread':8,      
-            'mainPath':'/home/hugh.rand//projects/snppipeline/test/testAgonaMOM/',    #TODO make path relative     
+            'mainPath':'/home/hugh.rand/projects/snppipeline/test/testAgonaMOM/',    #TODO make path relative     
             'Reference':'NC_011149.fasta',     
             'pathFileName':'path.txt',   
             'snplistFileName':'snplist.txt', 

@@ -137,13 +137,16 @@ def run_snp_pipeline(options_dict):
             dpFlag = af1Flag = False
             if 'INDEL' in vcf_data_line.INFO:
                 continue
-            if not(('DP' in vcf_data_line.INFO) and (('AF1' in vcf_data_line.INFO) or ('AR' in vcf_data_line.INFO))):
+            if not(('DP' in vcf_data_line.INFO) and 
+                   (('AF1' in vcf_data_line.INFO) or ('AR' in vcf_data_line.INFO))):
                 continue
-            if (vcf_data_line.INFO['DP'] >= options_dict['combinedDepthAcrossSamples']): #TODO move parameter to options_dict
+            if (vcf_data_line.INFO['DP'] >= options_dict['combinedDepthAcrossSamples']):
                 dpFlag = True
-            if (('AF1' in vcf_data_line.INFO) and (vcf_data_line.INFO['AF1'] == options_dict['alleleFrequencyForFirstALTAllele'])): #TODO move parameter to options_dict
+            if (('AF1' in vcf_data_line.INFO) and 
+                (vcf_data_line.INFO['AF1'] == options_dict['alleleFrequencyForFirstALTAllele'])):
                 af1Flag = True
-            if (('AR' in vcf_data_line.INFO) and (vcf_data_line.INFO['AR'] == options_dict['arFlagValue'])): #TODO move parameter to options_dict
+            if (('AR' in vcf_data_line.INFO) and
+                (vcf_data_line.INFO['AR'] == options_dict['arFlagValue'])):
                 af1Flag = True
             # find a good record fo SNP position, save data to hash
             verbose_print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
