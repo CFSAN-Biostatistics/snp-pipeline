@@ -117,6 +117,7 @@ snppipeline
     LICENSE.txt
     MANIFEST.in
     notes
+    presentations
     README.txt
     setup.py
     snppipeline
@@ -133,6 +134,28 @@ snppipeline
     snppipeline.egg-info
 
 ---
+
+Functions (no classes)
+======================
+> egrep 'def|\"\"\"' snppipeline/snppipeline.py
+def run_snp_pipeline(options_dict):
+    """Create SNP matrix
+
+> egrep 'def|\"\"\"' snppipeline/utils.py
+def pileup_wrapper(args):
+    """Wraps pileup to use multiple arguments with multiprocessing package.
+def pileup(filePath, options_dict):
+    """Run samtools to generate pileup.
+def get_consensus_base_from_pileup(base, length, data):
+    """Call the base for each SNP position
+def create_consensus_dict(pileup_file_path):
+    """Create a dict based on the information in a pileup file.
+def write_list_of_snps(file_path, snp_list_dict):    
+    """Write out list of snps for all samples to a single file.
+def write_reference_snp_file(reference_file_path, snp_list_file_path,
+    """Write out the snp fasta file for the reference.fasta using the snp
+
+
 
 Testing environment
 ===================
@@ -169,6 +192,14 @@ Your code has been rated at 2.42/10
 > pylint snppipeline/utils.py
 Your code has been rated at 6.15/10
 
+2014-03-31:
+----------
+>pylint snppipeline/snppipeline.py
+Your code has been rated at 2.42/10 
+
+> pylint snppipeline/utils.py
+Your code has been rated at 6.15/10
+
 ---
 
 The git log
@@ -187,7 +218,63 @@ github?
  * Some simple unit tests
  * Two integration tests
     *lambda virus
-    *agona 
+    *agona
+
+---
+
+More on testing
+===============
+ *utils.py
+    *./test/test_utils.py -v
+ok
+5 items had no tests:
+    utils
+    utils.pileup
+    utils.pileup_wrapper
+    utils.write_list_of_snps
+    utils.write_reference_snp_file
+2 items passed all tests:
+   3 tests in utils.create_consensus_dict
+   9 tests in utils.get_consensus_base_from_pileup
+12 tests in 7 items.
+12 passed and 0 failed.
+Test passed.
+ok
+
+ *snppileline.py
+    *./test/test_snppipeline.py -v
+[08:08 hugh.rand@CFU0142461 snppipeline] > ./test/test_snppipeline.py -v
+test_snppipeline_agona (__main__.Test)
+Run snppipeline with agona 5 samples example. ... [mpileup] 1 samples in 1 input files
+<mpileup> Set max per-file depth to 8000
+[mpileup] 1 samples in 1 input files
+<mpileup> Set max per-file depth to 8000
+[mpileup] 1 samples in 1 input files
+<mpileup> Set max per-file depth to 8000
+[mpileup] 1 samples in 1 input files
+<mpileup> Set max per-file depth to 8000
+[mpileup] 1 samples in 1 input files
+<mpileup> Set max per-file depth to 8000
+('  Match: ', ['snplist.txt', 'snpma.fasta', 'samples/CFSAN_genomes/CFSAN000448/reads.pileup', 'samples/CFSAN_genomes/CFSAN000449/reads.pileup', 'samples/CFSAN_genomes/CFSAN000450/reads.pileup', 'samples/SRA_data/ERR178930/reads.pileup', 'samples/SRA_data/ERR178931/reads.pileup', 'referenceSNP.fasta'])
+('  Mismatch: ', [])
+('  Errors: ', [])
+Match, Mismatch, Errors: 8, 0, 0
+ok
+test_snppipeline_lambda_virus (__main__.Test)
+Run snppipeline with synthetic virus example. ... [mpileup] 1 samples in 1 input files
+<mpileup> Set max per-file depth to 8000
+[mpileup] 1 samples in 1 input files
+[mpileup] 1 samples in 1 input files
+<mpileup> Set max per-file depth to 8000
+<mpileup> Set max per-file depth to 8000
+[mpileup] 1 samples in 1 input files
+<mpileup> Set max per-file depth to 8000
+Match, Mismatch, Errors: 7, 0, 0
+('  Match: ', ['snplist.txt', 'snpma.fasta', 'sample1/reads.pileup', 'sample2/reads.pileup', 'sample3/reads.pileup', 'sample4/reads.pileup', 'referenceSNP.fasta'])
+('  Mismatch: ', [])
+('  Errors: ', [])
+ok
+
 
 ---
 
