@@ -2,10 +2,10 @@
 
 from __future__ import print_function
 from Bio import SeqIO
-from sets import Set
 import operator
 import os
 import re
+import sets
 import subprocess
 import sys
 
@@ -49,6 +49,7 @@ def pileup(filePath, options_dict):
 
     verbose_print('Executing: '+command_line)
     #TODO review return values and clean up this next bit of code.
+    #  see for details: https://docs.python.org/2/library/subprocess.html#replacing-os-system
     try:
         return_code = subprocess.call(command_line,cwd=filePath,shell=True)
         if return_code < 0:
@@ -113,7 +114,7 @@ def get_consensus_base_from_pileup(base, length, data):
     i = 0
     while i < len(data):
         char = data[i]
-        if char in Set(['A','a','C','c','T','t','G','g','N','n']):
+        if char in sets.Set(['A','a','C','c','T','t','G','g','N','n']):
             base_count_dict[char.upper()] += 1
         elif char == '.' or char == ',':
             base_count_dict['.,'] += 1      

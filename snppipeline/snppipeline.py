@@ -4,8 +4,8 @@ from __future__ import print_function
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from multiprocessing import Pool
 import argparse
+import multiprocessing
 import os
 import pprint
 import utils
@@ -177,7 +177,7 @@ def run_snp_pipeline(options_dict):
     
     verbose_print("Starting Pileups.")
 
-    pool        = Pool(processes=options_dict['maxThread']) # start pool
+    pool        = multiprocessing.Pool(processes=options_dict['maxThread']) # start pool
     result_many = pool.map(utils.pileup_wrapper, parameter_list) #parallel
     
     verbose_pprint(result_many)
