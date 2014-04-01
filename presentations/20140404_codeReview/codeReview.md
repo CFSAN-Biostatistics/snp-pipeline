@@ -221,6 +221,9 @@ github?
 
 #The tests
 ==========
+ * Packages
+    unittest
+    doctest
  * Some simple unit tests
  * Two integration tests
     *lambda virus
@@ -230,8 +233,8 @@ github?
 
 More on testing
 ===============
- *utils.py
-    *./test/test_utils.py -v
+>./test/test_utils.py -v
+...
 ok
 5 items had no tests:
     utils
@@ -247,38 +250,19 @@ ok
 Test passed.
 ok
 
- *snppileline.py
-    *./test/test_snppipeline.py -v
-[08:08 hugh.rand@CFU0142461 snppipeline] > ./test/test_snppipeline.py -v
+snppileline.py
+> ./test/test_snppipeline.py -v
 test_snppipeline_agona (__main__.Test)
 Run snppipeline with agona 5 samples example. ... [mpileup] 1 samples in 1 input files
-<mpileup> Set max per-file depth to 8000
-[mpileup] 1 samples in 1 input files
-<mpileup> Set max per-file depth to 8000
-[mpileup] 1 samples in 1 input files
-<mpileup> Set max per-file depth to 8000
-[mpileup] 1 samples in 1 input files
-<mpileup> Set max per-file depth to 8000
-[mpileup] 1 samples in 1 input files
-<mpileup> Set max per-file depth to 8000
-('  Match: ', ['snplist.txt', 'snpma.fasta', 'samples/CFSAN_genomes/CFSAN000448/reads.pileup', 'samples/CFSAN_genomes/CFSAN000449/reads.pileup', 'samples/CFSAN_genomes/CFSAN000450/reads.pileup', 'samples/SRA_data/ERR178930/reads.pileup', 'samples/SRA_data/ERR178931/reads.pileup', 'referenceSNP.fasta'])
-('  Mismatch: ', [])
-('  Errors: ', [])
+...
 Match, Mismatch, Errors: 8, 0, 0
+...
 ok
 test_snppipeline_lambda_virus (__main__.Test)
 Run snppipeline with synthetic virus example. ... [mpileup] 1 samples in 1 input files
-<mpileup> Set max per-file depth to 8000
-[mpileup] 1 samples in 1 input files
-[mpileup] 1 samples in 1 input files
-<mpileup> Set max per-file depth to 8000
-<mpileup> Set max per-file depth to 8000
-[mpileup] 1 samples in 1 input files
-<mpileup> Set max per-file depth to 8000
+...
 Match, Mismatch, Errors: 7, 0, 0
-('  Match: ', ['snplist.txt', 'snpma.fasta', 'sample1/reads.pileup', 'sample2/reads.pileup', 'sample3/reads.pileup', 'sample4/reads.pileup', 'referenceSNP.fasta'])
-('  Mismatch: ', [])
-('  Errors: ', [])
+...
 ok
 
 
