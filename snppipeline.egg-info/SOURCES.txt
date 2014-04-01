@@ -1,0 +1,14 @@
+MANIFEST.in
+README.txt
+setup.py
+snppipeline/4snplist_matrix_P_01022014.py
+snppipeline/4snplist_matrix_P_02262014.py
+snppipeline/snppipeline.py
+snppipeline/utils.py
+snppipeline.egg-info/PKG-INFO
+snppipeline.egg-info/SOURCES.txt
+snppipeline.egg-info/dependency_links.txt
+snppipeline.egg-info/requires.txt
+snppipeline.egg-info/top_level.txt
+test/test_snppipeline.py
+test/test_utils.py
