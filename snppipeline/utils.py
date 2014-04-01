@@ -6,7 +6,8 @@ from sets import Set
 import operator
 import os
 import re
-#import subprocess
+import subprocess
+import sys
 
 def pileup_wrapper(args):
     """Wraps pileup to use multiple arguments with multiprocessing package.
@@ -44,10 +45,19 @@ def pileup(filePath, options_dict):
             options_dict['bamFileName'] +
             ' > ' + options_dict['pileupFileName']
     )
+
     verbose_print('Executing: '+command_line)
-    
-    return_code = os.system(command_line)  #TODO - replace with subprocess call at some point
-    #subprocess.call(command_line,cwd=filePath)  #TODO - need to make this work
+    #TODO review return values and clean up this next bit of code.
+    try:
+        return_code = subprocess.call(command_line,cwd=filePath,shell=True)
+        if return_code < 0:
+            sys.stderr.write("Child was terminated by signal: " + str(return_code))
+        else:
+            verbose_print("Child returned: " + str(return_code))
+    except OSError as e:
+        sys.stderr.write("Execution failed: " + str(e))
+
+
     verbose_print("samtools return code: ", return_code)
     if not os.path.isfile(pileup_file):
         print('Pileup file not created: '+pileup_file)
