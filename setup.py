@@ -15,7 +15,7 @@ setup(
     sequence data used in the phylogenetic analysis of pathogenic
     organisms sequenced from samples of interest to food safety.
     """,
-    #download_url='',#TODO    
+    #download_url='',#TODO    #TODO set this up properly
 #        exclude_package_data = {
 #            #Exclude any ARCHIVE directories
 #            '': ['ARCHIVE'],

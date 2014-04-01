@@ -177,11 +177,13 @@ a virtual machine for testing the egg.
         ./test/test_snppipeline.py
         ./test/test_utils.py
 
-20140324-har:Test code works, though will want to change hard-coded paths in future. From
+20140324-har: Test code works, though will want to change hard-coded paths in future. From
     the directory /home/hugh.rand/projects/snppipeline, can run the snppipeline test by:
     ./test/test_snppipeline.py
 
-20140331-har:Am now running pylint to aid in improving code:
+20140331-har: Am now running pylint to aid in improving code:
     pylint snppipeline/snppipeline.py
     pylint snppipeline/utils.py
- 
+
+20140401-har: Virtual machine to use in testing egg install is available via vmware:
+    vmplayer
