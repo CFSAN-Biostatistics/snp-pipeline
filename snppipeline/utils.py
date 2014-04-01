@@ -22,8 +22,8 @@ def pileup(filePath, options_dict):
     
     Args:
         filePath: Path   #TODO - finish
-        options_dict: Specified command-line options #TODO - finish
-    #TODO - allow for reading of already done pileup?
+        options_dict: Dictionary containing command-line options as per
+            documention for run_snp_pipeline.
     """
     verbose = False
     verbose_print = print if verbose else lambda *a, **k: None
@@ -33,6 +33,7 @@ def pileup(filePath, options_dict):
     pileup_file  = filePath + "/reads.pileup"
     snplist_file = options_dict['mainPath'] + options_dict['snplistFileName']
     
+    #TODO - allow for use of previously done pileup via command line argument?
     if os.path.isfile(pileup_file):
         verbose_print('Removing old pileup file '+pileup_file)
         os.remove(pileup_file)
@@ -181,6 +182,7 @@ def create_consensus_dict(pileup_file_path):
 def write_list_of_snps(file_path, snp_list_dict):    
     """Write out list of snps for all samples to a single file.
     """
+    #TODO finish documentation
     snp_list_file_object = open(file_path, "w")
     for key in sorted(snp_list_dict.iterkeys()):
         snp_list_file_object.write(key)
@@ -194,8 +196,10 @@ def write_list_of_snps(file_path, snp_list_dict):
 def write_reference_snp_file(reference_file_path, snp_list_file_path,
                              snp_reference_file_path):
     """Write out the snp fasta file for the reference.fasta using the snp
-    position file ( snplist.txt). #TODO actual code is more general - document at some point.
+    position file ( snplist.txt).
     """
+    #TODO finish documentation
+    #TODO actual code is more general than stated - document at some point.
      
     position_list = [line.split() for line in open(snp_list_file_path, "r")]
     match_dict    = SeqIO.to_dict(SeqIO.parse(reference_file_path,"fasta"))

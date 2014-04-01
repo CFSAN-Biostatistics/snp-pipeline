@@ -228,7 +228,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Run SNP pipeline.')
     parser.add_argument('-n', '--n-processes',      dest='maxThread',        type=int,  default=4,                 help='Max number of concurrent jobs.')
-    parser.add_argument('-d', '--mainPath',         dest='mainPath',         type=str,  default='/home/yan.luo/Desktop/analysis/Montevideo/XL-C2/bowtie/Matrices/', help='Path for all files')
+    parser.add_argument('-d', '--mainPath',         dest='mainPath',         type=str,  default='', help='Path for all files')
     parser.add_argument('-r', '--Reference',        dest='Reference',        type=str,  default='reference.fasta', help='reference for mapping')
     parser.add_argument('-f', '--pathFileName',     dest='pathFileName',     type=str,  default='path.txt',        help='Path file name')
     parser.add_argument('-l', '--snplistFileName',  dest='snplistFileName',  type=str,  default='snplist.txt',     help='Snplist file name')

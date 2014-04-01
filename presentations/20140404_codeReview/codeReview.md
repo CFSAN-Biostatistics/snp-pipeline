@@ -196,13 +196,15 @@ Your code has been rated at 2.42/10
 > pylint snppipeline/utils.py
 Your code has been rated at 6.15/10
 
-2014-03-31:
+2014-04-01:
 ----------
->pylint snppipeline/snppipeline.py
-Your code has been rated at 2.42/10 
+>pylint snppipeline/utils.py | grep "rated"
+No config file found, using default configuration
+Your code has been rated at 7.72/10 (previous run: 7.72/10)
 
-> pylint snppipeline/utils.py
-Your code has been rated at 6.15/10
+>pylint snppipeline/snppipeline.py | grep "rated"
+No config file found, using default configuration
+Your code has been rated at 5.68/10 (previous run: 5.68/10)
 
 ---
 
