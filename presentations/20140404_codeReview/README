@@ -1,0 +1,5 @@
+#One way to generate the slides from markdown:
+landslide -o codeReview.md > codeReview.html 
+
+#One way to generate pdf from markdown:
+landslide codeReview.md -d codereview.pdf
