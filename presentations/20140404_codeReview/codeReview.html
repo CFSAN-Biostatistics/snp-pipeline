@@ -57,7 +57,7 @@
             
             
             <section><ul>
-<li>Hugh Rand and Yan Luo</li>
+<li>Hugh Rand, Yan Luo, Jamie Pettengill, Errol Strain</li>
 <li>2014-04-04</li>
 </ul></section>
             
@@ -75,7 +75,7 @@
             </aside>
             
             <aside class="page_number">
-              1/25
+              1/28
             </aside>
           </footer>
         </div>
@@ -111,7 +111,139 @@
             </aside>
             
             <aside class="page_number">
-              2/25
+              2/28
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: codeReview.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Current Concerns</h1></header>
+            
+            
+            <section><ul>
+<li>Have I got all the right pieces?</li>
+<li>Am I going in the right direction?</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="codeReview.md">codeReview.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              3/28
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: codeReview.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>How it gets used</h1></header>
+            
+            
+            <section><pre><code>1. Align sequences to reference
+        bowtie2-align -p 11 -q -x /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus -1 reads4_1.fq -2 reads4_2.fq &gt; reads4.sam
+
+2. Convert to bam file with only mapped positions
+        samtools view -bS -F 4 -o /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reads/reads1_F4.bam reads1.sam
+
+3. Convert to a sorted bam 
+        samtools sort  reads4_F4.bam reads4_F4.sorted.bam
+
+4. Get a bcf file from the pileup and bam file
+        samtools mpileup -uf /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus.fa reads1_F4.sorted.bam.bam | bcftools view -bvcg - &gt; reads1_F4.bcf
+
+5. Convert bcf to vcf
+        bcftools view reads1_F4.bcf | vcfutils.pl varFilter -D1000 &gt; var1_F4.flt.vcf
+
+6. Run samtools pileup in parallel and combine alignment and pileup to generate snp matrix
+        ./snppipeline.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+</code></pre></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="codeReview.md">codeReview.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              4/28
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: codeReview.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Command line use</h1></header>
+            
+            
+            <section><p>!python
+if <strong>name</strong> == '<strong>main</strong>':</p>
+<pre><code>parser = argparse.ArgumentParser(description='Run SNP pipeline.')
+parser.add_argument('-n', '--n-processes',      dest='maxThread',        type=int,  default=4,                 help='Max number of concurrent jobs.')
+parser.add_argument('-d', '--mainPath',         dest='mainPath',         type=str,  default='', help='Path for all files')
+parser.add_argument('-r', '--Reference',        dest='Reference',        type=str,  default='reference.fasta', help='reference for mapping')
+parser.add_argument('-f', '--pathFileName',     dest='pathFileName',     type=str,  default='path.txt',        help='Path file name')
+parser.add_argument('-l', '--snplistFileName',  dest='snplistFileName',  type=str,  default='snplist.txt',     help='Snplist file name')
+parser.add_argument('-a', '--snpmaFileName',    dest='snpmaFileName',    type=str,  default='snpma.fa',        help='fasta file name')
+parser.add_argument('-b', '--bamFileName',      dest='bamFileName',      type=str,  default='reads.bam',       help='bam file name')
+parser.add_argument('-p', '--pileupFileName',   dest='pileupFileName',   type=str,  default='reads.pileup',    help='pileup file name')
+parser.add_argument('-v', '--verbose',          dest='verbose',          type=int,  default=1,                 help='Verbose flag (0=no info, 5=lots')
+parser.add_argument('-i', '--includeReference', dest='includeReference', type=bool, default=False,             help='Write reference sequence bases at SNP positions in fasta format.')
+parser.add_argument('-o', '--useOldPileups',    dest='useOldPileups',    type=bool, default=False,             help='Use available pileup files.')
+parser.add_argument(      '--DP',               dest='combinedDepthAcrossSamples',       type=int,   default=10,  help='Combined depth across samples.')
+parser.add_argument(      '--AF1',              dest='alleleFrequencyForFirstALTAllele', type=float, default=1.0, help='Allele frequency for first allele.')
+parser.add_argument(      '--AR',               dest='arFlagValue',                      type=float, default=1.0, help='AR flag value.')
+args_dict = vars(parser.parse_args())
+
+print("Running SNP pipeline with arguments:")
+pprint.pprint(args_dict)
+run_snp_pipeline(args_dict)
+</code></pre></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="codeReview.md">codeReview.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              5/28
             </aside>
           </footer>
         </div>
@@ -129,7 +261,7 @@
 <ul>
 <li>Errol - 1st version</li>
 <li>Yan   - 2nd version</li>
-<li>Hugh  - 'packageizing'</li>
+<li>Hugh  - package creation</li>
 <li>Hugh  - speed</li>
 </ul>
 <h2>Use</h2>
@@ -163,7 +295,7 @@
             </aside>
             
             <aside class="page_number">
-              3/25
+              6/28
             </aside>
           </footer>
         </div>
@@ -212,7 +344,7 @@
             </aside>
             
             <aside class="page_number">
-              4/25
+              7/28
             </aside>
           </footer>
         </div>
@@ -257,7 +389,7 @@
             </aside>
             
             <aside class="page_number">
-              5/25
+              8/28
             </aside>
           </footer>
         </div>
@@ -306,7 +438,7 @@
             </aside>
             
             <aside class="page_number">
-              6/25
+              9/28
             </aside>
           </footer>
         </div>
@@ -347,7 +479,7 @@
             </aside>
             
             <aside class="page_number">
-              7/25
+              10/28
             </aside>
           </footer>
         </div>
@@ -391,7 +523,7 @@
             </aside>
             
             <aside class="page_number">
-              8/25
+              11/28
             </aside>
           </footer>
         </div>
@@ -424,7 +556,7 @@
             </aside>
             
             <aside class="page_number">
-              9/25
+              12/28
             </aside>
           </footer>
         </div>
@@ -460,7 +592,7 @@
             </aside>
             
             <aside class="page_number">
-              10/25
+              13/28
             </aside>
           </footer>
         </div>
@@ -510,7 +642,7 @@
             </aside>
             
             <aside class="page_number">
-              11/25
+              14/28
             </aside>
           </footer>
         </div>
@@ -521,7 +653,7 @@
         <div class="slide">
           <div class="inner">
             
-            <header><h1>Functions (no classes)</h1></header>
+            <header><h1>Functions</h1></header>
             
             
             <section><p>egrep 'def |\"\"\"' ../../snppipeline/snppipeline.py | sed -e 's/\"\"\"//'</p>
@@ -561,37 +693,7 @@
             </aside>
             
             <aside class="page_number">
-              12/25
-            </aside>
-          </footer>
-        </div>
-      </div>
-      
-      <!-- slide source: codeReview.md -->
-      <div class="slide-wrapper">
-        <div class="slide">
-          <div class="inner">
-            
-            <header><h1>Function call graph</h1></header>
-            
-            
-            <section><p>pycallgraph</p></section>
-            
-          </div>
-          <div class="presenter_notes">
-            <header><h1>Presenter Notes</h1></header>
-            <section>
-            
-            </section>
-          </div>
-          <footer>
-            
-            <aside class="source">
-              Source: <a href="codeReview.md">codeReview.md</a>
-            </aside>
-            
-            <aside class="page_number">
-              13/25
+              15/28
             </aside>
           </footer>
         </div>
@@ -633,7 +735,7 @@
             </aside>
             
             <aside class="page_number">
-              14/25
+              16/28
             </aside>
           </footer>
         </div>
@@ -647,7 +749,7 @@
             <header><h1>Where to put the code?</h1></header>
             
             
-            <section><p>svn: https://xserve19.fda.gov/svn/bioin/mapping?</p></section>
+            <section><p>svn: https://xserve19.fda.gov/svn/bioin/mapping</p></section>
             
           </div>
           <div class="presenter_notes">
@@ -663,7 +765,7 @@
             </aside>
             
             <aside class="page_number">
-              15/25
+              17/28
             </aside>
           </footer>
         </div>
@@ -678,14 +780,18 @@
             
             
             <section><h2>2014-04-01:</h2>
-<blockquote>
-<p>pylint snppipeline/utils.py | grep "rated"
-No config file found, using default configuration
+<ul>
+<li>
+<p>pylint snppipeline/utils.py | grep "rated"</p>
+<p>No config file found, using default configuration
 Your code has been rated at 7.72/10 (previous run: 7.72/10)</p>
-<p>pylint snppipeline/snppipeline.py | grep "rated"
-No config file found, using default configuration
+</li>
+<li>
+<p>pylint snppipeline/snppipeline.py | grep "rated"</p>
+<p>No config file found, using default configuration
 Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
-</blockquote></section>
+</li>
+</ul></section>
             
           </div>
           <div class="presenter_notes">
@@ -701,7 +807,7 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
             </aside>
             
             <aside class="page_number">
-              16/25
+              18/28
             </aside>
           </footer>
         </div>
@@ -712,8 +818,20 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
         <div class="slide">
           <div class="inner">
             
-            <header><h1>The git log</h1></header>
+            <header><h1>Version control log 2014-04-02</h1></header>
             
+            
+            <section><ul>
+<li>1 * bba51bd - (HEAD, master) More work on presentation. (4 seconds ago) <Hugh Rand></li>
+<li>2 * 717597d - snppipeline.egg-info added to git tracking. (17 hours ago) <Hugh Rand></li>
+<li>3 * 2d84d4c - Clean up imports. (17 hours ago) <Hugh Rand></li>
+<li>4 * 440a340 - Presentation edited.  focus on documentation, egg building, and code review prep. (23 hours ago) <Hugh Rand></li>
+<li>...</li>
+<li>89 * 15d15d0 - (tag: NoErrorOriginalCode) Now know how to run old code with data in test file. (5 weeks ago) <Rand></li>
+<li>90 * 6f70b77 - Minor changes to code. Brought in original single-file code for testing. (5 weeks ago) <Rand></li>
+<li>91 * a626adc - Working on pulling apart code into package. Added test data from Jamie. (5 weeks ago) <Rand></li>
+<li>92 * 63dabb1 - Initial set of code to get started. (6 weeks ago) <Rand></li>
+</ul></section>
             
           </div>
           <div class="presenter_notes">
@@ -729,7 +847,7 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
             </aside>
             
             <aside class="page_number">
-              17/25
+              19/28
             </aside>
           </footer>
         </div>
@@ -759,7 +877,7 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
             </aside>
             
             <aside class="page_number">
-              18/25
+              20/28
             </aside>
           </footer>
         </div>
@@ -773,141 +891,16 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
             <header><h1>The tests</h1></header>
             
             
-            <section><p>-Packages
-    unittest
-    doctest
--Some simple unit tests
--Two integration tests
-    <em>lambda virus
-    </em>agona</p></section>
-            
-          </div>
-          <div class="presenter_notes">
-            <header><h1>Presenter Notes</h1></header>
-            <section>
-            
-            </section>
-          </div>
-          <footer>
-            
-            <aside class="source">
-              Source: <a href="codeReview.md">codeReview.md</a>
-            </aside>
-            
-            <aside class="page_number">
-              19/25
-            </aside>
-          </footer>
-        </div>
-      </div>
-      
-      <!-- slide source: codeReview.md -->
-      <div class="slide-wrapper">
-        <div class="slide">
-          <div class="inner">
-            
-            <header><h1>Some Test Output</h1></header>
-            
-            
-            <section><blockquote>
-<p>./test/test_utils.py -v
-...
-ok
-5 items had no tests:
-    utils
-    utils.pileup
-    utils.pileup_wrapper
-    utils.write_list_of_snps
-    utils.write_reference_snp_file
-2 items passed all tests:
-   3 tests in utils.create_consensus_dict
-   9 tests in utils.get_consensus_base_from_pileup
-12 tests in 7 items.
-12 passed and 0 failed.
-Test passed.
-ok</p>
-</blockquote>
-<p>snppileline.py</p>
-<blockquote>
-<p>./test/test_snppipeline.py -v
-test_snppipeline_agona (<strong>main</strong>.Test)
-Run snppipeline with agona 5 samples example. ... [mpileup] 1 samples in 1 input files
-...
-Match, Mismatch, Errors: 8, 0, 0
-...
-ok
-test_snppipeline_lambda_virus (<strong>main</strong>.Test)
-Run snppipeline with synthetic virus example. ... [mpileup] 1 samples in 1 input files
-...
-Match, Mismatch, Errors: 7, 0, 0
-...
-ok</p>
-</blockquote></section>
-            
-          </div>
-          <div class="presenter_notes">
-            <header><h1>Presenter Notes</h1></header>
-            <section>
-            
-            </section>
-          </div>
-          <footer>
-            
-            <aside class="source">
-              Source: <a href="codeReview.md">codeReview.md</a>
-            </aside>
-            
-            <aside class="page_number">
-              20/25
-            </aside>
-          </footer>
-        </div>
-      </div>
-      
-      <!-- slide source: codeReview.md -->
-      <div class="slide-wrapper">
-        <div class="slide">
-          <div class="inner">
-            
-            <header><h1>References</h1></header>
-            
-            
-          </div>
-          <div class="presenter_notes">
-            <header><h1>Presenter Notes</h1></header>
-            <section>
-            
-            </section>
-          </div>
-          <footer>
-            
-            <aside class="source">
-              Source: <a href="codeReview.md">codeReview.md</a>
-            </aside>
-            
-            <aside class="page_number">
-              21/25
-            </aside>
-          </footer>
-        </div>
-      </div>
-      
-      <!-- slide source: codeReview.md -->
-      <div class="slide-wrapper">
-        <div class="slide">
-          <div class="inner">
-            
-            <header><h1>Building Python Eggs</h1></header>
-            
-            
             <section><ul>
 <li>Packages<ul>
-<li>distutils</li>
-<li>setuptools</li>
+<li>unittest</li>
+<li>doctest</li>
 </ul>
 </li>
-<li>Code<ul>
-<li>setup.py</li>
+<li>Some simple unit tests</li>
+<li>Two integration tests<ul>
+<li>lambda virus</li>
+<li>agona</li>
 </ul>
 </li>
 </ul></section>
@@ -926,7 +919,96 @@ ok</p>
             </aside>
             
             <aside class="page_number">
-              22/25
+              21/28
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: codeReview.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Some Test Output - 1</h1></header>
+            
+            
+            <section><pre><code>./test/test_utils.py -v
+...
+ok
+5 items had no tests:
+    utils
+    utils.pileup
+    utils.pileup_wrapper
+    utils.write_list_of_snps
+    utils.write_reference_snp_file
+2 items passed all tests:
+3 tests in utils.create_consensus_dict
+9 tests in utils.get_consensus_base_from_pileup
+12 tests in 7 items.
+12 passed and 0 failed.
+Test passed.
+ok
+</code></pre></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="codeReview.md">codeReview.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              22/28
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: codeReview.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Some Test Output - 2</h1></header>
+            
+            
+            <section><pre><code>./test/test_snppipeline.py -v
+test_snppipeline_agona (__main__.Test)
+Run snppipeline with agona 5 samples example. ... [mpileup] 1 samples in 1 input files
+...
+Match, Mismatch, Errors: 8, 0, 0
+...
+ok
+test_snppipeline_lambda_virus (__main__.Test)
+Run snppipeline with synthetic virus example. ... [mpileup] 1 samples in 1 input files
+...
+Match, Mismatch, Errors: 7, 0, 0
+...
+ok
+</code></pre></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="codeReview.md">codeReview.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              23/28
             </aside>
           </footer>
         </div>
@@ -954,7 +1036,29 @@ ok</p>
             </aside>
             
             <aside class="page_number">
-              23/25
+              24/28
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source:  -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="page_number">
+              /28
             </aside>
           </footer>
         </div>
@@ -965,10 +1069,50 @@ ok</p>
         <div class="slide">
           <div class="inner">
             
-            <header><h1>Python Eggs</h1></header>
+            <header><h1>References</h1></header>
             
             
-            <section><p>A "Python egg" is a logical structure embodying the release of a specific
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="codeReview.md">codeReview.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              25/28
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: codeReview.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Building Python Eggs</h1></header>
+            
+            
+            <section><ul>
+<li>Packages<ul>
+<li>distutils</li>
+<li>setuptools</li>
+</ul>
+</li>
+<li>Code<ul>
+<li>setup.py</li>
+</ul>
+</li>
+</ul>
+<h1>Python Eggs</h1>
+<p>A "Python egg" is a logical structure embodying the release of a specific
 version of a Python project, comprising its code, resources, and metadata.
 There are multiple formats that can be used to physically encode a Python egg,
 and others can be developed. However, a key principle of Python eggs is that
@@ -997,7 +1141,7 @@ use.</p>
             </aside>
             
             <aside class="page_number">
-              24/25
+              26/28
             </aside>
           </footer>
         </div>
@@ -1025,7 +1169,37 @@ use.</p>
             </aside>
             
             <aside class="page_number">
-              25/25
+              27/28
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: codeReview.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Function call graph</h1></header>
+            
+            
+            <section><p>pycallgraph</p></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="codeReview.md">codeReview.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              28/28
             </aside>
           </footer>
         </div>
@@ -1052,140 +1226,158 @@ use.</p>
       
       
       <tr id="toc-row-3">
-        <th><a href="#slide3">Code History and Use</a></th>
+        <th><a href="#slide3">Current Concerns</a></th>
         <td><a href="#slide3">3</a></td>
       </tr>
       
       
       <tr id="toc-row-4">
-        <th><a href="#slide4">Goals</a></th>
+        <th><a href="#slide4">How it gets used</a></th>
         <td><a href="#slide4">4</a></td>
       </tr>
       
       
       <tr id="toc-row-5">
-        <th><a href="#slide5">Some background</a></th>
+        <th><a href="#slide5">Command line use</a></th>
         <td><a href="#slide5">5</a></td>
       </tr>
       
       
       <tr id="toc-row-6">
-        <th><a href="#slide6">The 'ecosystem' - Part 1</a></th>
+        <th><a href="#slide6">Code History and Use</a></th>
         <td><a href="#slide6">6</a></td>
       </tr>
       
       
       <tr id="toc-row-7">
-        <th><a href="#slide7">The 'ecosystem' - Part 2</a></th>
+        <th><a href="#slide7">Goals</a></th>
         <td><a href="#slide7">7</a></td>
       </tr>
       
       
       <tr id="toc-row-8">
-        <th><a href="#slide8">What I did - Part 1</a></th>
+        <th><a href="#slide8">Some background</a></th>
         <td><a href="#slide8">8</a></td>
       </tr>
       
       
       <tr id="toc-row-9">
-        <th><a href="#slide9">What I did - Part 2</a></th>
+        <th><a href="#slide9">The 'ecosystem' - Part 1</a></th>
         <td><a href="#slide9">9</a></td>
       </tr>
       
       
       <tr id="toc-row-10">
-        <th><a href="#slide10">What Remains to do</a></th>
+        <th><a href="#slide10">The 'ecosystem' - Part 2</a></th>
         <td><a href="#slide10">10</a></td>
       </tr>
       
       
       <tr id="toc-row-11">
-        <th><a href="#slide11">Package layout - snppipeline</a></th>
+        <th><a href="#slide11">What I did - Part 1</a></th>
         <td><a href="#slide11">11</a></td>
       </tr>
       
       
       <tr id="toc-row-12">
-        <th><a href="#slide12">Functions (no classes)</a></th>
+        <th><a href="#slide12">What I did - Part 2</a></th>
         <td><a href="#slide12">12</a></td>
       </tr>
       
       
       <tr id="toc-row-13">
-        <th><a href="#slide13">Function call graph</a></th>
+        <th><a href="#slide13">What Remains to do</a></th>
         <td><a href="#slide13">13</a></td>
       </tr>
       
       
       <tr id="toc-row-14">
-        <th><a href="#slide14">Testing environment</a></th>
+        <th><a href="#slide14">Package layout - snppipeline</a></th>
         <td><a href="#slide14">14</a></td>
       </tr>
       
       
       <tr id="toc-row-15">
-        <th><a href="#slide15">Where to put the code?</a></th>
+        <th><a href="#slide15">Functions</a></th>
         <td><a href="#slide15">15</a></td>
       </tr>
       
       
       <tr id="toc-row-16">
-        <th><a href="#slide16">pylint</a></th>
+        <th><a href="#slide16">Testing environment</a></th>
         <td><a href="#slide16">16</a></td>
       </tr>
       
       
       <tr id="toc-row-17">
-        <th><a href="#slide17">The git log</a></th>
+        <th><a href="#slide17">Where to put the code?</a></th>
         <td><a href="#slide17">17</a></td>
       </tr>
       
       
       <tr id="toc-row-18">
-        <th><a href="#slide18">Making the code public</a></th>
+        <th><a href="#slide18">pylint</a></th>
         <td><a href="#slide18">18</a></td>
       </tr>
       
       
       <tr id="toc-row-19">
-        <th><a href="#slide19">The tests</a></th>
+        <th><a href="#slide19">Version control log 2014-04-02</a></th>
         <td><a href="#slide19">19</a></td>
       </tr>
       
       
       <tr id="toc-row-20">
-        <th><a href="#slide20">Some Test Output</a></th>
+        <th><a href="#slide20">Making the code public</a></th>
         <td><a href="#slide20">20</a></td>
       </tr>
       
       
       <tr id="toc-row-21">
-        <th><a href="#slide21">References</a></th>
+        <th><a href="#slide21">The tests</a></th>
         <td><a href="#slide21">21</a></td>
       </tr>
       
       
       <tr id="toc-row-22">
-        <th><a href="#slide22">Building Python Eggs</a></th>
+        <th><a href="#slide22">Some Test Output - 1</a></th>
         <td><a href="#slide22">22</a></td>
       </tr>
       
       
       <tr id="toc-row-23">
-        <th><a href="#slide23">BACKUP</a></th>
+        <th><a href="#slide23">Some Test Output - 2</a></th>
         <td><a href="#slide23">23</a></td>
       </tr>
       
       
       <tr id="toc-row-24">
-        <th><a href="#slide24">Python Eggs</a></th>
+        <th><a href="#slide24">BACKUP</a></th>
         <td><a href="#slide24">24</a></td>
       </tr>
       
       
       <tr id="toc-row-25">
-        <th><a href="#slide25">CDC Pipeline</a></th>
+        <th><a href="#slide25">References</a></th>
         <td><a href="#slide25">25</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-26">
+        <th><a href="#slide26">Building Python Eggs</a></th>
+        <td><a href="#slide26">26</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-27">
+        <th><a href="#slide27">CDC Pipeline</a></th>
+        <td><a href="#slide27">27</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-28">
+        <th><a href="#slide28">Function call graph</a></th>
+        <td><a href="#slide28">28</a></td>
       </tr>
       
       
