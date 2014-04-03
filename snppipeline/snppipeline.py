@@ -37,33 +37,20 @@ def run_snp_pipeline(options_dict):
             var.flt.vcf file.            
         4. The snpma.fasta file contains the SNP calls for each sequence,
             arranged as a fasta file with one sequence per sample.
-        5. The reads.pileup files are used to determine the nucleotide base at
+        5. The reads.bam file is used by the samtools pileup program to
+            generate the pileup files for each sequence.
+        6. The reads.pileup files are used to determine the nucleotide base at
             each SNP position for each sample to construct the SNP fasta file.
-        6. The variant file var.flt.vcf is used to construct the SNP position
+        7. The variant file var.flt.vcf is used to construct the SNP position
             list. 
     
     The samtool pileups are run in parallel using the python multiprocessing
         package.
     
-    The vcf files are created outside of this function. Here we provide an
-        example of creating these files based on the lambda_virus sequence
-        that we use as one test for this package:
+    The vcf and bam files are created outside of this function. The package
+        documentation provides an example of creating these files based on the
+        lambda_virus sequence that is use as one test for this package:
         
-        1. Align sequences to reference
-            bowtie2-align -p 11 -q -x /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus -1 reads4_1.fq -2 reads4_2.fq > reads4.sam
-
-        2. Convert to bam file with only mapped positions
-            samtools view -bS -F 4 -o /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reads/reads1_F4.bam reads1.sam
-
-        3. Convert to a sorted bam 
-            samtools sort  reads4_F4.bam reads4_F4.sorted.bam
-
-        4. To get a bcf file from the pileup and bam file
-            samtools mpileup -uf /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus.fa reads1_F4.sorted.bam.bam | bcftools view -bvcg - > reads1_F4.bcf
-
-        5. To convert bcf to vcf
-            bcftools view reads1_F4.bcf | vcfutils.pl varFilter -D1000 > var1_F4.flt.vcf    
-
     Args:
         maxThread: (15) Max number of cocurrent threads.
         mainPath:  (no default) Directory containing all input files. Output
@@ -105,9 +92,11 @@ def run_snp_pipeline(options_dict):
     #Prep work
     #Note use of filter on list_of_sample_directories to remove blank lines.
     #==========================================================================
+
     verbose = False
     verbose_print  = print         if verbose else lambda *a, **k: None
     verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
+
     #TODO use os.path.join consistently through code for path creation?
     sample_directories_list_filename = (options_dict['mainPath'] +
                                         options_dict['pathFileName'])
@@ -148,7 +137,7 @@ def run_snp_pipeline(options_dict):
             if (('AR' in vcf_data_line.INFO) and
                 (vcf_data_line.INFO['AR'] == options_dict['arFlagValue'])):
                 af1_flag = True
-            # find a good record fo SNP position, save data to hash
+            # find a good record for SNP position, save data to hash
             verbose_print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
             if dp_flag and af1_flag:
                 if not snp_list_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):

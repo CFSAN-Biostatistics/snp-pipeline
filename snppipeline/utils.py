@@ -184,14 +184,15 @@ def write_list_of_snps(file_path, snp_list_dict):
     """Write out list of snps for all samples to a single file.
     """
     #TODO finish documentation
-    snp_list_file_object = open(file_path, "w")
-    for key in sorted(snp_list_dict.iterkeys()):
-        snp_list_file_object.write(key)
-        values = snp_list_dict[key]
-        for value in values:
-            snp_list_file_object.write("\t" + str(value))
-        snp_list_file_object.write("\n")
-    snp_list_file_object.close()
+    with open(file_path, "w") as snp_list_file_object:
+    #snp_list_file_object = open(file_path, "w")
+        for key in sorted(snp_list_dict.iterkeys()):
+            snp_list_file_object.write(key)
+            values = snp_list_dict[key]
+            for value in values:
+                snp_list_file_object.write("\t" + str(value))
+            snp_list_file_object.write("\n")
+    #snp_list_file_object.close()
 
 
 def write_reference_snp_file(reference_file_path, snp_list_file_path,
@@ -205,13 +206,14 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
     position_list = [line.split() for line in open(snp_list_file_path, "r")]
     match_dict    = SeqIO.to_dict(SeqIO.parse(reference_file_path,"fasta"))
 
-    snp_reference_file_object  = open(snp_reference_file_path,"w")
-    for orderedId in sorted(match_dict.keys()):
-        snp_reference_file_object.write(">" + orderedId + "\n")
-        for position in position_list:
-            ChromID, PosID = position[0:2]
-            if ChromID == orderedId:
-                snp_reference_file_object.write(match_dict[orderedId][int(PosID)-1].upper())
-    
-    snp_reference_file_object.close()
+    with open(snp_reference_file_path,"w") as snp_reference_file_object:
+#    snp_reference_file_object  = open(snp_reference_file_path,"w")
+        for orderedId in sorted(match_dict.keys()):
+            snp_reference_file_object.write(">" + orderedId + "\n")
+            for position in position_list:
+                ChromID, PosID = position[0:2]
+                if ChromID == orderedId:
+                    snp_reference_file_object.write(match_dict[orderedId][int(PosID)-1].upper())
+        
+#    snp_reference_file_object.close()
     

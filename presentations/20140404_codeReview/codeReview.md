@@ -8,39 +8,116 @@
 #Thanks To
 
 - Yan - graciously letting me rearrange her code.
-- Jamie - for help testing and troubleshooting.
-- Errol - for prodding me along.
-- John I. - for an idea about how do one thing.
-- Fish - for prodding on code reviews.
+- Jamie - help testing and troubleshooting.
+- Errol - prodding me along.
+- John I. - an idea about how to do one thing.
+- Fish - prodding on code reviews.
+
+---
+
+#What Has Gotten Done
+
+- Rebuilt code, close to egg-ready
+- Many pieces in place to review architecture
 
 ---
 
 #Current Concerns
 
 - Have I got all the right pieces?
+    - Novoalign vs Bowtie2
+
 - Am I going in the right direction?
+    - Why do we do the pileups twice?
+    - Alternate architecture?
+        - VCF (and other) file generator
+	- SNP matrix generator
+
+- Are we done with changes for v0.1
+    - Documentation
+    - Proper python egg
 
 ---
 
-#How it gets used
+#Graphic Overview
 
-    1. Align sequences to reference
-            bowtie2-align -p 11 -q -x /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus -1 reads4_1.fq -2 reads4_2.fq > reads4.sam
+![Reference Based Sequence Pipeline Sketch](images/ReferenceBasedSequencePipeline.PNG)
+
+---
+
+#Text Overview
+
+    0. Build reference sequence index (bowtie-build)
+        reference sequence --> reference index
+
+    1. Align sequences to reference (bowtie2-align)
+           reference index, sample sequences --> sam files (1/sample)
+
+    2. Convert sam to bam file, keep only mapped positions (samtools view)
+            sam files --> bam files (1/sample)
+
+    3. Sort bam file (samtools sort)
+            bam file --> sorted bam file (1/sample)
+
+    4. Get bcf file from pileup and bam file (samtools mpileup, bcftools view)
+            sorted bam files, reference --> pileups (1/sample)
+            pileups --> bcf files (1/sample)           
+
+    5. Convert bcf to vcf (bcftools view, cutoff)
+            bcf files --> vcf files (1/sample)   
+
+    6a. Create list of high quality SNPs (snppipeline)
+        vcf files, cutoffs --> snp list (1/run)
+
+    6b. Create pileup (snppipeline - samtools mpileup)
+        reference, bam files, cutoffs --> pileups (1/sample)
+
+    6c. Create SNP matrix (snppipeline)
+        #combine position from pileups and calls in snp calls?
+        snp list, ??? --> SNP matrix (1/run)
+
+---
+
+#The next level down
+
+    0. Create index file for reference
+        bowtie-build   
+
+    1. Align sequences to reference (bowtie2-align or just bowtie2 wrapper?)
+        bowtie2-align -p 11 -q -x /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus -1 reads4_1.fq -2 reads4_2.fq > reads4.sam
 
     2. Convert to bam file with only mapped positions
-            samtools view -bS -F 4 -o /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reads/reads1_F4.bam reads1.sam
+        samtools view -bS -F 4 -o /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reads/reads1_F4.bam reads1.sam
 
     3. Convert to a sorted bam 
-            samtools sort  reads4_F4.bam reads4_F4.sorted.bam
+        samtools sort  reads4_F4.bam reads4_F4.sorted.bam
 
     4. Get a bcf file from the pileup and bam file
-            samtools mpileup -uf /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus.fa reads1_F4.sorted.bam.bam | bcftools view -bvcg - > reads1_F4.bcf
+        samtools mpileup -uf /Users/james.pettengill/Downloads/bowtie2-2.2.0/example/reference/lambda_virus.fa reads1_F4.sorted.bam.bam | bcftools view -bvcg - > reads1_F4.bcf
 
     5. Convert bcf to vcf
-            bcftools view reads1_F4.bcf | vcfutils.pl varFilter -D1000 > var1_F4.flt.vcf    
+        bcftools view reads1_F4.bcf | vcfutils.pl varFilter -D1000 > var1_F4.flt.vcf    
 
     6. Run samtools pileup in parallel and combine alignment and pileup to generate snp matrix
-            ./snppipeline.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+        ./snppipeline.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+
+---
+
+#What Gets Consumed and Created
+
+    0. reference/reference.fa --> reference/reference.fai
+
+    1. reference/reference.fai, sample#/reads#_1.fq, sample#/reads#_2.fq --> sample#/reads#.sam
+
+    2. sample#/reads#.sam sample#/reads#_unsorted.bam
+
+    3. sample#/reads#_unsortd.bam reads#.bam
+
+    4. reference/reference.fa, reads#.bam, maximum depth cutoff --> reads#.bcf
+
+    5. reads#.bcf --> var#.flt.vcf    
+
+    6. reference/reference.fa, path.txt --> snplist.txt, snpma.fasta
 
 ---
 
@@ -100,6 +177,7 @@ if __name__ == '__main__':
 ##Make it shareable
 - CDC 
 - CVM
+- International collaborators (Italy)
 
 ##Make it a package
 - Reuseable code
@@ -114,7 +192,7 @@ if __name__ == '__main__':
 
 #Some background
 
-- Running with anaconca
+- Running with anaconda
 - Using python 2.7.6
 - Using PyVCF
     - (If you want to get good at writing, then read a fair bit.)
@@ -129,7 +207,7 @@ if __name__ == '__main__':
 
 #The 'ecosystem' - Part 1
 
-- Python instalation - Anaconda
+- Python installation - Anaconda
 - IDE - Spyder
 - Code standards
     - PEP8
@@ -344,10 +422,7 @@ github?
 
 ---
 
----
-
 #References
-
 
 ---
 
