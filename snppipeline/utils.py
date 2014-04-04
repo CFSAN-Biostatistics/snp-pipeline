@@ -14,33 +14,33 @@ def pileup_wrapper(args):
     """
     return pileup(*args)
 
-def pileup(sample_file_path, options_dict):
+def pileup(sample_dir_path, options_dict):
     """Run samtools to generate pileup for one sample.
     
     Description:
-    Generate pileup files, using snplist file and the reference fasta file.
+    Generate pileup file, using snplist file and the reference fasta file.
     
     Args:
-        sample_file_path: Full path to directory for a sample.
+        sample_dir_path: Full path to directory for a sample.
         options_dict: Dictionary containing command-line options as per
             documention for run_snp_pipeline.
     """
     verbose = False
     verbose_print = print if verbose else lambda *a, **k: None
     
-    os.chdir(sample_file_path)
-    verbose_print('Generating pileup file '+options_dict['pileupFileName']+ ' in '+sample_file_path)
-    pileup_file  = sample_file_path + "/reads.pileup"
-    snplist_file = options_dict['mainPath'] + options_dict['snplistFileName']
+    os.chdir(sample_dir_path)
+    verbose_print('Generating pileup file '+options_dict['pileupFileName']+ ' in '+sample_dir_path)
+    pileup_file_path  = os.path.join(sample_dir_path,"reads.pileup")
+    snplist_file_path = options_dict['mainPath'] + options_dict['snplistFileName']
    
     #TODO - allow for use of previously done pileup via command line argument?
-    if os.path.isfile(pileup_file):
-        verbose_print('Removing old pileup file '+pileup_file)
-        os.remove(pileup_file)
+    if os.path.isfile(pileup_file_path):
+        verbose_print('Removing old pileup file '+pileup_file_path)
+        os.remove(pileup_file_path)
     
     command_line = (
         'samtools mpileup ' +
-            '-l ' + snplist_file +
+            '-l ' + snplist_file_path +
             ' -f ' + options_dict['mainPath'] +
             options_dict['Reference'] + ' ' +
             options_dict['bamFileName'] +
@@ -51,7 +51,7 @@ def pileup(sample_file_path, options_dict):
     #TODO review return values and clean up this next bit of code.
     #  see for details: https://docs.python.org/2/library/subprocess.html#replacing-os-system
     try:
-        return_code = subprocess.call(command_line,cwd=sample_file_path,shell=True)
+        return_code = subprocess.call(command_line,cwd=sample_dir_path,shell=True)
         if return_code < 0:
             sys.stderr.write("Child was terminated by signal: " + str(return_code))
         else:
@@ -61,12 +61,12 @@ def pileup(sample_file_path, options_dict):
 
 
     verbose_print("samtools return code: ", return_code)
-    if not os.path.isfile(pileup_file):
-        print('Pileup file not created: '+pileup_file)
+    if not os.path.isfile(pileup_file_path):
+        print('Pileup file not created: '+pileup_file_path)
     
     verbose_print('pileup function exit')
     
-    return(pileup_file)
+    return(pileup_file_path)
 
 def get_consensus_base_from_pileup(base, length, data):
     """Call the base for each SNP position

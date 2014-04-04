@@ -114,8 +114,7 @@ def run_snp_pipeline(options_dict):
     for sample_directory in list_of_sample_directories:
 
         sample_name  = sample_directory.split(os.sep)[-1]
-    
-        vcf_reader = vcf.Reader(open(sample_directory+ "/var.flt.vcf", 'r'))
+        vcf_reader = vcf.Reader(open(os.path.join(sample_directory,"var.flt.vcf"), 'r'))
         for vcf_data_line in vcf_reader:     #TODO convert to with statement?
             verbose_print("vcf file data: ")
             verbose_print((vcf_data_line.CHROM,
@@ -181,7 +180,7 @@ def run_snp_pipeline(options_dict):
     for sample_directory in list_of_sample_directories:
 
         sample_name       = sample_directory.split(os.sep)[-1]
-        pileup_file_name  = sample_directory + "/reads.pileup"
+        pileup_file_name  = os.path.join(sample_directory,"reads.pileup")
         position_value_hash = utils.create_consensus_dict(pileup_file_name)
 
         seq_string = ""
@@ -197,9 +196,8 @@ def run_snp_pipeline(options_dict):
         records.append(seq_record)
     
     #Write bases for snps for each sequence to a fasta file           
-    fasta_file = open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") #TODO use with?
-    SeqIO.write(records, fasta_file, "fasta")
-    fasta_file.close()
+    with open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") as fasta_file:
+        SeqIO.write(records, fasta_file, "fasta")
     
     #Write reference sequence bases at SNP locations to a fasta file
     if options_dict['includeReference']:
