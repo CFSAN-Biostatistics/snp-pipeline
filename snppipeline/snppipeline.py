@@ -11,6 +11,7 @@ import pprint
 import utils
 import vcf
 
+#TODO use os.path.join consistently through code for path creation?
 def run_snp_pipeline(options_dict):
     """Create SNP matrix
      
@@ -93,11 +94,10 @@ def run_snp_pipeline(options_dict):
     #Note use of filter on list_of_sample_directories to remove blank lines.
     #==========================================================================
 
-    verbose = False
+    verbose        = False
     verbose_print  = print         if verbose else lambda *a, **k: None
     verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
 
-    #TODO use os.path.join consistently through code for path creation?
     sample_directories_list_filename = (options_dict['mainPath'] +
                                         options_dict['pathFileName'])
     list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
@@ -109,7 +109,7 @@ def run_snp_pipeline(options_dict):
     #Note use of get to cleanly handle case of missing key w/o exception.
     #==========================================================================
 
-    snp_list_dict = dict()
+    snp_dict = dict()
     
     for sample_directory in list_of_sample_directories:
 
@@ -139,17 +139,17 @@ def run_snp_pipeline(options_dict):
             # find a good record for SNP position, save data to hash
             verbose_print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
             if dp_flag and af1_flag:
-                if not snp_list_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
+                if not snp_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
                     record = [1]
                     record.append(sample_name)
-                    snp_list_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)] = record
+                    snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)] = record
                 else:
-                    record = snp_list_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)]
+                    record = snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)]
                     record[0] += 1
                     record.append(sample_name)
 
     snp_list_file_path = options_dict['mainPath'] + options_dict['snplistFileName']
-    utils.write_list_of_snps(snp_list_file_path, snp_list_dict)   
+    utils.write_list_of_snps(snp_list_file_path, snp_dict)   
     
     #==========================================================================
     # Generate Pileups of samples (in parallel)
@@ -175,16 +175,15 @@ def run_snp_pipeline(options_dict):
     #   Create snp matrix. Write results to file.
     #==========================================================================
     
-    records = []
+    sequence_records_list = []
 
     for sample_directory in list_of_sample_directories:
-
-        sample_name       = sample_directory.split(os.sep)[-1]
-        pileup_file_name  = os.path.join(sample_directory,"reads.pileup")
-        position_value_hash = utils.create_consensus_dict(pileup_file_name)
+        sample_name         = sample_directory.split(os.sep)[-1]
+        pileup_file_path    = os.path.join(sample_directory,"reads.pileup")
+        position_value_hash = utils.create_consensus_dict(pileup_file_path)
 
         seq_string = ""
-        for key in sorted(snp_list_dict.iterkeys()):  #TODO - Why is sorting what we want to do?
+        for key in sorted(snp_dict.iterkeys()):  #TODO - Why is sorting what we want to do?
             chrom, pos = key.split()
             if position_value_hash.has_key(chrom + ":" + pos):
                 seq_string += position_value_hash[chrom + ":" + pos]
@@ -193,11 +192,11 @@ def run_snp_pipeline(options_dict):
 
         seq = Seq(seq_string)
         seq_record = SeqRecord(seq, id=sample_name)
-        records.append(seq_record)
+        sequence_records_list.append(seq_record)
     
     #Write bases for snps for each sequence to a fasta file           
     with open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") as fasta_file:
-        SeqIO.write(records, fasta_file, "fasta")
+        SeqIO.write(sequence_records_list, fasta_file, "fasta")
     
     #Write reference sequence bases at SNP locations to a fasta file
     if options_dict['includeReference']:

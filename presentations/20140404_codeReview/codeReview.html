@@ -1318,7 +1318,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              1/32
+              1/33
             </aside>
           </footer>
         </div>
@@ -1354,7 +1354,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              2/32
+              2/33
             </aside>
           </footer>
         </div>
@@ -1387,7 +1387,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              3/32
+              3/33
             </aside>
           </footer>
         </div>
@@ -1442,7 +1442,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              4/32
+              4/33
             </aside>
           </footer>
         </div>
@@ -1472,7 +1472,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              5/32
+              5/33
             </aside>
           </footer>
         </div>
@@ -1490,20 +1490,20 @@ aside {
     reference sequence --&gt; reference index
 
 1. Align sequences to reference (bowtie2-align)
-       reference index, sample sequences --&gt; sam files (1/sample)
+    reference index, sample sequences --&gt; sam files (1/sample)
 
 2. Convert sam to bam file, keep only mapped positions (samtools view)
-        sam files --&gt; bam files (1/sample)
+    sam files --&gt; bam files (1/sample)
 
 3. Sort bam file (samtools sort)
-        bam file --&gt; sorted bam file (1/sample)
+    bam file --&gt; sorted bam file (1/sample)
 
-4. Get bcf file from pileup and bam file (samtools mpileup, bcftools view)
-        sorted bam files, reference --&gt; pileups (1/sample)
-        pileups --&gt; bcf files (1/sample)
+4. Get bcf file from pileup and sorted bam file (samtools mpileup, bcftools view)
+    sorted bam files, reference --&gt; pileups (1/sample)
+    pileups --&gt; bcf files (1/sample)
 
 5. Convert bcf to vcf (bcftools view, cutoff)
-        bcf files --&gt; vcf files (1/sample)
+    bcf files --&gt; vcf files (1/sample)
 
 6a. Create list of high quality SNPs (snppipeline)
     vcf files, cutoffs --&gt; snp list (1/run)
@@ -1530,7 +1530,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              6/32
+              6/33
             </aside>
           </footer>
         </div>
@@ -1580,7 +1580,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              7/32
+              7/33
             </aside>
           </footer>
         </div>
@@ -1623,7 +1623,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              8/32
+              8/33
             </aside>
           </footer>
         </div>
@@ -1676,7 +1676,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              9/32
+              9/33
             </aside>
           </footer>
         </div>
@@ -1701,17 +1701,6 @@ aside {
 <ul>
 <li>sequence analysis and publication</li>
 <li>outbreak investigation</li>
-</ul>
-<h2>Context</h2>
-<ul>
-<li>CDC pipeline (Lee Katz)<ul>
-<li>https://github.com/lskatz/lyve-SET</li>
-</ul>
-</li>
-<li>CVM (Yuansha Chen)<ul>
-<li>desire for a standard for SNP calling and phylogenetic tree analysis</li>
-</ul>
-</li>
 </ul></section>
             
           </div>
@@ -1728,7 +1717,49 @@ aside {
             </aside>
             
             <aside class="page_number">
-              10/32
+              10/33
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: codeReview.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Context</h1></header>
+            
+            
+            <section><h2>CDC pipeline (Lee Katz)</h2>
+<ul>
+<li>https://github.com/lskatz/lyve-SET</li>
+</ul>
+<h2>CVM (Yuansha Chen)</h2>
+<ul>
+<li>desire for a standard for SNP calling and phylogenetic tree analysis</li>
+</ul>
+<h2>External Colaborations</h2>
+<ul>
+<li>Italy?</li>
+</ul>
+<h2>Regulatory use</h2></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="codeReview.md">codeReview.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              11/33
             </aside>
           </footer>
         </div>
@@ -1754,8 +1785,7 @@ aside {
 </ul>
 <h2>Make it a package</h2>
 <ul>
-<li>Reuseable code</li>
-<li>Easily installed</li>
+<li>Reuseable and easily installed </li>
 <li>Locked down (versioning and source code control) </li>
 <li>Testable</li>
 </ul>
@@ -1778,7 +1808,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              11/32
+              12/33
             </aside>
           </footer>
         </div>
@@ -1823,7 +1853,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              12/32
+              13/33
             </aside>
           </footer>
         </div>
@@ -1872,7 +1902,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              13/32
+              14/33
             </aside>
           </footer>
         </div>
@@ -1892,7 +1922,7 @@ aside {
 <li>sphinx</li>
 </ul>
 </li>
-<li>Source Code Control - git </li>
+<li>Source Code Control - ??? </li>
 <li>Presentations<ul>
 <li>TBD</li>
 </ul>
@@ -1913,7 +1943,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              14/32
+              15/33
             </aside>
           </footer>
         </div>
@@ -1957,7 +1987,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              15/32
+              16/33
             </aside>
           </footer>
         </div>
@@ -1990,7 +2020,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              16/32
+              17/33
             </aside>
           </footer>
         </div>
@@ -2026,7 +2056,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              17/32
+              18/33
             </aside>
           </footer>
         </div>
@@ -2076,7 +2106,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              18/32
+              19/33
             </aside>
           </footer>
         </div>
@@ -2127,7 +2157,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              19/32
+              20/33
             </aside>
           </footer>
         </div>
@@ -2169,7 +2199,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              20/32
+              21/33
             </aside>
           </footer>
         </div>
@@ -2199,7 +2229,7 @@ aside {
             </aside>
             
             <aside class="page_number">
-              21/32
+              22/33
             </aside>
           </footer>
         </div>
@@ -2241,7 +2271,7 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
             </aside>
             
             <aside class="page_number">
-              22/32
+              23/33
             </aside>
           </footer>
         </div>
@@ -2257,7 +2287,7 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
             
             <section><ul>
 <li>1 * bba51bd - (HEAD, master) More work on presentation. (4 seconds ago) <Hugh Rand></li>
-<li>2 * 717597d - snppipeline.egg-info added to git tracking. (17 hours ago) <Hugh Rand></li>
+<li>2 * 717597d - snppipeline.egg-info added to version control tracking. (17 hours ago) <Hugh Rand></li>
 <li>3 * 2d84d4c - Clean up imports. (17 hours ago) <Hugh Rand></li>
 <li>4 * 440a340 - Presentation edited.  focus on documentation, egg building, and code review prep. (23 hours ago) <Hugh Rand></li>
 <li>...</li>
@@ -2281,7 +2311,7 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
             </aside>
             
             <aside class="page_number">
-              23/32
+              24/33
             </aside>
           </footer>
         </div>
@@ -2311,7 +2341,7 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
             </aside>
             
             <aside class="page_number">
-              24/32
+              25/33
             </aside>
           </footer>
         </div>
@@ -2353,7 +2383,7 @@ Your code has been rated at 5.68/10 (previous run: 5.68/10)</p>
             </aside>
             
             <aside class="page_number">
-              25/32
+              26/33
             </aside>
           </footer>
         </div>
@@ -2399,7 +2429,7 @@ ok
             </aside>
             
             <aside class="page_number">
-              26/32
+              27/33
             </aside>
           </footer>
         </div>
@@ -2442,7 +2472,7 @@ ok
             </aside>
             
             <aside class="page_number">
-              27/32
+              28/33
             </aside>
           </footer>
         </div>
@@ -2470,7 +2500,7 @@ ok
             </aside>
             
             <aside class="page_number">
-              28/32
+              29/33
             </aside>
           </footer>
         </div>
@@ -2498,7 +2528,7 @@ ok
             </aside>
             
             <aside class="page_number">
-              29/32
+              30/33
             </aside>
           </footer>
         </div>
@@ -2553,7 +2583,7 @@ use.</p>
             </aside>
             
             <aside class="page_number">
-              30/32
+              31/33
             </aside>
           </footer>
         </div>
@@ -2581,7 +2611,7 @@ use.</p>
             </aside>
             
             <aside class="page_number">
-              31/32
+              32/33
             </aside>
           </footer>
         </div>
@@ -2611,7 +2641,7 @@ use.</p>
             </aside>
             
             <aside class="page_number">
-              32/32
+              33/33
             </aside>
           </footer>
         </div>
@@ -2686,134 +2716,140 @@ use.</p>
       
       
       <tr id="toc-row-11">
-        <th><a href="#slide11">Goals</a></th>
+        <th><a href="#slide11">Context</a></th>
         <td><a href="#slide11">11</a></td>
       </tr>
       
       
       <tr id="toc-row-12">
-        <th><a href="#slide12">Some background</a></th>
+        <th><a href="#slide12">Goals</a></th>
         <td><a href="#slide12">12</a></td>
       </tr>
       
       
       <tr id="toc-row-13">
-        <th><a href="#slide13">The 'ecosystem' - Part 1</a></th>
+        <th><a href="#slide13">Some background</a></th>
         <td><a href="#slide13">13</a></td>
       </tr>
       
       
       <tr id="toc-row-14">
-        <th><a href="#slide14">The 'ecosystem' - Part 2</a></th>
+        <th><a href="#slide14">The 'ecosystem' - Part 1</a></th>
         <td><a href="#slide14">14</a></td>
       </tr>
       
       
       <tr id="toc-row-15">
-        <th><a href="#slide15">What I did - Part 1</a></th>
+        <th><a href="#slide15">The 'ecosystem' - Part 2</a></th>
         <td><a href="#slide15">15</a></td>
       </tr>
       
       
       <tr id="toc-row-16">
-        <th><a href="#slide16">What I did - Part 2</a></th>
+        <th><a href="#slide16">What I did - Part 1</a></th>
         <td><a href="#slide16">16</a></td>
       </tr>
       
       
       <tr id="toc-row-17">
-        <th><a href="#slide17">What Remains to do</a></th>
+        <th><a href="#slide17">What I did - Part 2</a></th>
         <td><a href="#slide17">17</a></td>
       </tr>
       
       
       <tr id="toc-row-18">
-        <th><a href="#slide18">Package layout - snppipeline</a></th>
+        <th><a href="#slide18">What Remains to do</a></th>
         <td><a href="#slide18">18</a></td>
       </tr>
       
       
       <tr id="toc-row-19">
-        <th><a href="#slide19">Functions</a></th>
+        <th><a href="#slide19">Package layout - snppipeline</a></th>
         <td><a href="#slide19">19</a></td>
       </tr>
       
       
       <tr id="toc-row-20">
-        <th><a href="#slide20">Testing environment</a></th>
+        <th><a href="#slide20">Functions</a></th>
         <td><a href="#slide20">20</a></td>
       </tr>
       
       
       <tr id="toc-row-21">
-        <th><a href="#slide21">Where to put the code?</a></th>
+        <th><a href="#slide21">Testing environment</a></th>
         <td><a href="#slide21">21</a></td>
       </tr>
       
       
       <tr id="toc-row-22">
-        <th><a href="#slide22">pylint</a></th>
+        <th><a href="#slide22">Where to put the code?</a></th>
         <td><a href="#slide22">22</a></td>
       </tr>
       
       
       <tr id="toc-row-23">
-        <th><a href="#slide23">Version control log 2014-04-02</a></th>
+        <th><a href="#slide23">pylint</a></th>
         <td><a href="#slide23">23</a></td>
       </tr>
       
       
       <tr id="toc-row-24">
-        <th><a href="#slide24">Making the code public</a></th>
+        <th><a href="#slide24">Version control log 2014-04-02</a></th>
         <td><a href="#slide24">24</a></td>
       </tr>
       
       
       <tr id="toc-row-25">
-        <th><a href="#slide25">The tests</a></th>
+        <th><a href="#slide25">Making the code public</a></th>
         <td><a href="#slide25">25</a></td>
       </tr>
       
       
       <tr id="toc-row-26">
-        <th><a href="#slide26">Some Test Output - 1</a></th>
+        <th><a href="#slide26">The tests</a></th>
         <td><a href="#slide26">26</a></td>
       </tr>
       
       
       <tr id="toc-row-27">
-        <th><a href="#slide27">Some Test Output - 2</a></th>
+        <th><a href="#slide27">Some Test Output - 1</a></th>
         <td><a href="#slide27">27</a></td>
       </tr>
       
       
       <tr id="toc-row-28">
-        <th><a href="#slide28">BACKUP</a></th>
+        <th><a href="#slide28">Some Test Output - 2</a></th>
         <td><a href="#slide28">28</a></td>
       </tr>
       
       
       <tr id="toc-row-29">
-        <th><a href="#slide29">References</a></th>
+        <th><a href="#slide29">BACKUP</a></th>
         <td><a href="#slide29">29</a></td>
       </tr>
       
       
       <tr id="toc-row-30">
-        <th><a href="#slide30">Building Python Eggs</a></th>
+        <th><a href="#slide30">References</a></th>
         <td><a href="#slide30">30</a></td>
       </tr>
       
       
       <tr id="toc-row-31">
-        <th><a href="#slide31">CDC Pipeline</a></th>
+        <th><a href="#slide31">Building Python Eggs</a></th>
         <td><a href="#slide31">31</a></td>
       </tr>
       
       
       <tr id="toc-row-32">
-        <th><a href="#slide32">Function call graph</a></th>
+        <th><a href="#slide32">CDC Pipeline</a></th>
         <td><a href="#slide32">32</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-33">
+        <th><a href="#slide33">Function call graph</a></th>
+        <td><a href="#slide33">33</a></td>
       </tr>
       
       

@@ -51,20 +51,20 @@
         reference sequence --> reference index
 
     1. Align sequences to reference (bowtie2-align)
-           reference index, sample sequences --> sam files (1/sample)
+        reference index, sample sequences --> sam files (1/sample)
 
     2. Convert sam to bam file, keep only mapped positions (samtools view)
-            sam files --> bam files (1/sample)
+        sam files --> bam files (1/sample)
 
     3. Sort bam file (samtools sort)
-            bam file --> sorted bam file (1/sample)
+        bam file --> sorted bam file (1/sample)
 
-    4. Get bcf file from pileup and bam file (samtools mpileup, bcftools view)
-            sorted bam files, reference --> pileups (1/sample)
-            pileups --> bcf files (1/sample)           
+    4. Get bcf file from pileup and sorted bam file (samtools mpileup, bcftools view)
+        sorted bam files, reference --> pileups (1/sample)
+        pileups --> bcf files (1/sample)           
 
     5. Convert bcf to vcf (bcftools view, cutoff)
-            bcf files --> vcf files (1/sample)   
+        bcf files --> vcf files (1/sample)   
 
     6a. Create list of high quality SNPs (snppipeline)
         vcf files, cutoffs --> snp list (1/run)
@@ -161,11 +161,20 @@
 - sequence analysis and publication
 - outbreak investigation
 
-##Context
-- CDC pipeline (Lee Katz)
-    - https://github.com/lskatz/lyve-SET
-- CVM (Yuansha Chen)
-    - desire for a standard for SNP calling and phylogenetic tree analysis
+---
+
+#Context
+
+##CDC pipeline (Lee Katz)
+- https://github.com/lskatz/lyve-SET
+
+##CVM (Yuansha Chen)
+- desire for a standard for SNP calling and phylogenetic tree analysis
+
+##External Colaborations
+- Italy?
+
+##Regulatory use
 
 ---
 
@@ -226,7 +235,7 @@
 - Documentation
     - PEP8
     - sphinx
-- Source Code Control - git 
+- Source Code Control - ??? 
 - Presentations
     - TBD
 
@@ -348,7 +357,7 @@ svn: https://xserve19.fda.gov/svn/bioin/mapping
 #Version control log 2014-04-02
 
 - 1 * bba51bd - (HEAD, master) More work on presentation. (4 seconds ago) <Hugh Rand>
-- 2 * 717597d - snppipeline.egg-info added to git tracking. (17 hours ago) <Hugh Rand>
+- 2 * 717597d - snppipeline.egg-info added to version control tracking. (17 hours ago) <Hugh Rand>
 - 3 * 2d84d4c - Clean up imports. (17 hours ago) <Hugh Rand>
 - 4 * 440a340 - Presentation edited.  focus on documentation, egg building, and code review prep. (23 hours ago) <Hugh Rand>
 - ...
