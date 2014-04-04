@@ -104,7 +104,7 @@ def run_snp_pipeline(options_dict):
     list_of_sample_directories = filter(None, list_of_sample_directories)
 
     #==========================================================================
-    #read in all vcf files and process into list of SNPs passing various
+    #read in all vcf files and process into dict of SNPs passing various
     #  criteria. Do this for each sample. Write to file.
     #Note use of get to cleanly handle case of missing key w/o exception.
     #==========================================================================
@@ -175,28 +175,28 @@ def run_snp_pipeline(options_dict):
     #   Create snp matrix. Write results to file.
     #==========================================================================
     
-    sequence_records_list = []
+    snp_sequence_records_list = []
 
     for sample_directory in list_of_sample_directories:
-        sample_name         = sample_directory.split(os.sep)[-1]
-        pileup_file_path    = os.path.join(sample_directory,"reads.pileup")
-        position_value_hash = utils.create_consensus_dict(pileup_file_path)
+        
+        sample_name                  = sample_directory.split(os.sep)[-1]
+        pileup_file_path             = os.path.join(sample_directory,"reads.pileup")
+        position_consensus_base_dict = utils.create_consensus_dict(pileup_file_path)
 
-        seq_string = ""
+        snp_seq_string = ""
         for key in sorted(snp_dict.iterkeys()):  #TODO - Why is sorting what we want to do?
             chrom, pos = key.split()
-            if position_value_hash.has_key(chrom + ":" + pos):
-                seq_string += position_value_hash[chrom + ":" + pos]
+            if position_consensus_base_dict.has_key(chrom + ":" + pos):
+                snp_seq_string += position_consensus_base_dict[chrom + ":" + pos]
             else:
-                seq_string += "-"
+                snp_seq_string += "-"
 
-        seq = Seq(seq_string)
-        seq_record = SeqRecord(seq, id=sample_name)
-        sequence_records_list.append(seq_record)
+        snp_seq_record = SeqRecord(Seq(snp_seq_string), id=sample_name)
+        snp_sequence_records_list.append(snp_seq_record)
     
     #Write bases for snps for each sequence to a fasta file           
-    with open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") as fasta_file:
-        SeqIO.write(sequence_records_list, fasta_file, "fasta")
+    with open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") as fasta_file_object:
+        SeqIO.write(snp_sequence_records_list, fasta_file_object, "fasta")
     
     #Write reference sequence bases at SNP locations to a fasta file
     if options_dict['includeReference']:

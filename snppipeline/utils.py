@@ -180,15 +180,15 @@ def create_consensus_dict(pileup_file_path):
     return position_value_dict
 
 
-def write_list_of_snps(file_path, snp_list_dict):    
+def write_list_of_snps(file_path, snp_dict):    
     """Write out list of snps for all samples to a single file.
     """
     #TODO finish documentation
 
     with open(file_path, "w") as snp_list_file_object:
-        for key in sorted(snp_list_dict.iterkeys()):
+        for key in sorted(snp_dict.iterkeys()):
             snp_list_file_object.write(key)
-            values = snp_list_dict[key]
+            values = snp_dict[key]
             for value in values:
                 snp_list_file_object.write("\t" + str(value))
             snp_list_file_object.write("\n")

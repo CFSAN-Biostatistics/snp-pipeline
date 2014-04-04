@@ -36,6 +36,7 @@
 - Are we done with changes for v0.1?
     - Documentation
     - Proper python egg
+    - Split snppipeline.py by 'section'?
 
 ---
 
@@ -294,6 +295,18 @@
     - test_utils.py
 - snppipeline.egg-info
 
+---
+
+#SNP and Pileup Dicts
+##SNP Dict:
+    {'gi|9626243|ref|NC_001416.1|\t18188': [1, 'sample4'],
+     'gi|9626243|ref|NC_001416.1|\t39485': [1, 'sample1'], 
+    ...
+
+##Pileup Dict:
+    {'gi|9626243|ref|NC_001416.1|:35148': 'C',
+     'gi|9626243|ref|NC_001416.1|:16070': 'C',
+    ...
 ---
 
 #Functions
