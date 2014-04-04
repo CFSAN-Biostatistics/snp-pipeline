@@ -15,6 +15,55 @@
 
 ---
 
+#Code History and Use
+
+##History
+- Errol - 1st version
+- Yan   - 2nd version
+- Hugh  - package creation
+- Hugh  - speed
+
+##Use
+- sequence analysis and publication
+- outbreak investigation
+
+---
+
+#Context
+
+##CDC pipeline (Lee Katz)
+- https://github.com/lskatz/lyve-SET
+
+##CVM (Yuansha Chen)
+- desire for a standard for SNP calling and phylogenetic tree analysis
+
+##External Colaborations
+- Italy?
+
+##Regulatory use
+
+---
+
+#Goals
+ 
+##Make it publishable
+- Jamie's paper
+
+##Make it shareable
+- CDC 
+- CVM
+- International collaborators (Italy)
+
+##Make it a package
+- Reuseable and easily installed 
+- Locked down (versioning and source code control) 
+- Testable
+
+##Get it publicaly vetted
+- Prepare for challenge of use in regulatory setting
+
+---
+
 #What Has Gotten Done
 
 - Rebuilt code, close to egg-ready
@@ -26,17 +75,15 @@
 
 - Have I got all the right pieces?
     - Novoalign vs Bowtie2
-
-- Am I going in the right direction?
-    - Why do we do the pileups twice?
-    - Alternate architecture?
-        - VCF (and other) file generator
-        - SNP matrix generator
-
 - Are we done with changes for v0.1?
     - Documentation
     - Proper python egg
     - Split snppipeline.py by 'section'?
+- Am I going in the right direction?
+    - Why do we do the pileups twice?
+    - Alternate architecture (v0.2)?
+        - VCF (and other) file generator
+        - SNP matrix generator
 
 ---
 
@@ -104,6 +151,10 @@
 
 ---
 
+#Dive into Code
+
+---
+
 #What Gets Consumed and Created
 
     0. reference/reference.fa --> reference/reference.fai
@@ -147,55 +198,6 @@
         print("Running SNP pipeline with arguments:")
         pprint.pprint(args_dict)
         run_snp_pipeline(args_dict)
-
----
-
-#Code History and Use
-
-##History
-- Errol - 1st version
-- Yan   - 2nd version
-- Hugh  - package creation
-- Hugh  - speed
-
-##Use
-- sequence analysis and publication
-- outbreak investigation
-
----
-
-#Context
-
-##CDC pipeline (Lee Katz)
-- https://github.com/lskatz/lyve-SET
-
-##CVM (Yuansha Chen)
-- desire for a standard for SNP calling and phylogenetic tree analysis
-
-##External Colaborations
-- Italy?
-
-##Regulatory use
-
----
-
-#Goals
- 
-##Make it publishable
-- Jamie's paper
-
-##Make it shareable
-- CDC 
-- CVM
-- International collaborators (Italy)
-
-##Make it a package
-- Reuseable and easily installed 
-- Locked down (versioning and source code control) 
-- Testable
-
-##Get it publicaly vetted
-- Prepare for challenge of use in regulatory setting
 
 ---
 
@@ -302,11 +304,13 @@
     {'gi|9626243|ref|NC_001416.1|\t18188': [1, 'sample4'],
      'gi|9626243|ref|NC_001416.1|\t39485': [1, 'sample1'], 
     ...
-
+    }
 ##Pileup Dict:
     {'gi|9626243|ref|NC_001416.1|:35148': 'C',
      'gi|9626243|ref|NC_001416.1|:16070': 'C',
     ...
+    }
+
 ---
 
 #Functions
