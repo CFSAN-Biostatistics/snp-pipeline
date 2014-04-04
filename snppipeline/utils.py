@@ -14,25 +14,25 @@ def pileup_wrapper(args):
     """
     return pileup(*args)
 
-def pileup(filePath, options_dict):
-    """Run samtools to generate pileup.
+def pileup(sample_file_path, options_dict):
+    """Run samtools to generate pileup for one sample.
     
     Description:
     Generate pileup files, using snplist file and the reference fasta file.
     
     Args:
-        filePath: Path   #TODO - finish
+        sample_file_path: Full path to directory for a sample.
         options_dict: Dictionary containing command-line options as per
             documention for run_snp_pipeline.
     """
     verbose = False
     verbose_print = print if verbose else lambda *a, **k: None
     
-    os.chdir(filePath)
-    verbose_print('Generating pileup file '+options_dict['pileupFileName']+ ' in '+filePath)
-    pileup_file  = filePath + "/reads.pileup"
+    os.chdir(sample_file_path)
+    verbose_print('Generating pileup file '+options_dict['pileupFileName']+ ' in '+sample_file_path)
+    pileup_file  = sample_file_path + "/reads.pileup"
     snplist_file = options_dict['mainPath'] + options_dict['snplistFileName']
-    
+   
     #TODO - allow for use of previously done pileup via command line argument?
     if os.path.isfile(pileup_file):
         verbose_print('Removing old pileup file '+pileup_file)
@@ -51,7 +51,7 @@ def pileup(filePath, options_dict):
     #TODO review return values and clean up this next bit of code.
     #  see for details: https://docs.python.org/2/library/subprocess.html#replacing-os-system
     try:
-        return_code = subprocess.call(command_line,cwd=filePath,shell=True)
+        return_code = subprocess.call(command_line,cwd=sample_file_path,shell=True)
         if return_code < 0:
             sys.stderr.write("Child was terminated by signal: " + str(return_code))
         else:
