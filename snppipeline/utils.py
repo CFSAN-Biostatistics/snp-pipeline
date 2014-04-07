@@ -4,15 +4,33 @@ from __future__ import print_function
 from Bio import SeqIO
 import operator
 import os
+import pprint
 import re
 import sets
 import subprocess
 import sys
+import vcf
+
+
+#==============================================================================
+#Prep work
+#Note use of filter on list_of_sample_directories to remove blank lines.
+#==============================================================================
+
+verbose        = False
+verbose_print  = print         if verbose else lambda *a, **k: None
+verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
+
+
+#==============================================================================
+#Define functions
+#==============================================================================
 
 def pileup_wrapper(args):
     """Wraps pileup to use multiple arguments with multiprocessing package.
     """
     return pileup(*args)
+
 
 def pileup(sample_dir_path, options_dict):
     """Run samtools to generate pileup for one sample.
@@ -25,8 +43,6 @@ def pileup(sample_dir_path, options_dict):
         options_dict: Dictionary containing command-line options as per
             documention for run_snp_pipeline.
     """
-    verbose = False
-    verbose_print = print if verbose else lambda *a, **k: None
     
     os.chdir(sample_dir_path)
     verbose_print('Generating pileup file '+options_dict['pileupFileName']+ ' in '+sample_dir_path)
@@ -213,4 +229,53 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
                 if ChromID == orderedId:
                     snp_reference_file_object.write(match_dict[orderedId][int(PosID)-1].upper())
         
+
+def convert_vcf_files_to_snp_dict(list_of_sample_directories,options_dict):
+    """convert list of vcf files to a single dict of quality SNPs.
+    
+    We use several criteria from options_dict to evaluate SNPs.
+ 
+    Note use of get to cleanly handle case of missing key w/o exception.
+    """
+
+    snp_dict = dict()
+    
+    for sample_directory in list_of_sample_directories:
+
+        sample_name  = sample_directory.split(os.sep)[-1]
+
+        with open(os.path.join(sample_directory,"var.flt.vcf"), 'r') as vcf_file_object:
+            vcf_reader = vcf.Reader(vcf_file_object)
+            for vcf_data_line in vcf_reader:
+                verbose_print("vcf file data: ")
+                verbose_print((vcf_data_line.CHROM,
+                               vcf_data_line.POS,
+                               vcf_data_line.INFO.get('DP'),
+                               vcf_data_line.INFO.get('AF1'),
+                               vcf_data_line.INFO.get('AR')))
+                dp_flag = af1_flag = False
+                info    = vcf_data_line.INFO
+                if 'INDEL' in info:
+                    continue
+                if not(('DP' in info) and (('AF1' in info) or ('AR' in info))):
+                    continue
+                if (info['DP'] >= options_dict['combinedDepthAcrossSamples']):
+                    dp_flag = True
+                if (('AF1' in info) and (info['AF1'] == options_dict['alleleFrequencyForFirstALTAllele'])):
+                    af1_flag = True
+                if (('AR' in info) and (info['AR'] == options_dict['arFlagValue'])):
+                    af1_flag = True
+                verbose_print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
+                if dp_flag and af1_flag:
+                    if not snp_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
+                        record = [1]
+                        record.append(sample_name)
+                        snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)] = record
+                    else:
+                        record = snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)]
+                        record[0] += 1
+                        record.append(sample_name)
+                        
+    return(snp_dict)
+
     
