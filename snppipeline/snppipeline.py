@@ -114,39 +114,38 @@ def run_snp_pipeline(options_dict):
     for sample_directory in list_of_sample_directories:
 
         sample_name  = sample_directory.split(os.sep)[-1]
-        vcf_reader = vcf.Reader(open(os.path.join(sample_directory,"var.flt.vcf"), 'r'))
-        for vcf_data_line in vcf_reader:     #TODO convert to with statement?
-            verbose_print("vcf file data: ")
-            verbose_print((vcf_data_line.CHROM,
-                           vcf_data_line.POS,
-                           vcf_data_line.INFO.get('DP'),
-                           vcf_data_line.INFO.get('AF1'),
-                           vcf_data_line.INFO.get('AR')))
-            dp_flag = af1_flag = False
-            if 'INDEL' in vcf_data_line.INFO:
-                continue
-            if not(('DP' in vcf_data_line.INFO) and 
-                   (('AF1' in vcf_data_line.INFO) or ('AR' in vcf_data_line.INFO))):
-                continue
-            if (vcf_data_line.INFO['DP'] >= options_dict['combinedDepthAcrossSamples']):
-                dp_flag = True
-            if (('AF1' in vcf_data_line.INFO) and 
-                (vcf_data_line.INFO['AF1'] == options_dict['alleleFrequencyForFirstALTAllele'])):
-                af1_flag = True
-            if (('AR' in vcf_data_line.INFO) and
-                (vcf_data_line.INFO['AR'] == options_dict['arFlagValue'])):
-                af1_flag = True
-            # find a good record for SNP position, save data to hash
-            verbose_print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
-            if dp_flag and af1_flag:
-                if not snp_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
-                    record = [1]
-                    record.append(sample_name)
-                    snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)] = record
-                else:
-                    record = snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)]
-                    record[0] += 1
-                    record.append(sample_name)
+
+        with open(os.path.join(sample_directory,"var.flt.vcf"), 'r') as vcf_file_object:
+            vcf_reader = vcf.Reader(vcf_file_object)
+            for vcf_data_line in vcf_reader:
+                verbose_print("vcf file data: ")
+                verbose_print((vcf_data_line.CHROM,
+                               vcf_data_line.POS,
+                               vcf_data_line.INFO.get('DP'),
+                               vcf_data_line.INFO.get('AF1'),
+                               vcf_data_line.INFO.get('AR')))
+                dp_flag = af1_flag = False
+                info    = vcf_data_line.INFO
+                if 'INDEL' in info:
+                    continue
+                if not(('DP' in info) and (('AF1' in info) or ('AR' in info))):
+                    continue
+                if (info['DP'] >= options_dict['combinedDepthAcrossSamples']):
+                    dp_flag = True
+                if (('AF1' in info) and (info['AF1'] == options_dict['alleleFrequencyForFirstALTAllele'])):
+                    af1_flag = True
+                if (('AR' in info) and (info['AR'] == options_dict['arFlagValue'])):
+                    af1_flag = True
+                verbose_print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
+                if dp_flag and af1_flag:
+                    if not snp_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
+                        record = [1]
+                        record.append(sample_name)
+                        snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)] = record
+                    else:
+                        record = snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)]
+                        record[0] += 1
+                        record.append(sample_name)
 
     snp_list_file_path = options_dict['mainPath'] + options_dict['snplistFileName']
     utils.write_list_of_snps(snp_list_file_path, snp_dict)   
