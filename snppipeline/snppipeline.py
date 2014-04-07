@@ -105,7 +105,6 @@ def run_snp_pipeline(options_dict):
     #==========================================================================
     #read in all vcf files and process into dict of SNPs passing various
     #  criteria. Do this for each sample. Write to file.
-    #Note use of get to cleanly handle case of missing key w/o exception.
     #==========================================================================
 
     snp_dict = utils.convert_vcf_files_to_snp_dict(list_of_sample_directories,options_dict)
@@ -114,9 +113,17 @@ def run_snp_pipeline(options_dict):
     
     #==========================================================================
     # Generate Pileups of samples (in parallel)
-    # Note that we use map and not map_async so that we block
-    #   until all the pileups are done (or bad things will happen in subsequent
-    #   parts of the code).
+    # Note the rather peculiar use of the pool. I.e., we use:
+    #   result_many = pool.map_async(utils.pileup_wrapper,
+    #                                parameter_list).get(9999999)
+    #  And not the maybe more sensible: 
+    #   result_many = pool.map(utils.pileup_wrapper, parameter_list)
+    #  This is to ensure that a keyboary interupt (Ctrl-C) is properly handled.
+    #  The approach I used is from:
+    #   http://stackoverflow.com/questions/1408356/keyboard-interrupts-with
+    #   -pythons-multiprocessing-pool
+    #  There are alternate approaches, one of which is in:
+    #   http://noswap.com/blog/python-multiprocessing-keyboardinterrupt
     #==========================================================================
     
     #create a list of tuples containing values need for pileup code (as passed
@@ -126,8 +133,9 @@ def run_snp_pipeline(options_dict):
     
     verbose_print("Starting Pileups.")
 
-    pool        = multiprocessing.Pool(processes=options_dict['maxThread']) # start pool
-    result_many = pool.map(utils.pileup_wrapper, parameter_list) #parallel
+    pool        = multiprocessing.Pool(processes=options_dict['maxThread'])
+    result_many = pool.map_async(utils.pileup_wrapper,
+                                 parameter_list).get(9999999)
     
     verbose_pprint(result_many)
     verbose_print("Pileups are finished.")
@@ -145,7 +153,7 @@ def run_snp_pipeline(options_dict):
         position_consensus_base_dict = utils.create_consensus_dict(pileup_file_path)
 
         snp_seq_string = ""
-        for key in sorted(snp_dict.iterkeys()):  #TODO - Why is sorting what we want to do?
+        for key in sorted(snp_dict.iterkeys()):  #TODO - Why sorted?
             chrom, pos = key.split()
             if position_consensus_base_dict.has_key(chrom + ":" + pos):
                 snp_seq_string += position_consensus_base_dict[chrom + ":" + pos]
@@ -159,7 +167,9 @@ def run_snp_pipeline(options_dict):
     with open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") as fasta_file_object:
         SeqIO.write(snp_sequence_records_list, fasta_file_object, "fasta")
     
-    #Write reference sequence bases at SNP locations to a fasta file
+    #==========================================================================
+    #    Write reference sequence bases at SNP locations to a fasta file.
+    #==========================================================================
     if options_dict['includeReference']:
         snp_list_file_path       = options_dict['mainPath'] + options_dict['snplistFileName']
         reference_file_path      = options_dict['mainPath'] + options_dict['Reference']
