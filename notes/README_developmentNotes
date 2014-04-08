@@ -185,5 +185,29 @@ a virtual machine for testing the egg.
     pylint snppipeline/snppipeline.py
     pylint snppipeline/utils.py
 
-20140401-har: Virtual machine to use in testing egg install is available via vmware:
+20140407: Review on testing
+    #Fast test code with
+        ./snppipeline.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+    #Full test of code with
+        ../test/test_snppipeline.py -v
+        ../test/test_utils.py -v
+
+20140407-har: Virtual machine to use in testing egg install is available via vmware:
     vmplayer
+#Try installing it on virtual machine
+  vmplayer
+  #Select ubuntu
+  #Log in ...47
+  #drag and drop egg over
+  #Ctrl-Alt-Tab to get a comand-line window up on ubuntu
+  #cd ~/Desktop
+  #sudo easy_install snppipeline-0.1.1-py2.7.egg
+  #python
+  #import snppipeline #doesn't seem to work
+#May need a __init__.py file in package. Let's go put this in an rebuild the egg.
+  cd /home/hugh.rand/projects/snppipeline
+  python setup.py bdist_egg
+#This seems to help with the import. Still seem to be some missing pieces.
+
+
+  

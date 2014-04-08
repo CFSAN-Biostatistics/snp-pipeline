@@ -49,7 +49,7 @@ def run_snp_pipeline(options_dict):
     
     The vcf and bam files are created outside of this function. The package
         documentation provides an example of creating these files based on the
-        lambda_virus sequence that is use as one test for this package:
+        lambda_virus sequence that is use as one test for this package.
         
     Args:
         maxThread: (15) Max number of cocurrent threads.
