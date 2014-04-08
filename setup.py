@@ -9,7 +9,7 @@ setup(
     author='Yan Luo',
     author_email='yan.luo@fda.hhs.gov',
     #url='http://', #TODO
-    packages=['snppipeline'],
+    packages=['snppipeline','test'],
     long_description="""
     snppipeline is a pipeline for the production of SNP matrices from 
     sequence data used in the phylogenetic analysis of pathogenic

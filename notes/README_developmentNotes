@@ -209,5 +209,9 @@ a virtual machine for testing the egg.
   python setup.py bdist_egg
 #This seems to help with the import. Still seem to be some missing pieces.
 
-
-  
+20140408: Rearranged script use, so tests are a little different:
+    #Fast test code with
+        scripts/snppipeline.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+    #Full test of code with
+        ../test/test_snppipeline.py -v
+        ../test/test_utils.py -v
