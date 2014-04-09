@@ -3,7 +3,7 @@
 import argparse
 import imp
 #TODO fix these two lines to make paths relative
-snppipeline = imp.load_source('snppipeline', '/home/hugh.rand/projects/snppipeline/snppipeline/snppipeline.py')
+snppipeline = imp.load_source('snppipeline', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/snppipeline.py')
 
 #==============================================================================
 # Command line driver

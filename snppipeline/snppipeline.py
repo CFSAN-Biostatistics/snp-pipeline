@@ -9,9 +9,10 @@ import os
 import pprint
 import imp
 #TODO fix these two lines to make paths relative
-utils = imp.load_source('utils', '/home/hugh.rand/projects/snppipeline/snppipeline/utils.py')
+utils = imp.load_source('utils', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/utils.py')
 
 #TODO use os.path.join consistently through code for path creation?
+#TODO make file paths in input file path.txt relative somehow?
 def run_snp_pipeline(options_dict):
     """Create SNP matrix
      

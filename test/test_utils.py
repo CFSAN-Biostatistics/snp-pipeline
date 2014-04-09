@@ -4,7 +4,7 @@ import unittest
 import doctest
 
 import imp
-utils = imp.load_source('utils', '/home/hugh.rand/projects/snppipeline/snppipeline/utils.py')
+utils = imp.load_source('utils', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/utils.py')
 
 class Test(unittest.TestCase):
     """Unit tests for utils."""

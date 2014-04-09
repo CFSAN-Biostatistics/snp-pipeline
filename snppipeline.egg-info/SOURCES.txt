@@ -3,6 +3,7 @@ README.txt
 setup.py
 snppipeline/4snplist_matrix_P_01022014.py
 snppipeline/4snplist_matrix_P_02262014.py
+snppipeline/__init__.py
 snppipeline/snppipeline.py
 snppipeline/utils.py
 snppipeline.egg-info/PKG-INFO

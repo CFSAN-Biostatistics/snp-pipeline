@@ -7,8 +7,8 @@ import os
 
 import imp
 #TODO fix these two lines to make paths relative
-snppipeline = imp.load_source('snppipeline', '/home/hugh.rand/projects/snppipeline/snppipeline/snppipeline.py')
-utils       = imp.load_source('utils', '/home/hugh.rand/projects/snppipeline/snppipeline/utils.py')
+snppipeline = imp.load_source('snppipeline', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/snppipeline.py')
+utils       = imp.load_source('utils', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/utils.py')
 
 class Test(unittest.TestCase):
     '''Unit test for snppipeline.'''
@@ -19,7 +19,7 @@ class Test(unittest.TestCase):
         
         args_dict = {
             'maxThread':3,      
-            'mainPath':'/home/hugh.rand/projects/snppipeline/test/testLambdaVirus/',     #TODO make path relative    
+            'mainPath':'/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/',     #TODO make path relative    
             'Reference':'lambda_virus.fa',     
             'pathFileName':'path.txt',   
             'snplistFileName':'snplist.txt', 
@@ -38,8 +38,8 @@ class Test(unittest.TestCase):
         
         #Compare the files in the two directories whose names are given.
         #Returns three lists of file names: match, mismatch, errors. 
-        directory_correct = '/home/hugh.rand/projects/snppipeline/test/codeComparisonFiles/testLambdaVirus' #TODO make path relative
-        directory_run_result = '/home/hugh.rand/projects/snppipeline/test/testLambdaVirus'  #TODO make path relative
+        directory_correct = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/codeComparisonFiles/testLambdaVirus' #TODO make path relative
+        directory_run_result = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus'  #TODO make path relative
         files_to_compare = ['snplist.txt','snpma.fasta','sample1/reads.pileup',
                             'sample2/reads.pileup','sample3/reads.pileup',
                             'sample4/reads.pileup','referenceSNP.fasta']
@@ -65,7 +65,7 @@ class Test(unittest.TestCase):
 
         args_dict = {
             'maxThread':8,      
-            'mainPath':'/home/hugh.rand/projects/snppipeline/test/testAgonaMOM/',    #TODO make path relative     
+            'mainPath':'/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testAgonaMOM/',    #TODO make path relative     
             'Reference':'NC_011149.fasta',     
             'pathFileName':'path.txt',   
             'snplistFileName':'snplist.txt', 
@@ -84,8 +84,8 @@ class Test(unittest.TestCase):
         
         #Compare the files in the two directories whose names are given.
         #Returns three lists of file names: match, mismatch, errors.
-        directory_correct = '/home/hugh.rand/projects/snppipeline/test/codeComparisonFiles/testAgonaMOM'  #TODO make path relative
-        directory_run_result = '/home/hugh.rand/projects/snppipeline/test/testAgonaMOM'  #TODO make path relative
+        directory_correct = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/codeComparisonFiles/testAgonaMOM'  #TODO make path relative
+        directory_run_result = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testAgonaMOM'  #TODO make path relative
         files_to_compare = ['snplist.txt',
                             'snpma.fasta',
                             'samples/CFSAN_genomes/CFSAN000448/reads.pileup',  

@@ -180,7 +180,7 @@ def create_consensus_dict(pileup_file_path):
     Raises:
 
     Examples:
-    >>> consensus_dict = create_consensus_dict("/home/hugh.rand/projects/snppipeline/test/codeComparisonFiles/testLambdaVirus/sample2/reads.pileup")
+    >>> consensus_dict = create_consensus_dict("/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/codeComparisonFiles/testLambdaVirus/sample2/reads.pileup")
     >>> consensus_dict['gi|9626243|ref|NC_001416.1|:3678']
     'T'
     >>> consensus_dict['gi|9626243|ref|NC_001416.1|:40984']
