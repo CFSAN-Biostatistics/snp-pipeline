@@ -213,5 +213,5 @@ a virtual machine for testing the egg.
     #Fast test code with
         scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
     #Full test of code with
-        ../test/test_snppipeline.py -v
-        ../test/test_utils.py -v
+        test/test_snppipeline.py -v
+        test/test_utils.py -v
