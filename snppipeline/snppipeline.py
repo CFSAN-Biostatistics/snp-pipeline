@@ -11,8 +11,9 @@ import imp
 #TODO fix these two lines to make paths relative
 utils = imp.load_source('utils', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/utils.py')
 
-#TODO use os.path.join consistently through code for path creation?
-#TODO make file paths in input file path.txt relative somehow?
+#TODO use os.path.join consistently through code for path creation
+#TODO make file paths in input file path.txt relative
+
 def run_snp_pipeline(options_dict):
     """Create SNP matrix
      
@@ -151,7 +152,7 @@ def run_snp_pipeline(options_dict):
     for sample_directory in list_of_sample_directories:
         
         sample_name                  = sample_directory.split(os.sep)[-1]
-        pileup_file_path             = os.path.join(sample_directory,"reads.pileup")
+        pileup_file_path             = os.path.join(sample_directory,options_dict['pileupFileName'])
         position_consensus_base_dict = utils.create_consensus_dict(pileup_file_path)
 
         snp_seq_string = ""

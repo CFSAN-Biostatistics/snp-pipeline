@@ -47,7 +47,7 @@ def pileup(sample_dir_path, options_dict):
     os.chdir(sample_dir_path)
     verbose_print('Generating pileup file ' + options_dict['pileupFileName'] +
                   ' in '+sample_dir_path)
-    pileup_file_path  = os.path.join(sample_dir_path,"reads.pileup")
+    pileup_file_path  = os.path.join(sample_dir_path,options_dict['pileupFileName'])
     snplist_file_path = (options_dict['mainPath'] +
                          options_dict['snplistFileName'])
    
