@@ -1,10 +1,17 @@
 Set up to run the snp pipeline - an example:
 
+    0. Set up some directories
+        mkdir reference samples
+
     1. Get the Reference sequence
-        NC_011149
+        ~/mnt/biob/svn/Biostats/rand/cfsanutils/scripts/fetch.py NC_011149 -e hugh.rand@fda.hhs.gov -f
 
     2. Get the sample sequences
-        fastq-dump --split-files ERR178930
+        fastq-dump --outdir samples/ERR178926 --split-files ERR178926
+        fastq-dump --outdir samples/ERR178927 --split-files ERR178927
+        fastq-dump --outdir samples/ERR178928 --split-files ERR178928
+        fastq-dump --outdir samples/ERR178929 --split-files ERR178929
+        fastq-dump --outdir samples/ERR178930 --split-files ERR178930
 
     0. Create index file for reference
         bowtie-build   NC_011149
