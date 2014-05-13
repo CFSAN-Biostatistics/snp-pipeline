@@ -1,6 +1,31 @@
 #!/bin/bash
-#Set up input for snppipline code.
-#Some prep work needs to be done before running this, and is as follows:
+#
+#Directives for Portable Batch System (PBS) if HPC with Torque or equivalent is installed.
+#PBS -N prepSamples
+#PBS -m be
+#PBS -j oe
+#PBS -M hugh.rand@fda.hhs.gov    #TODO Set this to be your email address
+#
+#Author: Hugh A. Rand (har)
+#Purpose: Set up input for snppipline code.
+#Input:
+#    referenceName
+#    sampleName
+#    various files too tedious to explain
+#Output:
+#    various files too tedious to explain
+#Use example:
+#   On workstation with one sample
+#       prepSamples.sh ERR178926 NC_011149
+#   On workstation with multiple samples
+#       echo -e "ERR178926\nERR178927\nERR178928\nERR178929\nERR178930\n" > prepInput
+#       cat prepInput | xargs -n 1 prepSamples.sh NC_011149
+#   With PBS
+#       qsub -d $PWD temp1.sh
+#History:
+#  20140512-har: Started.
+#Notes:
+#Bugs:
 #
 #
 

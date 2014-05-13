@@ -9,8 +9,6 @@ if [ -z "$1" ]; then
 fi
 REFERENCENAME=$1
 
-Set up to run the snp pipeline - an example:
-
 #Set up directories
 mkdir -p reference
 
@@ -18,5 +16,5 @@ mkdir -p reference
 ~/mnt/biob/svn/Biostats/rand/cfsanutils/scripts/fetch.py $REFERENCENAME -e hugh.rand@fda.hhs.gov > reference/$REFERENCENAME'.fasta'
 
 #Create index file for reference
-~/software/bowtie2-2.2.2/bowtie2-build reference/$REFERENCENAME'.fasta' reference/'$REFERENCENAME
+~/software/bowtie2-2.2.2/bowtie2-build reference/$REFERENCENAME'.fasta' reference/$REFERENCENAME
 
