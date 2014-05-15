@@ -1,5 +1,17 @@
 #!/bin/bash
-#Set up reference input for snppipline code.
+#
+#Author: Hugh A. Rand (har)
+#Purpose: Set up reference sequence input for snppipline code.
+#Input:
+#    referenceName
+#Output:
+#    various files too tedious to explain
+#Use example:
+#   prepReference.sh ERR178926
+#History:
+#   20140512-har: Started.
+#Notes:
+#Bugs:
 #
 
 #Process arguments

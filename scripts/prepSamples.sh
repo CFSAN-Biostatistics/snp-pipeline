@@ -7,7 +7,7 @@
 #PBS -M hugh.rand@fda.hhs.gov    #TODO Set this to be your email address
 #
 #Author: Hugh A. Rand (har)
-#Purpose: Set up input for snppipline code.
+#Purpose: Set up sample input for snppipline code.
 #Input:
 #    referenceName
 #    sampleName
@@ -21,6 +21,7 @@
 #       echo -e "ERR178926\nERR178927\nERR178928\nERR178929\nERR178930\n" > prepInput
 #       cat prepInput | xargs -n 1 prepSamples.sh NC_011149
 #   With PBS
+#       qsub -d $PWD temp.sh ERR178926 NC_011149
 #       qsub -d $PWD temp1.sh
 #History:
 #  20140512-har: Started.
@@ -41,19 +42,19 @@ SAMPLENAME=$2
 mkdir -p samples
 
 #Get the sample sequences
-  fastq-dump --outdir samples/$SAMPLENAME --split-files $SAMPLENAME
+fastq-dump --outdir samples/$SAMPLENAME --split-files $SAMPLENAME
 
 #Align sequences to reference
-  ~/software/bowtie2-2.2.2/bowtie2 -p 11 -q -x reference/$REFERENCENAME -1 samples/$SAMPLENAME/$SAMPLENAME'_1.fastq' -2 samples/$SAMPLENAME/$SAMPLENAME'_2.fastq' > samples/$SAMPLENAME/$SAMPLENAME'.sam'
+~/software/bowtie2-2.2.2/bowtie2 -p 11 -q -x reference/$REFERENCENAME -1 samples/$SAMPLENAME/$SAMPLENAME'_1.fastq' -2 samples/$SAMPLENAME/$SAMPLENAME'_2.fastq' > samples/$SAMPLENAME/'reads.sam'
 
 #Convert to bam file with only mapped positions
-  samtools view -bS -F 4 -o samples/$SAMPLENAME/$SAMPLENAME'.bam' samples/$SAMPLENAME/$SAMPLENAME'.sam'
+samtools view -bS -F 4 -o samples/$SAMPLENAME/'reads.bam' samples/$SAMPLENAME/'reads.sam'
 
 #Convert to a sorted bam 
-  samtools sort samples/$SAMPLENAME/$SAMPLENAME'.bam' samples/$SAMPLENAME/$SAMPLENAME'.sorted.bam'
+samtools sort samples/$SAMPLENAME/'reads.bam' samples/$SAMPLENAME/'reads.sorted'
 
 #Get a bcf file from the pileup and bam file
-  samtools mpileup -uf reference/NC_011149.fasta samples/$SAMPLENAME/$SAMPLENAME'.sorted.bam.bam' | bcftools view -bvcg - > samples/$SAMPLENAME/$SAMPLENAME'.bcf'
+samtools mpileup -uf reference/NC_011149.fasta samples/$SAMPLENAME/'reads.sorted.bam' | bcftools view -bvcg - > samples/$SAMPLENAME/'reads.bcf'
 
 #Convert bcf to vcf
-  bcftools view samples/$SAMPLENAME/$SAMPLENAME'.bcf' | vcfutils.pl varFilter -D1000 > samples/$SAMPLENAME/$SAMPLENAME'.vcf'
+bcftools view samples/$SAMPLENAME/'reads.bcf' | vcfutils.pl varFilter -D1000 > samples/$SAMPLENAME/'var.flt.vcf'
