@@ -48,13 +48,15 @@ fastq-dump --outdir samples/$SAMPLENAME --split-files $SAMPLENAME
 ~/software/bowtie2-2.2.2/bowtie2 -p 11 -q -x reference/$REFERENCENAME -1 samples/$SAMPLENAME/$SAMPLENAME'_1.fastq' -2 samples/$SAMPLENAME/$SAMPLENAME'_2.fastq' > samples/$SAMPLENAME/'reads.sam'
 
 #Convert to bam file with only mapped positions
-samtools view -bS -F 4 -o samples/$SAMPLENAME/'reads.bam' samples/$SAMPLENAME/'reads.sam'
+#samtools view -bS -F 4 -o samples/$SAMPLENAME/'reads.bam' samples/$SAMPLENAME/'reads.sam'
+samtools view -bS -F 4 -o samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMPLENAME/'reads.sam'
 
 #Convert to a sorted bam 
-samtools sort samples/$SAMPLENAME/'reads.bam' samples/$SAMPLENAME/'reads.sorted'
+#samtools sort samples/$SAMPLENAME/'reads.bam' samples/$SAMPLENAME/'reads.sorted'
+samtools sort samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMPLENAME/'reads'
 
 #Get a bcf file from the pileup and bam file
-samtools mpileup -uf reference/NC_011149.fasta samples/$SAMPLENAME/'reads.sorted.bam' | bcftools view -bvcg - > samples/$SAMPLENAME/'reads.bcf'
+samtools mpileup -uf reference/NC_011149.fasta samples/$SAMPLENAME/'reads.bam' | bcftools view -bvcg - > samples/$SAMPLENAME/'reads.bcf'
 
 #Convert bcf to vcf
 bcftools view samples/$SAMPLENAME/'reads.bcf' | vcfutils.pl varFilter -D1000 > samples/$SAMPLENAME/'var.flt.vcf'

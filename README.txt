@@ -1,4 +1,16 @@
-#Example: Set up to run the snp pipeline and run it.
+#############################
+#Running snp pipeline tests.#
+#############################
+#Several different cases
+scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testAgonaMOM -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+#Full test of code
+test/test_snppipeline.py -v
+test/test_utils.py -v
+
+#####################################################
+#Example: Set up to run the snp pipeline and run it.#
+#####################################################
 
 #Prep work
 mkdir junk #make a directory to work in
@@ -14,7 +26,7 @@ cat prepInput | xargs -n 1 /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipelin
         
 # Run samtools pileup in parallel and combine alignment and pileup to generate snp matrix
 ls -d -1 --color=never $PWD/samples/* > path.txt
-/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/junk/ -f path.txt -r NC_011149.fasta -l snplist.txt -a snpma.fasta -i True
+
+#Run the snp pipeline
 /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/junk/ -f path.txt -r reference/NC_011149.fasta -l snplist.txt -a snpma.fasta -i True
-#./snppipeline.py -n 10 -d ~/projects/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
 

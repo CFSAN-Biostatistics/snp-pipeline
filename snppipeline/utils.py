@@ -64,7 +64,7 @@ def pileup(sample_dir_path, options_dict):
             options_dict['bamFileName'] +
             ' > ' + options_dict['pileupFileName']
     )
-
+    print(command_line)
     verbose_print('Executing: '+command_line)
     #TODO review return values and clean up this next bit of code.
     #  see for details: https://docs.python.org/2/library/subprocess.html#replacing-os-system

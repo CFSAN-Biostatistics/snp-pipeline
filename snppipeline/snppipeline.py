@@ -15,6 +15,7 @@ utils = imp.load_source('utils', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snp
 #TODO make file paths in input file path.txt relative
 
 def run_snp_pipeline(options_dict):
+    print(options_dict)
     """Create SNP matrix
      
     Description:
