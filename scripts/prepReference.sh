@@ -1,16 +1,18 @@
 #!/bin/bash
 #
 #Author: Hugh A. Rand (har)
-#Purpose: Set up reference sequence input for snppipline code.
+#Purpose: Prep the reference sequence for snppipline code.
 #Input:
 #    referenceName
 #Output:
-#    various files too tedious to explain
+#    referenceName.???? #bowtie index file from reference sequence
 #Use example:
 #   prepReference.sh ERR178926
 #History:
 #   20140512-har: Started.
+#   20140520-har: Download of sequence moved to different script.
 #Notes:
+#   1.Assumes file named 'referenceName.fasta' is in a directory 'reference' 
 #Bugs:
 #
 
@@ -20,12 +22,6 @@ if [ -z "$1" ]; then
     exit
 fi
 REFERENCENAME=$1
-
-#Set up directories
-mkdir -p reference
-
-#Get the Reference sequence
-~/mnt/biob/svn/Biostats/rand/cfsanutils/scripts/fetch.py $REFERENCENAME -e hugh.rand@fda.hhs.gov > reference/$REFERENCENAME'.fasta'
 
 #Create index file for reference
 ~/software/bowtie2-2.2.2/bowtie2-build reference/$REFERENCENAME'.fasta' reference/$REFERENCENAME

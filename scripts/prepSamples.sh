@@ -7,11 +7,10 @@
 #PBS -M hugh.rand@fda.hhs.gov    #TODO Set this to be your email address
 #
 #Author: Hugh A. Rand (har)
-#Purpose: Set up sample input for snppipline code.
+#Purpose: Preps sample sequence data for snppipline code.
 #Input:
 #    referenceName
 #    sampleName
-#    various files too tedious to explain
 #Output:
 #    various files too tedious to explain
 #Use example:
@@ -24,8 +23,11 @@
 #       qsub -d $PWD temp.sh ERR178926 NC_011149
 #       qsub -d $PWD temp1.sh
 #History:
-#  20140512-har: Started.
+#   20140512-har: Started.
+#   20140520-har: Download of sequence moved to different script.
 #Notes:
+#   1.Assumes file named 'referenceName.fasta' is in a directory 'reference'
+#   2.Assumes sequence file(s) are in a directory 'sample'                                                                                                                             
 #Bugs:
 #
 #
@@ -37,12 +39,6 @@ if [ -z "$1" ]; then
 fi
 REFERENCENAME=$1
 SAMPLENAME=$2
-
-#Set up directories
-mkdir -p samples
-
-#Get the sample sequences
-fastq-dump --outdir samples/$SAMPLENAME --split-files $SAMPLENAME
 
 #Align sequences to reference
 ~/software/bowtie2-2.2.2/bowtie2 -p 11 -q -x reference/$REFERENCENAME -1 samples/$SAMPLENAME/$SAMPLENAME'_1.fastq' -2 samples/$SAMPLENAME/$SAMPLENAME'_2.fastq' > samples/$SAMPLENAME/'reads.sam'
