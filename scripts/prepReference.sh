@@ -5,7 +5,7 @@
 #Input:
 #    referenceName
 #Output:
-#    referenceName.???? #bowtie index file from reference sequence
+#    bowtie index files from reference sequence
 #Use example:
 #   prepReference.sh ERR178926
 #History:

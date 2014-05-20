@@ -26,10 +26,10 @@
 #   20140512-har: Started.
 #   20140520-har: Download of sequence moved to different script.
 #Notes:
-#   1.Assumes file named 'referenceName.fasta' is in a directory 'reference'
-#   2.Assumes sequence file(s) are in a directory 'sample'                                                                                                                             
+#   1. Assumes file named 'referenceName.fasta' is in a directory 'reference'
+#   2. Assumes sequence file(s) are in a directory 'sample'                                                                                                                             
 #Bugs:
-#
+#   1. Should add prints to stdout to show progress to user
 #
 
 #Process arguments
