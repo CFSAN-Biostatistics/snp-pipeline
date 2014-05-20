@@ -102,7 +102,7 @@ def run_snp_pipeline(options_dict):
     verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
 
     sample_directories_list_filename = (options_dict['mainPath'] +
-                                        options_dict['pathFileName'])
+                                        options_dict['pathFileName']) # TODO Fix this
     list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
     list_of_sample_directories = filter(None, list_of_sample_directories)
 
@@ -112,7 +112,7 @@ def run_snp_pipeline(options_dict):
     #==========================================================================
 
     snp_dict = utils.convert_vcf_files_to_snp_dict(list_of_sample_directories,options_dict)
-    snp_list_file_path = options_dict['mainPath'] + options_dict['snplistFileName']
+    snp_list_file_path = options_dict['mainPath'] + options_dict['snplistFileName'] # TODO Fix this
     utils.write_list_of_snps(snp_list_file_path, snp_dict)   
     
     #==========================================================================
@@ -122,8 +122,8 @@ def run_snp_pipeline(options_dict):
     #                                parameter_list).get(9999999)
     #  And not the maybe more sensible: 
     #   result_many = pool.map(utils.pileup_wrapper, parameter_list)
-    #  This is to ensure that a keyboary interupt (Ctrl-C) is properly handled.
-    #  The approach I used is from:
+    #  This is to ensure that a keyboard interupt (Ctrl-C) is properly handled.
+    #  The approach used is from:
     #   http://stackoverflow.com/questions/1408356/keyboard-interrupts-with
     #   -pythons-multiprocessing-pool
     #  There are alternate approaches, one of which is in:
@@ -157,8 +157,10 @@ def run_snp_pipeline(options_dict):
         position_consensus_base_dict = utils.create_consensus_dict(pileup_file_path)
 
         snp_seq_string = ""
+        #TODO - is there more than one chromosome?  If so, why is there only one snp_seq_string?
         for key in sorted(snp_dict.iterkeys()):  #TODO - Why sorted?
             chrom, pos = key.split()
+            # TODO how large is this dictionary?  Do we need a more efficient storage?
             if position_consensus_base_dict.has_key(chrom + ":" + pos):
                 snp_seq_string += position_consensus_base_dict[chrom + ":" + pos]
             else:
@@ -168,15 +170,15 @@ def run_snp_pipeline(options_dict):
         snp_sequence_records_list.append(snp_seq_record)
     
     #Write bases for snps for each sequence to a fasta file           
-    with open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") as fasta_file_object:
+    with open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") as fasta_file_object: # TODO join path
         SeqIO.write(snp_sequence_records_list, fasta_file_object, "fasta")
     
     #==========================================================================
     #    Write reference sequence bases at SNP locations to a fasta file.
     #==========================================================================
     if options_dict['includeReference']:
-        snp_list_file_path       = options_dict['mainPath'] + options_dict['snplistFileName']
-        reference_file_path      = options_dict['mainPath'] + options_dict['Reference']
+        snp_list_file_path       = options_dict['mainPath'] + options_dict['snplistFileName'] # TODO join path
+        reference_file_path      = options_dict['mainPath'] + options_dict['Reference'] # TODO join path
         snp_reference_file_path  = options_dict['mainPath'] + "referenceSNP.fasta"   #TODO - should make this configurable
         utils.write_reference_snp_file(reference_file_path, snp_list_file_path,
                                        snp_reference_file_path)

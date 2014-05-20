@@ -47,9 +47,9 @@ def pileup(sample_dir_path, options_dict):
     os.chdir(sample_dir_path)
     verbose_print('Generating pileup file ' + options_dict['pileupFileName'] +
                   ' in '+sample_dir_path)
-    pileup_file_path  = os.path.join(sample_dir_path,options_dict['pileupFileName'])
+    pileup_file_path  = os.path.join(sample_dir_path, options_dict['pileupFileName'])
     snplist_file_path = (options_dict['mainPath'] +
-                         options_dict['snplistFileName'])
+                         options_dict['snplistFileName']) #TODO use join
    
     #TODO - allow for use of previously done pileup via command line argument?
     if os.path.isfile(pileup_file_path):
@@ -90,7 +90,7 @@ def get_consensus_base_from_pileup(base, length, data):
     """Call the base for each SNP position
     
     Description:
-    Calls the base based on the pipelup data for a SNP position with a given
+    Calls the base based on the pileup data for a SNP position with a given
         length cutoff and with a given reference base.    
     
     Args:
@@ -103,7 +103,8 @@ def get_consensus_base_from_pileup(base, length, data):
     
     Raises:
 
-
+TODO: all these examples return the value of the 1st argument, can we get some other examples?
+TODO: turn these into unit test cases
     Examples:
     
     >>> print(get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A'))
@@ -127,8 +128,11 @@ def get_consensus_base_from_pileup(base, length, data):
     """
 
     consensus_base = ""
+    #TODO consider using a Counter
     base_count_dict = {'.,': 0, 'A': 0, 'C': 0, 'G': 0, 'N': 0, 'T': 0}
     
+    #TODO move the char.upper out of the loop.
+    #TODO move the set construction out of the loop, and we only need 4 elements in the set
     i = 0
     while i < len(data):
         char = data[i]
@@ -146,7 +150,7 @@ def get_consensus_base_from_pileup(base, length, data):
                 count = int(count_str)
             i += count
         elif char == '^':
-            if data[i+1] != "." and data[i+1] != ',':
+            if data[i + 1] != "." and data[i + 1] != ',':
                 i += 1
         i += 1
             
@@ -192,7 +196,10 @@ def create_consensus_dict(pileup_file_path):
     with open(pileup_file_path, "r") as pileup_file_object:
         for pileup_line in pileup_file_object:
             current_line_data = pileup_line.rstrip().split()
-            if len(current_line_data) >5:   #don't process lines without 5 pieces of information or more
+            #TODO should the test below be >= 5 ???
+            if len(current_line_data) > 5:   #don't process lines without 5 pieces of information or more
+                #TODO seq_id, pos, ref_base, depth, bases_string = current_line_data[:5]
+                #TODO position_value_dict[seq_id + ":" + pos] = get_consensus_base_from_pileup(ref_base, depth, bases_string)
                 position_value_dict[current_line_data[0] + ":" + current_line_data[1]] = get_consensus_base_from_pileup(current_line_data[2], current_line_data[3], current_line_data[4])
 
     return position_value_dict
@@ -232,7 +239,7 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
                     snp_reference_file_object.write(match_dict[orderedId][int(PosID)-1].upper())
         
 
-def convert_vcf_files_to_snp_dict(list_of_sample_directories,options_dict):
+def convert_vcf_files_to_snp_dict(list_of_sample_directories, options_dict):
     """convert list of vcf files to a single dict of quality SNPs.
     
     We use several criteria from options_dict to evaluate SNPs.
@@ -244,6 +251,7 @@ def convert_vcf_files_to_snp_dict(list_of_sample_directories,options_dict):
     
     for sample_directory in list_of_sample_directories:
 
+        #TODO os.path.split(sample_directory) ???
         sample_name  = sample_directory.split(os.sep)[-1]
 
         with open(os.path.join(sample_directory,"var.flt.vcf"), 'r') as vcf_file_object:
