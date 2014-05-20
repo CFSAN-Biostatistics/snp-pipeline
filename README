@@ -30,6 +30,6 @@ cat prepInput | xargs -n 1 /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipelin
         
 #Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to generate snp matrix)
 ls -d -1 --color=never $PWD/samples/* > path.txt
-/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testAgonaMOM2/ -f path.txt -r reference/NC_011149.fasta -l snplist.txt -a snpma.fasta -i True
+home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/junk/ -f path.txt -r reference/NC_011149.fasta -l snplist.txt -a snpma.fasta -i True
 
 
