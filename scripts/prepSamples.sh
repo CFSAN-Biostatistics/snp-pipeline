@@ -16,7 +16,7 @@
 #    various files too tedious to explain
 #Use example:
 #   On workstation with one sample
-#       prepSamples.sh ERR178926 NC_011149
+#       prepSamples.sh NC_011149 ERR178926
 #   On workstation with multiple samples
 #       echo -e "ERR178926\nERR178927\nERR178928\nERR178929\nERR178930\n" > prepInput
 #       cat prepInput | xargs -n 1 prepSamples.sh NC_011149
