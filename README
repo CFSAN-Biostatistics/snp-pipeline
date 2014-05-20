@@ -17,6 +17,7 @@ mkdir junk #make a directory to work in
 cd junk    #change to it
 
 #Get sequence data
+#echo -e "SRR955145\nSRR955146\nERR178930\nERR178931\n" > prepInput
 echo -e "ERR178926\nERR178927\nERR178928\nERR178929\nERR178930\n" > prepInput
 cat prepInput | xargs -n 1 /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/prepSequenceData.sh NC_011149
 
@@ -29,6 +30,6 @@ cat prepInput | xargs -n 1 /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipelin
         
 #Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to generate snp matrix)
 ls -d -1 --color=never $PWD/samples/* > path.txt
-#????copy reference file up one or not????
-/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/junk/ -f path.txt -r reference/NC_011149.fasta -l snplist.txt -a snpma.fasta -i True
+/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testAgonaMOM2/ -f path.txt -r reference/NC_011149.fasta -l snplist.txt -a snpma.fasta -i True
+
 
