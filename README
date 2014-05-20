@@ -16,12 +16,15 @@ test/test_utils.py -v
 mkdir junk #make a directory to work in
 cd junk    #change to it
 
+#Get sequence data
+echo -e "ERR178926\nERR178927\nERR178928\nERR178929\nERR178930\n" > prepInput
+cat prepInput | xargs -n 1 /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/prepSequenceData.sh NC_011149
+
 #Set up reference sequence
 /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/prepReference.sh NC_011149
 
 #Set up sample sequence
 #  Note: This could be run in parallel using gnu parallel (workstation) or qsub (HPC)
-echo -e "ERR178926\nERR178927\nERR178928\nERR178929\nERR178930\n" > prepInput
 cat prepInput | xargs -n 1 /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/prepSamples.sh NC_011149
         
 # Run samtools pileup in parallel and combine alignment and pileup to generate snp matrix
