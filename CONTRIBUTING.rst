@@ -13,7 +13,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/CFSAN-Biostatistics/snppipeline/issues.
+Report bugs at https://github.com/CFSAN-Biostatistics/snp-pipeline/issues.
 
 If you are reporting a bug, please include:
 
@@ -43,7 +43,7 @@ articles, and such.
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/CFSAN-Biostatistics/snppipeline/issues.
+The best way to send feedback is to file an issue at https://github.com/CFSAN-Biostatistics/snp-pipeline/issues.
 
 If you are proposing a feature:
 
@@ -57,10 +57,10 @@ Get Started!
 
 Ready to contribute? Here's how to set up `snppipeline` for local development.
 
-1. Fork the `snppipeline` repo on GitHub.
+1. Fork the `snp-pipeline` repo on GitHub.
 2. Clone your fork locally::
 
-    $ git clone git@github.com:your_name_here/snppipeline.git
+    $ git clone git@github.com:your_name_here/snp-pipeline.git
 
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
 
@@ -100,7 +100,7 @@ Before you submit a pull request, check that it meets these guidelines:
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
 3. The pull request should work for Python 2.6, 2.7, and 3.3, and for PyPy. Check 
-   https://travis-ci.org/CFSAN-Biostatistics/snppipeline/pull_requests
+   https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline/pull_requests
    and make sure that the tests pass for all supported Python versions.
 
 Tips
