@@ -44,11 +44,9 @@ SAMPLENAME=$2
 ~/software/bowtie2-2.2.2/bowtie2 -p 11 -q -x reference/$REFERENCENAME -1 samples/$SAMPLENAME/$SAMPLENAME'_1.fastq' -2 samples/$SAMPLENAME/$SAMPLENAME'_2.fastq' > samples/$SAMPLENAME/'reads.sam'
 
 #Convert to bam file with only mapped positions
-#samtools view -bS -F 4 -o samples/$SAMPLENAME/'reads.bam' samples/$SAMPLENAME/'reads.sam'
 samtools view -bS -F 4 -o samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMPLENAME/'reads.sam'
 
 #Convert to a sorted bam 
-#samtools sort samples/$SAMPLENAME/'reads.bam' samples/$SAMPLENAME/'reads.sorted'
 samtools sort samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMPLENAME/'reads'
 
 #Get a bcf file from the pileup and bam file
