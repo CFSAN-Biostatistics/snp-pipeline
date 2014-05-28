@@ -27,14 +27,14 @@ setup(
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License (MIT)',
+        'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
     keywords='bioinformatics NGS',
-    license='GPL',
+    license='BSD',
     install_requires=[
         'biopython',
         'PyVCF',

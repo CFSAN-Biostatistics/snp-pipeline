@@ -21,7 +21,7 @@ organisms sequenced from samples of interest to food safety.
 The SNP Pipeline was developed by the United States Food 
 and Drug Administration, Center for Food Safety and Applied Nutrition.
 
-* Free software
+* Free software: BSD license 
 * Documentation: http://snp-pipeline.rtfd.org.
 
 Features
@@ -49,6 +49,6 @@ License
 
 This project constitutes a work of the United States Government and is not subject to domestic copyright protection under 17 USC § 105.
 
-This program is free software: you can redistribute it and/or modify it under the terms of the attached License.
+This program is free software: you can redistribute it and/or modify it under the terms of the included License.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
