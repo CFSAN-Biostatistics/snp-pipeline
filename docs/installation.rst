@@ -17,7 +17,7 @@ on the following platforms:
 Executable Software Dependencies
 --------------------------------
 
-TODO: Fix this
+TODO: what other software is needed?
 
 You should have the following software installed before using the SNP Pipeline.
 
@@ -27,8 +27,8 @@ You should have the following software installed before using the SNP Pipeline.
     * fastq-dump_, an SRA Toolkit utility for fetching samples from NCBI SRA
 
 
-Python Script
--------------
+Installing the Python Package
+-----------------------------
 
 TODO: Fix this
 
@@ -45,4 +45,4 @@ Or, if you have virtualenvwrapper installed::
 .. _Bowtie2: http://sourceforge.net/projects/bowtie-bio/files/bowtie2/
 .. _SAMtools: http://sourceforge.net/projects/samtools/files/
 .. _BCFtools: http://samtools.github.io/bcftools/
-.. _SRA Toolkit: http://www.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software
+.. _fastq-dump: http://www.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software
