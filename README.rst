@@ -22,7 +22,9 @@ The SNP Pipeline was developed by the United States Food
 and Drug Administration, Center for Food Safety and Applied Nutrition.
 
 * Free software: BSD license 
-* Documentation: http://snp-pipeline.rtfd.org.
+* Documentation: http://snp-pipeline.rtfd.org
+* Source Code: https://github.com/CFSAN-Biostatistics/snp-pipeline
+* PyPI Distribution: https://pypi.python.org/pypi/snp-pipeline
 
 Features
 --------
