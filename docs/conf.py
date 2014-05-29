@@ -60,7 +60,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'snppipeline'
+project = u'CFSAN SNP Pipeline'
 copyright = u'2014, ' + unicode(snppipeline.__author__)
 
 # The version info for the project you're documenting, acts as replacement for
