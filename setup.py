@@ -60,4 +60,7 @@ setup(
         'PyVCF',
         'setuptools',
     ],
+
+    # package (aka directory) containing unit test modules
+    test_suite='test',
 )
