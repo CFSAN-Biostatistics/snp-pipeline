@@ -49,8 +49,10 @@ samtools view -bS -F 4 -o samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMP
 #Convert to a sorted bam 
 samtools sort samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMPLENAME/'reads'
 
-#Get a bcf file from the pileup and bam file
-samtools mpileup -uf reference/NC_011149.fasta samples/$SAMPLENAME/'reads.bam' | bcftools view -bvcg - > samples/$SAMPLENAME/'reads.bcf'
+#Get a bcf file from the pileup and bam file 
+#samtools mpileup -uf reference/NC_011149.fasta samples/$SAMPLENAME/'reads.bam' | bcftools view -bvcg - > samples/$SAMPLENAME/'reads.bcf'
+samtools mpileup -f reference/$REFERENCE'.fasta' samples/$SAMPLENAME/'reads.bam' > samples/$SAMPLENAME'.mpileup'
+java -jar VarScan.jar mpileup2snp - --min-var-freq 0.51 --output-vcf 1 > samples/$SAMPLENAME/'reads.bcf'
 
 #Convert bcf to vcf
-bcftools view samples/$SAMPLENAME/'reads.bcf' | vcfutils.pl varFilter -D1000 > samples/$SAMPLENAME/'var.flt.vcf'
+#bcftools view samples/$SAMPLENAME/'reads.bcf' | vcfutils.pl varFilter -D1000 > samples/$SAMPLENAME/'var.flt.vcf'

@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
         args_dict = {
             'maxThread':3,      
             'mainPath':'/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/',     #TODO make path relative    
-            'Reference':'lambda_virus.fa',     
+            'Reference':'reference/lambda_virus.fa',     
             'pathFileName':'path.txt',   
             'snplistFileName':'snplist.txt', 
             'snpmaFileName':'snpma.fasta',
@@ -40,9 +40,9 @@ class Test(unittest.TestCase):
         #Returns three lists of file names: match, mismatch, errors. 
         directory_correct = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/codeComparisonFiles/testLambdaVirus' #TODO make path relative
         directory_run_result = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus'  #TODO make path relative
-        files_to_compare = ['snplist.txt','snpma.fasta','sample1/reads.pileup',
-                            'sample2/reads.pileup','sample3/reads.pileup',
-                            'sample4/reads.pileup','referenceSNP.fasta']
+        files_to_compare = ['snplist.txt','snpma.fasta','samples/sample1/reads.pileup',
+                            'samples/sample2/reads.pileup','samples/sample3/reads.pileup',
+                            'samples/sample4/reads.pileup','referenceSNP.fasta']
         match, mismatch, errors =  filecmp.cmpfiles(directory_correct,
                                                     directory_run_result,
                                                     files_to_compare,shallow=False)

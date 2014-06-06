@@ -2,7 +2,7 @@
 #Running snp pipeline tests.#
 #############################
 #Several different cases
-scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/ -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
+scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/ -f path.txt -r reference/lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
 scripts/runsnppipeline.py -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testAgonaMOM -f path.txt -r lambda_virus.fa -l snplist.txt -a snpma.fasta -i True
 #Full test of code
 test/test_snppipeline.py -v

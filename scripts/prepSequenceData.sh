@@ -31,7 +31,7 @@ SAMPLENAME=$2
 mkdir -p reference samples
 
 #Get the Reference sequence
-~/mnt/biob/svn/Biostats/rand/cfsanutils/scripts/fetch.py $REFERENCENAME -e hugh.rand@fda.hhs.gov > reference/$REFERENCENAME'.fasta'
+~/mnt/biob/svn/Biostats/rand/cfsanutils/scripts/fetch.py $REFERENCENAME -e hugh.rand@fda.hhs.gov > reference/$REFERENCENAME'.fa'
 
 #Get the sample sequences
 fastq-dump --outdir samples/$SAMPLENAME --split-files $SAMPLENAME
