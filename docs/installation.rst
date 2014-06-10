@@ -27,8 +27,25 @@ You should have the following software installed before using the SNP Pipeline.
     * fastq-dump_, an SRA Toolkit utility for fetching samples from NCBI SRA
 
 
-Installing the Python Package
------------------------------
+Installing Python Package Dependencies
+--------------------------------------
+
+The installer automatically installs the necessary python packages used by
+snp-pipeline.  However, not all python packages can be reliably installed
+automatically.  The packages listed below may need manual installation if
+not already provided by your python distribution.
+
+    * Biopython
+
+Installing the SNP Pipeline Python Package
+------------------------------------------
+There is more than one way to install the SNP Pipeline.  If you intend to 
+work with the source code in the role of a software developer, you should
+clone the GitHub repository as described here:
+
+.. include:: ../CONTRIBUTING.rst
+
+Non-software developers should follow the instructions below.
 
 TODO: Fix this
 
