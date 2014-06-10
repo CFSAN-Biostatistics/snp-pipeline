@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
         args_dict = {
             'maxThread':3,      
             'mainPath':'/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/',     #TODO make path relative    
-            'Reference':'reference/lambda_virus.fa',     
+            'Reference':'reference/lambda_virus.fasta',     
             'pathFileName':'path.txt',   
             'snplistFileName':'snplist.txt', 
             'snpmaFileName':'snpma.fasta',
