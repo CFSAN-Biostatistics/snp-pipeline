@@ -15,11 +15,10 @@ test/test_utils.py -v
 #Prep work
 #  The directory and sequence information already exists, so just copy it to
 #    a directory to work in.
-cd test/testLambdaVirus
-#Test new name of sampleDirectoryNames.txt in all following code
-#TODO test next line as replacement for following one
+cd /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test
+cp -r testLambdaVirusClean testLambdaVirus
+cd testLambdaVirus
 ls -1 --color=never $PWD/samples > sampleDirectoryNames.txt
-#echo -e "sample1\nsample2\nsample3\nsample4\n" > sampleDirectoryNames.txt
 
 #Set up reference sequence
 /home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/scripts/prepReference.sh lambda_virus
