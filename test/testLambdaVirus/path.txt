@@ -1,4 +1,4 @@
-/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/sample1
-/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/sample2
-/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/sample3
-/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/sample4
+test/testLambdaVirus/sample1
+test/testLambdaVirus/sample2
+test/testLambdaVirus/sample3
+test/testLambdaVirus/sample4

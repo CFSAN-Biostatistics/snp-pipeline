@@ -1,0 +1,4 @@
+test/testLambdaVirus/sample1
+test/testLambdaVirus/sample2
+test/testLambdaVirus/sample3
+test/testLambdaVirus/sample4

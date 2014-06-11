@@ -1,14 +1,21 @@
 #!/usr/bin/env python2.7
 
 import unittest
-#import snppipeline
+
 import filecmp
 import os
+import inspect
 
-import imp
-#TODO fix these two lines to make paths relative
-snppipeline = imp.load_source('snppipeline', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/snppipeline.py')
-utils       = imp.load_source('utils', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/utils.py')
+from snppipeline import snppipeline
+
+# script directory
+test_directory = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+# various directories of test files
+test_lambda_virus_directory = os.path.join(test_directory, 'testLambdaVirus')
+test_agona_mom_directory = os.path.join(test_directory, 'testAgonaMOM')
+compare_lambda_virus_directory = os.path.join(test_directory, 'codeComparisonFiles', 'testLambdaVirus')
+compare_agona_mom_virus_directory = os.path.join(test_directory, 'codeComparisonFiles', 'testAgonaMOM')
 
 class Test(unittest.TestCase):
     '''Unit test for snppipeline.'''
@@ -16,13 +23,13 @@ class Test(unittest.TestCase):
     def test_snppipeline_lambda_virus(self):
         """Run snppipeline with synthetic virus example.
         """
-        
+
         args_dict = {
-            'maxThread':3,      
-            'mainPath':'/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/',     #TODO make path relative    
-            'Reference':'lambda_virus.fa',     
-            'pathFileName':'path.txt',   
-            'snplistFileName':'snplist.txt', 
+            'maxThread':3,
+            'mainPath': test_lambda_virus_directory,
+            'Reference':'lambda_virus.fa',
+            'pathFileName':'path.txt',
+            'snplistFileName':'snplist.txt',
             'snpmaFileName':'snpma.fasta',
             'bamFileName':'reads.bam',
             'pileupFileName':'reads.pileup',
@@ -32,14 +39,14 @@ class Test(unittest.TestCase):
             'combinedDepthAcrossSamples':10,
             'alleleFrequencyForFirstALTAllele':1.0,
             'arFlagValue':1.0
-        } 
-        
+        }
+
         snppipeline.run_snp_pipeline(args_dict)
-        
+
         #Compare the files in the two directories whose names are given.
-        #Returns three lists of file names: match, mismatch, errors. 
-        directory_correct = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/codeComparisonFiles/testLambdaVirus' #TODO make path relative
-        directory_run_result = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus'  #TODO make path relative
+        #Returns three lists of file names: match, mismatch, errors.
+        directory_correct = compare_lambda_virus_directory
+        directory_run_result = test_lambda_virus_directory
         files_to_compare = ['snplist.txt','snpma.fasta','sample1/reads.pileup',
                             'sample2/reads.pileup','sample3/reads.pileup',
                             'sample4/reads.pileup','referenceSNP.fasta']
@@ -56,7 +63,7 @@ class Test(unittest.TestCase):
 
         #Remove files generated #TODO make this optional?
         for file_name in files_to_compare:
-            os.remove(os.path.join(directory_run_result,file_name)) 
+            os.remove(os.path.join(directory_run_result,file_name))
 
 
     def test_snppipeline_agona(self):
@@ -64,11 +71,11 @@ class Test(unittest.TestCase):
         """
 
         args_dict = {
-            'maxThread':8,      
-            'mainPath':'/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testAgonaMOM/',    #TODO make path relative     
-            'Reference':'NC_011149.fasta',     
-            'pathFileName':'path.txt',   
-            'snplistFileName':'snplist.txt', 
+            'maxThread':8,
+            'mainPath': test_agona_mom_directory,
+            'Reference':'NC_011149.fasta',
+            'pathFileName':'path.txt',
+            'snplistFileName':'snplist.txt',
             'snpmaFileName':'snpma.fasta',
             'bamFileName':'reads.bam',
             'pileupFileName':'reads.pileup',
@@ -78,18 +85,18 @@ class Test(unittest.TestCase):
             'combinedDepthAcrossSamples':10,
             'alleleFrequencyForFirstALTAllele':1.0,
             'arFlagValue':1.0
-        } 
+        }
 
         snppipeline.run_snp_pipeline(args_dict)
-        
+
         #Compare the files in the two directories whose names are given.
         #Returns three lists of file names: match, mismatch, errors.
-        directory_correct = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/codeComparisonFiles/testAgonaMOM'  #TODO make path relative
-        directory_run_result = '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/test/testAgonaMOM'  #TODO make path relative
+        directory_correct = compare_agona_mom_virus_directory
+        directory_run_result = test_agona_mom_directory
         files_to_compare = ['snplist.txt',
                             'snpma.fasta',
-                            'samples/CFSAN_genomes/CFSAN000448/reads.pileup',  
-                            'samples/CFSAN_genomes/CFSAN000449/reads.pileup', 
+                            'samples/CFSAN_genomes/CFSAN000448/reads.pileup',
+                            'samples/CFSAN_genomes/CFSAN000449/reads.pileup',
                             'samples/CFSAN_genomes/CFSAN000450/reads.pileup',
                             'samples/SRA_data/ERR178930/reads.pileup',
                             'samples/SRA_data/ERR178931/reads.pileup',
@@ -101,18 +108,18 @@ class Test(unittest.TestCase):
         print('  Mismatch: ',mismatch)
         print('  Errors: ',errors)
         print('Match, Mismatch, Errors: '+str(len(match))+', '+str(len(mismatch))+', '+str(len(errors)))
-        
+
         self.assertEqual(True,len(match)    == len(files_to_compare) and
                               len(mismatch) == 0 and
                               len(errors)   == 0)
-        
+
         #TODO make this optional?
         for file_name in files_to_compare:
-            os.remove(os.path.join(directory_run_result,file_name)) 
+            os.remove(os.path.join(directory_run_result,file_name))
 
 if __name__ == "__main__":
     unittest.main()
-    
+
 
     #compare archived files to expected files
 

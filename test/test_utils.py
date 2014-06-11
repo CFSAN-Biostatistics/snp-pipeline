@@ -3,8 +3,7 @@
 import unittest
 import doctest
 
-import imp
-utils = imp.load_source('utils', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/utils.py')
+from snppipeline import utils
 
 class Test(unittest.TestCase):
     """Unit tests for utils."""
@@ -15,4 +14,3 @@ class Test(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-    
