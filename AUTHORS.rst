@@ -3,7 +3,7 @@ Credits
 =======
 
 CFSAN BioInformatics Team
------------------------
+-------------------------
 
 * Hugh A. Rand
 * Yan Luo

@@ -1,3 +1,5 @@
+.. _contributing-label:
+
 ============
 Contributing
 ============
@@ -55,7 +57,7 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `snppipeline` for local development.
+Ready to contribute? Here's how to set up `snp-pipeline` for local development.
 
 1. Fork the `snp-pipeline` repo on GitHub.
 2. Clone your fork locally::
