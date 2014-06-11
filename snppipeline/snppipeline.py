@@ -7,9 +7,12 @@ from Bio.SeqRecord import SeqRecord
 import multiprocessing
 import os
 import pprint
-import imp
-#TODO fix these two lines to make paths relative
-utils = imp.load_source('utils', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/utils.py')
+import utils
+
+
+def print_hello_world() :
+    """Test function to verify the module is executing anything at all."""
+    print("Hello World from snppipeline")
 
 #TODO use os.path.join consistently through code for path creation
 #TODO make file paths in input file path.txt relative
@@ -56,7 +59,7 @@ def run_snp_pipeline(options_dict):
         lambda_virus sequence that is use as one test for this package.
 
     Args:
-        maxThread: (15) Max number of cocurrent threads.
+        maxThread: (15) Max number of concurrent threads.
         mainPath:  (no default) Directory containing all input files. Output
             files will also be written here.
         Reference: (no default) File name for reference sequence (in fasta
@@ -101,8 +104,7 @@ def run_snp_pipeline(options_dict):
     verbose_print  = print         if verbose else lambda *a, **k: None
     verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
 
-    sample_directories_list_filename = (options_dict['mainPath'] +
-                                        options_dict['pathFileName']) # TODO Fix this
+    sample_directories_list_filename = os.path.join(options_dict['mainPath'], options_dict['pathFileName'])
     list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
     list_of_sample_directories = filter(None, list_of_sample_directories)
 
