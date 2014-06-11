@@ -41,16 +41,23 @@ REFERENCENAME=$1
 SAMPLENAME=$2
 
 #Align sequences to reference
+echo '**Align sequence '$SAMPLENAME' to reference '$REFERENCENAME
 ~/software/bowtie2-2.2.2/bowtie2 -p 11 -q -x reference/$REFERENCENAME -1 samples/$SAMPLENAME/$SAMPLENAME'_1.fastq' -2 samples/$SAMPLENAME/$SAMPLENAME'_2.fastq' > samples/$SAMPLENAME/'reads.sam'
 
 #Convert to bam file with only mapped positions
+echo '**Convert sam file to bam file with only mapped positions.'
 samtools view -bS -F 4 -o samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMPLENAME/'reads.sam'
 
-#Convert to a sorted bam 
+#Convert to a sorted bam
+echo '**Convert bam to sorted bam file.'
 samtools sort samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMPLENAME/'reads'
 
-#Get a bcf file from the pileup and bam file
-samtools mpileup -uf reference/NC_011149.fasta samples/$SAMPLENAME/'reads.bam' | bcftools view -bvcg - > samples/$SAMPLENAME/'reads.bcf'
+#Get a bcf file from the pileup and bam file 
+echo '**Produce bcf file from pileup and bam file.'
+samtools mpileup -uf reference/$REFERENCENAME'.fasta' samples/$SAMPLENAME/'reads.bam' | bcftools view -bvcg - > samples/$SAMPLENAME/'reads.bcf'
+#samtools mpileup -f reference/$REFERENCENAME'.fasta' samples/$SAMPLENAME/'reads.bam' > samples/$SAMPLENAME'.mpileup'
+#java -jar VarScan.jar mpileup2snp - --min-var-freq 0.90 --output-vcf 1 > samples/$SAMPLENAME/'reads.bcf'
 
 #Convert bcf to vcf
+echo '**Convert bcf file to vcf file.'
 bcftools view samples/$SAMPLENAME/'reads.bcf' | vcfutils.pl varFilter -D1000 > samples/$SAMPLENAME/'var.flt.vcf'
