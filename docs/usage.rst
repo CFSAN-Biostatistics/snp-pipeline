@@ -9,8 +9,40 @@ Command Syntax
 TODO: Document the main snp pipeline script with command line arguments
 
 
+Step-by-Step Example Workflow Based on Lamda Virus Test Data Provided with Code
+-------------------------------------------------------------------------------
+
+Step 1 - Prep work::
+
+    cp -r testLambdaVirusClean testLambdaVirus
+    cd testLambdaVirus
+    ls -1 --color=never $PWD/samples > sampleDirectoryNames.txt
+
+Step 2 - Prep the reference::
+
+    prepReference.sh lambda_virus
+
+Step 3 - Prep the samples::
+#  Note: This could be run in parallel using gnu parallel (workstation) or
+#    qsub (PBS on HPC)
+
+    cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh lambda_virus
+        
+#Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
+#   generate snp matrix)
+#TODO replace 'path.txt' with better name
+    ls -d -1 --color=never $PWD/samples/* > path.txt
+    $BASEDIRECTORY'/scripts/runsnppipeline.py' -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/ -f path.txt -r reference/lambda_virus.fasta -l snplist.txt -a snpma.fasta -i True
+
+
+Step-by-Step Example Workflow Based on S. Agona Data Downloaded from SRA
+------------------------------------------------------------------------
+TODO: do this
+
+
 Step-by-Step Workflow
 ---------------------
+TODO: finish/clean this for the general case
 
 Step 1 - Prep work::
 
@@ -37,3 +69,7 @@ Step 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and
     ls -d -1 --color=never $PWD/samples/* > path.txt
     scripts/runsnppipeline.py -n 10 -d ~/snppipeline/test/junk/ -f path.txt -r reference/NC_011149.fasta -l snplist.txt -a snpma.fasta -i True
  
+
+
+
+
