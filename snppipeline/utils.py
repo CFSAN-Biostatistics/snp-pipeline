@@ -104,7 +104,7 @@ def get_consensus_base_from_pileup(base, length, data):
     Raises:
 
 TODO: all these examples return the value of the 1st argument, can we get some other examples?
-TODO: turn these into unit test cases
+
     Examples:
 
     >>> print(get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A'))
@@ -184,7 +184,7 @@ def create_consensus_dict(pileup_file_path):
     Raises:
 
     Examples:
-    >>> consensus_dict = create_consensus_dict("test/codeComparisonFiles/testLambdaVirus/sample2/reads.pileup")
+    >>> consensus_dict = create_consensus_dict("test/codeComparisonFiles/testLambdaVirus/samples/sample2/reads.pileup")
     >>> consensus_dict['gi|9626243|ref|NC_001416.1|:3678']
     'T'
     >>> consensus_dict['gi|9626243|ref|NC_001416.1|:40984']
