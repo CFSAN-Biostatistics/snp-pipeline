@@ -34,6 +34,9 @@ class Test(unittest.TestCase):
             'arFlagValue':1.0
         } 
         
+        #TODO Add test to insure data for test is in directory specified in args_dict['mainPath'],
+        #       if not then tell user what script to run to create such a directory
+
         snppipeline.run_snp_pipeline(args_dict)
         
         #Compare the files in the two directories whose names are given.
@@ -80,6 +83,9 @@ class Test(unittest.TestCase):
 #            'alleleFrequencyForFirstALTAllele':1.0,
 #            'arFlagValue':1.0
 #        } 
+#
+#        #TODO Add test to insure data for test is in directory specified in args_dict['mainPath'],
+#        #       if not then tell user what script to run to create such a directory
 #
 #        snppipeline.run_snp_pipeline(args_dict)
 #        

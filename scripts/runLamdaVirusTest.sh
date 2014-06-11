@@ -22,8 +22,7 @@ fi
 BASEDIRECTORY=$1
 
 #Prep work
-#  The directory and sequence information already exists, so just copy it to
-#    another directory to work in.
+#  Copy the sequence data to work on to a test directory.
 cd $BASEDIRECTORY'/test'
 cp -r testLambdaVirusClean testLambdaVirus
 cd testLambdaVirus
@@ -37,7 +36,8 @@ $BASEDIRECTORY'/scripts/prepReference.sh' lambda_virus
 #    qsub (PBS on HPC)
 cat sampleDirectoryNames.txt | xargs -n 1 $BASEDIRECTORY'/scripts/prepSamples.sh' lambda_virus
         
-#Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to generate snp matrix)
+#Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
+#   generate snp matrix)
 #TODO replace 'path.txt' with better name
 ls -d -1 --color=never $PWD/samples/* > path.txt
 #$BASEDIRECTORY'/scripts/runsnppipeline.py' -n 10 -d ~/mnt/biob/svn/Biostats/rand/snppipeline/test/testLambdaVirus/ -f path.txt -r reference/lambda_virus.fasta -l snplist.txt -a snpma.fasta -i True
