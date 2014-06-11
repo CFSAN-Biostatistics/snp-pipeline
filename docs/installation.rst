@@ -68,4 +68,4 @@ If you installed with pip, you can uninstall from the command line::
 .. _SAMtools: http://sourceforge.net/projects/samtools/files/
 .. _BCFtools: http://samtools.github.io/bcftools/
 .. _fastq-dump: http://www.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software
-.. _Biopython: http://biopython.org/DIST/docs/install/Installation.html
+.. _Biopython: http://biopython.org/wiki/Download
