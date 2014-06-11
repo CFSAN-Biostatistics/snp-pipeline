@@ -56,7 +56,6 @@ setup(
     keywords=['bioinformatics', 'NGS', 'SNP'],
     license='BSD',
     install_requires=[
-        'biopython',
         'PyVCF',
         'setuptools',
     ],
