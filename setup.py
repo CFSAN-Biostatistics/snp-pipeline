@@ -38,19 +38,23 @@ setup(
         'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
     scripts=[
-        'scripts/prepSamples.sh',
+        'scripts/fetchSequenceData.sh',
         'scripts/prepReference.sh',
-        'scripts/prepSequenceData.sh',
-        'scripts/runsnppipeline.py'
+        'scripts/prepSamples.sh',
+        'scripts/runAgonaTest.sh',
+        'scripts/runLamdaVirusTest.sh',
+        'scripts/runsnppipeline.py',
     ],
 
     # Include the test data files listed below in the distribution.
     # The package_data parameter only works for binary distributions.
     # The same list of files is in MANIFEST.in for sdist distributions.
     package_data={
-        'test' : ['testLambdaVirus/sample*/*.fq',
+        'test' : ['testLambdaVirusClean/reference/*.fasta',
+                  'testLambdaVirusClean/samples/sample*/*.fastq',
                   'codeComparisonFiles/testLambdaVirus/*.fasta',
-                  'codeComparisonFiles/testLambdaVirus/sample*/*.pileup']
+                  'codeComparisonFiles/testLambdaVirus/*.txt',
+                  'codeComparisonFiles/testLambdaVirus/samples/sample*/*.pileup',]
     },
 
     keywords=['bioinformatics', 'NGS', 'SNP'],

@@ -1,5 +1,7 @@
 include README.rst
 include LICENSE.txt
-include test/testLambdaVirus/sample*/*.fq
+include test/testLambdaVirusClean/reference/*.fasta
+include test/testLambdaVirusClean/samples/sample*/*.fastq
 include test/codeComparisonFiles/testLambdaVirus/*.fasta
-include test/codeComparisonFiles/testLambdaVirus/sample*/*.pileup
+include test/codeComparisonFiles/testLambdaVirus/*.txt
+include test/codeComparisonFiles/testLambdaVirus/samples/sample*/*.pileup
