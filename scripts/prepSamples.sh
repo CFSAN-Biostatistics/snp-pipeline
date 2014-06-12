@@ -25,6 +25,7 @@
 #History:
 #   20140512-har: Started.
 #   20140520-har: Download of sequence moved to different script.
+#   20140612-scd: Removed the hardcoded path to bowtie2.  It must be on the $PATH now.
 #Notes:
 #   1. Assumes file named 'referenceName.fasta' is in a directory 'reference'
 #   2. Assumes sequence file(s) are in a directory 'sample'                                                                                                                             
@@ -42,7 +43,7 @@ SAMPLENAME=$2
 
 #Align sequences to reference
 echo '**Align sequence '$SAMPLENAME' to reference '$REFERENCENAME
-~/software/bowtie2-2.2.2/bowtie2 -p 11 -q -x reference/$REFERENCENAME -1 samples/$SAMPLENAME/$SAMPLENAME'_1.fastq' -2 samples/$SAMPLENAME/$SAMPLENAME'_2.fastq' > samples/$SAMPLENAME/'reads.sam'
+bowtie2 -p 11 -q -x reference/$REFERENCENAME -1 samples/$SAMPLENAME/$SAMPLENAME'_1.fastq' -2 samples/$SAMPLENAME/$SAMPLENAME'_2.fastq' > samples/$SAMPLENAME/'reads.sam'
 
 #Convert to bam file with only mapped positions
 echo '**Convert sam file to bam file with only mapped positions.'
