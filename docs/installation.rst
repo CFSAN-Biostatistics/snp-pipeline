@@ -22,7 +22,7 @@ You should have the following software installed before using the SNP Pipeline.
 
     * Bowtie2_, a tool for aligning reads to long reference sequences.
     * SAMtools_, utilities for manipulating alignments in the SAM format.
-    * BCFtools_, utilities for variant calling and manipulating VCF/BCF files.
+    * BCFtools_, utilities for variant calling and manipulating VCF/BCF files.  This should be installed automatically as part of the SAMtools installation.
     * fastq-dump_, an SRA Toolkit utility for fetching samples from NCBI SRA.
 
 

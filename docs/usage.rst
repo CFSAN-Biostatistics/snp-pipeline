@@ -14,6 +14,7 @@ Step-by-Step Example Workflow Based on Lamda Virus Test Data Provided with Code
 
 Step 1 - Prep work::
 
+    cd test
     cp -r testLambdaVirusClean testLambdaVirus
     cd testLambdaVirus
     ls -1 --color=never $PWD/samples > sampleDirectoryNames.txt
