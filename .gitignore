@@ -58,3 +58,6 @@ output/*/index.html
 docs/_build
 docs/html
 doc/html
+
+# Machine generated test files
+test/testLambdaVirus
