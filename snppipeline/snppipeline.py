@@ -10,10 +10,6 @@ import pprint
 import utils
 
 
-def print_hello_world() :
-    """Test function to verify the module is executing anything at all."""
-    print("Hello World from snppipeline")
-
 #TODO use os.path.join consistently through code for path creation
 
 def run_snp_pipeline(options_dict):
