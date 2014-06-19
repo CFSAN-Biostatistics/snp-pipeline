@@ -33,7 +33,7 @@ class Test(unittest.TestCase):
             'snpmaFileName':'snpma.fasta',
             'bamFileName':'reads.bam',
             'pileupFileName':'reads.pileup',
-            'verbose':False,
+            'verbose':1,
             'includeReference':True,
             'useOldPileups':False,
             'combinedDepthAcrossSamples':10,
