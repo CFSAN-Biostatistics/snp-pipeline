@@ -15,10 +15,8 @@ def print_hello_world() :
     print("Hello World from snppipeline")
 
 #TODO use os.path.join consistently through code for path creation
-#TODO make file paths in input file path.txt relative
 
 def run_snp_pipeline(options_dict):
-    print(options_dict)
     """Create SNP matrix
 
     Description:
@@ -56,7 +54,7 @@ def run_snp_pipeline(options_dict):
 
     The vcf and bam files are created outside of this function. The package
         documentation provides an example of creating these files based on the
-        lambda_virus sequence that is use as one test for this package.
+        lambda_virus sequence that is used as one test for this package.
 
     Args:
         maxThread: (15) Max number of concurrent threads.
@@ -100,9 +98,12 @@ def run_snp_pipeline(options_dict):
     #Note use of filter on list_of_sample_directories to remove blank lines.
     #==========================================================================
 
-    verbose        = False
+    verbose        = options_dict['verbose'] > 0
     verbose_print  = print         if verbose else lambda *a, **k: None
     verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
+
+    verbose_print("Options:")
+    verbose_print(options_dict)
 
     sample_directories_list_filename = os.path.join(options_dict['mainPath'], options_dict['pathFileName'])
     list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
@@ -172,16 +173,17 @@ def run_snp_pipeline(options_dict):
         snp_sequence_records_list.append(snp_seq_record)
 
     #Write bases for snps for each sequence to a fasta file
-    with open(options_dict['mainPath'] + options_dict['snpmaFileName'], "w") as fasta_file_object: # TODO join path
+    snpma_file_path = os.path.join(options_dict['mainPath'], options_dict['snpmaFileName'])
+    with open(snpma_file_path, "w") as fasta_file_object:
         SeqIO.write(snp_sequence_records_list, fasta_file_object, "fasta")
 
     #==========================================================================
     #    Write reference sequence bases at SNP locations to a fasta file.
     #==========================================================================
     if options_dict['includeReference']:
-        snp_list_file_path       = options_dict['mainPath'] + options_dict['snplistFileName'] # TODO join path
-        reference_file_path      = options_dict['mainPath'] + options_dict['Reference'] # TODO join path
-        snp_reference_file_path  = options_dict['mainPath'] + "referenceSNP.fasta"   #TODO - should make this configurable
+        snp_list_file_path       = os.path.join(options_dict['mainPath'], options_dict['snplistFileName'])
+        reference_file_path      = os.path.join(options_dict['mainPath'], options_dict['Reference'])
+        snp_reference_file_path  = os.path.join(options_dict['mainPath'], "referenceSNP.fasta")
         utils.write_reference_snp_file(reference_file_path, snp_list_file_path,
                                        snp_reference_file_path)
 

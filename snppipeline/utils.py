@@ -44,25 +44,27 @@ def pileup(sample_dir_path, options_dict):
             documention for run_snp_pipeline.
     """
 
-    os.chdir(sample_dir_path)
     verbose_print('Generating pileup file ' + options_dict['pileupFileName'] +
                   ' in '+sample_dir_path)
     pileup_file_path  = os.path.join(sample_dir_path, options_dict['pileupFileName'])
-    snplist_file_path = (options_dict['mainPath'] +
-                         options_dict['snplistFileName']) #TODO use join
+
+    # SAMtools ignores the snplist when the path is relative, make it absolute here:
+    snplist_file_path = os.path.abspath(os.path.join(options_dict['mainPath'], options_dict['snplistFileName']))
 
     #TODO - allow for use of previously done pileup via command line argument?
     if os.path.isfile(pileup_file_path):
         verbose_print('Removing old pileup file '+pileup_file_path)
         os.remove(pileup_file_path)
 
+    # SAMtools fails when the reference file is "./reference/lambdaVirus.fasta", make it absolute here:
+    reference_file_path = os.path.abspath(os.path.join(options_dict['mainPath'], options_dict['Reference']))
+    bam_file_path = os.path.join(sample_dir_path, options_dict['bamFileName'])
     command_line = (
         'samtools mpileup ' +
             '-l ' + snplist_file_path +
-            ' -f ' + options_dict['mainPath'] +
-            options_dict['Reference'] + ' ' +
-            options_dict['bamFileName'] +
-            ' > ' + options_dict['pileupFileName']
+            ' -f ' + reference_file_path + 
+            ' ' + bam_file_path +
+            ' > ' + pileup_file_path
     )
     print(command_line)
     verbose_print('Executing: '+command_line)
