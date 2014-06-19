@@ -1,9 +1,7 @@
 #!/usr/bin/env python2.7
 
 import argparse
-import imp
-#TODO Make path relative in next line.
-snppipeline = imp.load_source('snppipeline', '/home/hugh.rand/mnt/biob/svn/Biostats/rand/snppipeline/snppipeline/snppipeline.py')
+from snppipeline import snppipeline
 
 #==============================================================================
 # Command line driver
@@ -30,4 +28,3 @@ if __name__ == '__main__':
     args_dict = vars(parser.parse_args())
 
     snppipeline.run_snp_pipeline(args_dict)
-
