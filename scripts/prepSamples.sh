@@ -9,56 +9,73 @@
 #Author: Hugh A. Rand (har)
 #Purpose: Preps sample sequence data for snppipline code.
 #Input:
-#    referenceName
-#    sampleName
+#    referenceDir/referenceName
+#    samplePath
 #Output:
 #    various files too tedious to explain
 #Use example:
 #   On workstation with one sample
-#       prepSamples.sh NC_011149 ERR178926
+#       prepSamples.sh Users/NC_011149 Users/ERR178926
 #   On workstation with multiple samples
-#       echo -e "ERR178926\nERR178927\nERR178928\nERR178929\nERR178930\n" > prepInput
-#       cat prepInput | xargs -n 1 prepSamples.sh NC_011149
+#       ls -d samples/* > prepInput
+#       cat prepInput | xargs -n 1 prepSamples.sh reference/NC_011149
+#	On a workstation with gnu parallel:
+#       cat prepInput | parallel prepSamples.sh reference/NC_011149
 #   With PBS
 #       qsub -d $PWD temp.sh ERR178926 NC_011149
 #       qsub -d $PWD temp1.sh
 #History:
 #   20140512-har: Started.
 #   20140520-har: Download of sequence moved to different script.
-#   20140612-scd: Removed the hardcoded path to bowtie2.  It must be on the $PATH now.
+#   20140623-scd: Changes for varscan.
 #Notes:
-#   1. Assumes file named 'referenceName.fasta' is in a directory 'reference'
-#   2. Assumes sequence file(s) are in a directory 'sample'                                                                                                                             
+#   1. Assumes file named 'referenceName.fasta' in the referenceDir directory
+#   2. Assumes sequence file(s) are paired end and names '*_1.fastq' and '*_2.fastq'                                                                                                                             
 #Bugs:
 #   1. Should add prints to stdout to show progress to user
 #
 
 #Process arguments
 if [ -z "$1" ]; then
-    echo usage: $0 referenceName sampleName
+    echo usage: $0 referencePath samplePath
     exit
 fi
-REFERENCENAME=$1
-SAMPLENAME=$2
+REFERENCEPATH=$1
+SAMPLEPATH=$2
+SAMPLEID=${SAMPLEPATH##*/}
+REFERENCEID=${REFERENCEPATH##*/}
 
-#Align sequences to reference
-echo '**Align sequence '$SAMPLENAME' to reference '$REFERENCENAME
-bowtie2 -p 11 -q -x reference/$REFERENCENAME -1 samples/$SAMPLENAME/$SAMPLENAME'_1.fastq' -2 samples/$SAMPLENAME/$SAMPLENAME'_2.fastq' > samples/$SAMPLENAME/'reads.sam'
+#Check if alignment to reference has been done; if not align sequences to reference
+if [ -s $SAMPLEPATH/reads.sam ]; then
+	echo '**'$SAMPLEID' has already been aligned to '$REFERENCEID
+else
+	echo '**Align sequence '$SAMPLEID' to reference '$REFERENCEID
+	bowtie2 -p 11 -q -x $REFERENCEPATH -1 $SAMPLEPATH/$SAMPLEID'_1.fastq' -2 $SAMPLEPATH/$SAMPLEID'_2.fastq' > $SAMPLEPATH/'reads.sam'
+fi
 
-#Convert to bam file with only mapped positions
-echo '**Convert sam file to bam file with only mapped positions.'
-samtools view -bS -F 4 -o samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMPLENAME/'reads.sam'
+#Check if bam file exists; if not convert to bam file with only mapped positions
+if [ -s $SAMPLEPATH/reads.bam ]; then
+	echo '**Bam file already exists for '$SAMPLEID
+else
+	echo '**Convert sam file to bam file with only mapped positions.'
+	samtools view -bS -F 4 -o $SAMPLEPATH/'reads.unsorted.bam' $SAMPLEPATH/'reads.sam'
+	#Convert to a sorted bam
+	echo '**Convert bam to sorted bam file.'
+	samtools sort $SAMPLEPATH/'reads.unsorted.bam' $SAMPLEPATH/'reads'
+fi
 
-#Convert to a sorted bam
-echo '**Convert bam to sorted bam file.'
-samtools sort samples/$SAMPLENAME/'reads.unsorted.bam' samples/$SAMPLENAME/'reads'
+#Check if pileup present; if not create it 
+if [ -s $SAMPLEPATH/'reads.all.pileup' ]; then
+	echo '**'$SAMPLEID'.pileup already exists'
+else
+	echo '**Produce bcf file from pileup and bam file.'
+	samtools mpileup -f $REFERENCEPATH'.fasta' $SAMPLEPATH/'reads.bam' > $SAMPLEPATH/'reads.all.pileup'
+fi
 
-#Get a bcf file from the pileup and bam file 
-echo '**Produce bcf file from pileup and bam file.'
-samtools mpileup -uf reference/$REFERENCENAME'.fasta' samples/$SAMPLENAME/'reads.bam' | bcftools view -bvcg - > samples/$SAMPLENAME/'reads.bcf'
-#samtools mpileup -f reference/$REFERENCENAME'.fasta' samples/$SAMPLENAME/'reads.bam' > samples/$SAMPLENAME'.mpileup'
-#java -jar VarScan.jar mpileup2snp - --min-var-freq 0.90 --output-vcf 1 > samples/$SAMPLENAME/'reads.bcf'
-
-#Convert bcf to vcf
-echo '**Convert bcf file to vcf file.'
-bcftools view samples/$SAMPLENAME/'reads.bcf' | vcfutils.pl varFilter -D1000 > samples/$SAMPLENAME/'var.flt.vcf'
+#Check if unfiltered vcf exists; if not create it
+if [ -s $SAMPLEPATH/'var.flt.vcf' ]; then
+	echo '**vcf file already exists for '$SAMPLEID
+else
+	echo '**Creating vcf file'
+	java -jar /usr/bin/VarScan.jar mpileup2snp $SAMPLEPATH/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1 > $SAMPLEPATH/'var.flt.vcf'
+fi

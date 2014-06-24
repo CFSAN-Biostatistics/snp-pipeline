@@ -46,7 +46,7 @@ def pileup(sample_dir_path, options_dict):
 
     verbose_print('Generating pileup file ' + options_dict['pileupFileName'] +
                   ' in '+sample_dir_path)
-    pileup_file_path  = os.path.join(sample_dir_path, options_dict['pileupFileName'])
+    pileup_file_path  = os.path.abspath(os.path.join(sample_dir_path, options_dict['pileupFileName']))
 
     # SAMtools ignores the snplist when the path is relative, make it absolute here:
     snplist_file_path = os.path.abspath(os.path.join(options_dict['mainPath'], options_dict['snplistFileName']))
@@ -58,7 +58,7 @@ def pileup(sample_dir_path, options_dict):
 
     # SAMtools fails when the reference file is "./reference/lambdaVirus.fasta", make it absolute here:
     reference_file_path = os.path.abspath(os.path.join(options_dict['mainPath'], options_dict['Reference']))
-    bam_file_path = os.path.join(sample_dir_path, options_dict['bamFileName'])
+    bam_file_path = os.path.abspath(os.path.join(sample_dir_path, options_dict['bamFileName']))
     command_line = (
         'samtools mpileup ' +
             '-l ' + snplist_file_path +
@@ -66,7 +66,7 @@ def pileup(sample_dir_path, options_dict):
             ' ' + bam_file_path +
             ' > ' + pileup_file_path
     )
-    print(command_line)
+    
     verbose_print('Executing: '+command_line)
     #TODO review return values and clean up this next bit of code.
     #  see for details: https://docs.python.org/2/library/subprocess.html#replacing-os-system
@@ -259,34 +259,14 @@ def convert_vcf_files_to_snp_dict(list_of_sample_directories, options_dict):
         with open(os.path.join(sample_directory, "var.flt.vcf"), 'r') as vcf_file_object:
             vcf_reader = vcf.Reader(vcf_file_object)
             for vcf_data_line in vcf_reader:
-                verbose_print("vcf file data: ")
-                verbose_print((vcf_data_line.CHROM,
-                               vcf_data_line.POS,
-                               vcf_data_line.INFO.get('DP'),
-                               vcf_data_line.INFO.get('AF1'),
-                               vcf_data_line.INFO.get('AR')))
-                dp_flag = af1_flag = False
-                info    = vcf_data_line.INFO
-                if 'INDEL' in info:
-                    continue
-                if not(('DP' in info) and (('AF1' in info) or ('AR' in info))):
-                    continue
-                if (info['DP'] >= options_dict['combinedDepthAcrossSamples']):
-                    dp_flag = True
-                if (('AF1' in info) and (info['AF1'] == options_dict['alleleFrequencyForFirstALTAllele'])):
-                    af1_flag = True
-                if (('AR' in info) and (info['AR'] == options_dict['arFlagValue'])):
-                    af1_flag = True
-                verbose_print(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS))
-                if dp_flag and af1_flag:
-                    if not snp_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
-                        record = [1]
-                        record.append(sample_name)
-                        snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)] = record
-                    else:
-                        record = snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)]
-                        record[0] += 1
-                        record.append(sample_name)
+                if not snp_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
+                    record = [1]
+                    record.append(sample_name)
+                    snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)] = record
+                else:
+                    record = snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)]
+                    record[0] += 1
+                    record.append(sample_name)
 
     return snp_dict
 

@@ -24,7 +24,7 @@ You should have the following software installed before using the SNP Pipeline.
 
     * Bowtie2_, a tool for aligning reads to long reference sequences.
     * SAMtools_, utilities for manipulating alignments in the SAM format.
-    * BCFtools_, utilities for variant calling and manipulating VCF/BCF files.  This should be installed automatically as part of the SAMtools installation.
+    * VarScan_, a tool to detect variants in NGS data.
     * fastq-dump_, an SRA Toolkit utility for fetching samples from NCBI SRA.
 
 
@@ -68,6 +68,6 @@ If you installed with pip, you can uninstall from the command line::
 
 .. _Bowtie2: http://sourceforge.net/projects/bowtie-bio/files/bowtie2/
 .. _SAMtools: http://sourceforge.net/projects/samtools/files/
-.. _BCFtools: http://samtools.github.io/bcftools/
+.. _VarScan: http://sourceforge.net/projects/varscan/files/
 .. _fastq-dump: http://www.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software
 .. _Biopython: http://biopython.org/wiki/Download
