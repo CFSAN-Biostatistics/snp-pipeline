@@ -10,14 +10,18 @@
 #Purpose: Preps sample sequence data for snppipline code.
 #Input:
 #    referenceDir/referenceName
-#    samplePath
+#    samplePath to fastq
+#    [optional samplePath to mate fastq if paired]
 #Output:
 #    various files too tedious to explain
+#    written into the same directories containing the input sample fastq files
 #Use example:
-#   On workstation with one sample
-#       prepSamples.sh Users/NC_011149 Users/ERR178926
+#   On workstation with one sample, unpaired
+#       prepSamples.sh Users/NC_011149 Users/ERR178926.fastq
+#   On workstation with one sample, paired
+#       prepSamples.sh Users/NC_011149 Users/ERR178926_1.fastq Users/ERR178926_2.fastq
 #   On workstation with multiple samples
-#       ls -d samples/* > prepInput
+#       find samples -type f | grep fastq > prepInput
 #       cat prepInput | xargs -n 1 prepSamples.sh reference/NC_011149
 #	On a workstation with gnu parallel:
 #       cat prepInput | parallel prepSamples.sh reference/NC_011149
@@ -36,46 +40,61 @@
 #
 
 #Process arguments
-if [ -z "$1" ]; then
-    echo usage: $0 referencePath samplePath
-    exit
+
+if (($# < 2)) || (($# > 3)); then
+    echo usage: $0 referencePath sampleFastqPath1 [sampleFastqPath2]
+    exit 1
 fi
+
 REFERENCEPATH=$1
-SAMPLEPATH=$2
-SAMPLEID=${SAMPLEPATH##*/}
+SAMPLEPATH1=$2
+if (($# == 3)); then
+	SAMPLEPATH2=$3
+fi
+SAMPLEDIR=${SAMPLEPATH1%/*}
+SAMPLEID=${SAMPLEPATH1##*/} # strip the directory
+SAMPLEID=${SAMPLEID%_1.fastq} # strip the file extension and leading _1 if any
+SAMPLEID=${SAMPLEID%.fastq} # strip the file extension regardless of leading _1
 REFERENCEID=${REFERENCEPATH##*/}
 
+echo SAMPLEID=$SAMPLEID
+echo SAMPLEDIR=$SAMPLEDIR
+
 #Check if alignment to reference has been done; if not align sequences to reference
-if [ -s $SAMPLEPATH/reads.sam ]; then
-	echo '**'$SAMPLEID' has already been aligned to '$REFERENCEID
+if [ -s $SAMPLEDIR/reads.sam ]; then
+    echo '**'$SAMPLEID' has already been aligned to '$REFERENCEID
 else
-	echo '**Align sequence '$SAMPLEID' to reference '$REFERENCEID
-	bowtie2 -p 11 -q -x $REFERENCEPATH -1 $SAMPLEPATH/$SAMPLEID'_1.fastq' -2 $SAMPLEPATH/$SAMPLEID'_2.fastq' > $SAMPLEPATH/'reads.sam'
+    echo '**Align sequence '$SAMPLEID' to reference '$REFERENCEID
+    if [ $SAMPLEPATH2 ]; then
+        bowtie2 -p 11 -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2 > $SAMPLEDIR/'reads.sam'
+	else
+        bowtie2 -p 11 -q -x $REFERENCEPATH $SAMPLEPATH1 > $SAMPLEDIR/'reads.sam'
+	fi
 fi
 
 #Check if bam file exists; if not convert to bam file with only mapped positions
-if [ -s $SAMPLEPATH/reads.bam ]; then
+if [ -s $SAMPLEDIR/reads.bam ]; then
 	echo '**Bam file already exists for '$SAMPLEID
 else
 	echo '**Convert sam file to bam file with only mapped positions.'
-	samtools view -bS -F 4 -o $SAMPLEPATH/'reads.unsorted.bam' $SAMPLEPATH/'reads.sam'
+	samtools view -bS -F 4 -o $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads.sam'
 	#Convert to a sorted bam
 	echo '**Convert bam to sorted bam file.'
-	samtools sort $SAMPLEPATH/'reads.unsorted.bam' $SAMPLEPATH/'reads'
+	samtools sort $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads'
 fi
 
 #Check if pileup present; if not create it 
-if [ -s $SAMPLEPATH/'reads.all.pileup' ]; then
+if [ -s $SAMPLEDIR/'reads.all.pileup' ]; then
 	echo '**'$SAMPLEID'.pileup already exists'
 else
 	echo '**Produce bcf file from pileup and bam file.'
-	samtools mpileup -f $REFERENCEPATH'.fasta' $SAMPLEPATH/'reads.bam' > $SAMPLEPATH/'reads.all.pileup'
+	samtools mpileup -f $REFERENCEPATH'.fasta' $SAMPLEDIR/'reads.bam' > $SAMPLEDIR/'reads.all.pileup'
 fi
 
 #Check if unfiltered vcf exists; if not create it
-if [ -s $SAMPLEPATH/'var.flt.vcf' ]; then
+if [ -s $SAMPLEDIR/'var.flt.vcf' ]; then
 	echo '**vcf file already exists for '$SAMPLEID
 else
 	echo '**Creating vcf file'
-	java -jar /usr/bin/VarScan.jar mpileup2snp $SAMPLEPATH/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1 > $SAMPLEPATH/'var.flt.vcf'
+	java -jar /usr/bin/VarScan.jar mpileup2snp $SAMPLEDIR/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1 > $SAMPLEDIR/'var.flt.vcf'
 fi
