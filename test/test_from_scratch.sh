@@ -88,5 +88,8 @@ if [ $? -eq 0 ]; then echo OK; fi
 echo "\ndiff snpma.fasta"
 diff  ../$COMPAREDIR/snpma.fasta   snpma.fasta
 if [ $? -eq 0 ]; then echo OK; fi
+echo "\ndiff referenceSNP.fasta"
+diff  ../$COMPAREDIR/referenceSNP.fasta   referenceSNP.fasta
+if [ $? -eq 0 ]; then echo OK; fi
 
 cd ..

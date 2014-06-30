@@ -22,9 +22,6 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose',          dest='verbose',                          type=int,   default=1,                 help='Verbose flag (0=no info, 5=lots')
     parser.add_argument('-i', '--includeReference', dest='includeReference',                 type=bool,  default=False,             help='Write reference sequence bases at SNP positions in fasta format.')
     parser.add_argument('-o', '--useOldPileups',    dest='useOldPileups',                    type=bool,  default=False,             help='Use available pileup files.')
-    parser.add_argument(      '--DP',               dest='combinedDepthAcrossSamples',       type=int,   default=10,                help='Combined depth across samples.')
-    parser.add_argument(      '--AF1',              dest='alleleFrequencyForFirstALTAllele', type=float, default=1.0,               help='Allele frequency for first allele.')
-    parser.add_argument(      '--AR',               dest='arFlagValue',                      type=float, default=1.0,               help='AR flag value.')
     args_dict = vars(parser.parse_args())
 
     snppipeline.run_snp_pipeline(args_dict)

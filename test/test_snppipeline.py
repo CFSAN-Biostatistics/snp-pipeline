@@ -16,9 +16,21 @@ test_lambda_virus_directory = os.path.join(test_directory, 'testLambdaVirus')
 test_agona_mom_directory = os.path.join(test_directory, 'testAgonaMOM')
 compare_lambda_virus_directory = os.path.join(test_directory, 'codeComparisonFiles', 'testLambdaVirus')
 compare_agona_mom_virus_directory = os.path.join(test_directory, 'codeComparisonFiles', 'testAgonaMOM')
+path_file_name = os.path.join(test_lambda_virus_directory, 'sampleDirectoryNames.txt')
 
 class Test(unittest.TestCase):
     '''Unit test for snppipeline.'''
+
+    def setUp(self):
+        """Create the list of sample directories"""
+
+        samples_directory = os.path.join(test_lambda_virus_directory, 'samples')
+        subdir_list = [os.path.join(samples_directory, subdir) for subdir in os.listdir(samples_directory)]
+
+        with open(path_file_name, "w") as path_file_object:
+            for subdir in sorted(subdir_list):
+                path_file_object.write("%s\n" % subdir)
+
 
     def test_snppipeline_lambda_virus(self):
         """Run snppipeline with synthetic virus example.
@@ -28,7 +40,7 @@ class Test(unittest.TestCase):
             'maxThread':3,
             'mainPath': test_lambda_virus_directory,
             'Reference':'reference/lambda_virus.fasta',     
-            'pathFileName':'path.txt',
+            'pathFileName':path_file_name,
             'snplistFileName':'snplist.txt',
             'snpmaFileName':'snpma.fasta',
             'bamFileName':'reads.bam',
@@ -36,9 +48,6 @@ class Test(unittest.TestCase):
             'verbose':1,
             'includeReference':True,
             'useOldPileups':False,
-            'combinedDepthAcrossSamples':10,
-            'alleleFrequencyForFirstALTAllele':1.0,
-            'arFlagValue':1.0
         } 
         
         #TODO Add test to insure data for test is in directory specified in args_dict['mainPath'],
@@ -79,7 +88,7 @@ class Test(unittest.TestCase):
 #            'maxThread':8,      
 #            'mainPath': test_agona_mom_directory,
 #            'Reference':'NC_011149.fasta',     
-#            'pathFileName':'path.txt',   
+#            'pathFileName':'sampleDirectoryNames.txt',   
 #            'snplistFileName':'snplist.txt', 
 #            'snpmaFileName':'snpma.fasta',
 #            'bamFileName':'reads.bam',
@@ -87,9 +96,6 @@ class Test(unittest.TestCase):
 #            'verbose':False,
 #            'includeReference':True,
 #            'useOldPileups':False,
-#            'combinedDepthAcrossSamples':10,
-#            'alleleFrequencyForFirstALTAllele':1.0,
-#            'arFlagValue':1.0
 #        } 
 #
 #        #TODO Add test to insure data for test is in directory specified in args_dict['mainPath'],
@@ -103,11 +109,11 @@ class Test(unittest.TestCase):
 #        directory_run_result = test_agona_mom_directory
 #        files_to_compare = ['snplist.txt',
 #                            'snpma.fasta',
-#                            'samples/CFSAN_genomes/CFSAN000448/reads.pileup',  
-#                            'samples/CFSAN_genomes/CFSAN000449/reads.pileup', 
-#                            'samples/CFSAN_genomes/CFSAN000450/reads.pileup',
-#                            'samples/SRA_data/ERR178930/reads.pileup',
-#                            'samples/SRA_data/ERR178931/reads.pileup',
+#                            'samples/CFSAN000448/reads.pileup',  
+#                            'samples/CFSAN000449/reads.pileup', 
+#                            'samples/CFSAN000450/reads.pileup',
+#                            'samples/ERR178930/reads.pileup',
+#                            'samples/ERR178931/reads.pileup',
 #                            'referenceSNP.fasta']
 #        match, mismatch, errors =  filecmp.cmpfiles(directory_correct,
 #                                                    directory_run_result,

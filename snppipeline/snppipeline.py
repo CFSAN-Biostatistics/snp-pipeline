@@ -20,7 +20,7 @@ def run_snp_pipeline(options_dict):
         files arranged in the following way:
             mainPath
                 reference.fasta
-                path.txt
+                sampleDirectoryNames.txt
                 snplist.txt (*)
                 snpma.fasta (*)
             samples
@@ -32,7 +32,7 @@ def run_snp_pipeline(options_dict):
     The files are used as follows:
         1. The reference.fasta file is used for alignment of the sequence
             data in the running of the samtools pileup.
-        2. The path.txt file contains a list of the paths to the sample
+        2. The sampleDirectoryNames.txt file contains a list of the paths to the sample
             directories.
         3. The snplist.txt file contains the list of SNPs extracted from the
             var.flt.vcf file.
@@ -58,7 +58,7 @@ def run_snp_pipeline(options_dict):
             files will also be written here.
         Reference: (no default) File name for reference sequence (in fasta
             format) for mapping.
-        pathFileName: ("path.txt") Name of file containing full paths to
+        pathFileName: ("sampleDirectoryNames.txt") Name of file containing full paths to
             directories containing information for each sequence.
         snplistFileName: Text format list of SNP positions in samples.
         snpmaFileName: File name for snp matrix, formatted as a fasta file,
@@ -67,9 +67,6 @@ def run_snp_pipeline(options_dict):
         bamFileName: #TODO
         pileupFileName: Name for pileup files. One is generated for each
             sample, and placed in the corresponding directory for each sample.
-        DP: Combined depth across samples.
-        AF1: Allele frequency for first allele.
-        AR: AR flag value.
 
     Raises:
 
@@ -77,14 +74,11 @@ def run_snp_pipeline(options_dict):
     args_dict = {'maxThread':2,
                  'mainPath':'',
                  'Reference':'',
-                 'pathFileName':'path.txt',
+                 'pathFileName':'sampleDirectoryNames.txt',
                  'snplistFileName':'snplist.txt',
                  'snpmaFileName':'snpma.fa',
                  'bamFileName':'reads.bam',
                  'pileupFileName':'reads.pileup',
-                 'combinedDepthAcrossSamples':10,
-                 'alleleFrequencyForFirstALTAllele':1.0,
-                 'arFlagValue':1.0
                 }
     run_snp_pipeline(options_dict)
     """
