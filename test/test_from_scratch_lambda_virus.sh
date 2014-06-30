@@ -11,10 +11,10 @@
 #    ./testLambdaVirusClean/samples/sample1/sample1_2.fastq
 #    ./testLambdaVirusClean/samples/sample2/sample2_1.fastq
 #    ./testLambdaVirusClean/samples/sample2/sample2_2.fastq
-#    ./testLambdaVirusClean/samples/sample1/sample3_1.fastq
-#    ./testLambdaVirusClean/samples/sample1/sample3_2.fastq
-#    ./testLambdaVirusClean/samples/sample1/sample4_1.fastq
-#    ./testLambdaVirusClean/samples/sample1/sample4_2.fastq
+#    ./testLambdaVirusClean/samples/sample3/sample3_1.fastq
+#    ./testLambdaVirusClean/samples/sample3/sample3_2.fastq
+#    ./testLambdaVirusClean/samples/sample4/sample4_1.fastq
+#    ./testLambdaVirusClean/samples/sample4/sample4_2.fastq
 #	 ./codeComparisonFiles/testLambdaVirus/snplist.txt
 #	 ./codeComparisonFiles/testLambdaVirus/snpma.fasta
 #    ./codeComparisonFiles/testLambdaVirus/samples/sample1/reads.pileup
