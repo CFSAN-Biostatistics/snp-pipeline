@@ -29,8 +29,27 @@ and Drug Administration, Center for Food Safety and Applied Nutrition.
 Features
 --------
 
-* TODO
+The CFSAN SNP Pipeline uses reference-based alignments to create a matrix of
+SNPs for a given set of samples. The process generally starts off by finding
+a reference that is appropriate for the samples of interest, and collecting
+the sample sequence data into an appropriate directory structure. The SNP
+pipeline can then be used to perform the alignment of the samples to the
+reference. Once the sample sequences are aligned, a list of SNP positions is
+generated. The list of SNP positions is then used in combination with
+alignments of the samples to the reference sequence to call SNPs. The SNP
+calls are organized into a matrix containing (just) the SNP calls for all
+of the sequences.
 
+The CFSAN SNP Pipeline is written in a combination of bash and python. The
+code (including the bash scripts) is designed to be straighforward to
+install. A script is provided that allows the running of the Python code
+from the command line. All of the parameters used are available as command
+line options. In situations where additional customization is desired, the
+code is not highly complex and should be easy to modify as necessary.
+
+Two examples of using the code are provided. These examples serve as both
+unit tests, and as examples that can be modified to work on other data
+sets of interest.
 
 Citing SNP Pipeline
 -------------------
