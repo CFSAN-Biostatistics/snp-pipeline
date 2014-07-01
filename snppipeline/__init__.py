@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 
-__author__ = 'Hugh A. Rand, Yan Luo, Steve Davis, James Pettengill, Errol Strain'
+__author__ = 'Errol Strain, Yan Luo, James Pettengill, Hugh A. Rand, Steve Davis'
 __email__ = 'hugh.rand@fda.hhs.gov'
-__version__ = '0.1.1'
+__version__ = '0.1.0'

@@ -78,6 +78,6 @@ for the use of the system and interpretation of documentation and results lies
 solely with the user. In no event shall CFSAN be liable for direct, indirect,
 special, incidental, or consequential damages resulting from the use, misuse,
 or inability to use the system and accompanying documentation. Third parties'
-use of or acknowledgment of the sustem does not in any way represent that
+use of or acknowledgment of the system does not in any way represent that
 CFSAN endorses such third parties or expresses any opinion with respect to
 their statements. 

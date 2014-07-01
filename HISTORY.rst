@@ -3,7 +3,7 @@
 History
 -------
 
-0.1.1 (2014-06-21)
+0.1.0 (2014-07-03)
 ++++++++++++++++++
 
 * Basic functionality implemented.

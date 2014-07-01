@@ -4,10 +4,10 @@ from setuptools import setup
 
 setup(
     name='snp-pipeline',
-    version='0.1.1',
+    version='0.1.0',
     description='Script and functions for SNP matrix construction',
-    author='Yan Luo',
-    author_email='yan.luo@fda.hhs.gov',
+    author='Hugh A. Rand',
+    author_email='hugh.rand@fda.hhs.gov',
     url='https://github.com/CFSAN-Biostatistics/snp-pipeline',
     packages=['snppipeline','test'],
     long_description="""
