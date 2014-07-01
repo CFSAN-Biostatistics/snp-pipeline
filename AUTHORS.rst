@@ -5,11 +5,11 @@ Credits
 CFSAN BioInformatics Team
 -------------------------
 
-* Hugh A. Rand
-* Yan Luo
-* Steve Davis
-* James Pettengill
 * Errol Strain
+* Yan Luo
+* James Pettengill
+* Hugh A. Rand
+* Steve Davis
 
 
 External Contributors
