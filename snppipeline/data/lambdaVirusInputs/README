@@ -1,0 +1,4 @@
+Test dataset of four samples consisting of reads simulated based on the virus_lambda.fa reference sequence.
+
+Reads were simulated using the simulate.pl script provided with the Bowtie2 distribution; the reference also came from that package.
+

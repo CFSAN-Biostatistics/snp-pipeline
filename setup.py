@@ -44,17 +44,18 @@ setup(
         'scripts/runAgonaTest.sh',
         'scripts/runLamdaVirusTest.sh',
         'scripts/runsnppipeline.py',
+        'scripts/copy_snppipeline_data.py'
     ],
 
     # Include the test data files listed below in the distribution.
     # The package_data parameter only works for binary distributions.
     # The same list of files is in MANIFEST.in for sdist distributions.
     package_data={
-        'test' : ['testLambdaVirusClean/reference/*.fasta',
-                  'testLambdaVirusClean/samples/sample*/*.fastq',
-                  'codeComparisonFiles/testLambdaVirus/*.fasta',
-                  'codeComparisonFiles/testLambdaVirus/*.txt',
-                  'codeComparisonFiles/testLambdaVirus/samples/sample*/*.pileup',]
+        'snppipeline' : ['data/lambdaVirusInputs/reference/*.fasta',
+                         'data/lambdaVirusInputs/samples/sample*/*.fastq',
+                         'data/lambdaVirusExpectedResults/*.fasta',
+                         'data/lambdaVirusExpectedResults/*.txt',
+                         'data/lambdaVirusExpectedResults/samples/sample*/*.pileup',]
     },
 
     keywords=['bioinformatics', 'NGS', 'SNP'],

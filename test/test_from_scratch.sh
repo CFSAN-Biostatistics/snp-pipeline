@@ -2,7 +2,7 @@
 #
 #Author: Steve Davis (scd)
 #Purpose: 
-#    Run set up and test of snppipline code on the lamdba virus test data set.
+#    Run set up and test of snppipline code on a specified test data set.
 #Input:
 #    <cleanDirectory> = directory of reference and sample fastq data (testLambdaVirusClean or testAgonaClean)
 #    <workDirectory> = directory where the clean data is copied and results will be generated
@@ -10,40 +10,38 @@
 #    <numFastq> = 1 or 2.  1=unpaired or 2=paired
 #
 #    This script expects the following directories and files:
-#    ./<cleanDirectory>/reference/<reference name>.fasta
-#    ./<cleanDirectory>/samples/<multiple sample subdirectories>/*.fastq
-#    ./<compareDirectory>/snplist.txt
-#    ./<compareDirectory>/snpma.fasta
-#    ./<compareDirectory>/samples/<multiple sample subdirectories>/reads.pileup
+#    <cleanDirectory>/reference/<reference name>.fasta
+#    <cleanDirectory>/samples/<multiple sample subdirectories>/*.fastq
+#    <compareDirectory>/snplist.txt
+#    <compareDirectory>/snpma.fasta
+#    <compareDirectory>/samples/<multiple sample subdirectories>/reads.pileup
 #Output:
 #	 This script clones the <cleanDirectory> into a new <workDirectory>
 #    under the current working directory.  Within the <workDirectory>, the input 
 #    samples are copied and the outputs are generated.  Many intermediate files are
 #    generated, but the most important results are:
 #    are:
-#        ./<workDirectory>/snplist.txt
+#        <workDirectory>/snplist.txt
 #            a SNP list identifying the SNPs found across all samples
-#        ./<workDirectory>/snpma.fasta
+#        <workDirectory>/snpma.fasta
 #            a SNP matrix with one row per sample and one column per SNP
-#        ./<workDirectory>/samples/<multiple sample subdirectories>/reads.pileup
+#        <workDirectory>/samples/<multiple sample subdirectories>/reads.pileup
 #            one pileup file per sample
 #    The script compares the generated results to the expected results ands emits differences.
 #Use example:
 #    cd test
-#    sh test_from_scratch.sh  testLambdaVirusClean  testLambdaVirus  codeComparisonFiles/testLambdaVirus  2
-#    sh test_from_scratch.sh  testAgonaClean  testAgonaMOM  codeComparisonFiles/testAgonaMOM  1
+#    sh test_from_scratch.sh  ../snppipeline/data/lambdaVirusInputs  testLambdaVirus  ../snppipeline/data/lambdaVirusExpectedResults  2
+#    sh test_from_scratch.sh  ../snppipeline/data/agonaInputs  testAgona  ../snppipeline/data/agonaExpectedResults  1
 #History:
 #   20140626-scd: Started.
 #Notes:
 #Bugs:
-#   1. This script assumes the <workDirectory> is a subdirectory of the current working directory.
-#   2. This script assumes the <compareDirectory> is a subdirectory of the current working directory.
 #
 
 if [ $# -ne 4 ]; then
     echo usage: $0  cleanDirectory workDirectory compareDirectory numFastQ
     echo
-    echo 'cleanDirectory = directory of reference and sample fastq data (testLambdaVirusClean or testAgonaClean)'
+    echo 'cleanDirectory = directory of reference and sample fastq data (lambdaVirusInputs or agonaInputs)'
     echo 'workDirectory = directory where the clean data is copied and results will be generated'
     echo 'compareDirectory = directory containing correct result files (sample pileups, snplist, and snpma.fasta)'
     echo 'numFastq = 1 or 2.  1=unpaired or 2=paired'

@@ -7,6 +7,7 @@ Usage
 The SNP Pipeline is run from the Unix command line.  The pipeline consists of a collection
 of shell scripts and python scripts:
 
+    * copy_snppipeline_data.py : copies supplied example data to a work directory
     * prepReference.sh : indexes the reference genome
     * prepSamples.sh : finds variants in each sample
     * runsnppipeline.py : creates a matrix of SNPs across all samples
@@ -17,21 +18,21 @@ Step-by-Step Example Workflow Based on Lamda Virus Test Data Provided with Code
 Step 1 - Gather data::
 
     # The SNP Pipeline distribution includes sample data organized as shown below:
-    test/testLambdaVirusClean/reference/lambda_virus.fasta
-    test/testLambdaVirusClean/samples/sample1/sample1_1.fastq
-    test/testLambdaVirusClean/samples/sample1/sample1_2.fastq
-    test/testLambdaVirusClean/samples/sample2/sample2_1.fastq
-    test/testLambdaVirusClean/samples/sample2/sample2_2.fastq
-    test/testLambdaVirusClean/samples/sample3/sample3_1.fastq
-    test/testLambdaVirusClean/samples/sample3/sample3_2.fastq
-    test/testLambdaVirusClean/samples/sample4/sample4_1.fastq
-    test/testLambdaVirusClean/samples/sample4/sample4_2.fastq
+    lambdaVirusInputs/reference/lambda_virus.fasta
+    lambdaVirusInputs/samples/sample1/sample1_1.fastq
+    lambdaVirusInputs/samples/sample1/sample1_2.fastq
+    lambdaVirusInputs/samples/sample2/sample2_1.fastq
+    lambdaVirusInputs/samples/sample2/sample2_2.fastq
+    lambdaVirusInputs/samples/sample3/sample3_1.fastq
+    lambdaVirusInputs/samples/sample3/sample3_2.fastq
+    lambdaVirusInputs/samples/sample4/sample4_1.fastq
+    lambdaVirusInputs/samples/sample4/sample4_2.fastq
 
 Step 2 - Prep work::
 
     # Copy the supplied test data to a work area:
     cd test
-    cp -r testLambdaVirusClean testLambdaVirus
+    copy_snppipeline_data.py lambdaVirusInputs testLambdaVirus
     cd testLambdaVirus
     # Create files of sample directories and fastQ files:
     ls -d --color=never samples/* > sampleDirectoryNames.txt
@@ -52,6 +53,13 @@ generate snp matrix)::
 
     runsnppipeline.py -n 10 -d ./ -f sampleDirectoryNames.txt -r reference/lambda_virus.fasta -l snplist.txt -a snpma.fasta -i True
 
+Step 6 - View the results:
+
+Upon successful completion of the pipeline, the snplist.txt file should have 163 entries.  The SNP Matrix 
+can be found in snpma.fasta::
+
+    ls -l snplist.txt
+    ls -l snpma.fasta
 
 Step-by-Step Example Workflow Based on S. Agona Data Downloaded from SRA
 ------------------------------------------------------------------------
@@ -91,7 +99,7 @@ Step 2 - Prep work::
 Step 3 - Prep the reference::
 
     # Note: do not specify the .fasta file extension here
-    prepReference.sh reference/reference/my_reference
+    prepReference.sh reference/my_reference
 
 Step 4 - Prep the samples::
 
@@ -107,10 +115,18 @@ generate snp matrix)::
 
     runsnppipeline.py -n 10 -d ./ -f sampleDirectoryNames.txt -r reference/my_reference.fasta -l snplist.txt -a snpma.fasta -i True
 
+Step 6 - View the results:
+
+Upon successful completion of the pipeline, the snplist.txt file contains the variants found in each sample.  The SNP Matrix 
+can be found in snpma.fasta::
+
+    ls -l snplist.txt
+    ls -l snpma.fasta
+
+
 runsnppipeline.py Command Syntax
 --------------------------------
 Help for the SNP Pipeline command-line arguments can be found with the --help parameter::
-
 
     runsnppipeline.py  --help
 

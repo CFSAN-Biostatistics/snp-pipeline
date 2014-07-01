@@ -5,17 +5,18 @@ import unittest
 import filecmp
 import os
 import inspect
+from pkg_resources import resource_filename
 
 from snppipeline import snppipeline
 
-# script directory
 test_directory = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+data_directory = resource_filename(snppipeline.__name__, 'data')
 
 # various directories of test files
 test_lambda_virus_directory = os.path.join(test_directory, 'testLambdaVirus')
-test_agona_mom_directory = os.path.join(test_directory, 'testAgonaMOM')
-compare_lambda_virus_directory = os.path.join(test_directory, 'codeComparisonFiles', 'testLambdaVirus')
-compare_agona_mom_virus_directory = os.path.join(test_directory, 'codeComparisonFiles', 'testAgonaMOM')
+test_agona_mom_directory = os.path.join(test_directory, 'testAgona')
+compare_lambda_virus_directory = os.path.join(data_directory, 'lambdaVirusExpectedResults')
+compare_agona_mom_virus_directory = os.path.join(data_directory, 'agonaExpectedResults')
 path_file_name = os.path.join(test_lambda_virus_directory, 'sampleDirectoryNames.txt')
 
 class Test(unittest.TestCase):

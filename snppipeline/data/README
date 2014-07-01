@@ -1,0 +1,7 @@
+What is in this directory:
+
+README                     - this file
+lambdaVirusInputs          - test data set
+lambdaVirusExpectedResults - correct SNP Pipeline output 
+agonaInputs                - test data set (reference only)
+agonaExpectedResults       - correct output for comparing code run against
