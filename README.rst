@@ -60,9 +60,10 @@ To cite SNP Pipeline, please reference the SNP Pipeline GitHub repository:
 
 and cite the associated paper:
 
-    An evaluation of alternative methods for constructing
-    phylogenies from whole genome sequence data: A case
-    study with *Salmonella*
+    Pettengill, JB, Luo Y, Rand H, Chen Y, Gonzalez-Escalona N, Ottesen A,
+    Allard MW, Strain E. *In review*. An evaluation of alternative methods for
+    constructing phylogenies from whole genome sequence data: A case
+    study with *Salmonella*. PeerJ.
 
 
 License
