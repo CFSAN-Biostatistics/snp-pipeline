@@ -58,9 +58,6 @@ SAMPLEID=${SAMPLEID%_1.fastq} # strip the file extension and leading _1 if any
 SAMPLEID=${SAMPLEID%.fastq} # strip the file extension regardless of leading _1
 REFERENCEID=${REFERENCEPATH##*/}
 
-echo SAMPLEID=$SAMPLEID
-echo SAMPLEDIR=$SAMPLEDIR
-
 #Check if alignment to reference has been done; if not align sequences to reference
 if [ -s $SAMPLEDIR/reads.sam ]; then
     echo '**'$SAMPLEID' has already been aligned to '$REFERENCEID

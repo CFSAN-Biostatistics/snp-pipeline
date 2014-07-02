@@ -134,7 +134,7 @@ def run_snp_pipeline(options_dict):
     result_many = pool.map_async(utils.pileup_wrapper,
                                  parameter_list).get(9999999)
 
-    verbose_pprint(result_many)
+    #verbose_pprint(result_many)
     verbose_print("Pileups are finished.")
 
     #==========================================================================
