@@ -69,15 +69,5 @@ and cite the associated paper:
 License
 -------
 
-This project constitutes a work of the United States Government and is not subject to domestic copyright protection under 17 USC § 105.
+.. include:: ../LICENSE.txt
 
-This program is free software: you can redistribute it and/or modify it under the terms of the included License.
-
-This program is distributed in the hope that it will be useful. Responsibility
-for the use of the system and interpretation of documentation and results lies
-solely with the user. In no event shall CFSAN be liable for direct, indirect,
-special, incidental, or consequential damages resulting from the use, misuse,
-or inability to use the system and accompanying documentation. Third parties'
-use of or acknowledgment of the system does not in any way represent that
-CFSAN endorses such third parties or expresses any opinion with respect to
-their statements. 
