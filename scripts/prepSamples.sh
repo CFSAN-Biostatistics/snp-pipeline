@@ -4,9 +4,10 @@
 #PBS -N prepSamples
 #PBS -m be
 #PBS -j oe
-#PBS -M hugh.rand@fda.hhs.gov    #TODO Set this to be your email address
+#PBS -M user.name@fda.hhs.gov    #TODO Set this to be your email address
 #
 #Author: Hugh A. Rand (har)
+#        Steven C. Davis (scd)
 #Purpose: Preps sample sequence data for snppipline code.
 #Input:
 #    referenceDir/referenceName
@@ -34,7 +35,7 @@
 #   20140623-scd: Changes for varscan.
 #Notes:
 #   1. Assumes file named 'referenceName.fasta' in the referenceDir directory
-#   2. Assumes sequence file(s) are paired end and names '*_1.fastq' and '*_2.fastq'                                                                                                                             
+#   2. Assumes sequence file(s) are paired end and names '*_1.fastq' and '*_2.fastq'
 #Bugs:
 #   1. Should add prints to stdout to show progress to user
 #

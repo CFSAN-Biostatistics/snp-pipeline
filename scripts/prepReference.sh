@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 #Author: Hugh A. Rand (har)
+#        Steven C. Davis (scd)
 #Purpose: Prep the reference sequence for snppipline code.
 #Input:
 #    referenceDir/referenceName
@@ -17,14 +18,50 @@
 #   1. Assumes a file named 'referenceName.fasta' is in the referenceDir directory
 #Bugs:
 #
+#References:
+#   http://stackoverflow.com/questions/14008125/shell-script-common-template
+#
 
-#Process arguments
-if [ -z "$1" ]; then
+#Setup-------------------------------------------------------------
+
+USAGE="-h referencePath"
+
+#Options processing------------------------------------------------
+
+if [ $# == 0 ] ; then
     echo usage: $0 referencePath
-    exit
+    exit 1;
 fi
+
+while getopts "h" optname
+  do
+    case "$optname" in
+      "h")
+	echo usage: $0 referencePath
+        exit 0;
+        ;;
+      "?")
+        echo "Unknown option $OPTARG"
+        exit 0;
+        ;;
+      ":")
+        echo "No argument value for option $OPTARG"
+        exit 0;
+        ;;
+      *)
+        echo "Unknown error while processing options"
+        exit 0;
+        ;;
+    esac
+  done
+
+shift $(($OPTIND - 1))
+
 REFERENCEPATH=$1
+
+#Body--------------------------------------------------------------
 
 #Create index file for reference
 bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH
 
+#Wrap Up-----------------------------------------------------------
