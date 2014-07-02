@@ -1,9 +1,0 @@
-#One way to generate the slides from markdown:
-landslide -i -d codeReview.html codeReview.md
-
-#One way to generate pdf from markdown:
-landslide -c -i -d codeReview.html codeReview.md
-#can also print from firefox, which seems to be somewhat better
-
-#And to get it to me
-mail -a codeReview.html -s codeReview hugh.rand@fda.hhs.gov
