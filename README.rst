@@ -3,16 +3,17 @@ CFSAN SNP Pipeline
 ===============================
 
 .. Image showing the PyPI version badge - links to PyPI
-.. .. image:: https://badge.fury.io/py/snp-pipeline.png
-..    :target: http://badge.fury.io/py/snp-pipeline
+.. image:: https://badge.fury.io/py/snp-pipeline.png
+    :target: http://badge.fury.io/py/snp-pipeline
     
 .. Image showing the Travis Continuous Integration test status
 .. .. image:: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline.png?branch=master
 ..        :target: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline
 
 .. Image showing the PyPi download count
-.. .. image:: https://pypip.in/d/snp-pipeline/badge.png
-..        :target: https://pypi.python.org/pypi/snp-pipeline
+.. image:: https://pypip.in/d/snp-pipeline/badge.png
+        :target: https://pypi.python.org/pypi/snp-pipeline
+
 
 The CFSAN SNP Pipeline is a Python-based system for the production of SNP 
 matrices from sequence data used in the phylogenetic analysis of pathogenic 
@@ -42,7 +43,7 @@ of the sequences.
 
 This software was developed with the objective of creating high quality
 SNP matrices for sequences from closely-related pathogens, e.g., different
-samples of Salmoella enteriditis from an outbreak investigation. The
+samples of Salmonella enteriditis from an outbreak investigation. The
 focus on closely related sequences means that this code is not suited for 
 the analysis of relatively distantly related organisms, where there is not
 a single reference sequence appropriate for all the organisms for which an
