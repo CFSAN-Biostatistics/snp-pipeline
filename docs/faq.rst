@@ -27,7 +27,7 @@ Also make sure you install Biopython.  If you are using virtual environments, ma
 
 Q: How can I verify the pipeline is installed and working properly?
 
-A: The SNP Pipeline includes a small set of test data with result files.  You can run the pipeline against the test data to verify correct results.  The test data is in the test/testLambdaVirusClean directory.  Follow the lambda virus workflow steps in the :ref:`usage-label` section.
+A: The SNP Pipeline includes a small set of test data with result files.  You can run the pipeline against the test data to verify correct results.  Follow the lambda virus workflow steps in the :ref:`usage-label` section.
 
 Upon successful completion of the pipeline, the snplist.txt file should have 163 entries.  The SNP Matrix 
 can be found in snpma.fasta.  It should have the following contents::
@@ -49,6 +49,9 @@ can be found in snpma.fasta.  It should have the following contents::
     CTGAAACCGATCCTAAGCGTCTTGAATGGATCCCTATTAATCGGCGCTCCGTGCATATTC
     AGTCGGACATGTCGAGGGGTGGCCGATGTGAACAGGAGTAATA
 
+Note: the expected pipeline results are also included in the distribution.  To fetch the expected result files::
+
+    copy_snppipeline_data.py lambdaVirusExpectedResults myDirectoryForExpectedResults
 
 Q: My results for the included test data do not match the expected results. What is the cause?
 

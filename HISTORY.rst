@@ -8,6 +8,6 @@ History
 
 * Basic functionality implemented.
 * Lambda virus tests created and pass.
-* S. Agona tests created and pass.
+* S. Agona tests created -- UNDER DEVELOPMENT
 * Installs properly from PyPI.
 * Documentation available at ReadTheDocs.
