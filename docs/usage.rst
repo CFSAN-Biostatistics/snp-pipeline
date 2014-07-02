@@ -10,7 +10,7 @@ of shell scripts and python scripts:
     * copy_snppipeline_data.py : copies supplied example data to a work directory
     * prepReference.sh : indexes the reference genome
     * prepSamples.sh : finds variants in each sample
-    * runsnppipeline.py : creates a matrix of SNPs across all samples
+    * create_snp_matrix.py : creates a matrix of SNPs across all samples
 
 Step-by-Step Example Workflow Based on Lamda Virus Test Data Provided with Code
 -------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ Step 4 - Prep the samples::
 Step 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
 generate snp matrix)::
 
-    runsnppipeline.py -n 10 -d ./ -f sampleDirectoryNames.txt -r reference/lambda_virus.fasta -l snplist.txt -a snpma.fasta -i True
+    create_snp_matrix.py -n 10 -d ./ -f sampleDirectoryNames.txt -r reference/lambda_virus.fasta -l snplist.txt -a snpma.fasta -i True
 
 Step 6 - View the results:
 
@@ -113,7 +113,7 @@ Step 4 - Prep the samples::
 Step 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
 generate snp matrix)::
 
-    runsnppipeline.py -n 10 -d ./ -f sampleDirectoryNames.txt -r reference/my_reference.fasta -l snplist.txt -a snpma.fasta -i True
+    create_snp_matrix.py -n 10 -d ./ -f sampleDirectoryNames.txt -r reference/my_reference.fasta -l snplist.txt -a snpma.fasta -i True
 
 Step 6 - View the results:
 
@@ -124,10 +124,10 @@ can be found in snpma.fasta::
     ls -l snpma.fasta
 
 
-runsnppipeline.py Command Syntax
---------------------------------
+create_snp_matrix.py Command Syntax
+------------------------------------
 Help for the SNP Pipeline command-line arguments can be found with the --help parameter::
 
-    runsnppipeline.py  --help
+    create_snp_matrix.py  --help
 
 

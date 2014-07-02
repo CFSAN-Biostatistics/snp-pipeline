@@ -38,12 +38,9 @@ setup(
         'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
     scripts=[
-        'scripts/fetchSequenceData.sh',
         'scripts/prepReference.sh',
         'scripts/prepSamples.sh',
-        'scripts/runAgonaTest.sh',
-        'scripts/runLamdaVirusTest.sh',
-        'scripts/runsnppipeline.py',
+        'scripts/create_snp_matrix.py',
         'scripts/copy_snppipeline_data.py'
     ],
 

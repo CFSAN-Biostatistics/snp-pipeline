@@ -4,7 +4,7 @@
 #Purpose: 
 #    Run set up and test of snppipline code on a specified test data set.
 #Input:
-#    <cleanDirectory> = directory of reference and sample fastq data (testLambdaVirusClean or testAgonaClean)
+#    <cleanDirectory> = directory of reference and sample fastq data (lambdaVirusInputs or agonaInputs)
 #    <workDirectory> = directory where the clean data is copied and results will be generated
 #    <compareDirectory> = directory containing correct result files (sample pileups, snplist, and snpma.fasta)
 #    <numFastq> = 1 or 2.  1=unpaired or 2=paired
@@ -71,7 +71,7 @@ echo "\nStep 3 - Prep the samples"
 cat sampleFullPathNames.txt | xargs -n $NUMFASTQ prepSamples.sh $referenceBasePath
         
 echo "\nStep 4 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to generate snp matrix)"
-runsnppipeline.py -n 10 -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
+create_snp_matrix.py -n 10 -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
 
 echo "\nStep 5 - compare results"
 cat sampleDirectoryNames.txt | while read sampleDir
