@@ -11,7 +11,7 @@ CFSAN SNP Pipeline
 ..        :target: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline
 
 .. Image showing the PyPi download count
-.. image:: https://pypip.in/d/snp-pipeline/badge.png
+.. image:: https://pypip.in/download/snp-pipeline/badge.png
         :target: https://pypi.python.org/pypi/snp-pipeline
 
 
