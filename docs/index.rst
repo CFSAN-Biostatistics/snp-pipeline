@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    readme
+   dataflow
    installation
    usage
    faq

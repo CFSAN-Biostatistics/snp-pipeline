@@ -4,6 +4,8 @@
 Usage
 ========
 
+.. highlight:: bash
+
 The SNP Pipeline is run from the Unix command line.  The pipeline consists of a collection
 of shell scripts and python scripts:
 
@@ -60,6 +62,7 @@ can be found in snpma.fasta::
 
     ls -l snplist.txt
     ls -l snpma.fasta
+
 
 Step-by-Step Example Workflow Based on S. Agona Data Downloaded from SRA
 ------------------------------------------------------------------------

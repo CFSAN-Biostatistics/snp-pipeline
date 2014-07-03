@@ -61,14 +61,6 @@ unit tests, and as examples that can be modified to work on other data
 sets of interest.
 
 
-SNP Pipeline Processes
-----------------------
-
-The drawing below depicts the processes, files, and data flows within the SNP Pipeline.
-
-.. image:: SnpPipelineDataFlow.png
-
-
 Citing SNP Pipeline
 -------------------
 
