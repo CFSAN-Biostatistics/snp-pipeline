@@ -79,5 +79,5 @@ and cite the associated paper:
 License
 -------
 
-.. include:: ../LICENSE.txt
+See the LICENSE.txt file included in the SNP Pipeline distribution.
 
