@@ -24,7 +24,7 @@ You should have the following software installed before using the SNP Pipeline.
 
     * Bowtie2_, a tool for aligning reads to long reference sequences.
     * SAMtools_, utilities for manipulating alignments in the SAM format.
-    * VarScan_, a tool to detect variants in NGS data.
+    * VarScan_, a tool to detect variants in NGS data.  *Note: our scripts expect VarScan.jar in /usr/bin/.*
     * fastq-dump_, an SRA Toolkit utility for fetching samples from NCBI SRA.
 
 

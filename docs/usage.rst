@@ -20,15 +20,15 @@ Step-by-Step Example Workflow Based on Lamda Virus Test Data Provided with Code
 Step 1 - Gather data::
 
     # The SNP Pipeline distribution includes sample data organized as shown below:
-    lambdaVirusInputs/reference/lambda_virus.fasta
-    lambdaVirusInputs/samples/sample1/sample1_1.fastq
-    lambdaVirusInputs/samples/sample1/sample1_2.fastq
-    lambdaVirusInputs/samples/sample2/sample2_1.fastq
-    lambdaVirusInputs/samples/sample2/sample2_2.fastq
-    lambdaVirusInputs/samples/sample3/sample3_1.fastq
-    lambdaVirusInputs/samples/sample3/sample3_2.fastq
-    lambdaVirusInputs/samples/sample4/sample4_1.fastq
-    lambdaVirusInputs/samples/sample4/sample4_2.fastq
+    snppipeline/data/lambdaVirusInputs/reference/lambda_virus.fasta
+    snppipeline/data/lambdaVirusInputs/samples/sample1/sample1_1.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample1/sample1_2.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample2/sample2_1.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample2/sample2_2.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample3/sample3_1.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample3/sample3_2.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample4/sample4_1.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample4/sample4_2.fastq
 
 Step 2 - Prep work::
 
