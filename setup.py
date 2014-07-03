@@ -1,6 +1,20 @@
 #!/usr/bin/env python2.7
 
 from setuptools import setup
+import sys
+
+# Do not pollute innocent user's site-package with our unit tests.
+# Detect the setup mode to control whether the unit test package is installed.
+# Is there a better way to do this?
+install_unit_tests = False
+for a in sys.argv:
+    if a == "test" or a == "develop":
+        install_unit_tests = True
+
+if install_unit_tests:
+    packages_to_install = ['snppipeline','test']
+else:
+    packages_to_install = ['snppipeline']
 
 setup(
     name='snp-pipeline',
@@ -9,7 +23,7 @@ setup(
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
     url='https://github.com/CFSAN-Biostatistics/snp-pipeline',
-    packages=['snppipeline','test'],
+    packages=packages_to_install,
     long_description="""
     snp-pipeline is a pipeline for the production of SNP matrices from
     sequence data used in the phylogenetic analysis of pathogenic
