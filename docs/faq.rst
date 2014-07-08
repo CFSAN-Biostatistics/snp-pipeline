@@ -16,7 +16,12 @@ A: You can either use a python virtual environment or install into your user are
 
 **Q: The SNP Pipeline cannot find VarScan.  How should I install it?**
 
-A: The suppled shell scripts expect VarScan.jar in the /usr/bin/ directory.
+A: Download the VarScan jar file from SourceForge.  Put the jar file anywhere.  You need read-access to the
+jar file, but not execute-access.  The suppled shell scripts expect the CLASSPATH environment variable to 
+specify the path to the VarScan jar file.  The CLASSPATH should include the filename, not just the directory.
+Define it like this in your .bashrc file::
+
+    export CLASSPATH=~/software/varscan.v2.3.6/VarScan.v2.3.6.jar:$CLASSPATH
 
 
 
@@ -93,6 +98,6 @@ A: Try running sphinx like this::
 
 **Q: I changed one of the shell scripts, but the changes are ignored.**
 
-A: If you are working in a virtual environment, you need to reinstall the distribution.  Do this::
+A: Reinstall the distribution.  Do this::
 
 	$ python setup.py develop
