@@ -58,15 +58,17 @@ SAMPLEID=${SAMPLEID%_1.fastq} # strip the file extension and leading _1 if any
 SAMPLEID=${SAMPLEID%.fastq} # strip the file extension regardless of leading _1
 REFERENCEID=${REFERENCEPATH##*/}
 
+NUMPROCESSORS=$(grep -c ^processor /proc/cpuinfo)
+
 #Check if alignment to reference has been done; if not align sequences to reference
 if [ -s $SAMPLEDIR/reads.sam ]; then
     echo '**'$SAMPLEID' has already been aligned to '$REFERENCEID
 else
     echo '**Align sequence '$SAMPLEID' to reference '$REFERENCEID
     if [ $SAMPLEPATH2 ]; then
-        bowtie2 -p 11 -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2 > $SAMPLEDIR/'reads.sam'
+        bowtie2 -p $NUMPROCESSORS -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2 > $SAMPLEDIR/'reads.sam'
     else
-        bowtie2 -p 11 -q -x $REFERENCEPATH $SAMPLEPATH1 > $SAMPLEDIR/'reads.sam'
+        bowtie2 -p $NUMPROCESSORS -q -x $REFERENCEPATH $SAMPLEPATH1 > $SAMPLEDIR/'reads.sam'
     fi
 fi
 

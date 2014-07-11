@@ -42,11 +42,13 @@
 #    cd test
 #    test_from_scratch_lambda_virus.sh
 #History:
-#   20140624-scd: Started.
-#   20140625-scd: changed to a one-liner calling test_from_scratch.sh
-#   20140701-scd: move data under the snppipeline package
+#   20140710-scd: Started.
 #Notes:
 #Bugs:
 #
 
-test_from_scratch.sh  ../snppipeline/data/lambdaVirusInputs  testLambdaVirus  ../snppipeline/data/lambdaVirusExpectedResults  2
+cleanDir=~/mnt/biob/svn/BioStats/Steve/snp-pipeline-hpc-work/snppipeline/data/lambdaVirusInputs
+workdir=~/testLambdaVirus
+compareDir=~/mnt/biob/svn/BioStats/Steve/snp-pipeline-hpc-work/snppipeline/data/lambdaVirusExpectedResults
+
+test_from_scratch.sh  $cleanDir  $workdir  $compareDir  2  HPC
