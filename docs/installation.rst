@@ -50,24 +50,32 @@ Installing the SNP Pipeline Python Package
 ------------------------------------------
 There is more than one way to install the SNP Pipeline depending on whether you intend to work with the source code or just run it.
 
-Installation Method 1 for Software Developers
-`````````````````````````````````````````````
+Installation Method 1 for Most Users
+````````````````````````````````````
 
-If you intend to work with the source code in the role of a software developer, you should clone the GitHub repository as described in the :ref:`contributing-label` section of this documentation.
+This is the recommended installation method for new users. 
 
-Installation Method 2 for Everyone Else
-```````````````````````````````````````
-
-If you merely want to run the software without viewing or changing the source code, follow the instructions below.
+If you want to run the software without viewing or changing the source code, follow the instructions below.
 
 At the command line::
 
-    $ pip install snp-pipeline
+    $ pip install --user snp-pipeline
+
+Update your .bashrc file with the path to user-installed python packages::
+
+    export PATH=~/.local/bin:$PATH
 
 Or, if you have virtualenvwrapper installed::
 
     $ mkvirtualenv snp-pipeline
     $ pip install snp-pipeline
+
+
+
+Installation Method 2 for Software Developers
+`````````````````````````````````````````````
+
+If you intend to work with the source code in the role of a software developer, you should clone the GitHub repository as described in the :ref:`contributing-label` section of this documentation.
 
 
 Uninstalling SNP Pipeline 
@@ -76,6 +84,7 @@ Uninstalling SNP Pipeline
 If you installed with pip, you can uninstall from the command line::
 
     $ pip uninstall snp-pipeline
+
 
 .. _Bowtie2: http://sourceforge.net/projects/bowtie-bio/files/bowtie2/
 .. _SAMtools: http://sourceforge.net/projects/samtools/files/
