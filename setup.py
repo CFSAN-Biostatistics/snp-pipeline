@@ -53,6 +53,7 @@ setup(
     ],
     scripts=[
         'scripts/prepReference.sh',
+        'scripts/alignSampleToReference.sh',
         'scripts/prepSamples.sh',
         'scripts/create_snp_matrix.py',
         'scripts/copy_snppipeline_data.py'

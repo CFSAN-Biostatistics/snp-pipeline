@@ -11,6 +11,7 @@ of shell scripts and python scripts:
 
     * copy_snppipeline_data.py : copies supplied example data to a work directory
     * prepReference.sh : indexes the reference genome
+    * alignSampleToReference.sh : aligns samples to the reference genome
     * prepSamples.sh : finds variants in each sample
     * create_snp_matrix.py : creates a matrix of SNPs across all samples
 
@@ -38,24 +39,31 @@ Step 2 - Prep work::
     cd testLambdaVirus
     # Create files of sample directories and fastQ files:
     ls -d --color=never samples/* > sampleDirectoryNames.txt
-    find samples -type f | grep fastq | sort -u > sampleFullPathNames.txt
+    rm sampleFullPathNames.txt
+    cat sampleDirectoryNames.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
+    # Determine the number of CPU cores in your computer
+    NUMCORES=$(grep -c ^processor /proc/cpuinfo)
 
 Step 3 - Prep the reference::
 
     prepReference.sh reference/lambda_virus
 
-Step 4 - Prep the samples::
+Step 4 - Align the samples to the reference::
 
     # Note: This could be run in parallel using gnu parallel (workstation) or qsub (PBS on HPC)
-    # Note: We use xargs parameter "-n 2" because the samples are paired
-    cat sampleFullPathNames.txt | xargs -n 2 prepSamples.sh reference/lambda_virus
+    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES reference/lambda_virus
+
+Step 5 - Prep the samples::
+
+    # Note: This could be run in parallel using gnu parallel (workstation) or qsub (PBS on HPC)
+    cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh reference/lambda_virus
         
-Step 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
+Step 6 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
 generate snp matrix)::
 
-    create_snp_matrix.py -n 10 -d ./ -f sampleDirectoryNames.txt -r reference/lambda_virus.fasta -l snplist.txt -a snpma.fasta -i True
+    create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r reference/lambda_virus.fasta -l snplist.txt -a snpma.fasta -i True
 
-Step 6 - View the results:
+Step 7 - View the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 163 entries.  The SNP Matrix 
 can be found in snpma.fasta::
@@ -96,29 +104,34 @@ Step 2 - Prep work::
     cp -r myProject myProjectClean
     # The SNP pipeline will generate additional files into the reference and sample directories
     cd myProject
-    # Create files of sample directories:
+    # Create files of sample directories and fastQ files:
     ls -d --color=never samples/* > sampleDirectoryNames.txt
+    rm sampleFullPathNames.txt
+    cat sampleDirectoryNames.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
+    # Determine the number of CPU cores in your computer
+    NUMCORES=$(grep -c ^processor /proc/cpuinfo)
 
 Step 3 - Prep the reference::
 
     # Note: do not specify the .fasta file extension here
     prepReference.sh reference/my_reference
 
-Step 4 - Prep the samples::
+Step 4 - Align the samples to the reference::
 
-    # Run prepSamples once per sample, note the mix of paired and unpaired sample here
     # Note: This could be run in parallel using gnu parallel (workstation) or qsub (PBS on HPC)
-    prepSamples.sh  reference/my_reference  samples/sample1/sampleA.fastq
-    prepSamples.sh  reference/my_reference  samples/sample2/sampleB.fastq
-    prepSamples.sh  reference/my_reference  samples/sample3/sampleC_1.fastq  samples/sample3/sampleC_2.fastq
-    prepSamples.sh  reference/my_reference  samples/sample4/sampleD_1.fastq  samples/sample4/sampleD_2.fastq
+    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES reference/my_reference
 
-Step 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
+Step 5 - Prep the samples::
+
+    # Note: This could be run in parallel using gnu parallel (workstation) or qsub (PBS on HPC)
+    cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh reference/my_reference
+
+Step 6 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
 generate snp matrix)::
 
-    create_snp_matrix.py -n 10 -d ./ -f sampleDirectoryNames.txt -r reference/my_reference.fasta -l snplist.txt -a snpma.fasta -i True
+    create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r reference/my_reference.fasta -l snplist.txt -a snpma.fasta -i True
 
-Step 6 - View the results:
+Step 7 - View the results:
 
 Upon successful completion of the pipeline, the snplist.txt file contains the variants found in each sample.  The SNP Matrix 
 can be found in snpma.fasta::

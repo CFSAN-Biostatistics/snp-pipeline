@@ -40,7 +40,7 @@
 #    differences.
 #Use example:
 #    cd test
-#    test_from_scratch_lambda_virus.sh
+#    ./test_from_scratch_lambda_virus.sh
 #History:
 #   20140710-scd: Started.
 #Notes:
@@ -51,4 +51,4 @@ cleanDir=~/mnt/biob/svn/BioStats/Steve/snp-pipeline-hpc-work/snppipeline/data/la
 workdir=~/testLambdaVirus
 compareDir=~/mnt/biob/svn/BioStats/Steve/snp-pipeline-hpc-work/snppipeline/data/lambdaVirusExpectedResults
 
-test_from_scratch.sh  $cleanDir  $workdir  $compareDir  2  HPC
+./test_from_scratch.sh  $cleanDir  $workdir  $compareDir  torque

@@ -71,13 +71,13 @@ A: Different versions of the executable tools can generate different results.  T
 
 **Q: How can I run the SNP Pipeline with a mix of paired and unpaired samples?**
 
-A: Run the prepSamples script once per sample with either 1 fastq file or 2 fastq files.  See the following example::
+A: Run the alignSampleToReference script once per sample with either 1 fastq file or 2 fastq files.  See the following example::
 
-    prepSamples.sh  reference/NC_011149  samples/CFSAN000448/G0H235M04.RL10.fastq
-    prepSamples.sh  reference/NC_011149  samples/CFSAN000449/G00JH2D03.RL11.fastq
-    prepSamples.sh  reference/NC_011149  samples/CFSAN000450/HB4DJL101.RL1.fastq
-    prepSamples.sh  reference/NC_011149  samples/ERR178930/ERR178930_1.fastq  samples/ERR178930/ERR178930_2.fastq
-    prepSamples.sh  reference/NC_011149  samples/ERR178931/ERR178931_1.fastq  samples/ERR178931/ERR178931_2.fastq
+    alignSampleToReference.sh  8  reference/NC_011149  samples/CFSAN000448/G0H235M04.RL10.fastq
+    alignSampleToReference.sh  8  reference/NC_011149  samples/CFSAN000449/G00JH2D03.RL11.fastq
+    alignSampleToReference.sh  8  reference/NC_011149  samples/CFSAN000450/HB4DJL101.RL1.fastq
+    alignSampleToReference.sh  8  reference/NC_011149  samples/ERR178930/ERR178930_1.fastq  samples/ERR178930/ERR178930_2.fastq
+    alignSampleToReference.sh  8  reference/NC_011149  samples/ERR178931/ERR178931_1.fastq  samples/ERR178931/ERR178931_2.fastq
 
 
 
