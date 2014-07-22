@@ -40,7 +40,7 @@
 #    differences.
 #Use example:
 #    cd test
-#    test_from_scratch_lambda_virus.sh
+#    ./test_from_scratch_lambda_virus.sh
 #History:
 #   20140624-scd: Started.
 #   20140625-scd: changed to a one-liner calling test_from_scratch.sh
@@ -49,4 +49,4 @@
 #Bugs:
 #
 
-test_from_scratch.sh  ../snppipeline/data/lambdaVirusInputs  testLambdaVirus  ../snppipeline/data/lambdaVirusExpectedResults  2
+./test_from_scratch.sh  ../snppipeline/data/lambdaVirusInputs  testLambdaVirus  ../snppipeline/data/lambdaVirusExpectedResults

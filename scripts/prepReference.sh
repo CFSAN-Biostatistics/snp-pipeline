@@ -1,5 +1,11 @@
 #!/bin/bash
 #
+#Directives for Portable Batch System (PBS) if HPC with Torque or equivalent is installed.
+#PBS -N job.prepReference
+#PBS -m be
+#PBS -j oe
+#PBS -M user.name@fda.hhs.gov    #TODO Set this to be your email address
+#
 #Author: Hugh A. Rand (har)
 #        Steven C. Davis (scd)
 #Purpose: Prep the reference sequence for snppipline code.
@@ -14,6 +20,7 @@
 #   20140520-har: Download of sequence moved to different script.
 #   20140612-scd: Removed the hardcoded path to bowtie2.  It must be on the $PATH now.
 #   20140623-scd: Changed calling convention to match prepSamples.sh -- referenceDir is expected in the command parameter
+#   20140721-scd: Print the bowtie version and command line to facilitate troubleshooting
 #Notes:
 #   1. Assumes a file named 'referenceName.fasta' is in the referenceDir directory
 #Bugs:
@@ -62,6 +69,8 @@ REFERENCEPATH=$1
 #Body--------------------------------------------------------------
 
 #Create index file for reference
+bowtie2-build --version | sed 's/^/# /'
+echo bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH
 bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH
 
 #Wrap Up-----------------------------------------------------------

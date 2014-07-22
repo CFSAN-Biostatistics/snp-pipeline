@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #Directives for Portable Batch System (PBS) if HPC with Torque or equivalent is installed.
-#PBS -N prepSamples
+#PBS -N job.prepSamples
 #PBS -m be
 #PBS -j oe
 #PBS -M user.name@fda.hhs.gov    #TODO Set this to be your email address
@@ -10,22 +10,19 @@
 #        Steven C. Davis (scd)
 #Purpose: Preps sample sequence data for snppipline code.
 #Input:
-#    referenceDir/referenceName
-#    samplePath to fastq
-#    [optional samplePath to mate fastq if paired]
+#    referenceDir/referenceName (without the .fasta extension)
+#    sampleDir
 #Output:
 #    various files too tedious to explain
 #    written into the same directories containing the input sample fastq files
 #Use example:
 #   On workstation with one sample, unpaired
-#       prepSamples.sh Users/NC_011149 Users/ERR178926.fastq
-#   On workstation with one sample, paired
-#       prepSamples.sh Users/NC_011149 Users/ERR178926_1.fastq Users/ERR178926_2.fastq
+#       prepSamples.sh Users/NC_011149 Users/ERR178926
 #   On workstation with multiple samples
-#       find samples -type f | grep fastq > prepInput
-#       cat prepInput | xargs -n 1 prepSamples.sh reference/NC_011149
+#       ls -d --color=never samples/* > sampleDirectoryNames.txt
+#       cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh reference/NC_011149
 #   On a workstation with gnu parallel:
-#       cat prepInput | parallel prepSamples.sh reference/NC_011149
+#       cat sampleDirectoryNames.txt | parallel prepSamples.sh reference/NC_011149
 #   With PBS
 #       qsub -d $PWD temp.sh ERR178926 NC_011149
 #       qsub -d $PWD temp1.sh
@@ -33,9 +30,9 @@
 #   20140512-har: Started.
 #   20140520-har: Download of sequence moved to different script.
 #   20140623-scd: Changes for varscan.
+#   20140715-scd: Moved the bowtie align to the alignSampleToReference.sh script.
 #Notes:
-#   1. Assumes file named 'referenceName.fasta' in the referenceDir directory
-#   2. Assumes sequence file(s) are paired end and names '*_1.fastq' and '*_2.fastq'
+#
 #Bugs:
 #   1. Should add prints to stdout to show progress to user
 #
@@ -43,34 +40,15 @@
 #Process arguments
 
 if (($# < 2)) || (($# > 3)); then
-    echo usage: $0 referencePath sampleFastqPath1 [sampleFastqPath2]
+    echo usage: $0 referencePath sampleDir
+    echo '      referencePath : relative or absolute path to the reference, without the .fasta extension'
+    echo '      sampleDir     : directory containing the sample'
     exit 1
 fi
 
 REFERENCEPATH=$1
-SAMPLEPATH1=$2
-if (($# == 3)); then
-    SAMPLEPATH2=$3
-fi
-SAMPLEDIR=${SAMPLEPATH1%/*}
-SAMPLEID=${SAMPLEPATH1##*/} # strip the directory
-SAMPLEID=${SAMPLEID%_1.fastq} # strip the file extension and leading _1 if any
-SAMPLEID=${SAMPLEID%.fastq} # strip the file extension regardless of leading _1
-REFERENCEID=${REFERENCEPATH##*/}
-
-NUMPROCESSORS=$(grep -c ^processor /proc/cpuinfo)
-
-#Check if alignment to reference has been done; if not align sequences to reference
-if [ -s $SAMPLEDIR/reads.sam ]; then
-    echo '**'$SAMPLEID' has already been aligned to '$REFERENCEID
-else
-    echo '**Align sequence '$SAMPLEID' to reference '$REFERENCEID
-    if [ $SAMPLEPATH2 ]; then
-        bowtie2 -p $NUMPROCESSORS -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2 > $SAMPLEDIR/'reads.sam'
-    else
-        bowtie2 -p $NUMPROCESSORS -q -x $REFERENCEPATH $SAMPLEPATH1 > $SAMPLEDIR/'reads.sam'
-    fi
-fi
+SAMPLEDIR=$2
+SAMPLEID=${SAMPLEDIR##*/} # strip the parent directories
 
 #Check if bam file exists; if not convert to bam file with only mapped positions
 if [ -s $SAMPLEDIR/reads.bam ]; then
