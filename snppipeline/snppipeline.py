@@ -53,7 +53,7 @@ def run_snp_pipeline(options_dict):
         lambda_virus sequence that is used as one test for this package.
 
     Args:
-        maxThread: (15) Max number of concurrent threads.
+        maxThread: (number of cpu cores) Max number of concurrent threads.
         mainPath:  (no default) Directory containing all input files. Output
             files will also be written here.
         Reference: (no default) File name for reference sequence (in fasta
@@ -145,17 +145,14 @@ def run_snp_pipeline(options_dict):
 
     for sample_directory in list_of_sample_directories:
 
-        sample_name                  = sample_directory.split(os.sep)[-1]
+        sample_name                  = os.path.basename(sample_directory)
         pileup_file_path             = os.path.join(sample_directory, options_dict['pileupFileName'])
         position_consensus_base_dict = utils.create_consensus_dict(pileup_file_path)
 
         snp_seq_string = ""
-        #TODO - is there more than one chromosome?  If so, why is there only one snp_seq_string?
-        for key in sorted(snp_dict.iterkeys()):  #TODO - Why sorted?
-            chrom, pos = key.split()
-            # TODO how large is this dictionary?  Do we need a more efficient storage?
-            if position_consensus_base_dict.has_key(chrom + ":" + pos):
-                snp_seq_string += position_consensus_base_dict[chrom + ":" + pos]
+        for key in sorted(snp_dict.iterkeys()):
+            if position_consensus_base_dict.has_key(key):
+                snp_seq_string += position_consensus_base_dict[key]
             else:
                 snp_seq_string += "-"
 

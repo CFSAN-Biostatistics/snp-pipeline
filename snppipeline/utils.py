@@ -133,12 +133,11 @@ TODO: all these examples return the value of the 1st argument, can we get some o
     #TODO consider using a Counter
     base_count_dict = {'.,': 0, 'A': 0, 'C': 0, 'G': 0, 'N': 0, 'T': 0}
 
-    #TODO move the char.upper out of the loop.
-    #TODO move the set construction out of the loop, and we only need 4 elements in the set
+    upper_lower_base_set = sets.Set(['A','a','C','c','T','t','G','g','N','n'])
     i = 0
     while i < len(data):
         char = data[i]
-        if char in sets.Set(['A','a','C','c','T','t','G','g','N','n']):
+        if char in upper_lower_base_set:
             base_count_dict[char.upper()] += 1
         elif char == '.' or char == ',':
             base_count_dict['.,'] += 1
@@ -157,7 +156,7 @@ TODO: all these examples return the value of the 1st argument, can we get some o
         i += 1
 
     consensus_base = max(base_count_dict.iteritems(), key=operator.itemgetter(1))[0]
-    if base_count_dict[consensus_base] <= (int(length)/2):
+    if base_count_dict[consensus_base] <= (length/2):
         consensus_base = "-"
     elif consensus_base == ".,":
         consensus_base = base
@@ -176,20 +175,20 @@ def create_consensus_dict(pileup_file_path):
         pileup_file_path: full path to a pileup file.
 
     Returns:
-        A dict mapping a key formed from a sequence and position to a
+        A dict mapping a key formed from a tuple(sequence, position) to a
         consensus sequence base. For example:
 
-        {'gi|9626243|ref|NC_001416.1|:46842': 'G',
-         'gi|9626243|ref|NC_001416.1|:47425': 'T',
-         'gi|9626243|ref|NC_001416.1|:47893': 'A'}
+        {('gi|9626243|ref|NC_001416.1|', 46842): 'G',
+         ('gi|9626243|ref|NC_001416.1|', 47425): 'T',
+         ('gi|9626243|ref|NC_001416.1|', 47893): 'A'}
 
     Raises:
 
     Examples:
     >>> consensus_dict = create_consensus_dict("snppipeline/data/lambdaVirusExpectedResults/samples/sample2/reads.pileup")
-    >>> consensus_dict['gi|9626243|ref|NC_001416.1|:3678']
+    >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',3678)]
     'T'
-    >>> consensus_dict['gi|9626243|ref|NC_001416.1|:40984']
+    >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',40984)]
     'A'
     """
 
@@ -198,23 +197,29 @@ def create_consensus_dict(pileup_file_path):
     with open(pileup_file_path, "r") as pileup_file_object:
         for pileup_line in pileup_file_object:
             current_line_data = pileup_line.rstrip().split()
-            #TODO should the test below be >= 5 ???
-            if len(current_line_data) > 5:   #don't process lines without 5 pieces of information or more
-                #TODO seq_id, pos, ref_base, depth, bases_string = current_line_data[:5]
-                #TODO position_value_dict[seq_id + ":" + pos] = get_consensus_base_from_pileup(ref_base, depth, bases_string)
-                position_value_dict[current_line_data[0] + ":" + current_line_data[1]] = get_consensus_base_from_pileup(current_line_data[2], current_line_data[3], current_line_data[4])
+            if len(current_line_data) >= 5:   #don't process lines without 5 pieces of information or more
+                seq_id, pos, ref_base, depth, bases_string = current_line_data[:5]
+                pos = int(pos)
+                depth = int(depth)
+                position_value_dict[(seq_id, pos)] = get_consensus_base_from_pileup(ref_base, depth, bases_string)
 
     return position_value_dict
 
 
 def write_list_of_snps(file_path, snp_dict):
     """Write out list of snps for all samples to a single file.
+
+    Args:
+        file_path : path to snplist file to be written
+        snp_dict  : dictionary with key = tuple(CHROM, POS), value = list[count, sampleName1, sampleName2, ..., sampleNameN]
+
+    Returns:
+        Nothing
     """
-    #TODO finish documentation
 
     with open(file_path, "w") as snp_list_file_object:
         for key in sorted(snp_dict.iterkeys()):
-            snp_list_file_object.write(key)
+            snp_list_file_object.write(key[0] + "\t" + str(key[1]))
             values = snp_dict[key]
             for value in values:
                 snp_list_file_object.write("\t" + str(value))
@@ -229,16 +234,15 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
     #TODO finish documentation
     #TODO actual code is more general than stated. Fix this.
 
-    position_list = [line.split() for line in open(snp_list_file_path, "r")]
+    position_list = [line.split()[0:2] for line in open(snp_list_file_path, "r")]
     match_dict    = SeqIO.to_dict(SeqIO.parse(reference_file_path, "fasta"))
 
     with open(snp_reference_file_path, "w") as snp_reference_file_object:
         for ordered_id in sorted(match_dict.keys()):
             snp_reference_file_object.write(">" + ordered_id + "\n")
-            for position in position_list:
-                chrom_id, PosID = position[0:2]
+            for chrom_id, pos in position_list:
                 if chrom_id == ordered_id:
-                    snp_reference_file_object.write(match_dict[ordered_id][int(PosID)-1].upper())
+                    snp_reference_file_object.write(match_dict[ordered_id][int(pos)-1].upper())
 
 
 def convert_vcf_files_to_snp_dict(list_of_sample_directories, options_dict):
@@ -246,27 +250,28 @@ def convert_vcf_files_to_snp_dict(list_of_sample_directories, options_dict):
 
     We use several criteria from options_dict to evaluate SNPs.
 
-    Note use of get to cleanly handle case of missing key w/o exception.
+    Returns:
+        snp_dict  : dictionary with key = (CHROM, POS), value = [count, sampleName1, sampleName2, ..., sampleNameN]
+
     """
 
     snp_dict = dict()
 
     for sample_directory in list_of_sample_directories:
 
-        #TODO os.path.split(sample_directory) ???
-        sample_name = sample_directory.split(os.sep)[-1]
+        sample_name = os.path.basename(sample_directory)
 
         with open(os.path.join(sample_directory, "var.flt.vcf"), 'r') as vcf_file_object:
             vcf_reader = vcf.Reader(vcf_file_object)
             for vcf_data_line in vcf_reader:
-                if not snp_dict.has_key(vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)):
+                key = (vcf_data_line.CHROM, vcf_data_line.POS)
+                if not snp_dict.has_key(key):
                     record = [1]
-                    record.append(sample_name)
-                    snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)] = record
+                    snp_dict[key] = record
                 else:
-                    record = snp_dict[vcf_data_line.CHROM + "\t" + str(vcf_data_line.POS)]
+                    record = snp_dict[key]
                     record[0] += 1
-                    record.append(sample_name)
+                record.append(sample_name)
 
     return snp_dict
 
