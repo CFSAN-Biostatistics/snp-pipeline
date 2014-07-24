@@ -73,10 +73,10 @@ else
     echo '**Align sequence '$SAMPLEID' to reference '$REFERENCEID
     bowtie2 --version | sed 's/^/# /'
     if [ $SAMPLEPATH2 ]; then
-        echo bowtie2 -p $NUMCORES -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2
-        bowtie2 -p $NUMCORES -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2 > $SAMPLEDIR/'reads.sam'
+        echo bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2
+        bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2 > $SAMPLEDIR/'reads.sam'
     else
-        echo bowtie2 -p $NUMCORES -q -x $REFERENCEPATH $SAMPLEPATH1
-        bowtie2 -p $NUMCORES -q -x $REFERENCEPATH $SAMPLEPATH1 > $SAMPLEDIR/'reads.sam'
+        echo bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH $SAMPLEPATH1
+        bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH $SAMPLEPATH1 > $SAMPLEDIR/'reads.sam'
     fi
 fi
