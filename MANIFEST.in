@@ -2,6 +2,9 @@ include README.rst
 include LICENSE.txt
 include snppipeline/data/lambdaVirusInputs/reference/*.fasta
 include snppipeline/data/lambdaVirusInputs/samples/sample*/*.fastq
-include snppipeline/data/lambdaVirusExpectedResults/*.fasta
-include snppipeline/data/lambdaVirusExpectedResults/*.txt
-include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/*.pileup
+include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/reads.sam
+include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/reads.all.pileup
+include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/var.flt.vcf
+include snppipeline/data/lambdaVirusExpectedResults/snplist.txt
+include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/reads.pileup
+include snppipeline/data/lambdaVirusExpectedResults/snpma.fasta

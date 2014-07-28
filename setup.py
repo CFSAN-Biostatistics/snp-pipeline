@@ -65,9 +65,12 @@ setup(
     package_data={
         'snppipeline' : ['data/lambdaVirusInputs/reference/*.fasta',
                          'data/lambdaVirusInputs/samples/sample*/*.fastq',
-                         'data/lambdaVirusExpectedResults/*.fasta',
-                         'data/lambdaVirusExpectedResults/*.txt',
-                         'data/lambdaVirusExpectedResults/samples/sample*/*.pileup',]
+                         'data/lambdaVirusExpectedResults/samples/sample*/reads.sam',
+                         'data/lambdaVirusExpectedResults/samples/sample*/reads.all.pileup',
+                         'data/lambdaVirusExpectedResults/samples/sample*/var.flt.vcf',
+                         'data/lambdaVirusExpectedResults/snplist.txt',
+                         'data/lambdaVirusExpectedResults/samples/sample*/reads.pileup',
+                         'data/lambdaVirusExpectedResults/snpma.fasta',]
     },
 
     keywords=['bioinformatics', 'NGS', 'SNP'],

@@ -50,13 +50,13 @@ Step 3 - Prep the reference::
 
 Step 4 - Align the samples to the reference::
 
-    # Note: This could be run in parallel using gnu parallel (workstation) or qsub (PBS on HPC)
+    # Align each sample, one at a time, using all CPU cores
     cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES reference/lambda_virus
 
 Step 5 - Prep the samples::
 
-    # Note: This could be run in parallel using gnu parallel (workstation) or qsub (PBS on HPC)
-    cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh reference/lambda_virus
+    # Process the samples in parallel using all CPU cores
+    cat sampleDirectoryNames.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/lambda_virus
         
 Step 6 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
 generate snp matrix)::
@@ -118,13 +118,13 @@ Step 3 - Prep the reference::
 
 Step 4 - Align the samples to the reference::
 
-    # Note: This could be run in parallel using gnu parallel (workstation) or qsub (PBS on HPC)
+    # Align each sample, one at a time, using all CPU cores
     cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES reference/my_reference
 
 Step 5 - Prep the samples::
 
-    # Note: This could be run in parallel using gnu parallel (workstation) or qsub (PBS on HPC)
-    cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh reference/my_reference
+    # Process the samples in parallel using all CPU cores
+    cat sampleDirectoryNames.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/my_reference
 
 Step 6 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to
 generate snp matrix)::

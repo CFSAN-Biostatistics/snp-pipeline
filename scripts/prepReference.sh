@@ -10,7 +10,7 @@
 #        Steven C. Davis (scd)
 #Purpose: Prep the reference sequence for snppipline code.
 #Input:
-#    referenceDir/referenceName
+#    referenceDir/referenceName (without the fasta extension)
 #Output:
 #    bowtie index files from reference sequence written to the reference subdirectory
 #Use example:
@@ -72,5 +72,9 @@ REFERENCEPATH=$1
 bowtie2-build --version | sed 's/^/# /'
 echo bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH
 bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH
+
+#Create fai index
+echo samtools faidx $REFERENCEPATH'.fasta'
+samtools faidx $REFERENCEPATH'.fasta'
 
 #Wrap Up-----------------------------------------------------------

@@ -36,6 +36,8 @@
 #   20140626-scd: Started.
 #   20140710-scd: Enhanced to conditionally support HPC (Torque).
 #   20140721-scd: Enhanced to support mix of paired and unpaired samples.
+#   20140728-scd: Changed the comparison logic include the upstream files to detect reproducibility problems sooner.
+#   20140728-scd: Changed the comparison logic to easily allow running a test repeatedly overnight to verify repeatable results.
 #Notes:
 #Bugs:
 #
@@ -107,7 +109,7 @@ if [[ $PLATFORM == torque ]]; then
 _EOF_
 )
 else
-    cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh $referenceBasePath
+    cat sampleDirectoryNames.txt | xargs -n 1 -P $NUMCORES prepSamples.sh $referenceBasePath
 fi
         
 echo -e "\nStep 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to generate snp matrix)"
@@ -132,21 +134,62 @@ fi
 if [[ $COMPAREDIR != /* ]] && [[ $COMPAREDIR != ~* ]]; then
     COMPAREDIR=../$COMPAREDIR # handle relative path
 fi
+
+echo -e "\ndiff reads.sam"
+echo -n "reads.sam:" >> ../overnight_run.txt
 cat sampleDirectoryNames.txt | while read sampleDir
 do
-    echo -e "\ndiff $sampleDir/reads/pileup"
-    diff  $COMPAREDIR/$sampleDir/reads.pileup $sampleDir/reads.pileup
-    if [ $? -eq 0 ]; then echo OK; fi
+    diff -q --ignore-matching-lines=bowtie $COMPAREDIR/$sampleDir/reads.sam $sampleDir/reads.sam
+    stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
+    echo -n $stat" " >> ../overnight_run.txt
 done
+
+echo -e "\ndiff reads.all.pileup"
+echo -n "  reads.all.pileup:" >> ../overnight_run.txt
+cat sampleDirectoryNames.txt | while read sampleDir
+do
+    diff -q $COMPAREDIR/$sampleDir/reads.all.pileup $sampleDir/reads.all.pileup
+    stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
+    echo -n $stat" " >> ../overnight_run.txt
+done
+
+echo -e "\ndiff var.flt.vcf"
+echo -n "  var.flt.vcf:" >> ../overnight_run.txt
+cat sampleDirectoryNames.txt | while read sampleDir
+do
+    diff -q $COMPAREDIR/$sampleDir/var.flt.vcf $sampleDir/var.flt.vcf
+    stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
+    echo -n $stat" " >> ../overnight_run.txt
+done
+
 echo -e "\ndiff snplist.txt"
-diff  $COMPAREDIR/snplist.txt   snplist.txt
-if [ $? -eq 0 ]; then echo OK; fi
+echo -n "  snplist.txt:" >> ../overnight_run.txt
+diff -q $COMPAREDIR/snplist.txt   snplist.txt
+stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
+echo -n $stat" " >> ../overnight_run.txt
+
+echo -e "\ndiff reads.pileup"
+echo -n "  reads.pileup:" >> ../overnight_run.txt
+cat sampleDirectoryNames.txt | while read sampleDir
+do
+    diff -q $COMPAREDIR/$sampleDir/reads.pileup $sampleDir/reads.pileup
+    stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
+    echo -n $stat" " >> ../overnight_run.txt
+done
+
 echo -e "\ndiff snpma.fasta"
-diff  $COMPAREDIR/snpma.fasta   snpma.fasta
-if [ $? -eq 0 ]; then echo OK; fi
+echo -n "  snpma.fasta:" >> ../overnight_run.txt
+diff -q $COMPAREDIR/snpma.fasta   snpma.fasta
+stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
+echo -n $stat" " >> ../overnight_run.txt
+
 echo -e "\ndiff referenceSNP.fasta"
-diff  $COMPAREDIR/referenceSNP.fasta   referenceSNP.fasta
-if [ $? -eq 0 ]; then echo OK; fi
+echo -n "  referenceSNP.fasta:" >> ../overnight_run.txt
+diff -q $COMPAREDIR/referenceSNP.fasta   referenceSNP.fasta
+stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
+echo -n $stat" " >> ../overnight_run.txt
+
+echo >> ../overnight_run.txt
 
 cd - > /dev/null
 exit 0
