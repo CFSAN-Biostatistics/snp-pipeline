@@ -10,8 +10,6 @@ import pprint
 import utils
 
 
-#TODO use os.path.join consistently through code for path creation
-
 def run_snp_pipeline(options_dict):
     """Create SNP matrix
 
@@ -105,7 +103,7 @@ def run_snp_pipeline(options_dict):
     #==========================================================================
 
     snp_dict = utils.convert_vcf_files_to_snp_dict(list_of_sample_directories, options_dict)
-    snp_list_file_path = options_dict['mainPath'] + options_dict['snplistFileName'] # TODO Fix this
+    snp_list_file_path = os.path.join(options_dict['mainPath'], options_dict['snplistFileName'])
     utils.write_list_of_snps(snp_list_file_path, snp_dict)
 
     #==========================================================================
