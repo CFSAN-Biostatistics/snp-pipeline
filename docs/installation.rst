@@ -15,6 +15,7 @@ Operating System Requirements
 The SNP Pipeline runs in a Linux environment. It has been tested 
 on the following platforms:
 
+    * Red Hat
     * CentOS
     * Ubuntu
     * Mac OS X
