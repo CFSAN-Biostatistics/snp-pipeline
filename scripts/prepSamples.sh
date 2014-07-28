@@ -31,6 +31,7 @@
 #   20140520-har: Download of sequence moved to different script.
 #   20140623-scd: Changes for varscan.
 #   20140715-scd: Moved the bowtie align to the alignSampleToReference.sh script.
+#   20140728-scd: Log the executed commands with all options to stdout.
 #Notes:
 #
 #Bugs:
@@ -55,9 +56,11 @@ if [ -s $SAMPLEDIR/reads.bam ]; then
     echo '**Bam file already exists for '$SAMPLEID
 else
     echo '**Convert sam file to bam file with only mapped positions.'
+    echo samtools view -bS -F 4 -o $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads.sam'
     samtools view -bS -F 4 -o $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads.sam'
     #Convert to a sorted bam
     echo '**Convert bam to sorted bam file.'
+    echo samtools sort $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads'
     samtools sort $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads'
 fi
 
@@ -66,6 +69,7 @@ if [ -s $SAMPLEDIR/'reads.all.pileup' ]; then
     echo '**'$SAMPLEID'.pileup already exists'
 else
     echo '**Produce bcf file from pileup and bam file.'
+    echo samtools mpileup -f $REFERENCEPATH'.fasta' $SAMPLEDIR/'reads.bam'
     samtools mpileup -f $REFERENCEPATH'.fasta' $SAMPLEDIR/'reads.bam' > $SAMPLEDIR/'reads.all.pileup'
 fi
 
@@ -75,6 +79,7 @@ if [ -s $SAMPLEDIR/'var.flt.vcf' ]; then
 else
     echo '**Creating vcf file'
     if [ ! -z "$CLASSPATH" ]; then
+        echo java net.sf.varscan.VarScan mpileup2snp $SAMPLEDIR/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1
         java net.sf.varscan.VarScan mpileup2snp $SAMPLEDIR/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1 > $SAMPLEDIR/'var.flt.vcf'
     else
         echo '*** Error: cannot execute VarScan. Define the path to VarScan in the CLASSPATH environment variable.'
