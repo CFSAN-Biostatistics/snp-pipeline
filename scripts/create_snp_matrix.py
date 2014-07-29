@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 
 import argparse
+from snppipeline import __version__
 from snppipeline import snppipeline
 import multiprocessing
 
@@ -24,6 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose',          dest='verbose',                          type=int,   default=1,                 help='Verbose flag (0=no info, 5=lots)')
     parser.add_argument('-i', '--includeReference', dest='includeReference',                 type=bool,  default=False,             help='Write reference sequence bases at SNP positions in fasta format.')
     parser.add_argument('-o', '--useOldPileups',    dest='useOldPileups',                    type=bool,  default=False,             help='Use available pileup files.')
+    parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
     args_dict = vars(parser.parse_args())
 
     snppipeline.run_snp_pipeline(args_dict)

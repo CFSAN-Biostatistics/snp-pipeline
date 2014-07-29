@@ -113,8 +113,10 @@ else
 fi
         
 echo -e "\nStep 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to generate snp matrix)"
+cmd="create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True"
+echo $cmd
+create_snp_matrix.py --version 2>&1 > /dev/null | sed 's/^/# /'
 if [[ $PLATFORM == torque ]]; then
-    cmd="create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True"
     prepSamplesJobArray=${prepSamplesJobId%%.*}
     createSnpMatrixJobId=$(echo $cmd | qsub -d $WORKDIR -N job.createSnpMatrix -j oe -W depend=afterokarray:$prepSamplesJobArray)
 else

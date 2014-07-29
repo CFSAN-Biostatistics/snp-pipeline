@@ -71,12 +71,13 @@ if [ -s $SAMPLEDIR/reads.sam ]; then
     echo '**'$SAMPLEID' has already been aligned to '$REFERENCEID
 else
     echo '**Align sequence '$SAMPLEID' to reference '$REFERENCEID
-    bowtie2 --version | sed 's/^/# /'
     if [ $SAMPLEPATH2 ]; then
-        echo bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2
+        echo -e "\n"bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2"\n"
+        bowtie2 --version | sed 's/^/# /'
         bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2 > $SAMPLEDIR/'reads.sam'
     else
-        echo bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH $SAMPLEPATH1
+        echo -e "\n"bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH $SAMPLEPATH1"\n"
+        bowtie2 --version | sed 's/^/# /'
         bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH $SAMPLEPATH1 > $SAMPLEDIR/'reads.sam'
     fi
 fi
