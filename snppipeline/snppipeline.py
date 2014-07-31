@@ -95,7 +95,7 @@ def run_snp_pipeline(options_dict):
 
     sample_directories_list_filename = os.path.join(options_dict['mainPath'], options_dict['pathFileName'])
     list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
-    list_of_sample_directories = filter(None, list_of_sample_directories)
+    list_of_sample_directories = sorted(filter(None, list_of_sample_directories))
 
     #==========================================================================
     #read in all vcf files and process into dict of SNPs passing various

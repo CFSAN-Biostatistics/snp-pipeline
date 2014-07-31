@@ -64,17 +64,11 @@ if (($# < 4)); then
 fi
 
 echo -e "\nStep 1 - Prep work"
-mkdir -p $WORKDIR
-cp -v -u -r $CLEANDIR/* $WORKDIR
-find $WORKDIR -name "*.bt2" -type f -delete
-find $WORKDIR -name "*.fai" -type f -delete
-find $WORKDIR -name "*.pileup" -type f -delete
-find $WORKDIR -name "*.sam" -type f -delete
-find $WORKDIR -name "*.bam" -type f -delete
-find $WORKDIR -name "*.vcf" -type f -delete
-rm $WORKDIR/*
+rm -rf $WORKDIR
+cp -v -r -s $CLEANDIR $WORKDIR
 cd $WORKDIR
-ls -d --color=never samples/* > sampleDirectoryNames.txt
+# get sample directories sorted by size, largest first
+ls -d samples/* | xargs ls -L -s -m | grep -E "(samples|total)" | sed 'N;s/\n//;s/:total//' | sort -k 2 -n -r | cut -f 1 -d " " > sampleDirectoryNames.txt
 rm sampleFullPathNames.txt
 cat sampleDirectoryNames.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
 sampleCount=$(cat sampleDirectoryNames.txt | wc -l)

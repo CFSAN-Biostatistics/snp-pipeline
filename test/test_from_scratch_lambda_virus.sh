@@ -49,4 +49,4 @@
 #Bugs:
 #
 
-./test_from_scratch.sh  ../snppipeline/data/lambdaVirusInputs  testLambdaVirus  ../snppipeline/data/lambdaVirusExpectedResults
+./test_from_scratch.sh  $(pwd)/../snppipeline/data/lambdaVirusInputs  testLambdaVirus  ../snppipeline/data/lambdaVirusExpectedResults
