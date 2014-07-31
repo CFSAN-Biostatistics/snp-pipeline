@@ -3,6 +3,18 @@
 History
 -------
 
+0.1.2 (2014-08-xx)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+**Other Changes:**
+
+* Added the referenceSNP.fasta file to the supplied lambda virus expected results 
+  data set.  The expected results files are fetched with the copy_snppipeline_data.py 
+  script.
+
+
 0.1.1 (2014-07-28)
 ~~~~~~~~~~~~~~~~~~
 

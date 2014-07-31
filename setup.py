@@ -70,7 +70,8 @@ setup(
                          'data/lambdaVirusExpectedResults/samples/sample*/var.flt.vcf',
                          'data/lambdaVirusExpectedResults/snplist.txt',
                          'data/lambdaVirusExpectedResults/samples/sample*/reads.pileup',
-                         'data/lambdaVirusExpectedResults/snpma.fasta',]
+                         'data/lambdaVirusExpectedResults/snpma.fasta',
+                         'data/lambdaVirusExpectedResults/referenceSNP.fasta',]
     },
 
     keywords=['bioinformatics', 'NGS', 'SNP'],
