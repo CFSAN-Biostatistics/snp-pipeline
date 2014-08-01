@@ -72,12 +72,13 @@ if [ -s $SAMPLEDIR/reads.sam ]; then
 else
     echo '**Align sequence '$SAMPLEID' to reference '$REFERENCEID
     if [ $SAMPLEPATH2 ]; then
-        echo -e "\n"bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2"\n"
-        bowtie2 --version | sed 's/^/# /'
+        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2
+        echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
         bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH -1 $SAMPLEPATH1 -2 $SAMPLEPATH2 > $SAMPLEDIR/'reads.sam'
     else
-        echo -e "\n"bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH $SAMPLEPATH1"\n"
-        bowtie2 --version | sed 's/^/# /'
+        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH $SAMPLEPATH1
+        echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
         bowtie2 -p $NUMCORES --reorder -q -x $REFERENCEPATH $SAMPLEPATH1 > $SAMPLEDIR/'reads.sam'
     fi
+    echo $(date +"# %Y-%m-%d %T") alignSampleToReference.sh finished
 fi

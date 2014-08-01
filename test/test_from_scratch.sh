@@ -105,16 +105,22 @@ _EOF_
 else
     cat sampleDirectoryNames.txt | xargs -n 1 -P $NUMCORES prepSamples.sh $referenceBasePath
 fi
-        
+
 echo -e "\nStep 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to generate snp matrix)"
-cmd="create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True"
-echo $cmd
-create_snp_matrix.py --version 2>&1 > /dev/null | sed 's/^/# /'
 if [[ $PLATFORM == torque ]]; then
     prepSamplesJobArray=${prepSamplesJobId%%.*}
-    createSnpMatrixJobId=$(echo $cmd | qsub -d $WORKDIR -N job.createSnpMatrix -j oe -W depend=afterokarray:$prepSamplesJobArray)
-else
+    createSnpMatrixJobId=$(echo | qsub -d $WORKDIR -N job.createSnpMatrix -j oe -W depend=afterokarray:$prepSamplesJobArray << _EOF_
+    echo "# "\$(date +"%Y-%m-%d %T") create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
+    echo "# "$(create_snp_matrix.py --version 2>&1 > /dev/null)
     create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
+    echo "# "\$(date +"%Y-%m-%d %T") create_snp_matrix.py finished
+_EOF_
+)
+else
+    echo "# "$(date +"%Y-%m-%d %T") create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
+    echo "# "$(create_snp_matrix.py --version 2>&1 > /dev/null)
+    create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
+    echo "# "$(date +"%Y-%m-%d %T") create_snp_matrix.py finished
 fi    
 
 echo -e "\nStep 6 - compare results"

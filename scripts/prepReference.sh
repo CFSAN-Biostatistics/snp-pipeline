@@ -69,13 +69,15 @@ REFERENCEPATH=$1
 #Body--------------------------------------------------------------
 
 #Create index file for reference
-echo -e "\n"bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH"\n"
-bowtie2-build --version | sed 's/^/# /'
+echo "# "$(date +"%Y-%m-%d %T") bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH
+echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
 bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH
 
 #Create fai index
-echo -e "\n"samtools faidx $REFERENCEPATH'.fasta'"\n"
-samtools 2>&1 > /dev/null | grep Version | sed 's/^/# SAMtools /'
+echo "# "$(date +"%Y-%m-%d %T") samtools faidx $REFERENCEPATH'.fasta'
+echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
 samtools faidx $REFERENCEPATH'.fasta'
+
+echo "# "$(date +"%Y-%m-%d %T") prepReference.sh finished
 
 #Wrap Up-----------------------------------------------------------
