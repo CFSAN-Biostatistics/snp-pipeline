@@ -47,8 +47,8 @@
 #Bugs:
 #
 
-cleanDir=~/mnt/biob/svn/BioStats/Steve/snp-pipeline-hpc-work/snppipeline/data/lambdaVirusInputs
-workdir=~/testLambdaVirus
-compareDir=~/mnt/biob/svn/BioStats/Steve/snp-pipeline-hpc-work/snppipeline/data/lambdaVirusExpectedResults
+cleanDir=/scratch/app_sdavis/cleanLambdaVirus
+workdir=/scratch/app_sdavis/testLambdaVirus
+compareDir=/scratch/app_sdavis/lambdaVirusExpectedResults
 
 ./test_from_scratch.sh  $cleanDir  $workdir  $compareDir  torque
