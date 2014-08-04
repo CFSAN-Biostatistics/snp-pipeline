@@ -70,7 +70,7 @@ fi
 if [ -s $SAMPLEDIR/'reads.all.pileup' ]; then
     echo '**'$SAMPLEID'.pileup already exists'
 else
-    echo '**Produce bcf file from pileup and bam file.'
+    echo '**Create pileup from bam file.'
     echo "# "$(date +"%Y-%m-%d %T") samtools mpileup -f $REFERENCEPATH'.fasta' $SAMPLEDIR/'reads.bam'
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
     samtools mpileup -f $REFERENCEPATH'.fasta' $SAMPLEDIR/'reads.bam' > $SAMPLEDIR/'reads.all.pileup'
@@ -80,7 +80,7 @@ fi
 if [ -s $SAMPLEDIR/'var.flt.vcf' ]; then
     echo '**vcf file already exists for '$SAMPLEID
 else
-    echo '**Creating vcf file'
+    echo '**Create vcf file'
     if [ ! -z "$CLASSPATH" ]; then
         echo "# "$(date +"%Y-%m-%d %T") java net.sf.varscan.VarScan mpileup2snp $SAMPLEDIR/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1
         echo "# "$(java net.sf.varscan.VarScan 2>&1 > /dev/null | head -n 1)
