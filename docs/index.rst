@@ -15,6 +15,7 @@ Contents:
    dataflow
    installation
    usage
+   reproducible
    faq
    contributing
    authors
