@@ -55,7 +55,10 @@ setup(
         'scripts/prepReference.sh',
         'scripts/alignSampleToReference.sh',
         'scripts/prepSamples.sh',
+        'scripts/create_snp_list.py',
+        'scripts/create_snp_pileup.py',
         'scripts/create_snp_matrix.py',
+        'scripts/create_snp_reference_seq.py',
         'scripts/copy_snppipeline_data.py'
     ],
 
@@ -69,7 +72,7 @@ setup(
                          'data/lambdaVirusExpectedResults/samples/sample*/reads.all.pileup',
                          'data/lambdaVirusExpectedResults/samples/sample*/var.flt.vcf',
                          'data/lambdaVirusExpectedResults/snplist.txt',
-                         'data/lambdaVirusExpectedResults/samples/sample*/reads.pileup',
+                         'data/lambdaVirusExpectedResults/samples/sample*/reads.snp.pileup',
                          'data/lambdaVirusExpectedResults/snpma.fasta',
                          'data/lambdaVirusExpectedResults/referenceSNP.fasta',]
     },

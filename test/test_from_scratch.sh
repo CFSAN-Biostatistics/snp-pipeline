@@ -38,6 +38,7 @@
 #   20140721-scd: Enhanced to support mix of paired and unpaired samples.
 #   20140728-scd: Changed the comparison logic include the upstream files to detect reproducibility problems sooner.
 #   20140728-scd: Changed the comparison logic to easily allow running a test repeatedly overnight to verify repeatable results.
+#   20140818-scd: Split the create_snp_matrix script into 4 smaller scripts.
 #Notes:
 #Bugs:
 #
@@ -68,10 +69,10 @@ rm -rf $WORKDIR
 cp -v -r -s $CLEANDIR $WORKDIR
 cd $WORKDIR
 # get sample directories sorted by size, largest first
-ls -d samples/* | xargs ls -L -s -m | grep -E "(samples|total)" | sed 'N;s/\n//;s/:total//' | sort -k 2 -n -r | cut -f 1 -d " " > sampleDirectoryNames.txt
-rm sampleFullPathNames.txt
-cat sampleDirectoryNames.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
-sampleCount=$(cat sampleDirectoryNames.txt | wc -l)
+ls -d samples/* | xargs ls -L -s -m | grep -E "(samples|total)" | sed 'N;s/\n//;s/:total//' | sort -k 2 -n -r | cut -f 1 -d " " > sampleDirectories.txt
+rm sampleFullPathNames.txt 2>/dev/null
+cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
+sampleCount=$(cat sampleDirectories.txt | wc -l)
 
 echo -e "\nStep 2 - Prep the reference"
 referencePath=$(ls reference/*.fasta)
@@ -98,32 +99,52 @@ echo -e "\nStep 4 - Prep the samples"
 if [[ $PLATFORM == torque ]]; then
     alignSamplesJobArray=${alignSamplesJobId%%.*}
     prepSamplesJobId=$(echo | qsub -t 1-$sampleCount -d $WORKDIR -N job.prepSamples -j oe -W depend=afterokarray:$alignSamplesJobArray << _EOF_
-    prepSamplesParameters=\$(cat sampleDirectoryNames.txt | head -n \$PBS_ARRAYID | tail -n 1)
-    prepSamples.sh $referenceBasePath \$prepSamplesParameters
+    sampleDir=\$(cat sampleDirectories.txt | head -n \$PBS_ARRAYID | tail -n 1)
+    prepSamples.sh $referenceBasePath \$sampleDir
 _EOF_
 )
 else
-    cat sampleDirectoryNames.txt | xargs -n 1 -P $NUMCORES prepSamples.sh $referenceBasePath
+    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh $referenceBasePath
 fi
 
-echo -e "\nStep 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to generate snp matrix)"
+echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP list file"
 if [[ $PLATFORM == torque ]]; then
     prepSamplesJobArray=${prepSamplesJobId%%.*}
-    createSnpMatrixJobId=$(echo | qsub -d $WORKDIR -N job.createSnpMatrix -j oe -W depend=afterokarray:$prepSamplesJobArray << _EOF_
-    echo "# "\$(date +"%Y-%m-%d %T") create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
-    echo "# "$(create_snp_matrix.py --version 2>&1 > /dev/null)
-    create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
-    echo "# "\$(date +"%Y-%m-%d %T") create_snp_matrix.py finished
+    snpListJobId=$(echo create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt | qsub -d $WORKDIR -N job.snpList -j oe -W depend=afterokarray:$prepSamplesJobArray)
+else
+    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
+fi
+
+echo -e "\nStep 6 - Create pileups at SNP positions for each sample"
+if [[ $PLATFORM == torque ]]; then
+    snpPileupJobId=$(echo | qsub -t 1-$sampleCount -d $WORKDIR -N job.snpPileup -j oe -W depend=afterok:$snpListJobId << _EOF_
+    sampleDir=\$(cat sampleDirectories.txt | head -n \$PBS_ARRAYID | tail -n 1)
+    create_snp_pileup.py -l snplist.txt -a \$sampleDir/reads.all.pileup -o \$sampleDir/reads.snp.pileup
 _EOF_
 )
 else
-    echo "# "$(date +"%Y-%m-%d %T") create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
-    echo "# "$(create_snp_matrix.py --version 2>&1 > /dev/null)
-    create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
-    echo "# "$(date +"%Y-%m-%d %T") create_snp_matrix.py finished
+    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+fi
+
+echo -e "\nStep 7 - Create the SNP matrix"
+if [[ $PLATFORM == torque ]]; then
+    snpPileupJobArray=${snpPileupJobId%%.*}
+    snpMatrixJobId=$(echo | qsub -d $WORKDIR -N job.snpMatrix -j oe -W depend=afterokarray:$snpPileupJobArray << _EOF_
+    create_snp_matrix.py -l snplist.txt -p reads.snp.pileup -o snpma.fasta sampleDirectories.txt
+_EOF_
+)
+else
+    create_snp_matrix.py -l snplist.txt -p reads.snp.pileup -o snpma.fasta sampleDirectories.txt
 fi    
 
-echo -e "\nStep 6 - compare results"
+echo -e "\nStep 8 - Create the reference base sequence"
+if [[ $PLATFORM == torque ]]; then
+    echo create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta $referencePath | qsub -d $WORKDIR -N job.snpReference -j oe -W depend=afterokarray:$snpPileupJobArray
+else
+    create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta $referencePath
+fi
+
+echo -e "\nStep 9 - compare results"
 if [[ $PLATFORM == torque ]]; then
     snpmaFileCount=0
     while ((snpmaFileCount == 0)); do
@@ -139,7 +160,7 @@ fi
 
 echo -e "\ndiff reads.sam"
 echo -n "reads.sam:" >> ../overnight_run.txt
-cat sampleDirectoryNames.txt | while read sampleDir
+cat sampleDirectories.txt | while read sampleDir
 do
     diff -q --ignore-matching-lines=bowtie $COMPAREDIR/$sampleDir/reads.sam $sampleDir/reads.sam
     stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
@@ -148,7 +169,7 @@ done
 
 echo -e "\ndiff reads.all.pileup"
 echo -n "  reads.all.pileup:" >> ../overnight_run.txt
-cat sampleDirectoryNames.txt | while read sampleDir
+cat sampleDirectories.txt | while read sampleDir
 do
     diff -q $COMPAREDIR/$sampleDir/reads.all.pileup $sampleDir/reads.all.pileup
     stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
@@ -157,7 +178,7 @@ done
 
 echo -e "\ndiff var.flt.vcf"
 echo -n "  var.flt.vcf:" >> ../overnight_run.txt
-cat sampleDirectoryNames.txt | while read sampleDir
+cat sampleDirectories.txt | while read sampleDir
 do
     diff -q $COMPAREDIR/$sampleDir/var.flt.vcf $sampleDir/var.flt.vcf
     stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
@@ -170,11 +191,11 @@ diff -q $COMPAREDIR/snplist.txt   snplist.txt
 stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
 echo -n $stat" " >> ../overnight_run.txt
 
-echo -e "\ndiff reads.pileup"
-echo -n "  reads.pileup:" >> ../overnight_run.txt
-cat sampleDirectoryNames.txt | while read sampleDir
+echo -e "\ndiff reads.snp.pileup"
+echo -n "  reads.snp.pileup:" >> ../overnight_run.txt
+cat sampleDirectories.txt | while read sampleDir
 do
-    diff -q $COMPAREDIR/$sampleDir/reads.pileup $sampleDir/reads.pileup
+    diff -q $COMPAREDIR/$sampleDir/reads.snp.pileup $sampleDir/reads.snp.pileup
     stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
     echo -n $stat" " >> ../overnight_run.txt
 done

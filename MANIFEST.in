@@ -6,6 +6,6 @@ include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/reads.sam
 include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/reads.all.pileup
 include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/var.flt.vcf
 include snppipeline/data/lambdaVirusExpectedResults/snplist.txt
-include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/reads.pileup
+include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/reads.snp.pileup
 include snppipeline/data/lambdaVirusExpectedResults/snpma.fasta
 include snppipeline/data/lambdaVirusExpectedResults/referenceSNP.fasta
