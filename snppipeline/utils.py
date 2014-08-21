@@ -7,7 +7,6 @@ import os
 import pprint
 import re
 import sets
-import subprocess
 import sys
 import vcf
 
@@ -26,67 +25,6 @@ verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
 #Define functions
 #==============================================================================
 
-def pileup_wrapper(args):
-    """Wraps pileup to use multiple arguments with multiprocessing package.
-    """
-    return pileup(*args)
-
-
-def pileup(sample_dir_path, options_dict):
-    """Run samtools to generate pileup for one sample.
-
-    Description:
-    Generate pileup file, using snplist file and the reference fasta file.
-
-    Args:
-        sample_dir_path: Full path to directory for a sample.
-        options_dict: Dictionary containing command-line options as per
-            documention for run_snp_pipeline.
-    """
-
-    verbose_print('Generating pileup file ' + options_dict['pileupFileName'] +
-                  ' in '+sample_dir_path)
-    pileup_file_path  = os.path.abspath(os.path.join(sample_dir_path, options_dict['pileupFileName']))
-
-    # SAMtools ignores the snplist when the path is relative, make it absolute here:
-    snplist_file_path = os.path.abspath(os.path.join(options_dict['mainPath'], options_dict['snplistFileName']))
-
-    #TODO - allow for use of previously done pileup via command line argument?
-    if os.path.isfile(pileup_file_path):
-        verbose_print('Removing old pileup file '+pileup_file_path)
-        os.remove(pileup_file_path)
-
-    # SAMtools fails when the reference file is "./reference/lambdaVirus.fasta", make it absolute here:
-    reference_file_path = os.path.abspath(os.path.join(options_dict['mainPath'], options_dict['Reference']))
-    bam_file_path = os.path.abspath(os.path.join(sample_dir_path, options_dict['bamFileName']))
-    command_line = (
-        'samtools mpileup ' +
-            '-l ' + snplist_file_path +
-            ' -f ' + reference_file_path + 
-            ' ' + bam_file_path +
-            ' > ' + pileup_file_path
-    )
-    
-    verbose_print('Executing: '+command_line)
-    #TODO review return values and clean up this next bit of code.
-    #  see for details: https://docs.python.org/2/library/subprocess.html#replacing-os-system
-    try:
-        return_code = subprocess.call(command_line, cwd=sample_dir_path, shell=True)
-        if return_code < 0:
-            sys.stderr.write("Child was terminated by signal: " + str(return_code))
-        else:
-            verbose_print("Child returned: " + str(return_code))
-    except OSError as e:
-        sys.stderr.write("Execution failed: " + str(e))
-
-
-    verbose_print("samtools return code: ", return_code)
-    if not os.path.isfile(pileup_file_path):
-        print('Pileup file not created: '+pileup_file_path)
-
-    verbose_print('pileup function exit')
-
-    return pileup_file_path
 
 def get_consensus_base_from_pileup(base, length, data):
     """Call the base for each SNP position
@@ -164,6 +102,27 @@ TODO: all these examples return the value of the 1st argument, can we get some o
     return consensus_base
 
 
+def create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, snp_set):
+    """Create a subset pileup with SNP locations only.
+
+    Given a whole-genome pileup file, create a new pileup file with a subset
+    of the records at the SNP locations only.
+
+    Args:
+        all_pileup_file_path: path to a whole-genome pileup file
+        all_pileup_file_path: path to a snp pileup file to be created
+        snp_set: set of (CHROM, POS) tuples identifying the locations with SNPs
+    """
+    with open(all_pileup_file_path, "r") as all_pileup_file_object:
+        with open(snp_pileup_file_path, "w") as snp_pileup_file_object:
+            for pileup_line in all_pileup_file_object:
+                current_line_data = pileup_line.rstrip().split()
+                seq_id, pos = current_line_data[:2]
+                key = (seq_id, int(pos))
+                if key in snp_set:
+                    snp_pileup_file_object.write(pileup_line)
+
+
 def create_consensus_dict(pileup_file_path):
     """Create a dict based on the information in a pileup file.
 
@@ -185,7 +144,7 @@ def create_consensus_dict(pileup_file_path):
     Raises:
 
     Examples:
-    >>> consensus_dict = create_consensus_dict("snppipeline/data/lambdaVirusExpectedResults/samples/sample2/reads.pileup")
+    >>> consensus_dict = create_consensus_dict("snppipeline/data/lambdaVirusExpectedResults/samples/sample2/reads.snp.pileup")
     >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',3678)]
     'T'
     >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',40984)]
@@ -211,7 +170,7 @@ def write_list_of_snps(file_path, snp_dict):
 
     Args:
         file_path : path to snplist file to be written
-        snp_dict  : dictionary with key = tuple(CHROM, POS), value = list[count, sampleName1, sampleName2, ..., sampleNameN]
+        snp_dict  : dictionary with key = tuple(CHROM, POS) -> value = list[count, sampleName1, sampleName2, ..., sampleNameN]
 
     Returns:
         Nothing
@@ -224,6 +183,24 @@ def write_list_of_snps(file_path, snp_dict):
             for value in values:
                 snp_list_file_object.write("\t" + str(value))
             snp_list_file_object.write("\n")
+
+
+def read_snp_position_list(snp_list_file_path):
+    """Read list of snp positions across all samples from the snplist.txt.
+
+    Args:
+        snp_list_file_path : path to snplist file to be written
+
+    Returns:
+        snp_list  : sorted list of tuple(str(CHROM), int(POS))
+    """
+
+    snp_list = list()
+    with open(snp_list_file_path, "r") as snp_list_file_object:
+        for line in snp_list_file_object:
+            chrom, pos = line.split()[0:2]
+            snp_list.append((chrom, int(pos)))
+    return snp_list
 
 
 def write_reference_snp_file(reference_file_path, snp_list_file_path,
@@ -245,23 +222,24 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
                     snp_reference_file_object.write(match_dict[ordered_id][int(pos)-1].upper())
 
 
-def convert_vcf_files_to_snp_dict(list_of_sample_directories, options_dict):
+def convert_vcf_files_to_snp_dict(sample_vcf_file_list):
     """convert list of vcf files to a single dict of quality SNPs.
 
-    We use several criteria from options_dict to evaluate SNPs.
+    Args:
+        sample_vcf_file_list : list of relative or absolute paths to the sample VCF files
 
     Returns:
-        snp_dict  : dictionary with key = (CHROM, POS), value = [count, sampleName1, sampleName2, ..., sampleNameN]
+        snp_dict  : dictionary with key = (CHROM, POS) -> value = [count, sampleName1, sampleName2, ..., sampleNameN]
 
     """
 
     snp_dict = dict()
 
-    for sample_directory in list_of_sample_directories:
+    for vcf_file_path in sample_vcf_file_list:
 
-        sample_name = os.path.basename(sample_directory)
+        sample_name = os.path.basename(os.path.dirname(vcf_file_path))
 
-        with open(os.path.join(sample_directory, "var.flt.vcf"), 'r') as vcf_file_object:
+        with open(vcf_file_path, 'r') as vcf_file_object:
             vcf_reader = vcf.Reader(vcf_file_object)
             for vcf_data_line in vcf_reader:
                 key = (vcf_data_line.CHROM, vcf_data_line.POS)

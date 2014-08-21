@@ -10,8 +10,29 @@ History
 
 **Other Changes:**
 
+*Note the loss of backward compatibilty for existing workflows using create_snp_matrix.py*
+
+* Split the create_snp_matrix script into 4 smaller scripts to simplify the code
+  and improve performance when processing many samples in parallel.  Refer to the 
+  :ref:`usage-label` section for the revised step-by-step usage instructions.
+* The rewritten python scripts emit their version number, arguments, run timestamps, 
+  and other diagnostic information to stdout.
+* Changed the default name of the reads.pileup file to reads.snp.pileup.  You can
+  override this on the command line of the create_snp_pileup.py script.
+* Previously, the pipeline executed SAMtools mpileup twice -- the first pileup across 
+  the whole genome, and the second pileup restricted to those positions where snps 
+  were identified by varscan in *any* of the samples.  This release removes the 
+  second SAMtools pileup, and generates the snp pileup file by simply extracting a 
+  subset of the pileup records from the genome-wide pileup at the positions where 
+  variants were found in *any* sample.  The consequence of this change is faster run 
+  times, but also an improvement to the results -- there will be fewer missing 
+  values in the snp matrix.
 * Added the referenceSNP.fasta file to the supplied lambda virus expected results 
-  data set.  The expected results files are fetched with the copy_snppipeline_data.py 
+  data set.
+* Changed the the supplied lambda virus expected results data set to match the 
+  results obtained with the pipeline enhancements in this release and now using SAMtools
+  version 0.1.19.  SAMtools mpileup version 0.1.19 excludes read bases with low quality.
+  As a reminder, the expected results files are fetched with the copy_snppipeline_data.py 
   script.
 
 
