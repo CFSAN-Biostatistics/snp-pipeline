@@ -105,10 +105,87 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l referenceSNP.fasta
 
 
-Step-by-Step Example Workflow Based on S. Agona Data Downloaded from SRA
-------------------------------------------------------------------------
-TODO: do this
+Step-by-Step Example Workflow Using S. Agona Data Downloaded from SRA
+---------------------------------------------------------------------
 
+Step 1 - Gather data::
+
+    # The SNP Pipeline distribution includes sample data organized as shown below:
+    snppipeline/data/agonaInputs/sha256sumCheck
+    snppipeline/data/agonaInputs/reference/NC_011149.fasta
+
+Step 2 - Prep work::
+
+    # Copy the supplied test data to a work area:
+    cd test
+    copy_snppipeline_data.py agonaInputs testAgona
+    cd testAgona
+    # Create sample directories
+    mkdir -p samples/ERR178926  samples/ERR178927  samples/ERR178928  samples/ERR178929  samples/ERR178930
+    # Download sample data from SRA at NCBI. Note that we use the fastq-dump command from
+    #   the NCBI SRA-toolkit to fetch sample sequences. There are other ways to get the data,
+    #   but the SRA-toolkit is easy to install, and does a good job of downloading large
+    #   files.
+    fastq-dump --split-files --outdir samples/ERR178926 ERR178926
+    fastq-dump --split-files --outdir samples/ERR178927 ERR178927
+    fastq-dump --split-files --outdir samples/ERR178928 ERR178928
+    fastq-dump --split-files --outdir samples/ERR178929 ERR178929
+    fastq-dump --split-files --outdir samples/ERR178930 ERR178930
+    # Check the data
+    #   The original data was used to generate a hash as follows:
+    #     sha256sum reference/*.fasta samples/*/*.fastq > sha256sumCheck
+    #   The command below checks the downloaded data (and the reference sequence) against the
+    #     hashes that are saved in the sha256sumCheck file using sha256sum command, which is
+    #     generally available on unix systems.
+    sha256sum -c sha256sumCheck
+
+    # Create files of sample directories and fastQ files:
+    ls -d --color=never samples/* > sampleDirectories.txt
+    rm sampleFullPathNames.txt 2>/dev/null
+    cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
+    # Determine the number of CPU cores in your computer
+    NUMCORES=$(grep -c ^processor /proc/cpuinfo)
+
+Step 3 - Prep the reference::
+
+    prepReference.sh reference/NC_011149
+
+Step 4 - Align the samples to the reference::
+
+    # Align each sample, one at a time, using all CPU cores
+    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES reference/NC_011149
+
+Step 5 - Prep the samples::
+
+    # Process the samples in parallel using all CPU cores
+    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/NC_011149
+
+Step 6 - Combine the SNP positions across all samples into the SNP list file::
+
+    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
+
+Step 7 - Create pileups at SNP positions for each sample::
+
+    # Process the samples in parallel using all CPU cores
+    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+
+Step 8 - Create the SNP matrix::
+
+    create_snp_matrix.py -l snplist.txt -p reads.snp.pileup -o snpma.fasta sampleDirectories.txt
+
+Step 9 - Create the reference base sequence::
+
+    create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/NC_011149.fasta
+
+        
+Step 10 - View the results:
+
+Upon successful completion of the pipeline, the snplist.txt file should have ???? entries.  The SNP Matrix 
+can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
+
+    ls -l snplist.txt
+    ls -l snpma.fasta
+    ls -l referenceSNP.fasta
 
 Step-by-Step Workflow - General Case
 ------------------------------------

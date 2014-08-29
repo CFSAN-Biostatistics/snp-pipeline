@@ -1,89 +1,151 @@
 .. _reproducible-label:
 
 ====================
+Correct and Reproducible Results
+====================
+
+
+It is our goal to make the SNP Pipeline results both fully reproducible and as
+correct as current scientific understanding allows. As part of this effort, we
+document here problems we have found that have affected correctness. We also detail
+how we have built this software so that it is as reproducible as possible. In
+addition, we are building, collecting, and collating data sets that we use to assess
+both correctness and reproducibility of our software. As a project that is made
+possible only by very recent developments in science and technology, our efforts to ensure correctness and reproducibility are an ongoing effort. The publications we
+have produced in an effort to ensure scientific correctness are listed as references at the bottom of this document. This document will continue to evolve as we improve our process and as scientific advances occur.
+
 Reproducible Results
 ====================
 
-This page is a work in progress.
-
-We strive to make the SNP Pipeline results fully reproducible -- not just the
+We have made the SNP Pipeline results fully reproducible -- not just the
 final SNP matrix, but each intermediate file as well.  Reproducible results
 help us test and debug the pipeline and also facilitate collaborative efforts
 between researchers.
 
+Public Availability
+-------------------
+The SNP Pipeline source code is available on GitHub so anyone can download our
+source code. The GitHub repository contains some data sets that can be used to
+reproduce selected results. We also provide information on the public
+location of other (large) data sets that can be used to reproduce other results
+we provide.
+
 Version Control
 ---------------
-The SNP Pipeline source code is available on GitHub so anyone can download
-and reproduce our results.  Each new release is tagged with a version identifier
-and also released to the Python Package Index for easy installation.
-
-Control Test Set
-----------------
-* We should probably include a control data set for which the SNPs are known.
-* We have the lambda virus data set, but we don't know the correct list of snps.
+We use git internally for code development to ensure that we have control over
+our source code and can identify which version of code was used to produce any
+particular result. We tag/version commits of the code that we consider production
+releases and use them for the majority of our internal analyses. We also release
+each of these tagged versions to GitHub and to the Python Package Index for easy
+installation.
 
 Parameters
 ----------
-* Debating whether to include this section...
-* Parameter values can affect results.
-* Some parameters are exposed, some are hard-coded.
-* We recommend changing one parameter at a time in a controlled manner to determine the effects of the parameter change.
-* We recommend accurately recording the parameter values used for any important results, ideally in a script or configuration file.
+The SNP pipeline behavior depends on the setting of a number of parameters that
+determine the behavior of various software packages that the pipeline uses. These
+parameters affect both the correctness and reproducibility of results. We have set
+all the parameters so that the results are reproducible, and in general this means
+setting seeds for all random number dependent processes, as well as specific
+choices for other can affect such things as the order of the results. We discuss
+these in more detail in other portions of this document.
+
+The pipeline uses some fairly complex software packages, and these packages have
+large numbers of parameters. We do not expose all of these parameters, but just the
+ones that we have found it useful to modify in our work. Those wishing to further
+modify the behavior will have to adjust the code to change the behavior to meet
+their needs.
+
+We recommend changing one parameter at a time in a controlled manner to determine
+the effects of the parameter change.
+
+We recommend accurately recording the parameter values used for any important
+results, ideally in a script or configuration file.
+
 
 Concurrency
 -----------
-The SNP Pipeline takes advantage of multiple CPU cores to run portions of the processing 
-in parallel.  However, concurrency can lead to non-deterministic behavior and different 
-results when the pipeline is run repeatedly.  The pipeline addresses known concurrency issues
-with bowtie and samtools.
+The SNP Pipeline takes advantage of multiple CPU cores to run portions of the
+processing in parallel.  However, concurrency can lead to non-deterministic behavior
+and different results when the pipeline is run repeatedly.  The pipeline addresses
+known concurrency issues with bowtie and samtools.
 
 **Bowtie**
 
-The SNP Pipeline uses multiple CPU cores during the bowtie alignment.  Unless told otherwise, 
-when bowtie runs multiple concurrent threads, it generates output records in the SAM file in 
-non-deterministic order.  The consequence of this is the SAM files and Pileup 
-files can differ between runs.  This may appear as two adjacent read-bases swapped in the 
-pileup files.
+The SNP Pipeline uses multiple CPU cores during the bowtie alignment.  Unless told
+otherwise, when bowtie runs multiple concurrent threads, it generates output records
+in the SAM file in non-deterministic order.  The consequence of this is the SAM
+files and Pileup files can differ between runs.  This may appear as two adjacent read-bases swapped in the pileup files.
 
-To workaround this problem, the pipeline uses the ``--reorder`` bowtie command line option.  
-The reorder option causes bowtie to generate output records in the same order as the
-reads in the input file.  This is discussed in the bowtie documentation here:
+To workaround this problem, the pipeline uses the ``--reorder`` bowtie command line
+option. The reorder option causes bowtie to generate output records in the same order
+as the reads in the input file.  This is discussed in the bowtie documentation here:
 http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#performance-options
 
 **SAMtools**
 
-The SNP Pipeline runs multiple samtools processes concurrently to generate pileups for
-each sample.  When the samtools pileup process runs, it checks for the existence of the
-reference faidx file, ``*.fai``.  If the faidx file does not exist, samtools creates it 
-automatically.  However, multiple samtools mpileup processes can interfere with each 
-other by attempting to create the file at the same time.  This interference causes 
-incorrect pipeline results.
+The SNP Pipeline runs multiple samtools processes concurrently to generate
+pileups for each sample.  When the samtools pileup process runs, it checks for the
+existence of the reference faidx file, ``*.fai``.  If the faidx file does not exist,
+samtools creates it automatically.  However, multiple samtools mpileup processes can
+interfere with each other by attempting to create the file at the same time.  This
+interference causes incorrect pipeline results.
 
-To workaround this problem, the pipeline explicitly creates the faidx file by running 
-``samtools faidx`` on the reference before running the mpileup processes.  This prevents errors 
-later when multiple samtools mpileup processes run concurrently.
-  
+To workaround this problem, the pipeline explicitly creates the faidx file by running
+``samtools faidx`` on the reference before running the mpileup processes.  This prevents errors later when multiple samtools mpileup processes run concurrently.
+
 
 Software Versions
 -----------------
-Different versions of the executable tools can generate different results.  This may be important
-if you intend to compare the results between runs.
+Different versions of the software packages this pipeline uses can generate different
+results.  This is important if you compare the results between runs. We share our
+observations from the versions of SAMtools and Bowtie that we have used below.
 
 **Bowtie**
 
 Bowtie 2.1.0 and 2.2.2 produce functionally identical SAM files.  The only difference
-observed is a header record in bowtie 2.2.2 documenting the program version and command line parameters.
+we observed is a header record in bowtie 2.2.2 documenting the program version and command line parameters.
 
 **SAMtools**
 
-Different versions of SAMtools can produce different pileup files which can subsequently impact
-the snp list and snp matrix.  SAMtools version 0.1.19 has the capability to exclude read bases 
-with low quality. By default, it excludes read bases with quality below 13 (95% accuracy).
-SAMtools mpileup version 0.1.18 does not filter read bases by quality and there is no option to 
-change this behavior.
+SAMtools mpileup version 0.1.18 and version 0.1.19 differ in their default behavior. Version 0.1.19 can filter out bases with low quality, and by default, it excludes
+bases with quality score below 13 (95% accuracy). Version 0.1.18 does not have this capability, and thus different versions of SAMtools mpileup when run with the default
+parameters can produce different pileup files which can impact the snp list and snp
+matrix.
 
 On one of our data sets with 116 samples, we observed these results:
 
 * 36030 snps found when pileups generated with SAMtools 0.1.18
 * 38154 snps found when pileups generated with SAMtools 0.1.19
+
+Correct Results
+===============
+
+Test Data Sets
+==============
+
+Lambda Virus
+------------
+This data set was built using the bowtie2 example, and intended to be a small
+test case and example that will run quickly and verify the basic functionality
+of the code.
+
+Salmonella Agona
+----------------
+This data set was designed to contain realistic sequences, but not very many
+of them, so that it could be run in a reasonable amount of time. The data must
+be downloaded from the NCBI due to its large size. We provide a file of hashes
+that can easily be used to verify that the data downloaded matches the data
+originally used to produce our results. (Use sha256sum at the unix command line.)
+
+Listeria monocytogenes
+----------------------
+This is designed to be a realistic-sized data set based on an outbreak of L. m.
+in Roos cheese. The data must
+be downloaded from the NCBI due to its large size. We provide a file of hashes
+that can easily be used to verify that the data downloaded matches the data
+originally used to produce our results. (Use sha256sum at the unix command line.)
+
+Synthetic data set 1
+--------------------
+This data set is a synthetic data set based on …. It was constructed as part of an effort to …
 
