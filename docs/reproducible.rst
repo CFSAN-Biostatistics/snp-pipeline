@@ -139,9 +139,10 @@ our own software and in the various packages we use. To this point we
 have found two problems worth mentioning here.
 
 **SAMtools first and last base SNPs not called**
+TODO
 
 **SAMtools snp pileup difference from genome-wide pileup**
-
+TODO
 
 Test Data Sets
 ==============
