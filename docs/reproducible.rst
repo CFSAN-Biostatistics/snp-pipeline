@@ -1,15 +1,15 @@
 .. _reproducible-label:
 
-====================
+================================
 Correct and Reproducible Results
-====================
+================================
 
 
 It is our goal to make the SNP Pipeline results both fully
 reproducible and as correct as current scientific understanding
 allows. As part of this effort, we document here problems we have
 found that have affected correctness. We also detail how we have built
-this software so that it is as reproducible as possible. In addition,
+this software so the results are as reproducible as possible. In addition,
 we are building, collecting, and collating data sets that we use to
 assess both correctness and reproducibility of our software. As a
 project that is made possible only by very recent developments in
@@ -31,7 +31,7 @@ Public Availability
 -------------------
 The SNP Pipeline source code is available on GitHub so anyone can download our
 source code. The GitHub repository contains some data sets that can be used to
-reproduce selected results. We also provide information on how to create and
+reproduce selected results. We also provide information on how to obtain and
 verify other data sets that we have used. (These data sets are large, so we
 do not provide them directly.)
 
@@ -134,15 +134,25 @@ On one of our data sets with 116 samples, we observed these results:
 Correct Results
 ===============
 
-As we have constructed out pipeline, we have found problems both in
+As we have constructed our pipeline, we have found problems both in
 our own software and in the various packages we use. To this point we
 have found two problems worth mentioning here.
 
 **SAMtools first and last base SNPs not called**
+
 TODO
 
 **SAMtools snp pileup difference from genome-wide pileup**
-TODO
+
+An important processing step in the SNP Pipeline is creation of a pileup 
+file per sample containing read pileups at the positions where snps were called 
+in *any* of the samples.  This pileup file should be a subset of the genome-wide
+pileup for each sample.  However, the SAMtools software does not generate 
+pileup records exactly matching the genome-wide pileup when given a list of 
+positions for which the pileup should be generated.  The differences are 
+particularly evident at the first few snp positions and cause missing
+values in the SNP matrix.  To work around this problem, the SNP Pipeline 
+internally extracts the desired pileup records from the genome-wide pileup.
 
 Test Data Sets
 ==============

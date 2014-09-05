@@ -50,12 +50,13 @@ Step 1 - Gather data::
     snppipeline/data/lambdaVirusInputs/samples/sample4/sample4_1.fastq
     snppipeline/data/lambdaVirusInputs/samples/sample4/sample4_2.fastq
 
-Step 2 - Prep work::
-
     # Copy the supplied test data to a work area:
     cd test
     copy_snppipeline_data.py lambdaVirusInputs testLambdaVirus
     cd testLambdaVirus
+
+Step 2 - Prep work::
+
     # Create files of sample directories and fastQ files:
     ls -d --color=never samples/* > sampleDirectories.txt
     rm sampleFullPathNames.txt 2>/dev/null
@@ -114,8 +115,6 @@ Step 1 - Gather data::
     snppipeline/data/agonaInputs/sha256sumCheck
     snppipeline/data/agonaInputs/reference/NC_011149.fasta
 
-Step 2 - Prep work::
-
     # Copy the supplied test data to a work area:
     cd test
     copy_snppipeline_data.py agonaInputs testAgona
@@ -138,6 +137,8 @@ Step 2 - Prep work::
     #     hashes that are saved in the sha256sumCheck file using sha256sum command, which is
     #     generally available on unix systems.
     sha256sum -c sha256sumCheck
+
+Step 2 - Prep work::
 
     # Create files of sample directories and fastQ files:
     ls -d --color=never samples/* > sampleDirectories.txt
