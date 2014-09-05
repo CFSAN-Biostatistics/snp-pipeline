@@ -3,5 +3,5 @@ What is in this directory:
 README                     - this file
 lambdaVirusInputs          - test data set
 lambdaVirusExpectedResults - correct SNP Pipeline output 
-agonaInputs                - test data set (reference only)
+agonaInputs                - test data set (reference only) and SHA hashes for data integrity check
 agonaExpectedResults       - correct SNP Pipeline output
