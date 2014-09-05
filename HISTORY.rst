@@ -34,6 +34,10 @@ History
   version 0.1.19.  SAMtools mpileup version 0.1.19 excludes read bases with low quality.
   As a reminder, the expected results files are fetched with the copy_snppipeline_data.py 
   script.
+* The copy_snppipeline_data.py script handles existing destination directories more 
+  sensibly now.  The example data is copied into the destination directory if the directory
+  already exists.  Otherwise the destination directory is created and the example data
+  files are copied there.
 
 
 0.1.1 (2014-07-28)

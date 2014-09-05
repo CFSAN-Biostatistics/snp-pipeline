@@ -43,7 +43,9 @@ $ copy_snppipeline_data.py lambdaVirusInputs testLambdaVirus
     nargs='?', 
     type=str,   
     default='.',  
-    help="""    Destination directory into which the SNP pipeline example data will be copied. 
+    help="""    Destination directory into which the SNP pipeline example data will be copied.
+    The example data is copied into the destination directory if the directory already exists.  
+    Otherwise the destination directory is created and the example data files are copied there. 
     (default: current directory)""")
 
     args_dict = vars(parser.parse_args())
@@ -51,7 +53,10 @@ $ copy_snppipeline_data.py lambdaVirusInputs testLambdaVirus
     #print 'whichData=' + args_dict['whichData']
     #print 'destDirectory=' + args_dict['destDirectory']
 
-    command = 'cp -r ' + data_directory + '/' + args_dict['whichData'] + ' ' + args_dict['destDirectory']
+    if os.path.isdir(args_dict['destDirectory']):
+        command = 'cp -r ' + data_directory + '/' + args_dict['whichData'] + '/* ' + args_dict['destDirectory']
+    else:
+        command = 'cp -r ' + data_directory + '/' + args_dict['whichData'] + ' ' + args_dict['destDirectory']
 
     #print command
     return_code = subprocess.call(command, shell=True)
