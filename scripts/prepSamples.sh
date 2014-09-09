@@ -10,19 +10,19 @@
 #        Steven C. Davis (scd)
 #Purpose: Preps sample sequence data for snppipline code.
 #Input:
-#    referenceDir/referenceName (without the .fasta extension)
+#    referenceDir/referenceName
 #    sampleDir
 #Output:
 #    various files too tedious to explain
 #    written into the same directories containing the input sample fastq files
 #Use example:
 #   On workstation with one sample, unpaired
-#       prepSamples.sh Users/NC_011149 Users/ERR178926
+#       prepSamples.sh Users/NC_011149.fasta Users/ERR178926
 #   On workstation with multiple samples
 #       ls -d --color=never samples/* > sampleDirectoryNames.txt
-#       cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh reference/NC_011149
+#       cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh reference/NC_011149.fasta
 #   On a workstation with gnu parallel:
-#       cat sampleDirectoryNames.txt | parallel prepSamples.sh reference/NC_011149
+#       cat sampleDirectoryNames.txt | parallel prepSamples.sh reference/NC_011149.fasta
 #   With PBS
 #       qsub -d $PWD temp.sh ERR178926 NC_011149
 #       qsub -d $PWD temp1.sh
@@ -32,59 +32,128 @@
 #   20140623-scd: Changes for varscan.
 #   20140715-scd: Moved the bowtie align to the alignSampleToReference.sh script.
 #   20140728-scd: Log the executed commands with all options to stdout.
+#   20140905-scd: Use getopts to parse the command arguments.  Improved online help.
+#   20140905-scd: Expects the full file name of the reference on the command line.
 #Notes:
 #
 #Bugs:
 #   1. Should add prints to stdout to show progress to user
 #
 
-#Process arguments
+usage()
+{
+    echo usage: $0 [-h] referenceFile sampleDir
+    echo
+    echo 'Find variants in a specified sample.'
+    echo 'The output files are written to the sample directory.'
+    echo
+    echo 'positional arguments:'
+    echo '  referenceFile    : Relative or absolute path to the reference fasta file'
+    echo '  sampleDir        : Relative or absolute directory of the sample'
+    echo
+    echo 'options:'
+    echo '  -h               : Show this help message and exit'
+    echo
+}
 
-if (($# < 2)) || (($# > 3)); then
-    echo usage: $0 referencePath sampleDir
-    echo '      referencePath : relative or absolute path to the reference, without the .fasta extension'
-    echo '      sampleDir     : directory containing the sample'
+# --------------------------------------------------------
+# getopts command line option handler: 
+
+# For each valid option, 
+#   If it is given, create a var dynamically to
+#   indicate it is set: $opt_name_set = 1
+
+#   If var gets an arg, create another var to
+#   hold its value: $opt_name_arg = some value
+
+# For invalid options given, 
+#   Invoke Usage routine
+
+# precede option list with a colon
+# option list is a list of allowed option characters
+# options that require an arg are followed by a colon
+
+# example: ":abc:d"
+# -abc 14 -d
+
+while getopts ":h" option; do
+  if [ "$option" = "h" ]; then
+    usage
+    exit 0
+  elif [ "$option" = "?" ]; then
+    echo
+    echo "Invalid option -- '$OPTARG'"
+    usage
     exit 1
+  elif [ "$option" = ":" ]; then
+    echo
+    echo "Missing argument for option -- '$OPTARG'"
+    usage
+    exit 2
+  else
+    declare opt_"$option"_set="1"
+    if [ "$OPTARG" != "" ]; then
+      declare opt_"$option"_arg="$OPTARG"
+    fi
+  fi
+done
+
+# --------------------------------------------------------
+# get the arguments
+
+shift $((OPTIND-1))
+referenceFilePath="$1"
+if [ "$referenceFilePath" = "" ]; then
+  echo "Missing reference file"
+  echo
+  usage
+  exit 3
 fi
 
-REFERENCEPATH=$1
-SAMPLEDIR=$2
-SAMPLEID=${SAMPLEDIR##*/} # strip the parent directories
+sampleDir="$2"
+if [ "$sampleDir" = "" ]; then
+  echo "Missing sample directory"
+  echo
+  usage
+  exit 4
+fi
+
+sampleId=${sampleDir##*/} # strip the parent directories
 
 #Check if bam file exists; if not convert to bam file with only mapped positions
-if [ -s $SAMPLEDIR/reads.bam ]; then
-    echo '**Bam file already exists for '$SAMPLEID
+if [ -s $sampleDir/reads.bam ]; then
+    echo '**Bam file already exists for '$sampleId
 else
     echo '**Convert sam file to bam file with only mapped positions.'
-    echo "# "$(date +"%Y-%m-%d %T") samtools view -bS -F 4 -o $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads.sam'
+    echo "# "$(date +"%Y-%m-%d %T") samtools view -bS -F 4 -o $sampleDir/'reads.unsorted.bam' $sampleDir/'reads.sam'
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-    samtools view -bS -F 4 -o $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads.sam'
+    samtools view -bS -F 4 -o $sampleDir/'reads.unsorted.bam' $sampleDir/'reads.sam'
     #Convert to a sorted bam
     echo '**Convert bam to sorted bam file.'
-    echo "# "$(date +"%Y-%m-%d %T") samtools sort $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads'
+    echo "# "$(date +"%Y-%m-%d %T") samtools sort $sampleDir/'reads.unsorted.bam' $sampleDir/'reads'
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-    samtools sort $SAMPLEDIR/'reads.unsorted.bam' $SAMPLEDIR/'reads'
+    samtools sort $sampleDir/'reads.unsorted.bam' $sampleDir/'reads'
 fi
 
 #Check if pileup present; if not create it 
-if [ -s $SAMPLEDIR/'reads.all.pileup' ]; then
-    echo '**'$SAMPLEID'.pileup already exists'
+if [ -s $sampleDir/'reads.all.pileup' ]; then
+    echo '**'$sampleId'.pileup already exists'
 else
     echo '**Create pileup from bam file.'
-    echo "# "$(date +"%Y-%m-%d %T") samtools mpileup -f $REFERENCEPATH'.fasta' $SAMPLEDIR/'reads.bam'
+    echo "# "$(date +"%Y-%m-%d %T") samtools mpileup -f $referenceFilePath $sampleDir/'reads.bam'
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-    samtools mpileup -f $REFERENCEPATH'.fasta' $SAMPLEDIR/'reads.bam' > $SAMPLEDIR/'reads.all.pileup'
+    samtools mpileup -f $referenceFilePath $sampleDir/'reads.bam' > $sampleDir/'reads.all.pileup'
 fi
 
 #Check if unfiltered vcf exists; if not create it
-if [ -s $SAMPLEDIR/'var.flt.vcf' ]; then
-    echo '**vcf file already exists for '$SAMPLEID
+if [ -s $sampleDir/'var.flt.vcf' ]; then
+    echo '**vcf file already exists for '$sampleId
 else
     echo '**Create vcf file'
     if [ ! -z "$CLASSPATH" ]; then
-        echo "# "$(date +"%Y-%m-%d %T") java net.sf.varscan.VarScan mpileup2snp $SAMPLEDIR/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1
+        echo "# "$(date +"%Y-%m-%d %T") java net.sf.varscan.VarScan mpileup2snp $sampleDir/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1
         echo "# "$(java net.sf.varscan.VarScan 2>&1 > /dev/null | head -n 1)
-        java net.sf.varscan.VarScan mpileup2snp $SAMPLEDIR/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1 > $SAMPLEDIR/'var.flt.vcf'
+        java net.sf.varscan.VarScan mpileup2snp $sampleDir/'reads.all.pileup' --min-var-freq 0.90 --output-vcf 1 > $sampleDir/'var.flt.vcf'
     else
         echo '*** Error: cannot execute VarScan. Define the path to VarScan in the CLASSPATH environment variable.'
         exit 2

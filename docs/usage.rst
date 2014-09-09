@@ -66,17 +66,17 @@ Step 2 - Prep work::
 
 Step 3 - Prep the reference::
 
-    prepReference.sh reference/lambda_virus
+    prepReference.sh reference/lambda_virus.fasta
 
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
-    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES reference/lambda_virus
+    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh -p $NUMCORES reference/lambda_virus.fasta
 
 Step 5 - Prep the samples::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/lambda_virus
+    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/lambda_virus.fasta
 
 Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -119,8 +119,10 @@ Step 1 - Gather data::
     cd test
     copy_snppipeline_data.py agonaInputs testAgona
     cd testAgona
+    
     # Create sample directories
     mkdir -p samples/ERR178926  samples/ERR178927  samples/ERR178928  samples/ERR178929  samples/ERR178930
+    
     # Download sample data from SRA at NCBI. Note that we use the fastq-dump command from
     #   the NCBI SRA-toolkit to fetch sample sequences. There are other ways to get the data,
     #   but the SRA-toolkit is easy to install, and does a good job of downloading large
@@ -130,6 +132,7 @@ Step 1 - Gather data::
     fastq-dump --split-files --outdir samples/ERR178928 ERR178928
     fastq-dump --split-files --outdir samples/ERR178929 ERR178929
     fastq-dump --split-files --outdir samples/ERR178930 ERR178930
+    
     # Check the data
     #   The original data was used to generate a hash as follows:
     #     sha256sum reference/*.fasta samples/*/*.fastq > sha256sumCheck
@@ -149,17 +152,17 @@ Step 2 - Prep work::
 
 Step 3 - Prep the reference::
 
-    prepReference.sh reference/NC_011149
+    prepReference.sh reference/NC_011149.fasta
 
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
-    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES reference/NC_011149
+    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh -p $NUMCORES reference/NC_011149.fasta
 
 Step 5 - Prep the samples::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/NC_011149
+    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/NC_011149.fasta
 
 Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -215,29 +218,32 @@ Step 2 - Prep work::
     cp -r myProject myProjectClean
     # The SNP pipeline will generate additional files into the reference and sample directories
     cd myProject
-    # Create files of sample directories and fastQ files:
+    
+    # Create file of sample directories:
     ls -d --color=never samples/* > sampleDirectories.txt
-    rm sampleFullPathNames.txt 2>/dev/null
-    cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
+    
+    # get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
+    TMPFILE1=$(mktemp tmp.fastqs.XXXXXXXX)
+    cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq* >> $TMPFILE1; echo $dir/*.fq* >> $TMPFILE1; done
+    grep -v '*.fq*' $TMPFILE1 | grep -v '*.fastq*' > sampleFullPathNames.txt
+    rm $TMPFILE1
+    
     # Determine the number of CPU cores in your computer
     NUMCORES=$(grep -c ^processor /proc/cpuinfo)
 
 Step 3 - Prep the reference::
 
-    # Note: do not specify the .fasta file extension here
-    prepReference.sh reference/my_reference
+    prepReference.sh reference/my_reference.fasta
 
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
-    # Note: do not specify the .fasta file extension here
-    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES reference/my_reference
+    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh -p $NUMCORES reference/my_reference.fasta
 
 Step 5 - Prep the samples::
 
     # Process the samples in parallel using all CPU cores
-    # Note: do not specify the .fasta file extension here
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/my_reference
+    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/my_reference.fasta
 
 Step 6 - Combine the SNP positions across all samples into the SNP list file::
 

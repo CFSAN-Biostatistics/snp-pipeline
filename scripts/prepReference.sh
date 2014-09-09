@@ -10,73 +10,110 @@
 #        Steven C. Davis (scd)
 #Purpose: Prep the reference sequence for snppipline code.
 #Input:
-#    referenceDir/referenceName (without the fasta extension)
+#    referenceDir/referenceFilePath (with the fasta extension)
 #Output:
 #    bowtie index files from reference sequence written to the reference subdirectory
 #Use example:
-#   prepReference.sh reference/ERR178926
+#   prepReference.sh reference/ERR178926.fasta
 #History:
 #   20140512-har: Started.
 #   20140520-har: Download of sequence moved to different script.
 #   20140612-scd: Removed the hardcoded path to bowtie2.  It must be on the $PATH now.
 #   20140623-scd: Changed calling convention to match prepSamples.sh -- referenceDir is expected in the command parameter
 #   20140721-scd: Print the bowtie version and command line to facilitate troubleshooting
+#   20140905-scd: Use getopts to parse the command arguments.  Improved online help.
+#   20140905-scd: Expects the full file name of the reference on the command line.
 #Notes:
-#   1. Assumes a file named 'referenceName.fasta' is in the referenceDir directory
+#
 #Bugs:
 #
 #References:
 #   http://stackoverflow.com/questions/14008125/shell-script-common-template
 #
 
-#Setup-------------------------------------------------------------
+usage()
+{
+    echo usage: $0 [-h] referenceFile
+    echo
+    echo 'Index the reference genome for subsequent alignment, and create'
+    echo 'the faidx index file for subsequent pileups. The output is written'
+    echo 'to the reference directory.'
+    echo
+    echo 'positional arguments:'
+    echo '  referenceFile    : Relative or absolute path to the reference fasta file'
+    echo
+    echo 'options:'
+    echo '  -h               : Show this help message and exit'
+    echo
+}
 
-USAGE="-h referencePath"
+# --------------------------------------------------------
+# getopts command line option handler: 
 
-#Options processing------------------------------------------------
+# For each valid option, 
+#   If it is given, create a var dynamically to
+#   indicate it is set: $opt_name_set = 1
 
-if [ $# == 0 ] ; then
-    echo usage: $0 referencePath
-    exit 1;
+#   If var gets an arg, create another var to
+#   hold its value: $opt_name_arg = some value
+
+# For invalid options given, 
+#   Invoke Usage routine
+
+# precede option list with a colon
+# option list is a list of allowed option characters
+# options that require an arg are followed by a colon
+
+# example: ":abc:d"
+# -abc 14 -d
+
+while getopts ":h" option; do
+  if [ "$option" = "h" ]; then
+    usage
+    exit 0
+  elif [ "$option" = "?" ]; then
+    echo
+    echo "Invalid option -- '$OPTARG'"
+    usage
+    exit 1
+  elif [ "$option" = ":" ]; then
+    echo
+    echo "Missing argument for option -- '$OPTARG'"
+    usage
+    exit 2
+  else
+    declare opt_"$option"_set="1"
+    if [ "$OPTARG" != "" ]; then
+      declare opt_"$option"_arg="$OPTARG"
+    fi
+  fi
+done
+
+# --------------------------------------------------------
+# get the arguments
+
+shift $((OPTIND-1))
+referenceFilePath="$1"
+if [ "$referenceFilePath" = "" ]; then
+  echo "Missing reference file"
+  echo
+  usage
+  exit 3
 fi
 
-while getopts "h" optname
-  do
-    case "$optname" in
-      "h")
-	echo usage: $0 referencePath
-        exit 0;
-        ;;
-      "?")
-        echo "Unknown option $OPTARG"
-        exit 0;
-        ;;
-      ":")
-        echo "No argument value for option $OPTARG"
-        exit 0;
-        ;;
-      *)
-        echo "Unknown error while processing options"
-        exit 0;
-        ;;
-    esac
-  done
-
-shift $(($OPTIND - 1))
-
-REFERENCEPATH=$1
+referenceBasePath=${referenceFilePath%.fasta} # strip the file extension
 
 #Body--------------------------------------------------------------
 
 #Create index file for reference
-echo "# "$(date +"%Y-%m-%d %T") bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH
+echo "# "$(date +"%Y-%m-%d %T") bowtie2-build $referenceFilePath $referenceBasePath
 echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
-bowtie2-build $REFERENCEPATH'.fasta' $REFERENCEPATH
+bowtie2-build $referenceFilePath $referenceBasePath
 
 #Create fai index
-echo "# "$(date +"%Y-%m-%d %T") samtools faidx $REFERENCEPATH'.fasta'
+echo "# "$(date +"%Y-%m-%d %T") samtools faidx $referenceFilePath
 echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-samtools faidx $REFERENCEPATH'.fasta'
+samtools faidx $referenceFilePath
 
 echo "# "$(date +"%Y-%m-%d %T") prepReference.sh finished
 

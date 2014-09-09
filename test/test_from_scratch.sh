@@ -70,17 +70,19 @@ cp -v -r -s $CLEANDIR $WORKDIR
 cd $WORKDIR
 # get sample directories sorted by size, largest first
 ls -d samples/* | xargs ls -L -s -m | grep -E "(samples|total)" | sed 'N;s/\n//;s/:total//' | sort -k 2 -n -r | cut -f 1 -d " " > sampleDirectories.txt
-rm sampleFullPathNames.txt 2>/dev/null
-cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
 sampleCount=$(cat sampleDirectories.txt | wc -l)
+# get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
+TMPFILE1=$(mktemp tmp.fastqs.XXXXXXXX)
+cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq* >> $TMPFILE1; echo $dir/*.fq* >> $TMPFILE1; done
+grep -v '*.fq*' $TMPFILE1 | grep -v '*.fastq*' > sampleFullPathNames.txt
+rm $TMPFILE1
 
 echo -e "\nStep 2 - Prep the reference"
-referencePath=$(ls reference/*.fasta)
-referenceBasePath=${referencePath%.fasta} # strip the file extension
+referenceFilePath=$(ls reference/*.fasta)
 if [[ $PLATFORM == torque ]]; then
-    prepReferenceJobId=$(echo prepReference.sh $referenceBasePath | qsub -d $WORKDIR -N job.prepReference -j oe)
+    prepReferenceJobId=$(echo prepReference.sh $referenceFilePath | qsub -d $WORKDIR -N job.prepReference -j oe)
 else
-    prepReference.sh $referenceBasePath
+    prepReference.sh $referenceFilePath
 fi
 
 echo -e "\nStep 3 - Align the samples to the reference"
@@ -88,11 +90,11 @@ if [[ $PLATFORM == torque ]]; then
     numAlignThreads=8
     alignSamplesJobId=$(echo | qsub -t 1-$sampleCount -d $WORKDIR -N job.alignSamples -j oe -W depend=afterok:$prepReferenceJobId -l nodes=1:ppn=$numAlignThreads << _EOF_
     alignSamplesParameters=\$(cat sampleFullPathNames.txt | head -n \$PBS_ARRAYID | tail -n 1)
-    alignSampleToReference.sh $numAlignThreads $referenceBasePath \$alignSamplesParameters
+    alignSampleToReference.sh -p $numAlignThreads $referenceFilePath \$alignSamplesParameters
 _EOF_
 )
 else
-    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES $referenceBasePath
+    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh -p $NUMCORES $referenceFilePath
 fi
 
 echo -e "\nStep 4 - Prep the samples"
@@ -100,11 +102,11 @@ if [[ $PLATFORM == torque ]]; then
     alignSamplesJobArray=${alignSamplesJobId%%.*}
     prepSamplesJobId=$(echo | qsub -t 1-$sampleCount -d $WORKDIR -N job.prepSamples -j oe -W depend=afterokarray:$alignSamplesJobArray << _EOF_
     sampleDir=\$(cat sampleDirectories.txt | head -n \$PBS_ARRAYID | tail -n 1)
-    prepSamples.sh $referenceBasePath \$sampleDir
+    prepSamples.sh $referenceFilePath \$sampleDir
 _EOF_
 )
 else
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh $referenceBasePath
+    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh $referenceFilePath
 fi
 
 echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP list file"
@@ -139,9 +141,9 @@ fi
 
 echo -e "\nStep 8 - Create the reference base sequence"
 if [[ $PLATFORM == torque ]]; then
-    echo create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta $referencePath | qsub -d $WORKDIR -N job.snpReference -j oe -W depend=afterokarray:$snpPileupJobArray
+    echo create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta $referenceFilePath | qsub -d $WORKDIR -N job.snpReference -j oe -W depend=afterokarray:$snpPileupJobArray
 else
-    create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta $referencePath
+    create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta $referenceFilePath
 fi
 
 echo -e "\nStep 9 - compare results"

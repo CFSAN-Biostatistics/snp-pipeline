@@ -3,19 +3,20 @@
 History
 -------
 
-0.1.2 (2014-08-xx)
+0.1.3 (2014-09-xx)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
 
 **Other Changes:**
 
-*Note the loss of backward compatibilty for existing workflows using create_snp_matrix.py*
+*Note the loss of backward compatibilty for existing workflows using prepReference.sh, 
+alignSampleToReference.sh, prepSamples.sh, create_snp_matrix.py*
 
 * Split the create_snp_matrix script into 4 smaller scripts to simplify the code
   and improve performance when processing many samples in parallel.  Refer to the 
-  :ref:`usage-label` section for the revised step-by-step usage instructions.
-* The rewritten python scripts emit their version number, arguments, run timestamps, 
+  :ref:`usage-label` section for the revised step-by-step usage instructions. The 
+  rewritten python scripts emit their version number, arguments, run timestamps, 
   and other diagnostic information to stdout.
 * Changed the default name of the reads.pileup file to reads.snp.pileup.  You can
   override this on the command line of the create_snp_pileup.py script.
@@ -39,10 +40,20 @@ History
 * Updated the supplied expected result files for the Agona data set.  Note that due to 
   the large file sizes, the Agona expected results data set does not contain all 
   the intermediate output files.
+* Improved the online help (usage) for all scripts.
 * The copy_snppipeline_data.py script handles existing destination directories more 
   sensibly now.  The example data is copied into the destination directory if the directory
   already exists.  Otherwise the destination directory is created and the example data
   files are copied there.
+* Changed the alignSampleToReference.sh script to specify the number of CPU cores with
+  the -p flag, rather than a positional argument.  By default, all CPU cores are 
+  utilized during the alignment.
+* Changed the alignSampleToReference.sh script to expect the full file name of the reference
+  including the fasta extension, if any.
+* Changed the prepReference.sh script to expect the full file name of the reference
+  including the fasta extension, if any.
+* Changed the prepSamples.sh script to expect the full file name of the reference
+  including the fasta extension, if any.
 
 
 0.1.1 (2014-07-28)
