@@ -34,6 +34,11 @@ History
   version 0.1.19.  SAMtools mpileup version 0.1.19 excludes read bases with low quality.
   As a reminder, the expected results files are fetched with the copy_snppipeline_data.py 
   script.
+* Updated the usage instructions, illustrating how to download the Agona samples from
+  NCBI and how to run the SNP Pipeline on the Agona data set.
+* Updated the supplied expected result files for the Agona data set.  Note that due to 
+  the large file sizes, the Agona expected results data set does not contain all 
+  the intermediate output files.
 * The copy_snppipeline_data.py script handles existing destination directories more 
   sensibly now.  The example data is copied into the destination directory if the directory
   already exists.  Otherwise the destination directory is created and the example data
