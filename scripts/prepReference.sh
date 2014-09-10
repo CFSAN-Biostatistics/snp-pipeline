@@ -23,6 +23,7 @@
 #   20140721-scd: Print the bowtie version and command line to facilitate troubleshooting
 #   20140905-scd: Use getopts to parse the command arguments.  Improved online help.
 #   20140905-scd: Expects the full file name of the reference on the command line.
+#   20140910-scd: Outputs are not rebuilt when already fresh, unless the -f (force) option is specified.
 #Notes:
 #
 #Bugs:
@@ -33,17 +34,18 @@
 
 usage()
 {
-    echo usage: $0 [-h] referenceFile
+    echo usage: $0 [-h] [-f] referenceFile
     echo
     echo 'Index the reference genome for subsequent alignment, and create'
     echo 'the faidx index file for subsequent pileups. The output is written'
     echo 'to the reference directory.'
     echo
-    echo 'positional arguments:'
+    echo 'Positional arguments:'
     echo '  referenceFile    : Relative or absolute path to the reference fasta file'
     echo
-    echo 'options:'
+    echo 'Options:'
     echo '  -h               : Show this help message and exit'
+    echo '  -f               : Force processing even when result files already exist and are newer than inputs'
     echo
 }
 
@@ -67,7 +69,7 @@ usage()
 # example: ":abc:d"
 # -abc 14 -d
 
-while getopts ":h" option; do
+while getopts ":hf" option; do
   if [ "$option" = "h" ]; then
     usage
     exit 0
@@ -103,18 +105,22 @@ fi
 
 referenceBasePath=${referenceFilePath%.fasta} # strip the file extension
 
-#Body--------------------------------------------------------------
-
 #Create index file for reference
-echo "# "$(date +"%Y-%m-%d %T") bowtie2-build $referenceFilePath $referenceBasePath
-echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
-bowtie2-build $referenceFilePath $referenceBasePath
+if [[ $opt_f_set != "1" && "$referenceBasePath.rev.1.bt2" -nt "$referenceFilePath" ]]; then
+    echo "# Bowtie index is already freshly built: $referenceBasePath.rev.1.bt2"
+else
+    echo "# "$(date +"%Y-%m-%d %T") bowtie2-build "$referenceFilePath" "$referenceBasePath"
+    echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
+    bowtie2-build "$referenceFilePath" "$referenceBasePath"
+fi
 
 #Create fai index
-echo "# "$(date +"%Y-%m-%d %T") samtools faidx $referenceFilePath
-echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-samtools faidx $referenceFilePath
+if [[ "$opt_f_set" != "1" && "$referenceFilePath.fai" -nt "$referenceFilePath" ]]; then
+    echo "# SAMtools fai index is already freshly built: $referenceFilePath.fai"
+else
+    echo "# "$(date +"%Y-%m-%d %T") samtools faidx "$referenceFilePath"
+    echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
+    samtools faidx "$referenceFilePath"
+fi
 
 echo "# "$(date +"%Y-%m-%d %T") prepReference.sh finished
-
-#Wrap Up-----------------------------------------------------------

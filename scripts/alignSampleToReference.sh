@@ -40,6 +40,7 @@
 #   20140721-scd: Print the bowtie version and command line to facilitate troubleshooting
 #   20140903-scd: Use getopts to parse the command arguments.  Changed the calling convention.
 #   20140905-scd: Expects the full file name of the reference on the command line.
+#   20140910-scd: Outputs are not rebuilt when already fresh, unless the -f (force) option is specified.
 #Notes:
 #
 #Bugs:
@@ -48,19 +49,20 @@
 
 usage()
 {
-    echo usage: $0 [-h] [-p INT] referenceFile sampleFastqFile1 [sampleFastqFile2]
+    echo usage: $0 [-h] [-f] [-p INT] referenceFile sampleFastqFile1 [sampleFastqFile2]
     echo
     echo 'Align the sequence reads for a specified sample to a specified reference genome.'
     echo 'The output is written to the file "reads.sam" in the sample directory.'
     echo
-    echo 'positional arguments:'
+    echo 'Positional arguments:'
     echo '  referenceFile    : Relative or absolute path to the reference fasta file'
     echo '  sampleFastqFile1 : Relative or absolute path to the fastq file'
     echo '  sampleFastqFile2 : Optional relative or absolute path to the mate fastq file, if paired'
     echo
-    echo 'options:'
+    echo 'Options:'
     echo '  -h               : Show this help message and exit'
     echo '  -p INT           : Number of CPU cores to use concurrently during bowtie alignment (default: all)'
+    echo '  -f               : Force processing even when result files already exist and are newer than inputs'
     echo
 }
 
@@ -84,7 +86,7 @@ usage()
 # example: ":abc:d"
 # -abc 14 -d
 
-while getopts ":p:h" option; do
+while getopts ":p:hf" option; do
   if [ "$option" = "h" ]; then
     usage
     exit 0
@@ -159,18 +161,23 @@ fi
 # exit 0 
 
 #Check if alignment to reference has been done; if not align sequences to reference
-if [ -s $sampleDir/reads.sam ]; then
-    echo '**'$sampleId' has already been aligned to '$referenceId
-else
-    echo '**Align sequence '$sampleId' to reference '$referenceId
-    if [ $sampleFilePath2 ]; then
-        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x $referenceBasePath -1 $sampleFilePath1 -2 $sampleFilePath2
+if [ $sampleFilePath2 ]; then
+    if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]; then
+        echo "# $sampleId has already been aligned to $referenceId"
+    else
+        echo "# Align sequence $sampleId to reference $referenceId"
+        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x "$referenceBasePath" -1 "$sampleFilePath1" -2 "$sampleFilePath2"
         echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
         bowtie2 -p $numCores --reorder -q -x $referenceBasePath -1 $sampleFilePath1 -2 $sampleFilePath2 > $sampleDir/'reads.sam'
-    else
-        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x $referenceBasePath $sampleFilePath1
-        echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
-        bowtie2 -p $numCores --reorder -q -x $referenceBasePath $sampleFilePath1 > $sampleDir/'reads.sam'
     fi
-    echo $(date +"# %Y-%m-%d %T") alignSampleToReference.sh finished
+else
+    if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]; then
+        echo "# $sampleId has already been aligned to $referenceId"
+    else
+        echo "# Align sequence $sampleId to reference $referenceId"
+        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x "$referenceBasePath" "$sampleFilePath1"
+        echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
+        bowtie2 -p $numCores --reorder -q -x "$referenceBasePath" "$sampleFilePath1" > "$sampleDir/reads.sam"
+    fi
 fi
+echo $(date +"# %Y-%m-%d %T") alignSampleToReference.sh finished

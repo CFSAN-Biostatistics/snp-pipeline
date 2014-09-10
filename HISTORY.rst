@@ -48,12 +48,13 @@ alignSampleToReference.sh, prepSamples.sh, create_snp_matrix.py*
 * Changed the alignSampleToReference.sh script to specify the number of CPU cores with
   the -p flag, rather than a positional argument.  By default, all CPU cores are 
   utilized during the alignment.
-* Changed the alignSampleToReference.sh script to expect the full file name of the reference
-  including the fasta extension, if any.
-* Changed the prepReference.sh script to expect the full file name of the reference
-  including the fasta extension, if any.
-* Changed the prepSamples.sh script to expect the full file name of the reference
-  including the fasta extension, if any.
+* Changed the shell scripts (prepReference.sh, alignSampleToReference.sh, prepSamples.sh) 
+  to expect the full file name of the reference including the fasta extension, if any.
+* Changed the shell scripts (prepReference.sh, alignSampleToReference.sh, prepSamples.sh) 
+  to skip processing steps when result files already exist and are newer than the input 
+  files.  If you modify an upstream file, any dependent downstream files will be rebuilt.  
+  You can force processing regardless of file timestamps with the ``-f`` option.
+* Changed the name of the sorted bam file to reads.sorted.bam.
 
 
 0.1.1 (2014-07-28)
