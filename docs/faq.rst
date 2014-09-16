@@ -39,7 +39,7 @@ can be found.  See also: the :ref:`installation-label` section of this documenta
 
 **Q: How can I verify the pipeline is installed and working properly?**
 
-A: The SNP Pipeline includes a small set of test data with result files.  You can run the pipeline against the 
+A: The SNP Pipeline includes two small sets of test data with result files.  You can run the pipeline against the 
 test data to verify correct results.  Follow the lambda virus workflow steps in the :ref:`usage-label` section.
 
 Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
@@ -66,6 +66,11 @@ Note: the expected pipeline results are also included in the distribution.  To f
 
     copy_snppipeline_data.py lambdaVirusExpectedResults myDirectoryForExpectedResults
 
+After verifying correct results on the lambda data set, you can follow the workflow steps for the agona test data
+set.  To fetch the expected result files::
+
+    copy_snppipeline_data.py agonaExpectedResults myDirectoryForExpectedResults
+
 **Q: My results for the included test data do not match the expected results. What is the cause?**
 
 A: Different versions of the executable tools can generate different results.  The test data was generated with 
@@ -80,11 +85,11 @@ these versions:
 A: Run the alignSampleToReference script once per sample with either 1 fastq file or 2 fastq files.  See 
 the following example::
 
-    alignSampleToReference.sh  8  reference/NC_011149  samples/CFSAN000448/G0H235M04.RL10.fastq
-    alignSampleToReference.sh  8  reference/NC_011149  samples/CFSAN000449/G00JH2D03.RL11.fastq
-    alignSampleToReference.sh  8  reference/NC_011149  samples/CFSAN000450/HB4DJL101.RL1.fastq
-    alignSampleToReference.sh  8  reference/NC_011149  samples/ERR178930/ERR178930_1.fastq  samples/ERR178930/ERR178930_2.fastq
-    alignSampleToReference.sh  8  reference/NC_011149  samples/ERR178931/ERR178931_1.fastq  samples/ERR178931/ERR178931_2.fastq
+    alignSampleToReference.sh  reference/NC_011149  samples/CFSAN000448/G0H235M04.RL10.fastq
+    alignSampleToReference.sh  reference/NC_011149  samples/CFSAN000449/G00JH2D03.RL11.fastq
+    alignSampleToReference.sh  reference/NC_011149  samples/CFSAN000450/HB4DJL101.RL1.fastq
+    alignSampleToReference.sh  reference/NC_011149  samples/ERR178930/ERR178930_1.fastq  samples/ERR178930/ERR178930_2.fastq
+    alignSampleToReference.sh  reference/NC_011149  samples/ERR178931/ERR178931_1.fastq  samples/ERR178931/ERR178931_2.fastq
 
 
 

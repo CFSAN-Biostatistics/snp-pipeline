@@ -3,10 +3,24 @@
 History
 -------
 
-0.1.3 (2014-09-xx)
+0.2.0 (2014-09-16)
 ~~~~~~~~~~~~~~~~~~
 
-**Bug fixes:**
+**Changes Impacting Results:**
+
+* Previously, the pipeline executed SAMtools mpileup twice -- the first pileup across 
+  the whole genome, and the second pileup restricted to those positions where snps 
+  were identified by varscan in *any* of the samples.  This release removes the 
+  second SAMtools pileup, and generates the snp pileup file by simply extracting a 
+  subset of the pileup records from the genome-wide pileup at the positions where 
+  variants were found in *any* sample.  The consequence of this change is faster run 
+  times, but also an improvement to the results -- there will be fewer missing 
+  values in the snp matrix.
+* Changed the the supplied lambda virus expected results data set to match the 
+  results obtained with the pipeline enhancements in this release and now using SAMtools
+  version 0.1.19.  SAMtools mpileup version 0.1.19 excludes read bases with low quality.
+  As a reminder, the expected results files are fetched with the copy_snppipeline_data.py 
+  script.
 
 **Other Changes:**
 
@@ -20,21 +34,8 @@ alignSampleToReference.sh, prepSamples.sh, create_snp_matrix.py*
   and other diagnostic information to stdout.
 * Changed the default name of the reads.pileup file to reads.snp.pileup.  You can
   override this on the command line of the create_snp_pileup.py script.
-* Previously, the pipeline executed SAMtools mpileup twice -- the first pileup across 
-  the whole genome, and the second pileup restricted to those positions where snps 
-  were identified by varscan in *any* of the samples.  This release removes the 
-  second SAMtools pileup, and generates the snp pileup file by simply extracting a 
-  subset of the pileup records from the genome-wide pileup at the positions where 
-  variants were found in *any* sample.  The consequence of this change is faster run 
-  times, but also an improvement to the results -- there will be fewer missing 
-  values in the snp matrix.
 * Added the referenceSNP.fasta file to the supplied lambda virus expected results 
   data set.
-* Changed the the supplied lambda virus expected results data set to match the 
-  results obtained with the pipeline enhancements in this release and now using SAMtools
-  version 0.1.19.  SAMtools mpileup version 0.1.19 excludes read bases with low quality.
-  As a reminder, the expected results files are fetched with the copy_snppipeline_data.py 
-  script.
 * Updated the usage instructions, illustrating how to download the Agona samples from
   NCBI and how to run the SNP Pipeline on the Agona data set.
 * Updated the supplied expected result files for the Agona data set.  Note that due to 

@@ -180,6 +180,8 @@ originally used to produce our results. (Use sha256sum at the unix command line.
 Listeria monocytogenes
 ----------------------
 
+*Coming soon in a future release*
+
 This is designed to be a realistic-sized data set based on an outbreak
 of L. m.  in Roos cheese. The data must be downloaded from the NCBI
 due to its large size. We provide a file of hashes that can easily be
@@ -188,6 +190,8 @@ used to produce our results. (Use sha256sum at the unix command line.)
 
 Synthetic data sets
 -------------------
+
+*Coming soon in a future release*
 
 We are currently creating synthetic data sets based on simulating
 various evolutionary scenarios. The simulations are designed to be

@@ -96,14 +96,22 @@ Step 9 - Create the reference base sequence::
     create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/lambda_virus.fasta
 
         
-Step 10 - View the results:
+Step 10 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
+    # Verify the result files were created
     ls -l snplist.txt
     ls -l snpma.fasta
     ls -l referenceSNP.fasta
+
+    # Verify correct results
+    copy_snppipeline_data.py lambdaVirusExpectedResults expectedResults
+    diff -q -s snplist.txt         expectedResults/snplist.txt
+    diff -q -s snpma.fasta         expectedResults/snpma.fasta
+    diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
+
 
 
 Step-by-Step Example Workflow Using S. Agona Data Downloaded from SRA
@@ -182,14 +190,22 @@ Step 9 - Create the reference base sequence::
     create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/NC_011149.fasta
 
         
-Step 10 - View the results:
+Step 10 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have ???? entries.  The SNP Matrix 
+Upon successful completion of the pipeline, the snplist.txt file should have 3624 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
+    # Verify the result files were created
     ls -l snplist.txt
     ls -l snpma.fasta
     ls -l referenceSNP.fasta
+
+    # Verify correct results
+    copy_snppipeline_data.py agonaExpectedResults expectedResults
+    diff -q -s snplist.txt         expectedResults/snplist.txt
+    diff -q -s snpma.fasta         expectedResults/snpma.fasta
+    diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
+
 
 Step-by-Step Workflow - General Case
 ------------------------------------
@@ -265,7 +281,7 @@ Step 9 - Create the reference base sequence::
 
 Step 10 - View the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
+Upon successful completion of the pipeline, the snplist.txt identifies the SNPs in all samples.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     ls -l snplist.txt

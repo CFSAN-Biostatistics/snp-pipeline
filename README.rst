@@ -51,7 +51,7 @@ analysis is desired.
 
 The CFSAN SNP Pipeline is written in a combination of bash and python. The
 code (including the bash scripts) is designed to be straighforward to
-install. A script is provided that allows the running of the Python code
+install. Scripts are provided to run the Python code
 from the command line. All of the parameters used are available as command
 line options. In situations where additional customization is desired, the
 code is not highly complex and should be easy to modify as necessary.
