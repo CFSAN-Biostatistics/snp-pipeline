@@ -3,6 +3,7 @@
 import argparse
 from snppipeline import __version__
 from snppipeline import snppipeline
+from snppipeline import utils
 
 #==============================================================================
 # Command line driver
@@ -25,5 +26,6 @@ if __name__ == '__main__':
     parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
     args_dict = vars(parser.parse_args())
 
+    utils.set_logging_verbosity(args_dict)
     snppipeline.set_logging_verbosity(args_dict)
     snppipeline.create_snp_matrix(args_dict)

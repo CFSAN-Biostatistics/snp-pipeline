@@ -13,12 +13,21 @@ import vcf
 
 #==============================================================================
 #Prep work
-#Note use of filter on list_of_sample_directories to remove blank lines.
 #==============================================================================
 
-verbose        = False
-verbose_print  = print         if verbose else lambda *a, **k: None
-verbose_pprint = pprint.pprint if verbose else lambda *a, **k: None
+verbose_print  = lambda *a, **k: None
+verbose_pprint = lambda *a, **k: None
+
+def set_logging_verbosity(options_dict):
+    """Enable or disable logging.
+
+    Args:
+        verbose : Verbosity value, any value greater than 0 enables logging
+    """
+    global verbose_print
+    global verbose_pprint
+    verbose_print  = print         if options_dict['verbose'] > 0 else lambda *a, **k: None
+    verbose_pprint = pprint.pprint if options_dict['verbose'] > 0 else lambda *a, **k: None
 
 
 #==============================================================================
@@ -236,6 +245,15 @@ def convert_vcf_files_to_snp_dict(sample_vcf_file_list):
     snp_dict = dict()
 
     for vcf_file_path in sample_vcf_file_list:
+
+        if not os.path.isfile(vcf_file_path):
+            verbose_print("ERROR: Missing VCF file %s" % vcf_file_path)
+            continue
+        if os.path.getsize(vcf_file_path) == 0:
+            verbose_print("ERROR: Empty VCF file %s" % vcf_file_path)
+            continue
+
+        verbose_print("Processing VCF file %s" % vcf_file_path)
 
         sample_name = os.path.basename(os.path.dirname(vcf_file_path))
 
