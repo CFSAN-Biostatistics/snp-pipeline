@@ -3,7 +3,7 @@
 History
 -------
 
-0.2.0 (2014-09-16)
+0.2.0 (2014-09-17)
 ~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Results:**
@@ -21,6 +21,7 @@ History
   version 0.1.19.  SAMtools mpileup version 0.1.19 excludes read bases with low quality.
   As a reminder, the expected results files are fetched with the copy_snppipeline_data.py 
   script.
+* Removed the "<unknown description>" from the snp matrix fasta file.
 
 **Other Changes:**
 
@@ -56,6 +57,8 @@ alignSampleToReference.sh, prepSamples.sh, create_snp_matrix.py*
   files.  If you modify an upstream file, any dependent downstream files will be rebuilt.  
   You can force processing regardless of file timestamps with the ``-f`` option.
 * Changed the name of the sorted bam file to reads.sorted.bam.
+* Changed the general-case usage instructions to handle a variety of fastq file 
+  extensions (\*.fastq\* and \*.fq\*).
 
 
 0.1.1 (2014-07-28)

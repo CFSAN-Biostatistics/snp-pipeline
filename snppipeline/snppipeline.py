@@ -272,7 +272,7 @@ def create_snp_matrix(options_dict):
             else:
                 snp_seq_string += "-"
 
-        snp_seq_record = SeqRecord(Seq(snp_seq_string), id=sample_name)
+        snp_seq_record = SeqRecord(Seq(snp_seq_string), id=sample_name, description="")
         snp_sequence_records_list.append(snp_seq_record)
 
     #Write bases for snps for each sequence to a fasta file
