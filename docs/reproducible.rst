@@ -140,7 +140,11 @@ have found two problems worth mentioning here.
 
 **SAMtools first and last base SNPs not called**
 
-TODO
+The first of last position in the reference may be identified as a variable
+site. This is recorded correctly in the list of SNPs, but when it is passed
+to samtools to create the SNP matrix, that (first or last position) only
+has missing data. This bug has been reported but we do not currently provide
+a work-around for it.
 
 **SAMtools snp pileup difference from genome-wide pileup**
 
