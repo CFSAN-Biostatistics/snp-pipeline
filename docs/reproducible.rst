@@ -134,17 +134,9 @@ On one of our data sets with 116 samples, we observed these results:
 Correct Results
 ===============
 
-As we have constructed our pipeline, we have found problems both in
+As we have constructed our pipeline, we have found problems in
 our own software and in the various packages we use. To this point we
-have found two problems worth mentioning here.
-
-**SAMtools first and last base SNPs not called**
-
-The first of last position in the reference may be identified as a variable
-site. This is recorded correctly in the list of SNPs, but when it is passed
-to samtools to create the SNP matrix, that (first or last position) only
-has missing data. This bug has been reported but we do not currently provide
-a work-around for it.
+have found one problem worth mentioning here.
 
 **SAMtools snp pileup difference from genome-wide pileup**
 
@@ -155,8 +147,13 @@ pileup for each sample.  However, the SAMtools software does not generate
 pileup records exactly matching the genome-wide pileup when given a list of 
 positions for which the pileup should be generated.  The differences are 
 particularly evident at the first few snp positions and cause missing
-values in the SNP matrix.  To work around this problem, the SNP Pipeline 
+values in the SNP matrix. We first noticed this problem when the first or
+last position of the reference sequence was identified as a variant site.
+To work around this problem, the SNP Pipeline 
 internally extracts the desired pileup records from the genome-wide pileup.
+
+This SAMtools issue has been reported here: https://github.com/samtools/samtools/issues/282
+
 
 Test Data Sets
 ==============
