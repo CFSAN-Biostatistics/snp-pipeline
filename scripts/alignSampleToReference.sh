@@ -41,6 +41,7 @@
 #   20140903-scd: Use getopts to parse the command arguments.  Changed the calling convention.
 #   20140905-scd: Expects the full file name of the reference on the command line.
 #   20140910-scd: Outputs are not rebuilt when already fresh, unless the -f (force) option is specified.
+#   20140919-scd: Handle spaces in file names.
 #Notes:
 #
 #Bugs:
@@ -146,7 +147,7 @@ else
     numCores=$(grep -c ^processor /proc/cpuinfo)
 fi
 
-# echo
+# echo ==============================
 # echo numCores=$numCores
 # echo referenceFilePath=$referenceFilePath
 # echo sampleFilePath1=$sampleFilePath1
@@ -157,7 +158,7 @@ fi
 # echo sampleDir=$sampleDir
 # echo sampleId=$sampleId
 # echo referenceId=$referenceId
-# echo
+# echo ==============================
 # exit 0 
 
 #Check if alignment to reference has been done; if not align sequences to reference
@@ -166,18 +167,18 @@ if [ $sampleFilePath2 ]; then
         echo "# $sampleId has already been aligned to $referenceId"
     else
         echo "# Align sequence $sampleId to reference $referenceId"
-        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x "$referenceBasePath" -1 "$sampleFilePath1" -2 "$sampleFilePath2"
+        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" -1 \""$sampleFilePath1"\" -2 \""$sampleFilePath2"\"
         echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
-        bowtie2 -p $numCores --reorder -q -x $referenceBasePath -1 $sampleFilePath1 -2 $sampleFilePath2 > $sampleDir/'reads.sam'
+        bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" -1 \""$sampleFilePath1"\" -2 \""$sampleFilePath2"\" > "$sampleDir/reads.sam"
     fi
 else
     if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]; then
         echo "# $sampleId has already been aligned to $referenceId"
     else
         echo "# Align sequence $sampleId to reference $referenceId"
-        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x "$referenceBasePath" "$sampleFilePath1"
+        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" \""$sampleFilePath1"\"
         echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
-        bowtie2 -p $numCores --reorder -q -x "$referenceBasePath" "$sampleFilePath1" > "$sampleDir/reads.sam"
+        bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" \""$sampleFilePath1"\" > "$sampleDir/reads.sam"
     fi
 fi
 echo $(date +"# %Y-%m-%d %T") alignSampleToReference.sh finished
