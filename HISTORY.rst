@@ -3,6 +3,16 @@
 History
 -------
 
+0.2.1 (2014-09-24)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* Version 0.2.0 was missing the Agona data files in the Python distribution.  The
+  GitHub repo was fine.  The missing files only impacted PyPi.  Add the Agona 
+  data files to the Python distribution file list.
+
+
 0.2.0 (2014-09-17)
 ~~~~~~~~~~~~~~~~~~
 

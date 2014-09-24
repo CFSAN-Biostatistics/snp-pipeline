@@ -18,7 +18,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='0.2.0',
+    version='0.2.1',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -74,7 +74,15 @@ setup(
                          'data/lambdaVirusExpectedResults/snplist.txt',
                          'data/lambdaVirusExpectedResults/samples/sample*/reads.snp.pileup',
                          'data/lambdaVirusExpectedResults/snpma.fasta',
-                         'data/lambdaVirusExpectedResults/referenceSNP.fasta',]
+                         'data/lambdaVirusExpectedResults/referenceSNP.fasta',
+                         'data/agonaInputs/reference/*.fasta',
+                         'data/agonaInputs/sha256sumCheck',
+                         'data/agonaExpectedResults/referenceSNP.fasta',
+                         'data/agonaExpectedResults/samples/*/var.flt.vcf',
+                         'data/agonaExpectedResults/snplist.txt',
+                         'data/agonaExpectedResults/samples/*/reads.snp.pileup',
+                         'data/agonaExpectedResults/snpma.fasta',
+                         ]
     },
 
     keywords=['bioinformatics', 'NGS', 'SNP'],
