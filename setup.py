@@ -18,7 +18,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='0.2.1',
+    version='0.3.0',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -52,6 +52,7 @@ setup(
         'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
     scripts=[
+        'scripts/run_snp_pipeline.sh',
         'scripts/prepReference.sh',
         'scripts/alignSampleToReference.sh',
         'scripts/prepSamples.sh',

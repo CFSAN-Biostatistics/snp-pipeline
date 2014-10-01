@@ -3,6 +3,14 @@
 History
 -------
 
+0.3.0 (2014-??-??)
+~~~~~~~~~~~~~~~~~~
+
+* Added a new script, run_snp_pipeline.sh, to run the entire pipeline either on 
+  a workstation or on a High Performance Computing cluster with the Torque job 
+  queue manager.
+
+
 0.2.1 (2014-09-24)
 ~~~~~~~~~~~~~~~~~~
 

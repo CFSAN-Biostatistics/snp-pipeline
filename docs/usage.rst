@@ -15,6 +15,9 @@ of shell scripts and python scripts.
 +===========================+====================================================================+
 | copy_snppipeline_data.py  | | Copies supplied example data to a work directory                 |
 +---------------------------+--------------------------------------------------------------------+
+| run_snp_pipeline.sh       | | This do-it-all script runs all the other scripts listed below,   |
+|                           | | comprising all the pipeline steps                                |
++---------------------------+--------------------------------------------------------------------+
 | prepReference.sh          | | Indexes the reference genome                                     |
 +---------------------------+--------------------------------------------------------------------+
 | alignSampleToReference.sh | | Aligns samples to the reference genome                           |
@@ -34,8 +37,200 @@ of shell scripts and python scripts.
 +---------------------------+--------------------------------------------------------------------+
 
 
-Step-by-Step Example Workflow Based on Lamda Virus Test Data Provided with Code
--------------------------------------------------------------------------------
+Inputs
+------
+
+Before using the SNP Pipeline, make sure your input data is organized and
+named the way the pipeline expects.  Follow these guidelines:
+
+* No spaces in file names and directory names.
+
+* A fasta genome reference file must exist in a separate directory.
+
+* The samples must be organized with a separate directory for each sample.  
+  Each sample directory should contain the fastq files for that sample.  
+  The name of the directory should match the name of the sample.
+  When using paired-end fastq files, the forward and reverse files must be 
+  in the same directory.
+
+* The script needs to know how to find all the samples.  You have two choices:
+
+    #. You can organize all the sample directories under a common parent directory.
+
+    #. You can have sample directories anywhere you like, but you will need to 
+       create a file listing the path to all the sample directories.
+
+* The sample fastq files must be named with one of the following file
+  patterns: (\*.fastq, \*.fq, \*.fastq.gz, \*.fq.gz).  It's okay if different
+  samples are named differently, but the two mate files of paired-end samples
+  must be named with the same extension.
+
+Outputs
+-------
+
+By default, the SNP Pipeline generates the following output files.  If you 
+need more control over the output, you can run the pipeline one step at a time.  
+See the section *Step-by-Step Workflows* below.
+
+* snplist.txt : contains a combined list of the SNP positions across all 
+  samples in a single unified SNP list file identifing the postions and sample 
+  names where SNPs were called.
+
+* reads.snp.pileup : for each sample, the pileup file at the positions where 
+  SNPs were called in any of the samples.
+
+* snpma.fasta : the SNP matrix containing the consensus base for each of 
+  the samples at the positions where SNPs were called in any of the samples.  
+  The matrix contains one row per sample and one column per SNP position.  
+  Non-SNP positions are not included in the matrix.  The matrix is formatted 
+  as a fasta file, with each sequence (all of identical length) corresponding 
+  to the SNPs in the correspondingly named sequence.
+
+* referenceSNP.fasta : a fasta file containing the reference sequence bases at
+  all the SNP locations.
+
+
+All-In-One SNP Pipeline Script
+------------------------------
+
+Most users should be able to run the SNP pipeline by launching a single script, 
+``run_snp_pipeline.sh``.  This script is easy to use and works equally well on
+your desktop workstation or on a High Performance Computing cluster.  You can 
+find examples of using the script in the sections below.
+
+If you need more flexibility, you can run the individual pipeline scripts one 
+step at a time.  See the section *Step-by-Step Workflows* below.
+
+
+All-In-One Workflow - Lambda Virus
+----------------------------------
+
+The SNP Pipeline software distribution includes a small Lambda Virus data set 
+that can be quickly processed to verify the basic functionality of the software.
+
+Step 1 - Gather data::
+
+    # The SNP Pipeline distribution includes sample data organized as shown below:
+    snppipeline/data/lambdaVirusInputs/reference/lambda_virus.fasta
+    snppipeline/data/lambdaVirusInputs/samples/sample1/sample1_1.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample1/sample1_2.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample2/sample2_1.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample2/sample2_2.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample3/sample3_1.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample3/sample3_2.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample4/sample4_1.fastq
+    snppipeline/data/lambdaVirusInputs/samples/sample4/sample4_2.fastq
+
+    # Copy the supplied test data to a work area:
+    cd test
+    copy_snppipeline_data.py lambdaVirusInputs testLambdaVirus
+    cd testLambdaVirus
+
+Step 2 - Run the SNP Pipeline::
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    #
+    # Specify the following options:
+    #   -s : samples parent directory
+    run_snp_pipeline.sh -s samples reference/lambda_virus.fasta
+
+
+Step 3 - View and verify the results:
+
+Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
+can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
+
+    # Verify the result files were created
+    ls -l snplist.txt
+    ls -l snpma.fasta
+    ls -l referenceSNP.fasta
+
+    # Verify correct results
+    copy_snppipeline_data.py lambdaVirusExpectedResults expectedResults
+    diff -q -s snplist.txt         expectedResults/snplist.txt
+    diff -q -s snpma.fasta         expectedResults/snpma.fasta
+    diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
+
+
+All-In-One Workflow - Salmonella Agona
+--------------------------------------
+
+The Salmonella Agona data set contains a small number of realistic sequences that 
+can be processed in a reasonable amount of time.  Due to the large size of real
+data, the sequences must be downloaded from the NCBI SRA.  Follow the instructions 
+below to download and process the data set.
+
+This workflow illustrates how to run the SNP Pipeline on a High Performance Computing 
+cluster (HPC) running the Torque job queue.  If you do not have a cluster available,
+you can still work through this example -- just remove the ``-Q torque`` command line 
+option in step 2.
+
+Step 1 - Gather data::
+
+    # The SNP Pipeline distribution includes sample data organized as shown below:
+    snppipeline/data/agonaInputs/sha256sumCheck
+    snppipeline/data/agonaInputs/reference/NC_011149.fasta
+
+    # Copy the supplied test data to a work area:
+    mkdir testAgona
+    cd testAgona
+    copy_snppipeline_data.py agonaInputs cleanInputs
+    cd cleanInputs
+    
+    # Create sample directories
+    mkdir -p samples/ERR178926  samples/ERR178927  samples/ERR178928  samples/ERR178929  samples/ERR178930
+    
+    # Download sample data from SRA at NCBI. Note that we use the fastq-dump command from
+    #   the NCBI SRA-toolkit to fetch sample sequences. There are other ways to get the data,
+    #   but the SRA-toolkit is easy to install, and does a good job of downloading large
+    #   files.
+    fastq-dump --split-files --outdir samples/ERR178926 ERR178926
+    fastq-dump --split-files --outdir samples/ERR178927 ERR178927
+    fastq-dump --split-files --outdir samples/ERR178928 ERR178928
+    fastq-dump --split-files --outdir samples/ERR178929 ERR178929
+    fastq-dump --split-files --outdir samples/ERR178930 ERR178930
+    
+    # Check the data
+    #   The original data was used to generate a hash as follows:
+    #     sha256sum reference/*.fasta samples/*/*.fastq > sha256sumCheck
+    #   The command below checks the downloaded data (and the reference sequence) against the
+    #     hashes that are saved in the sha256sumCheck file using sha256sum command, which is
+    #     generally available on unix systems.
+    sha256sum -c sha256sumCheck
+    cd ..
+
+Step 2 - Run the SNP Pipeline::
+
+    # Run the pipeline
+    # Specify the following options:
+    #   -m : mirror link the input samples and reference files
+    #   -o : working directory
+    #   -s : samples parent directory
+    #   -Q : HPC job queue manager
+    run_snp_pipeline.sh -m -Q torque -o work -s cleanInputs/samples cleanInputs/reference/NC_011149.fasta
+      
+Step 3 - View and verify the results:
+
+Upon successful completion of the pipeline, the snplist.txt file should have 3624 entries.  The SNP Matrix 
+can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
+
+    # Verify the result files were created
+    ls -l work/snplist.txt
+    ls -l work/snpma.fasta
+    ls -l work/referenceSNP.fasta
+
+    # Verify correct results
+    copy_snppipeline_data.py agonaExpectedResults expectedResults
+    diff -q -s work/snplist.txt         expectedResults/snplist.txt
+    diff -q -s work/snpma.fasta         expectedResults/snpma.fasta
+    diff -q -s work/referenceSNP.fasta  expectedResults/referenceSNP.fasta
+
+
+Step-by-Step Workflow - Lambda Virus 
+------------------------------------
+
+The SNP Pipeline software distribution includes a small Lambda Virus data set 
+that can be quickly processed to verify the basic functionality of the software.
 
 Step 1 - Gather data::
 
@@ -114,8 +309,13 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
 
 
 
-Step-by-Step Example Workflow Using S. Agona Data Downloaded from SRA
----------------------------------------------------------------------
+Step-by-Step Workflow - Salmonella Agona
+----------------------------------------
+
+The Salmonella Agona data set contains realistic sequences that can be processed
+in a reasonable amount of time.  Due to the large size of real data, the sequences
+must be downloaded from the NCBI SRA.  Follow the instructions below to download 
+and process the data set.
 
 Step 1 - Gather data::
 

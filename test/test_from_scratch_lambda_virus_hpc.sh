@@ -43,12 +43,16 @@
 #    ./test_from_scratch_lambda_virus.sh
 #History:
 #   20140710-scd: Started.
+#   20140919-scd: Changed to work with the new script, run_snp_pipeline.sh
 #Notes:
 #Bugs:
 #
 
-cleanDir=/scratch/app_sdavis/cleanLambdaVirus
-workdir=/scratch/app_sdavis/testLambdaVirus
-compareDir=/scratch/app_sdavis/lambdaVirusExpectedResults
+reference="/scratch/app_sdavis/lambdaVirusInputs/reference/lambda_virus.fasta"
+samplesDir="/scratch/app_sdavis/lambdaVirusInputs/samples"
+workdir="/scratch/app_sdavis/testLambdaVirus"
+compareDir="/scratch/app_sdavis/lambdaVirusExpectedResults"
 
-./test_from_scratch.sh  $cleanDir  $workdir  $compareDir  torque
+./test_from_scratch.sh  $reference  $samplesDir $workdir $compareDir
+
+
