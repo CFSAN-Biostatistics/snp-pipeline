@@ -38,7 +38,7 @@ set -e
 
 usage()
 {
-    echo 'usage: $0 [-h] [-f] [-m] [-c|-C FILE] [-Q "torque"]  -o DIR  (-s DIR | -S FILE)  referenceFile'
+    echo "usage: run_snp_pipeline.sh [-h] [-f] [-m] [-c|-C FILE] [-Q \"torque\"]  -o DIR  (-s DIR | -S FILE)  referenceFile"
     echo
     echo 'Run the SNP Pipeline on a specified data set.'
     echo
