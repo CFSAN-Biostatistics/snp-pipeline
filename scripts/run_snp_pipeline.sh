@@ -129,10 +129,12 @@ while getopts ":hfmc:Q:o:s:S:" option; do
         exit 0
     elif [ "$option" = "?" ]; then
         echo "Invalid option -- '$OPTARG'"
+        echo
         usage
         exit 1
     elif [ "$option" = ":" ]; then
         echo "Missing argument for option -- '$OPTARG'"
+        echo
         usage
         exit 2
     else
@@ -157,6 +159,14 @@ if [ "$referenceFilePath" = "" ]; then
 fi
 if [[ ! -f "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath does not exist."; exit 3; fi
 if [[ ! -s "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath is empty."; exit 3; fi
+
+# Extra arguments not allowed
+if [[ "$2" != "" ]]; then 
+    echo "Unexpected argument \"$2\" specified after the reference file."
+    echo
+    usage
+    exit 100
+fi
 
 # Force rebuild flag
 if [[ "$opt_f_set" = "1" ]]; then
@@ -263,7 +273,7 @@ mkdir -p "$logDir"
 
 # --------------------------------------------------------
 echo -e "\nStep 1 - Prep work"
-numCores=$(grep -c ^processor /proc/cpuinfo)
+numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 # get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
 tmpFile=$(mktemp -p "$workDir" tmp.fastqs.XXXXXXXX)
 cat "$sampleDirsFile" | while read dir; do echo $dir/*.fastq* >> "$tmpFile"; echo "$dir"/*.fq* >> "$tmpFile"; done
@@ -299,7 +309,7 @@ if [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    cat "$workDir/sampleFullPathNames.txt" | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $forceFlag -p $numCores "$referenceFilePath"
+    cat "$workDir/sampleFullPathNames.txt" | xargs -n 2 -L 1 alignSampleToReference.sh $forceFlag -p $numCores "$referenceFilePath"
 fi
 
 echo -e "\nStep 4 - Prep the samples"

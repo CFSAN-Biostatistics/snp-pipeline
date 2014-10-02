@@ -253,11 +253,11 @@ Step 1 - Gather data::
 Step 2 - Prep work::
 
     # Create files of sample directories and fastQ files:
-    ls -d --color=never samples/* > sampleDirectories.txt
+    ls -d samples/* > sampleDirectories.txt
     rm sampleFullPathNames.txt 2>/dev/null
     cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
     # Determine the number of CPU cores in your computer
-    NUMCORES=$(grep -c ^processor /proc/cpuinfo)
+    NUMCORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 Step 3 - Prep the reference::
 
@@ -266,7 +266,7 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
-    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh -p $NUMCORES reference/lambda_virus.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh -p $NUMCORES reference/lambda_virus.fasta
 
 Step 5 - Prep the samples::
 
@@ -352,11 +352,11 @@ Step 1 - Gather data::
 Step 2 - Prep work::
 
     # Create files of sample directories and fastQ files:
-    ls -d --color=never samples/* > sampleDirectories.txt
+    ls -d samples/* > sampleDirectories.txt
     rm sampleFullPathNames.txt 2>/dev/null
     cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
     # Determine the number of CPU cores in your computer
-    NUMCORES=$(grep -c ^processor /proc/cpuinfo)
+    NUMCORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 Step 3 - Prep the reference::
 
@@ -365,7 +365,7 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
-    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh -p $NUMCORES reference/NC_011149.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh -p $NUMCORES reference/NC_011149.fasta
 
 Step 5 - Prep the samples::
 
@@ -436,7 +436,7 @@ Step 2 - Prep work::
     cd myProject
     
     # Create file of sample directories:
-    ls -d --color=never samples/* > sampleDirectories.txt
+    ls -d samples/* > sampleDirectories.txt
     
     # get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
     TMPFILE1=$(mktemp tmp.fastqs.XXXXXXXX)
@@ -445,7 +445,7 @@ Step 2 - Prep work::
     rm $TMPFILE1
     
     # Determine the number of CPU cores in your computer
-    NUMCORES=$(grep -c ^processor /proc/cpuinfo)
+    NUMCORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 Step 3 - Prep the reference::
 
@@ -454,7 +454,7 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
-    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh -p $NUMCORES reference/my_reference.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh -p $NUMCORES reference/my_reference.fasta
 
 Step 5 - Prep the samples::
 

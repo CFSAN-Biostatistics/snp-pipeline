@@ -23,13 +23,13 @@
 #   On workstation with one sample, paired
 #       alignSampleToReference.sh Users/NC_011149.fasta Users/ERR178926_1.fastq Users/ERR178926_2.fastq
 #   On workstation with multiple samples
-#       numCores=$(grep -c ^processor /proc/cpuinfo)
+#       numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 #       ls -d samples/* | xargs ls -L -s -m | grep -E "(samples|total)" | sed 'N;s/\n//;s/:total//' | sort -k 2 -n -r | cut -f 1 -d " " > sampleDirectories.txt
 #       TMPFILE1=$(mktemp tmp.fastqs.XXXXXXXX)
 #       cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq* >> $TMPFILE1; echo $dir/*.fq* >> $TMPFILE1; done
 #       grep -v '*.fq*' $TMPFILE1 | grep -v '*.fastq*' > sampleFullPathNames.txt
 #       rm $TMPFILE1
-#       cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh -p $NUMCORES Users/NC_011149.fasta
+#       cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh -p $NUMCORES Users/NC_011149.fasta
 #   On a workstation with gnu parallel:
 #       cat sampleFullPathNames.txt | parallel alignSampleToReference.sh -p 1 reference/NC_011149.fasta
 #   With PBS
@@ -144,7 +144,7 @@ referenceId=${referenceBasePath##*/} # strip the directory
 if [ "$opt_p_set" = "1" ]; then
     numCores="$opt_p_arg"
 else
-    numCores=$(grep -c ^processor /proc/cpuinfo)
+    numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 fi
 
 # echo ==============================

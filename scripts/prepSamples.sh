@@ -19,7 +19,7 @@
 #   On workstation with one sample, unpaired
 #       prepSamples.sh Users/NC_011149.fasta Users/ERR178926
 #   On workstation with multiple samples
-#       ls -d --color=never samples/* > sampleDirectoryNames.txt
+#       ls -d samples/* > sampleDirectoryNames.txt
 #       cat sampleDirectoryNames.txt | xargs -n 1 prepSamples.sh reference/NC_011149.fasta
 #   On a workstation with gnu parallel:
 #       cat sampleDirectoryNames.txt | parallel prepSamples.sh reference/NC_011149.fasta

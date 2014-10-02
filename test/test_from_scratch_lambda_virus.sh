@@ -50,9 +50,15 @@
 #Bugs:
 #
 
-./test_from_scratch.sh  "lambdaVirusInputs/reference/lambda_virus.fasta"  \
+rm -rf testLambdaVirus
+mkdir testLambdaVirus
+cd testLambdaVirus
+copy_snppipeline_data.py lambdaVirusInputs lambdaVirusInputs
+copy_snppipeline_data.py lambdaVirusExpectedResults lambdaVirusExpectedResults
+
+../test_from_scratch.sh  "lambdaVirusInputs/reference/lambda_virus.fasta"  \
                         "lambdaVirusInputs/samples" \
-                        testLambdaVirus  \
+                        ./  \
                         lambdaVirusExpectedResults
 
 #./test_from_scratch.sh  /home/steven.davis/Projects/snp-pipeline/snppipeline/data/lambdaVirusInputs/reference/lambda_virus.fasta  \
