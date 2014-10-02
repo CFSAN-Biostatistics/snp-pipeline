@@ -112,9 +112,12 @@ from the versions of SAMtools and Bowtie that we have used below.
 
 **Bowtie**
 
-Bowtie 2.1.0 and 2.2.2 produce functionally identical SAM files.  The
-only difference we observed is a header record in bowtie 2.2.2
-documenting the program version and command line parameters.
+Different versions of Bowtie can generate different SAM files, which 
+subsequently causes different pileups and different variant detection.
+For example, with our included data sets, Bowtie 2.1.0 and 2.2.2 produce
+functionally identical SAM files when run on the Lambda Virus data set.  
+However, the generated SAM files (and downstream results) are different 
+when run on the Salmonella Agona data set.
 
 **SAMtools**
 
@@ -160,7 +163,7 @@ Test Data Sets
 
 We have created/curated a number of data sets for use in testing both the
 reproducibility and correctness of the pipeline. In the following sections
-we briefly describe theses data sets.
+we briefly describe these data sets.
 
 Lambda Virus
 ------------
