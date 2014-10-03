@@ -86,6 +86,17 @@ If you installed with pip, you can uninstall from the command line::
 
     $ pip uninstall snp-pipeline
 
+Tips
+----
+
+There is a dependency on the python psutil package.  Pip will attempt to 
+install the psutil package automatically when installing snp-pipeline.  
+If it fails with an error message about missing Python.h, you will need to 
+manually install the python-dev package.  
+In Ubuntu, use this command::
+
+    $ sudo apt-get install python-dev
+
 
 .. _Bowtie2: http://sourceforge.net/projects/bowtie-bio/files/bowtie2/
 .. _SAMtools: http://sourceforge.net/projects/samtools/files/

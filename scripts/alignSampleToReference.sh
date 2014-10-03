@@ -42,6 +42,7 @@
 #   20140905-scd: Expects the full file name of the reference on the command line.
 #   20140910-scd: Outputs are not rebuilt when already fresh, unless the -f (force) option is specified.
 #   20140919-scd: Handle spaces in file names.
+#   20141003-scd: Enhance log output
 #Notes:
 #
 #Bugs:
@@ -66,6 +67,17 @@ usage()
     echo '  -f               : Force processing even when result files already exist and are newer than inputs'
     echo
 }
+
+# --------------------------------------------------------
+# Log the starting conditions
+echo "# Command           : $0 $@"
+echo "# Working Directory : $(pwd)"
+if [[ "$PBS_JOBID" != "" ]]; then
+echo "# \$PBS_JOBID        : $PBS_JOBID"
+fi
+echo "# Hostname          :" $(hostname)
+echo "# RAM               :" $(python -c 'import psutil; print "{:,} MB".format(psutil.virtual_memory().total / 1024 / 1024)')
+echo
 
 # --------------------------------------------------------
 # getopts command line option handler: 
@@ -170,6 +182,7 @@ if [ $sampleFilePath2 ]; then
         echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" -1 \""$sampleFilePath1"\" -2 \""$sampleFilePath2"\"
         echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
         bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" -1 \""$sampleFilePath1"\" -2 \""$sampleFilePath2"\" > "$sampleDir/reads.sam"
+        echo
     fi
 else
     if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]; then
@@ -179,6 +192,7 @@ else
         echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" \""$sampleFilePath1"\"
         echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
         bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" \""$sampleFilePath1"\" > "$sampleDir/reads.sam"
+        echo
     fi
 fi
 echo $(date +"# %Y-%m-%d %T") alignSampleToReference.sh finished

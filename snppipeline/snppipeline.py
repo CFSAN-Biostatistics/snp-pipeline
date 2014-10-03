@@ -9,6 +9,8 @@ import pprint
 import utils
 import sys
 import time
+import platform
+import psutil
 from __init__ import __version__
 
 
@@ -35,9 +37,22 @@ def program_name():
     """Return the basename of the python script being executed."""
     return os.path.basename(sys.argv[0])
 
-def command_line():
-    """Return the command line string."""
+def command_line_short():
+    """Return the command line string without the full path to the program."""
     return "%s %s" % (program_name(), " ".join(sys.argv[1:]))
+
+def command_line_long():
+    """Return the command line string with the full path to the program."""
+    return " ".join(sys.argv)
+
+def print_log_header():
+    """Print a standardized header for the log with starting conditions."""
+    verbose_print("# Command           : %s" % command_line_long())
+    verbose_print("# Working Directory : %s" % os.getcwd())
+    verbose_print("# Hostname          : %s" % platform.node())
+    verbose_print("# RAM               : {:,} MB".format(psutil.virtual_memory().total / 1024 / 1024))
+    verbose_print("")
+
 
 def print_arguments(options_dict):
     """Print the program options.
@@ -94,7 +109,8 @@ def create_snp_list(options_dict):
                    }
     create_snp_list(options_dict)
     """
-    verbose_print("# %s %s" % (timestamp(), command_line()))
+    print_log_header()
+    verbose_print("# %s %s" % (timestamp(), command_line_short()))
     verbose_print("# %s version %s" % (program_name(), __version__))
     print_arguments(options_dict)
 
@@ -116,6 +132,7 @@ def create_snp_list(options_dict):
     snp_list_file_path = options_dict['snpListFile']
     verbose_print('Found %d snp positions across %d sample vcf files.' % (len(snp_dict), len(list_of_vcf_files)))
     utils.write_list_of_snps(snp_list_file_path, snp_dict)
+    verbose_print("")
     verbose_print("# %s %s finished" % (timestamp(), program_name()))
 
 
@@ -163,7 +180,8 @@ def create_snp_pileup(options_dict):
                    }
     create_snp_pileup(options_dict)
     """
-    verbose_print("# %s %s" % (timestamp(), command_line()))
+    print_log_header()
+    verbose_print("# %s %s" % (timestamp(), command_line_short()))
     verbose_print("# %s version %s" % (program_name(), __version__))
     print_arguments(options_dict)
 
@@ -175,6 +193,7 @@ def create_snp_pileup(options_dict):
     # to locations with SNPs only.
     snp_list = utils.read_snp_position_list(snp_list_file_path)
     utils.create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, set(snp_list))
+    verbose_print("")
     verbose_print("# %s %s finished" % (timestamp(), program_name()))
 
 
@@ -233,7 +252,8 @@ def create_snp_matrix(options_dict):
                    }
     create_snp_matrix(options_dict)
     """
-    verbose_print("# %s %s" % (timestamp(), command_line()))
+    print_log_header()
+    verbose_print("# %s %s" % (timestamp(), command_line_short()))
     verbose_print("# %s version %s" % (program_name(), __version__))
     print_arguments(options_dict)
 
@@ -280,6 +300,7 @@ def create_snp_matrix(options_dict):
     with open(snpma_file_path, "w") as fasta_file_object:
         SeqIO.write(snp_sequence_records_list, fasta_file_object, "fasta")
 
+    verbose_print("")
     verbose_print("# %s %s finished" % (timestamp(), program_name()))
 
 
@@ -323,7 +344,8 @@ def create_snp_reference_seq(options_dict):
                    }
     create_snp_reference_seq(options_dict)
     """
-    verbose_print("# %s %s" % (timestamp(), command_line()))
+    print_log_header()
+    verbose_print("# %s %s" % (timestamp(), command_line_short()))
     verbose_print("# %s version %s" % (program_name(), __version__))
     print_arguments(options_dict)
 
@@ -334,6 +356,7 @@ def create_snp_reference_seq(options_dict):
                                    options_dict['snpListFile'],
                                    options_dict['snpRefFile'])
 
+    verbose_print("")
     verbose_print("# %s %s finished" % (timestamp(), program_name()))
 
 

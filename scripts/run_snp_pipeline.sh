@@ -150,7 +150,7 @@ done
 shift $((OPTIND-1))
 
 # Reference fasta file
-referenceFilePath="$1"
+export referenceFilePath="$1"
 if [ "$referenceFilePath" = "" ]; then
     echo "Missing reference file."
     echo
@@ -170,7 +170,7 @@ fi
 
 # Force rebuild flag
 if [[ "$opt_f_set" = "1" ]]; then
-    forceFlag="-f"
+    export forceFlag="-f"
 else
     unset forceFlag
 fi
@@ -195,11 +195,11 @@ fi
 
 # Handle output working directory.  Create the directory if it does not exist.
 if [[ "$opt_o_set" = "1" ]]; then
-    workDir="$opt_o_arg"
+    export workDir="$opt_o_arg"
     if ! mkdir -p "$workDir"; then echo "Could not create the output directory $workDir"; exit 5; fi
     if [[ ! -w "$workDir" ]]; then echo "Output directory $workDir is not writable."; exit 5; fi
 else
-    workDir="$(pwd)"
+    export workDir="$(pwd)"
 fi
 
 # Handle sample directories
@@ -260,7 +260,7 @@ fi
 
 # Create the logs directory
 runTimeStamp=$(date +"%Y%m%d.%H%M%S")
-logDir="$workDir/logs-$runTimeStamp"
+export logDir="$workDir/logs-$runTimeStamp"
 mkdir -p "$logDir"
 
 
@@ -273,7 +273,7 @@ mkdir -p "$logDir"
 
 # --------------------------------------------------------
 echo -e "\nStep 1 - Prep work"
-numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
+export numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 # get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
 tmpFile=$(mktemp -p "$workDir" tmp.fastqs.XXXXXXXX)
 cat "$sampleDirsFile" | while read dir; do echo $dir/*.fastq* >> "$tmpFile"; echo "$dir"/*.fq* >> "$tmpFile"; done
@@ -291,7 +291,7 @@ if [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    prepReference.sh $forceFlag "$referenceFilePath"
+    prepReference.sh $forceFlag "$referenceFilePath" 2>&1 | tee $logDir/prepReference.log
 fi
 
 echo -e "\nStep 3 - Align the samples to the reference"
@@ -309,13 +309,12 @@ if [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    cat "$workDir/sampleFullPathNames.txt" | xargs -n 2 -L 1 alignSampleToReference.sh $forceFlag -p $numCores "$referenceFilePath"
+    nl "$workDir/sampleFullPathNames.txt" | xargs -n 3 -L 1 sh -c 'alignSampleToReference.sh $forceFlag -p $numCores "$referenceFilePath" $1 $2 2>&1 | tee $logDir/alignSamples.log-$0'
 fi
 
 echo -e "\nStep 4 - Prep the samples"
 if [[ "$platform" == "torque" ]]; then
-    echo sleep 2
-    sleep 2 # workaround torque bug
+    sleep 2 # workaround torque bug when submitting two large consecutive array jobs
     alignSamplesJobArray=${alignSamplesJobId%%.*}
     prepSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
     #PBS -N job.prepSamples
@@ -329,7 +328,7 @@ if [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    cat "$sampleDirsFile" | xargs -n 1 -P $numCores prepSamples.sh $forceFlag "$referenceFilePath"
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCores sh -c 'prepSamples.sh $forceFlag "$referenceFilePath" $1 2>&1 | tee $logDir/prepSamples.log-$0'
 fi
 
 echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP list file"
@@ -345,7 +344,7 @@ if [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    create_snp_list.py -n var.flt.vcf -o "$workDir/snplist.txt" "$sampleDirsFile"
+    create_snp_list.py -n var.flt.vcf -o "$workDir/snplist.txt" "$sampleDirsFile" 2>&1 | tee $logDir/snpList.log
 fi
 
 echo -e "\nStep 6 - Create pileups at SNP positions for each sample"
@@ -361,7 +360,7 @@ if [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    cat "$sampleDirsFile" | xargs -n 1 -P $numCores -I % create_snp_pileup.py -l "$workDir/snplist.txt" -a "%/reads.all.pileup" -o "%/reads.snp.pileup"
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCores sh -c 'create_snp_pileup.py -l "$workDir/snplist.txt" -a "$1/reads.all.pileup" -o "$1/reads.snp.pileup" 2>&1 | tee $logDir/snpPileup.log-$0'
 fi
 
 echo -e "\nStep 7 - Create the SNP matrix"
@@ -378,7 +377,7 @@ if [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    create_snp_matrix.py -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" "$sampleDirsFile"
+    create_snp_matrix.py -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" "$sampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
 fi    
 
 echo -e "\nStep 8 - Create the reference base sequence"
@@ -393,6 +392,6 @@ if [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    create_snp_reference_seq.py -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" "$referenceFilePath"
+    create_snp_reference_seq.py -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
 fi
 

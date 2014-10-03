@@ -6,9 +6,23 @@ History
 0.3.0 (2014-??-??)
 ~~~~~~~~~~~~~~~~~~
 
+**Bug fixes:**
+
+* Fixed some Mac incompatibilities.
+
+**Other Changes:**
+
+* There is a new dependency on the python psutil package.  Pip will attempt to 
+  install the psutil package automatically.  If it fails, you may need to
+  manually install the python-dev package.  In Ubuntu, 
+  ``sudo apt-get install python-dev``
 * Added a new script, run_snp_pipeline.sh, to run the entire pipeline either on 
   a workstation or on a High Performance Computing cluster with the Torque job 
   queue manager.
+* The run_snp_pipeline.sh script adds consistent logging functionality for 
+  workstation and HPC runs.  The logs for each pipeline run are stored in a 
+  time-stamped directory under the output directory.
+
 
 
 0.2.1 (2014-09-24)
