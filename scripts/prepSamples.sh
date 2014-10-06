@@ -67,7 +67,7 @@ if [[ "$PBS_JOBID" != "" ]]; then
 echo "# \$PBS_JOBID        : $PBS_JOBID"
 fi
 echo "# Hostname          :" $(hostname)
-echo "# RAM               :" $(python -c 'import psutil; print "{:,} MB".format(psutil.virtual_memory().total / 1024 / 1024)')
+echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; print("{:,} MB".format(psutil.virtual_memory().total / 1024 / 1024))')
 echo
 
 # --------------------------------------------------------
@@ -136,7 +136,7 @@ sampleId=${sampleDir##*/} # strip the parent directories
 
 # Check for fresh bam file; if not, convert to bam file with only mapped positions
 if [[ "$opt_f_set" != "1" && "$sampleDir/reads.unsorted.bam" -nt "$sampleDir/reads.sam" ]]; then
-    echo "# Unsorted bam file is already freshly created for $sampleId"
+    echo "# Unsorted bam file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
     echo "# Convert sam file to bam file with only mapped positions."
     echo "# "$(date +"%Y-%m-%d %T") samtools view -bS -F 4 -o "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sam"
@@ -148,7 +148,7 @@ fi
 
 # Check for fresh sorted bam file; if not, sort it
 if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sorted.bam" -nt "$sampleDir/reads.unsorted.bam" ]]; then
-    echo "# Sorted bam file is already freshly created for $sampleId"
+    echo "# Sorted bam file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
     #Convert to a sorted bam
     echo "# Convert bam to sorted bam file."
@@ -160,7 +160,7 @@ fi
 
 #Check for fresh pileup; if not, create it 
 if [[ "$opt_f_set" != "1" && "$sampleDir/reads.all.pileup" -nt "$sampleDir/reads.sorted.bam" && "$sampleDir/reads.all.pileup" -nt "$referenceFilePath" ]]; then
-    echo "# Pileup file is already freshly created for $sampleId"
+    echo "# Pileup file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
     echo "# Create pileup from bam file."
     echo "# "$(date +"%Y-%m-%d %T") samtools mpileup -f "$referenceFilePath" "$sampleDir/reads.sorted.bam"
@@ -171,7 +171,7 @@ fi
 
 #Check for fresh unfiltered vcf; if not, create it
 if [[ "$opt_f_set" != "1" && "$sampleDir/var.flt.vcf" -nt "$sampleDir/reads.all.pileup" ]]; then
-    echo "# Vcf file is already freshly created for $sampleId"
+    echo "# Vcf file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
     echo "# Create vcf file"
     if [ ! -z "$CLASSPATH" ]; then

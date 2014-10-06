@@ -14,6 +14,7 @@ if __name__ == '__main__':
                                                     at the positions where SNPs were called in any of the samples.""", 
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
+    parser.add_argument('-f', '--force',         dest='forceFlag',     action='store_true',                                  help='Force processing even when result file already exists and is newer than inputs')
     parser.add_argument('-l', '--snpListFile',   dest='snpListFile',   type=str, default='snplist.txt',      metavar='FILE', help='Relative or absolute path to the SNP list file across all samples')
     parser.add_argument('-a', '--allPileupFile', dest='allPileupFile', type=str, default='reads.all.pileup', metavar='FILE', help='Relative or absolute path to the genome-wide pileup file for this sample')
     parser.add_argument('-o', '--output',        dest='snpPileupFile', type=str, default='reads.snp.pileup', metavar='FILE', help='Output file. Relative or absolute path to the sample SNP pileup file')

@@ -340,11 +340,11 @@ if [[ "$platform" == "torque" ]]; then
     #PBS -j oe
     #PBS -W depend=afterokarray:$prepSamplesJobArray
     #PBS -o $logDir/snpList.log
-    create_snp_list.py -n var.flt.vcf -o "$workDir/snplist.txt" "$sampleDirsFile" 
+    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" "$sampleDirsFile" 
 _EOF_
 )
 else
-    create_snp_list.py -n var.flt.vcf -o "$workDir/snplist.txt" "$sampleDirsFile" 2>&1 | tee $logDir/snpList.log
+    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" "$sampleDirsFile" 2>&1 | tee $logDir/snpList.log
 fi
 
 echo -e "\nStep 6 - Create pileups at SNP positions for each sample"
@@ -356,11 +356,11 @@ if [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterok:$snpListJobId
     #PBS -o $logDir/snpPileup.log
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    create_snp_pileup.py -l "$workDir/snplist.txt" -a "\$sampleDir/reads.all.pileup" -o "\$sampleDir/reads.snp.pileup"
+    create_snp_pileup.py $forceFlag -l "$workDir/snplist.txt" -a "\$sampleDir/reads.all.pileup" -o "\$sampleDir/reads.snp.pileup"
 _EOF_
 )
 else
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCores sh -c 'create_snp_pileup.py -l "$workDir/snplist.txt" -a "$1/reads.all.pileup" -o "$1/reads.snp.pileup" 2>&1 | tee $logDir/snpPileup.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCores sh -c 'create_snp_pileup.py $forceFlag -l "$workDir/snplist.txt" -a "$1/reads.all.pileup" -o "$1/reads.snp.pileup" 2>&1 | tee $logDir/snpPileup.log-$0'
 fi
 
 echo -e "\nStep 7 - Create the SNP matrix"
@@ -373,11 +373,11 @@ if [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterokarray:$snpPileupJobArray
     #PBS -l walltime=05:00:00
     #PBS -o $logDir/snpMatrix.log
-    create_snp_matrix.py -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" "$sampleDirsFile"
+    create_snp_matrix.py $forceFlag -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" "$sampleDirsFile"
 _EOF_
 )
 else
-    create_snp_matrix.py -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" "$sampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
+    create_snp_matrix.py $forceFlag -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" "$sampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
 fi    
 
 echo -e "\nStep 8 - Create the reference base sequence"
@@ -388,10 +388,10 @@ if [[ "$platform" == "torque" ]]; then
     #PBS -j oe 
     #PBS -W depend=afterokarray:$snpPileupJobArray
     #PBS -o $logDir/snpReference.log
-    create_snp_reference_seq.py -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" "$referenceFilePath"
+    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" "$referenceFilePath"
 _EOF_
 )
 else
-    create_snp_reference_seq.py -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
+    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
 fi
 

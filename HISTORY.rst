@@ -22,6 +22,11 @@ History
 * The run_snp_pipeline.sh script adds consistent logging functionality for 
   workstation and HPC runs.  The logs for each pipeline run are stored in a 
   time-stamped directory under the output directory.
+* Changed the python scripts (create_snp_list.py, create_snp_pileup.py, create_snp_matrix.py, create_snp_reference.py) 
+  to skip processing steps when result files already exist and are newer than the input 
+  files.  If you modify an upstream file, any dependent downstream files will be rebuilt.  
+  You can force processing regardless of file timestamps with the ``-f`` option.
+  Similar functionality for the shell scripts was previously implemented in release 0.2.0.
 
 
 

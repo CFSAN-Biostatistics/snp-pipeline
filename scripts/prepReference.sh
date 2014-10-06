@@ -58,7 +58,7 @@ if [[ "$PBS_JOBID" != "" ]]; then
 echo "# \$PBS_JOBID        : $PBS_JOBID"
 fi
 echo "# Hostname          :" $(hostname)
-echo "# RAM               :" $(python -c 'import psutil; print "{:,} MB".format(psutil.virtual_memory().total / 1024 / 1024)')
+echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; print("{:,} MB".format(psutil.virtual_memory().total / 1024 / 1024))')
 echo
 
 # --------------------------------------------------------
@@ -119,7 +119,7 @@ referenceBasePath=${referenceFilePath%.fasta} # strip the file extension
 
 #Create index file for reference
 if [[ $opt_f_set != "1" && "$referenceBasePath.rev.1.bt2" -nt "$referenceFilePath" ]]; then
-    echo "# Bowtie index is already freshly built: $referenceBasePath.rev.1.bt2"
+    echo "# Bowtie index $referenceBasePath.rev.1.bt2 is already freshly built.  Use the -f option to force a rebuild."
 else
     echo "# "$(date +"%Y-%m-%d %T") bowtie2-build "$referenceFilePath" "$referenceBasePath"
     echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
@@ -129,7 +129,7 @@ fi
 
 #Create fai index
 if [[ "$opt_f_set" != "1" && "$referenceFilePath.fai" -nt "$referenceFilePath" ]]; then
-    echo "# SAMtools fai index is already freshly built: $referenceFilePath.fai"
+    echo "# SAMtools fai index $referenceFilePath.fai is already freshly built.  Use the -f option to force a rebuild."
 else
     echo "# "$(date +"%Y-%m-%d %T") samtools faidx "$referenceFilePath"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)

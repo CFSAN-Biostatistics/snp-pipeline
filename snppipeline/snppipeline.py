@@ -49,6 +49,9 @@ def print_log_header():
     """Print a standardized header for the log with starting conditions."""
     verbose_print("# Command           : %s" % command_line_long())
     verbose_print("# Working Directory : %s" % os.getcwd())
+    pbs_jobid = os.environ.get("PBS_JOBID")
+    if pbs_jobid:
+        verbose_print("# $PBS_JOBID        : %s" % pbs_jobid)
     verbose_print("# Hostname          : %s" % platform.node())
     verbose_print("# RAM               : {:,} MB".format(psutil.virtual_memory().total / 1024 / 1024))
     verbose_print("")
@@ -126,13 +129,17 @@ def create_snp_list(options_dict):
     # Read in all vcf files and process into dict of SNPs passing various
     # criteria. Do this for each sample. Write to file.
     #==========================================================================
+    snp_list_file_path = options_dict['snpListFile']
     vcf_file_name = options_dict['vcfFileName']
     list_of_vcf_files = [os.path.join(dir, vcf_file_name) for dir in list_of_sample_directories]
-    snp_dict = utils.convert_vcf_files_to_snp_dict(list_of_vcf_files)
-    snp_list_file_path = options_dict['snpListFile']
-    verbose_print('Found %d snp positions across %d sample vcf files.' % (len(snp_dict), len(list_of_vcf_files)))
-    utils.write_list_of_snps(snp_list_file_path, snp_dict)
-    verbose_print("")
+
+    if options_dict['forceFlag'] or utils.target_needs_rebuild(list_of_vcf_files, snp_list_file_path):
+        snp_dict = utils.convert_vcf_files_to_snp_dict(list_of_vcf_files)
+        verbose_print('Found %d snp positions across %d sample vcf files.' % (len(snp_dict), len(list_of_vcf_files)))
+        utils.write_list_of_snps(snp_list_file_path, snp_dict)
+        verbose_print("")
+    else:
+        verbose_print("SNP list %s has already been freshly built.  Use the -f option to force a rebuild." % snp_list_file_path)
     verbose_print("# %s %s finished" % (timestamp(), program_name()))
 
 
@@ -189,11 +196,15 @@ def create_snp_pileup(options_dict):
     all_pileup_file_path = options_dict['allPileupFile']
     snp_pileup_file_path = options_dict['snpPileupFile']
 
-    # Create a pileup file with a subset of the whole-genome pileup restricted
-    # to locations with SNPs only.
-    snp_list = utils.read_snp_position_list(snp_list_file_path)
-    utils.create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, set(snp_list))
-    verbose_print("")
+    source_files = [snp_list_file_path, all_pileup_file_path]
+    if options_dict['forceFlag'] or utils.target_needs_rebuild(source_files, snp_pileup_file_path):
+        # Create a pileup file with a subset of the whole-genome pileup restricted
+        # to locations with SNPs only.
+        snp_list = utils.read_snp_position_list(snp_list_file_path)
+        utils.create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, set(snp_list))
+        verbose_print("")
+    else:
+        verbose_print("SNP pileup %s has already been freshly built.  Use the -f option to force a rebuild." % snp_pileup_file_path)
     verbose_print("# %s %s finished" % (timestamp(), program_name()))
 
 
@@ -266,9 +277,23 @@ def create_snp_matrix(options_dict):
     list_of_sample_directories = sorted(filter(None, list_of_sample_directories))
 
     #==========================================================================
+    # Check if the result is already fresh
+    #==========================================================================
+    snpma_file_path = options_dict['snpmaFile']
+    snp_list_file_path = options_dict['snpListFile']
+    source_files = [snp_list_file_path]
+    if not options_dict['forceFlag']:
+        for sample_directory in list_of_sample_directories:
+            snp_pileup_file_path = os.path.join(sample_directory, options_dict['pileupFileName'])
+            source_files.append(snp_pileup_file_path)
+        if not utils.target_needs_rebuild(source_files, snpma_file_path):
+            verbose_print("SNP matrix %s has already been freshly built.  Use the -f option to force a rebuild." % snpma_file_path)
+            verbose_print("# %s %s finished" % (timestamp(), program_name()))
+            return
+
+    #==========================================================================
     #   Read the list of SNP positions.
     #==========================================================================
-    snp_list_file_path = options_dict['snpListFile']
     sorted_snp_position_list = utils.read_snp_position_list(snp_list_file_path)
     snplist_length = len(sorted_snp_position_list)
     verbose_print("snp position list length = %d" % snplist_length)
@@ -296,7 +321,6 @@ def create_snp_matrix(options_dict):
         snp_sequence_records_list.append(snp_seq_record)
 
     #Write bases for snps for each sequence to a fasta file
-    snpma_file_path = options_dict['snpmaFile']
     with open(snpma_file_path, "w") as fasta_file_object:
         SeqIO.write(snp_sequence_records_list, fasta_file_object, "fasta")
 
@@ -352,11 +376,17 @@ def create_snp_reference_seq(options_dict):
     #==========================================================================
     #    Write reference sequence bases at SNP locations to a fasta file.
     #==========================================================================
-    utils.write_reference_snp_file(options_dict['referenceFile'], 
-                                   options_dict['snpListFile'],
-                                   options_dict['snpRefFile'])
+    reference_file = options_dict['referenceFile']
+    snp_list_file_path = options_dict['snpListFile']
+    snp_ref_seq_path = options_dict['snpRefFile']
 
-    verbose_print("")
+    source_files = [reference_file, snp_list_file_path]
+    if options_dict['forceFlag'] or utils.target_needs_rebuild(source_files, snp_ref_seq_path):
+        utils.write_reference_snp_file(reference_file, snp_list_file_path, snp_ref_seq_path)
+        verbose_print("")
+    else:
+        verbose_print("SNP reference sequence %s has already been freshly built.  Use the -f option to force a rebuild." % snp_ref_seq_path)
+
     verbose_print("# %s %s finished" % (timestamp(), program_name()))
 
 

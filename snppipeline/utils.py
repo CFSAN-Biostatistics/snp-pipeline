@@ -30,6 +30,29 @@ def set_logging_verbosity(options_dict):
     verbose_pprint = pprint.pprint if options_dict['verbose'] > 0 else lambda *a, **k: None
 
 
+
+def target_needs_rebuild(source_files, target_file):
+    """Determine if a target file needs a fresh rebuild, i.e. the target does
+    not exist or its modification time is older than any of its source files.
+
+    Args:
+        source_files : relative or absolute path to a list of files
+        target_file : relative or absolute path to target file
+    """
+    if not os.path.isfile(target_file):
+        return True;
+
+    target_timestamp = os.stat(target_file).st_mtime
+
+    for source_file in source_files:
+        source_timestamp = os.stat(source_file).st_mtime
+        if source_timestamp > target_timestamp:
+            return True
+
+    return False
+
+
+
 #==============================================================================
 #Define functions
 #==============================================================================

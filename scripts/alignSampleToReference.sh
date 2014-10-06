@@ -76,7 +76,7 @@ if [[ "$PBS_JOBID" != "" ]]; then
 echo "# \$PBS_JOBID        : $PBS_JOBID"
 fi
 echo "# Hostname          :" $(hostname)
-echo "# RAM               :" $(python -c 'import psutil; print "{:,} MB".format(psutil.virtual_memory().total / 1024 / 1024)')
+echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; print("{:,} MB".format(psutil.virtual_memory().total / 1024 / 1024))')
 echo
 
 # --------------------------------------------------------
@@ -176,7 +176,7 @@ fi
 #Check if alignment to reference has been done; if not align sequences to reference
 if [ $sampleFilePath2 ]; then
     if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]; then
-        echo "# $sampleId has already been aligned to $referenceId"
+        echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
     else
         echo "# Align sequence $sampleId to reference $referenceId"
         echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" -1 \""$sampleFilePath1"\" -2 \""$sampleFilePath2"\"
@@ -186,7 +186,7 @@ if [ $sampleFilePath2 ]; then
     fi
 else
     if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]; then
-        echo "# $sampleId has already been aligned to $referenceId"
+        echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
     else
         echo "# Align sequence $sampleId to reference $referenceId"
         echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" \""$sampleFilePath1"\"
