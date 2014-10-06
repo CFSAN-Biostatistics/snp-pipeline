@@ -225,6 +225,82 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s work/snpma.fasta         expectedResults/snpma.fasta
     diff -q -s work/referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
+All-In-One Workflow - Listeria monocytogenes
+--------------------------------------------
+
+This Listeria monocytogene data set is based on an oubreak investigation related
+to contamination in stone fruit. It only contains environmental/produce isolates,
+though the full investigation contained data obtained from clinical samples as well.
+Due to the large size of the data, the sequences must be downloaded from the NCBI
+SRA.  The instructions below show how to create the data set and process it. 
+We do the processing with the run_snp_pipeline.sh script, which does much of the
+work in one step, but provides less insight into (and control of) the analysis
+process.  
+
+Step 1 - Create dataset::
+
+
+    # The SNP Pipeline distribution does not include the sample data, but does
+    #   include information about the sample data, as well as the reference
+    #   sequence:
+    snppipeline/data/listeriaInputs/sha256sumCheck
+    snppipeline/data/listeriaInputs/reference/CFSAN023463.HGAP.draft.fasta
+    snppipeline/data/listeriaInputs/sampleList
+
+    # Copy the supplied test data to a work area:
+    mkdir testDir
+    cd testDir
+    copy_snppipeline_data.py listeriaInputs cleanInputs
+    cd cleanInputs
+    
+    # Create sample directories and download sample data from SRA at NCBI. Note that
+    #   we use the fastq-dump command from the NCBI SRA-toolkit to fetch sample
+    #   sequences. There are other ways to get the data, but the SRA-toolkit is
+    #   easy to install, and does a good job of downloading large files.
+    mkdir samples
+    < sampleList xargs -I % sh -c ' mkdir samples/%; fastq-dump --split-files --outdir samples/% %;'
+
+    # Check the data
+    #   The original data was used to generate a hash as follows:
+    #     sha256sum sampleList reference/*.fasta samples/*/*.fastq > sha256sumCheck
+    #   The command below checks the downloaded data (and the reference sequence) against the
+    #     hashes that are saved in the sha256sumCheck file using sha256sum command, which is
+    #     generally available on unix systems.
+    sha256sum -c sha256sumCheck
+
+    
+Step 2 - Run the SNP Pipeline::
+
+    # Run the pipeline. In this case we show the command line options as we might use them
+    #   to run on a large workstation. Depending on the amount of memory and number of cores
+    #   on your workstation, there are a couple of parameters you may want/need to adjust
+    #   for this analysis or other analysis work that your do. These parameters are the
+    #   number of cores that are used, and the amount of memory that is used by the java
+    #   virtual machine. The number of cores can be altered by changing the 'numCores' 
+    #   variable in the run_snp_pipeline.sh script. The amount of memory used by the
+    #   javavm can be set by using the -Xmx flag in the call to java in the prepSamples.sh
+    #   script. Remember that if you have installed this code using a python virtual
+    #   environment, you will need to re-run 'python setup.py develop' again, or you will
+    #   be wondering why your changes are not affecting anything. 
+    run_snp_pipeline.sh -o outputDirectory -s data/samples data/reference/CFSAN023463.HGAP.draft.fasta
+
+Step 3 - View and verify the results::
+
+Upon successful completion of the pipeline, the snplist.txt file should have 11,746
+entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference
+bases are in the referenceSNP.fasta file::
+
+    # Verify the result files were created
+    ls -l work/snplist.txt
+    ls -l work/snpma.fasta
+    ls -l work/referenceSNP.fasta
+
+    # Verify correct results
+    copy_snppipeline_data.py listeriaExpectedResults expectedResults
+    diff -q -s work/snplist.txt         expectedResults/snplist.txt
+    diff -q -s work/snpma.fasta         expectedResults/snpma.fasta
+    diff -q -s work/referenceSNP.fasta  expectedResults/referenceSNP.fasta
+
 
 Step-by-Step Workflow - Lambda Virus 
 ------------------------------------
@@ -405,7 +481,6 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s snplist.txt         expectedResults/snplist.txt
     diff -q -s snpma.fasta         expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
-
 
 Step-by-Step Workflow - General Case
 ------------------------------------

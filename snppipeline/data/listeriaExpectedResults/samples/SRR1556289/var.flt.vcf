@@ -1,0 +1,59 @@
+##fileformat=VCFv4.1
+##source=VarScan2
+##INFO=<ID=ADP,Number=1,Type=Integer,Description="Average per-sample depth of bases with Phred score >= 15">
+##INFO=<ID=WT,Number=1,Type=Integer,Description="Number of samples called reference (wild-type)">
+##INFO=<ID=HET,Number=1,Type=Integer,Description="Number of samples called heterozygous-variant">
+##INFO=<ID=HOM,Number=1,Type=Integer,Description="Number of samples called homozygous-variant">
+##INFO=<ID=NC,Number=1,Type=Integer,Description="Number of samples not called">
+##FILTER=<ID=str10,Description="Less than 10% or more than 90% of variant supporting reads on one strand">
+##FILTER=<ID=indelError,Description="Likely artifact due to indel reads at this position">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=SDP,Number=1,Type=Integer,Description="Raw Read Depth as reported by SAMtools">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Quality Read Depth of bases with Phred score >= 15">
+##FORMAT=<ID=RD,Number=1,Type=Integer,Description="Depth of reference-supporting bases (reads1)">
+##FORMAT=<ID=AD,Number=1,Type=Integer,Description="Depth of variant-supporting bases (reads2)">
+##FORMAT=<ID=FREQ,Number=1,Type=String,Description="Variant allele frequency">
+##FORMAT=<ID=PVAL,Number=1,Type=String,Description="P-value from Fisher's Exact Test">
+##FORMAT=<ID=RBQ,Number=1,Type=Integer,Description="Average quality of reference-supporting bases (qual1)">
+##FORMAT=<ID=ABQ,Number=1,Type=Integer,Description="Average quality of variant-supporting bases (qual2)">
+##FORMAT=<ID=RDF,Number=1,Type=Integer,Description="Depth of reference-supporting bases on forward strand (reads1plus)">
+##FORMAT=<ID=RDR,Number=1,Type=Integer,Description="Depth of reference-supporting bases on reverse strand (reads1minus)">
+##FORMAT=<ID=ADF,Number=1,Type=Integer,Description="Depth of variant-supporting bases on forward strand (reads2plus)">
+##FORMAT=<ID=ADR,Number=1,Type=Integer,Description="Depth of variant-supporting bases on reverse strand (reads2minus)">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1
+unitig_0|quiver	17877	.	C	T	.	PASS	ADP=21;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:117:21:21:0:21:100%:1.8578E-12:0:36:0:0:12:9
+unitig_0|quiver	95254	.	C	T	.	PASS	ADP=10;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:52:10:10:0:10:100%:5.4125E-6:0:38:0:0:6:4
+unitig_0|quiver	178245	.	C	T	.	PASS	ADP=32;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:182:32:32:0:32:100%:5.4567E-19:0:38:0:0:21:11
+unitig_0|quiver	269265	.	T	G	.	PASS	ADP=20;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:111:21:20:0:20:100%:7.2544E-12:0:36:0:0:7:13
+unitig_0|quiver	371955	.	C	T	.	PASS	ADP=27;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:152:27:27:0:27:100%:5.1363E-16:0:37:0:0:16:11
+unitig_0|quiver	447925	.	A	C	.	PASS	ADP=12;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:64:12:12:0:12:100%:3.698E-7:0:38:0:0:8:4
+unitig_0|quiver	451740	.	A	G	.	PASS	ADP=8;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:41:8:8:0:8:100%:7.77E-5:0:38:0:0:3:5
+unitig_0|quiver	700107	.	T	C	.	PASS	ADP=15;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:81:15:15:0:15:100%:6.4467E-9:0:37:0:0:8:7
+unitig_0|quiver	813306	.	T	C	.	PASS	ADP=20;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:111:21:20:0:20:100%:7.2544E-12:0:35:0:0:11:9
+unitig_0|quiver	845615	.	A	T	.	PASS	ADP=9;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:46:9:9:0:9:100%:2.0568E-5:0:37:0:0:4:5
+unitig_0|quiver	1020007	.	C	T	.	PASS	ADP=19;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:105:19:19:0:19:100%:2.8292E-11:0:37:0:0:9:10
+unitig_0|quiver	1052017	.	G	A	.	PASS	ADP=17;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:93:17:17:0:17:100%:4.2852E-10:0:38:0:0:7:10
+unitig_0|quiver	1089020	.	C	T	.	PASS	ADP=18;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:99:18:18:0:18:100%:1.1019E-10:0:37:0:0:7:11
+unitig_0|quiver	1096475	.	C	A	.	PASS	ADP=9;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:46:9:9:0:9:100%:2.0568E-5:0:38:0:0:6:3
+unitig_0|quiver	1161078	.	T	C	.	PASS	ADP=14;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:76:14:14:0:14:100%:2.4927E-8:0:36:0:0:8:6
+unitig_0|quiver	1316697	.	C	A	.	PASS	ADP=19;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:105:19:19:0:19:100%:2.8292E-11:0:37:0:0:7:12
+unitig_0|quiver	1565269	.	T	A	.	PASS	ADP=14;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:76:14:14:0:14:100%:2.4927E-8:0:38:0:0:6:8
+unitig_0|quiver	1620459	.	T	A	.	PASS	ADP=16;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:81:16:16:0:15:93.75%:6.4467E-9:0:38:0:0:6:9
+unitig_0|quiver	1669126	.	T	G	.	PASS	ADP=12;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:64:13:12:0:12:100%:3.698E-7:0:38:0:0:7:5
+unitig_0|quiver	1761604	.	C	T	.	PASS	ADP=19;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:105:19:19:0:19:100%:2.8292E-11:0:38:0:0:9:10
+unitig_0|quiver	1833624	.	A	G	.	PASS	ADP=17;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:93:17:17:0:17:100%:4.2852E-10:0:37:0:0:6:11
+unitig_0|quiver	1847516	.	C	T	.	PASS	ADP=9;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:46:9:9:0:9:100%:2.0568E-5:0:38:0:0:6:3
+unitig_0|quiver	1943438	.	C	T	.	PASS	ADP=16;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:87:16:16:0:16:100%:1.6637E-9:0:36:0:0:9:7
+unitig_0|quiver	2002331	.	A	T	.	PASS	ADP=9;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:46:9:9:0:9:100%:2.0568E-5:0:38:0:0:3:6
+unitig_0|quiver	2089654	.	C	T	.	PASS	ADP=23;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:129:23:23:0:23:100%:1.2146E-13:0:36:0:0:8:15
+unitig_0|quiver	2212083	.	G	A	.	PASS	ADP=12;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:64:12:12:0:12:100%:3.698E-7:0:37:0:0:5:7
+unitig_0|quiver	2296798	.	G	A	.	PASS	ADP=27;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:152:27:27:0:27:100%:5.1363E-16:0:37:0:0:13:14
+unitig_0|quiver	2323588	.	T	C	.	PASS	ADP=21;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:111:21:21:0:20:95.24%:7.2544E-12:0:36:0:0:12:8
+unitig_0|quiver	2490111	.	T	C	.	PASS	ADP=38;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:218:38:38:0:38:100%:1.4508E-22:0:38:0:0:16:22
+unitig_0|quiver	2537455	.	C	T	.	PASS	ADP=14;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:76:14:14:0:14:100%:2.4927E-8:0:38:0:0:9:5
+unitig_0|quiver	2568446	.	T	C	.	PASS	ADP=26;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:146:26:26:0:26:100%:2.0165E-15:0:38:0:0:12:14
+unitig_0|quiver	2575523	.	C	G	.	PASS	ADP=28;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:158:28:28:0:28:100%:1.3074E-16:0:36:0:0:11:17
+unitig_0|quiver	2732778	.	A	C	.	PASS	ADP=28;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:158:28:28:0:28:100%:1.3074E-16:0:38:0:0:15:13
+unitig_0|quiver	2877555	.	T	G	.	PASS	ADP=23;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:129:24:23:0:23:100%:1.2146E-13:0:37:0:0:11:12
+unitig_0|quiver	2932527	.	C	T	.	PASS	ADP=22;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:123:22:22:0:22:100%:4.7526E-13:0:37:0:0:10:12
