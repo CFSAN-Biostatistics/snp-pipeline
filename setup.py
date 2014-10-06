@@ -91,6 +91,7 @@ setup(
     install_requires=[
         'PyVCF',
         'setuptools',
+        'psutil',
     ],
 
     # package (aka directory) containing unit test modules

@@ -24,6 +24,7 @@
 #   20140905-scd: Use getopts to parse the command arguments.  Improved online help.
 #   20140905-scd: Expects the full file name of the reference on the command line.
 #   20140910-scd: Outputs are not rebuilt when already fresh, unless the -f (force) option is specified.
+#   20141003-scd: Enhance log output
 #Notes:
 #
 #Bugs:
@@ -48,6 +49,17 @@ usage()
     echo '  -f               : Force processing even when result files already exist and are newer than inputs'
     echo
 }
+
+# --------------------------------------------------------
+# Log the starting conditions
+echo "# Command           : $0 $@"
+echo "# Working Directory : $(pwd)"
+if [[ "$PBS_JOBID" != "" ]]; then
+echo "# \$PBS_JOBID        : $PBS_JOBID"
+fi
+echo "# Hostname          :" $(hostname)
+echo "# RAM               :" $(python -c 'import psutil; print "{:,} MB".format(psutil.virtual_memory().total / 1024 / 1024)')
+echo
 
 # --------------------------------------------------------
 # getopts command line option handler: 
@@ -112,6 +124,7 @@ else
     echo "# "$(date +"%Y-%m-%d %T") bowtie2-build "$referenceFilePath" "$referenceBasePath"
     echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
     bowtie2-build "$referenceFilePath" "$referenceBasePath"
+    echo
 fi
 
 #Create fai index
@@ -121,6 +134,7 @@ else
     echo "# "$(date +"%Y-%m-%d %T") samtools faidx "$referenceFilePath"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
     samtools faidx "$referenceFilePath"
+    echo
 fi
 
 echo "# "$(date +"%Y-%m-%d %T") prepReference.sh finished
