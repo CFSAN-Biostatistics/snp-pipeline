@@ -27,15 +27,17 @@ $ copy_snppipeline_data.py lambdaVirusInputs testLambdaVirus
     
     parser.add_argument('whichData',
     metavar='whichData',
-    choices=['lambdaVirusInputs', 'lambdaVirusExpectedResults', 'agonaInputs', 'agonaExpectedResults'],
+    choices=['lambdaVirusInputs', 'lambdaVirusExpectedResults', 'agonaInputs', 'agonaExpectedResults', 'listeriaInputs', 'listeriaExpectedResults'],
     help="""    Which of the supplied data sets to copy.  The choices are:
         lambdaVirusInputs          : Input reference and fastq files
         lambdaVirusExpectedResults : Expected results files
         agonaInputs                : Input reference file
         agonaExpectedResults       : Expected results files
+        listeriaInputs             : Input reference file
+        listeriaExpectedResults    : Expected results files
     Note: the lambda virus data set is complete with input data and expected results. 
-    The agona data set has the reference genome and the expected results, but not 
-    the input fastq files, because the files are too large to include with the 
+    The agona and listeria data sets have the reference genome and the expected results, but 
+    not the input fastq files, because the files are too large to include with the 
     package.  (default: None)
     """)
     

@@ -66,10 +66,11 @@ Note: the expected pipeline results are also included in the distribution.  To f
 
     copy_snppipeline_data.py lambdaVirusExpectedResults myDirectoryForExpectedResults
 
-After verifying correct results on the lambda data set, you can follow the workflow steps for the agona test data
-set.  To fetch the expected result files::
+After verifying correct results on the lambda data set, you can follow the workflow steps for the agona data
+set or the listeria data set.  To fetch the expected result files::
 
     copy_snppipeline_data.py agonaExpectedResults myDirectoryForExpectedResults
+    copy_snppipeline_data.py listeriaExpectedResults myDirectoryForExpectedResults
 
 **Q: My results for the included test data do not match the expected results. What is the cause?**
 

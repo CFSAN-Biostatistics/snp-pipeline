@@ -12,10 +12,9 @@ History
 
 **Other Changes:**
 
-* There is a new dependency on the python psutil package.  Pip will attempt to 
-  install the psutil package automatically.  If it fails, you may need to
-  manually install the python-dev package.  In Ubuntu, 
-  ``sudo apt-get install python-dev``
+* There is a new dependency on the python psutil package.  When you install the SNP Pipeline, 
+  pip will attempt to install the psutil package automatically.  If it fails, you may need to
+  manually install the python-dev package.  In Ubuntu, ``sudo apt-get install python-dev``
 * Added a new script, run_snp_pipeline.sh, to run the entire pipeline either on 
   a workstation or on a High Performance Computing cluster with the Torque job 
   queue manager.
@@ -27,7 +26,11 @@ History
   files.  If you modify an upstream file, any dependent downstream files will be rebuilt.  
   You can force processing regardless of file timestamps with the ``-f`` option.
   Similar functionality for the shell scripts was previously implemented in release 0.2.0.
-
+* Added a Listeria monocytogenes data set.  Updated the usage instructions, illustrating 
+  how to download the Listeria samples from NCBI and how to run the SNP Pipeline on the 
+  Listeria data set.  The distribution includes the expected result files for the Listeria 
+  data set.  Note that due to the large file sizes, the Listeria expected results data set
+  does not contain all the intermediate output files.
 
 
 0.2.1 (2014-09-24)

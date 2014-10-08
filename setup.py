@@ -83,6 +83,13 @@ setup(
                          'data/agonaExpectedResults/snplist.txt',
                          'data/agonaExpectedResults/samples/*/reads.snp.pileup',
                          'data/agonaExpectedResults/snpma.fasta',
+                         'data/listeriaInputs/reference/*.fasta',
+                         'data/listeriaInputs/sampleList',
+                         'data/listeriaInputs/sha256sumCheck',
+                         'data/listeriaExpectedResults/referenceSNP.fasta',
+                         'data/listeriaExpectedResults/samples/*/var.flt.vcf',
+                         'data/listeriaExpectedResults/snplist.txt',
+                         'data/listeriaExpectedResults/snpma.fasta',
                          ]
     },
 

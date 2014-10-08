@@ -160,11 +160,6 @@ can be processed in a reasonable amount of time.  Due to the large size of real
 data, the sequences must be downloaded from the NCBI SRA.  Follow the instructions 
 below to download and process the data set.
 
-This workflow illustrates how to run the SNP Pipeline on a High Performance Computing 
-cluster (HPC) running the Torque job queue.  If you do not have a cluster available,
-you can still work through this example -- just remove the ``-Q torque`` command line 
-option in step 2.
-
 Step 1 - Gather data::
 
     # The SNP Pipeline distribution includes sample data organized as shown below:
@@ -204,10 +199,9 @@ Step 2 - Run the SNP Pipeline::
     # Run the pipeline
     # Specify the following options:
     #   -m : mirror link the input samples and reference files
-    #   -o : working directory
+    #   -o : output directory
     #   -s : samples parent directory
-    #   -Q : HPC job queue manager
-    run_snp_pipeline.sh -m -Q torque -o work -s cleanInputs/samples cleanInputs/reference/NC_011149.fasta
+    run_snp_pipeline.sh -m -o work -s cleanInputs/samples cleanInputs/reference/NC_011149.fasta
       
 Step 3 - View and verify the results:
 
@@ -237,12 +231,17 @@ We do the processing with the run_snp_pipeline.sh script, which does much of the
 work in one step, but provides less insight into (and control of) the analysis
 process.  
 
+This workflow illustrates how to run the SNP Pipeline on a High Performance Computing 
+cluster (HPC) running the Torque job queue manager.  If you do not have a cluster available,
+you can still work through this example -- just remove the ``-Q torque`` command line 
+option in step 2.
+
 Step 1 - Create dataset::
 
 
     # The SNP Pipeline distribution does not include the sample data, but does
     #   include information about the sample data, as well as the reference
-    #   sequence:
+    #   sequence.  The files are organized as shown below:
     snppipeline/data/listeriaInputs/sha256sumCheck
     snppipeline/data/listeriaInputs/reference/CFSAN023463.HGAP.draft.fasta
     snppipeline/data/listeriaInputs/sampleList
@@ -267,39 +266,46 @@ Step 1 - Create dataset::
     #     hashes that are saved in the sha256sumCheck file using sha256sum command, which is
     #     generally available on unix systems.
     sha256sum -c sha256sumCheck
-
+    cd ..
     
-Step 2 - Run the SNP Pipeline::
+Step 2 - Run the SNP Pipeline:
 
-    # Run the pipeline. In this case we show the command line options as we might use them
-    #   to run on a large workstation. Depending on the amount of memory and number of cores
-    #   on your workstation, there are a couple of parameters you may want/need to adjust
-    #   for this analysis or other analysis work that your do. These parameters are the
-    #   number of cores that are used, and the amount of memory that is used by the java
-    #   virtual machine. The number of cores can be altered by changing the 'numCores' 
-    #   variable in the run_snp_pipeline.sh script. The amount of memory used by the
-    #   javavm can be set by using the -Xmx flag in the call to java in the prepSamples.sh
-    #   script. Remember that if you have installed this code using a python virtual
-    #   environment, you will need to re-run 'python setup.py develop' again, or you will
-    #   be wondering why your changes are not affecting anything. 
-    run_snp_pipeline.sh -o outputDirectory -s data/samples data/reference/CFSAN023463.HGAP.draft.fasta
+In this case we show the command line options for running on a high performance 
+computing cluster.  If instead, you decide to run this on a workstation, there are
+a couple of parameters you may want/need to adjust for this  analysis or other analysis
+work that your do. These parameters are the number of CPU cores that are used, and the 
+amount of memory that is used by the java virtual machine. The number of cores can be 
+altered by changing the 'numCores' variable in the run_snp_pipeline.sh script. The 
+amount of memory used by the javavm can be set by using the -Xmx flag in the call to 
+java in the prepSamples.sh script. Remember that if you previously installed this code using 
+``python setup.py develop``, you will need to re-run ``python setup.py develop`` again, 
+or you will be wondering why your changes are not affecting anything.  Launch the
+pipeline::
+
+    # Run the pipeline. 
+    # Specify the following options:
+    #   -m : mirror link the input samples and reference files
+    #   -Q : HPC job queue manager
+    #   -o : output directory
+    #   -s : samples parent directory
+    run_snp_pipeline.sh -m -Q torque -o outputDirectory -s cleanInputs/samples cleanInputs/reference/CFSAN023463.HGAP.draft.fasta
 
 Step 3 - View and verify the results::
 
-Upon successful completion of the pipeline, the snplist.txt file should have 11,746
+Upon successful completion of the pipeline, the snplist.txt file should have 11,787
 entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference
 bases are in the referenceSNP.fasta file::
 
     # Verify the result files were created
-    ls -l work/snplist.txt
-    ls -l work/snpma.fasta
-    ls -l work/referenceSNP.fasta
+    ls -l outputDirectory/snplist.txt
+    ls -l outputDirectory/snpma.fasta
+    ls -l outputDirectory/referenceSNP.fasta
 
     # Verify correct results
     copy_snppipeline_data.py listeriaExpectedResults expectedResults
-    diff -q -s work/snplist.txt         expectedResults/snplist.txt
-    diff -q -s work/snpma.fasta         expectedResults/snpma.fasta
-    diff -q -s work/referenceSNP.fasta  expectedResults/referenceSNP.fasta
+    diff -q -s outputDirectory/snplist.txt         expectedResults/snplist.txt
+    diff -q -s outputDirectory/snpma.fasta         expectedResults/snpma.fasta
+    diff -q -s outputDirectory/referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
 
 Step-by-Step Workflow - Lambda Virus 

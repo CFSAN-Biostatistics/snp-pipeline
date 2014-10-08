@@ -184,8 +184,6 @@ originally used to produce our results. (Use sha256sum at the unix command line.
 Listeria monocytogenes
 ----------------------
 
-*Coming soon in a future release*
-
 This is designed to be a realistic-sized data set based on an outbreak
 of L. m.  in soft cheese. The data must be downloaded from the NCBI
 due to its large size. We provide a file of hashes that can easily be

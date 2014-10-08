@@ -16,3 +16,10 @@ include snppipeline/data/agonaExpectedResults/samples/*/reads.snp.pileup
 include snppipeline/data/agonaExpectedResults/samples/*/var.flt.vcf
 include snppipeline/data/agonaExpectedResults/snplist.txt
 include snppipeline/data/agonaExpectedResults/snpma.fasta
+include snppipeline/data/listeriaInputs/reference/*.fasta
+include snppipeline/data/listeriaInputs/sampleList
+include snppipeline/data/listeriaInputs/sha256sumCheck
+include snppipeline/data/listeriaExpectedResults/referenceSNP.fasta
+include snppipeline/data/listeriaExpectedResults/samples/*/var.flt.vcf
+include snppipeline/data/listeriaExpectedResults/snplist.txt
+include snppipeline/data/listeriaExpectedResults/snpma.fasta

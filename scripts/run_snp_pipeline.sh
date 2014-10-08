@@ -237,7 +237,7 @@ if [[ "$mirrorFlag" = "1" ]]; then
     # Mirror/link the reference
     mkdir -p "$workDir/reference"
     absoluteReferenceFilePath=$(get_abs_filename "$referenceFilePath")
-    cp -v -u -s "$absoluteReferenceFilePath" "$workDir/reference"
+    cp -v -u -s -f "$absoluteReferenceFilePath" "$workDir/reference"
     # since we mirrored the reference, we need to update our reference location
     referenceFileName=${referenceFilePath##*/} # strip directories
     referenceFilePath="$workDir/reference/$referenceFileName"
@@ -249,8 +249,8 @@ if [[ "$mirrorFlag" = "1" ]]; then
         mkdir -p "$workDir/samples/$baseDir"
         # copy without stderr message and without exit error code
         absoluteSampleDir=$(get_abs_filename "$dir")
-        cp -v -r -s -u "$absoluteSampleDir"/*.fastq* "$workDir/samples/$baseDir" 2> /dev/null || true
-        cp -v -r -s -u "$absoluteSampleDir"/*.fq* "$workDir/samples/$baseDir" 2> /dev/null || true
+        cp -r -v -u -s -f "$absoluteSampleDir"/*.fastq* "$workDir/samples/$baseDir" 2> /dev/null || true
+        cp -r -v -u -s -f "$absoluteSampleDir"/*.fq* "$workDir/samples/$baseDir" 2> /dev/null || true
     done
     # since we mirrored the samples, we need to update our samples location and sorted list of samples
     samplesDir="$workDir/samples"
