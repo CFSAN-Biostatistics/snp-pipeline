@@ -6,7 +6,7 @@ CFSAN SNP Pipeline
 .. image:: https://badge.fury.io/py/snp-pipeline.png
     :target: http://badge.fury.io/py/snp-pipeline
     
-.. Image showing the Travis Continuous Integration test status
+.. Image showing the Travis Continuous Integration test status, commented out for now
 .. .. image:: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline.png?branch=master
 ..        :target: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline
 
@@ -56,7 +56,7 @@ from the command line. All of the parameters used are available as command
 line options. In situations where additional customization is desired, the
 code is not highly complex and should be easy to modify as necessary.
 
-Two examples of using the code are provided. These examples serve as both
+Examples of using the code are provided. These examples serve as both
 unit tests, and as examples that can be modified to work on other data
 sets of interest.
 
@@ -70,10 +70,9 @@ To cite SNP Pipeline, please reference the SNP Pipeline GitHub repository:
 
 and cite the associated paper:
 
-    Pettengill, JB, Luo Y, Rand H, Chen Y, Gonzalez-Escalona N, Ottesen A,
-    Allard MW, Strain E. *In review*. An evaluation of alternative methods for
-    constructing phylogenies from whole genome sequence data: A case
-    study with *Salmonella*. PeerJ.
+    `Pettengill JB, Luo Y, Davis S, Chen Y, Gonzalez-Escalona N, Ottesen A, Rand H, Allard MW, Strain​ E
+    An evaluation of alternative methods for constructing phylogenies from whole genome sequence data: A case study with Salmonella. 
+    <https://peerj.com/articles/620/>`_
 
 
 License
