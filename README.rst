@@ -27,8 +27,8 @@ and Drug Administration, Center for Food Safety and Applied Nutrition.
 * Source Code: https://github.com/CFSAN-Biostatistics/snp-pipeline
 * PyPI Distribution: https://pypi.python.org/pypi/snp-pipeline
 
-Features
---------
+Introduction
+------------
 
 The CFSAN SNP Pipeline uses reference-based alignments to create a matrix of
 SNPs for a given set of samples. The process generally starts off by finding
@@ -52,8 +52,8 @@ analysis is desired.
 The CFSAN SNP Pipeline is written in a combination of bash and python. The
 code (including the bash scripts) is designed to be straighforward to
 install. Scripts are provided to run the Python code
-from the command line. All of the parameters used are available as command
-line options. In situations where additional customization is desired, the
+from the command line. A configuration file supports customizing the
+behavior of the pipeline. In situations where additional customization is desired, the
 code is not highly complex and should be easy to modify as necessary.
 
 Examples of using the code are provided. These examples serve as both

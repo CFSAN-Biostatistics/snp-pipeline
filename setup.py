@@ -67,7 +67,8 @@ setup(
     # The package_data parameter only works for binary distributions.
     # The same list of files is in MANIFEST.in for sdist distributions.
     package_data={
-        'snppipeline' : ['data/lambdaVirusInputs/reference/*.fasta',
+        'snppipeline' : ['data/configuration/snppipeline.conf',
+                         'data/lambdaVirusInputs/reference/*.fasta',
                          'data/lambdaVirusInputs/samples/sample*/*.fastq',
                          'data/lambdaVirusExpectedResults/samples/sample*/reads.sam',
                          'data/lambdaVirusExpectedResults/samples/sample*/reads.all.pileup',

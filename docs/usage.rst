@@ -6,35 +6,37 @@ Usage
 
 .. highlight:: bash
 
+
+
 The SNP Pipeline is run from the Unix command line.  The pipeline consists of a collection
 of shell scripts and python scripts.
 
 
-+---------------------------+--------------------------------------------------------------------+
-| Script                    | | Description                                                      |
-+===========================+====================================================================+
-| copy_snppipeline_data.py  | | Copies supplied example data to a work directory                 |
-+---------------------------+--------------------------------------------------------------------+
-| run_snp_pipeline.sh       | | This do-it-all script runs all the other scripts listed below,   |
-|                           | | comprising all the pipeline steps                                |
-+---------------------------+--------------------------------------------------------------------+
-| prepReference.sh          | | Indexes the reference genome                                     |
-+---------------------------+--------------------------------------------------------------------+
-| alignSampleToReference.sh | | Aligns samples to the reference genome                           |
-+---------------------------+--------------------------------------------------------------------+
-| prepSamples.sh            | | Finds variants in each sample                                    |
-+---------------------------+--------------------------------------------------------------------+
-| create_snp_list           | | Combines the SNP positions across all samples into a single      |
-|                           | | unified SNP list file                                            |
-+---------------------------+--------------------------------------------------------------------+
-| create_snp_pileup         | | Creates the SNP pileup file for a sample -- the pileup file at   |
-|                           | | the positions where SNPs were called in any of the samples       |
-+---------------------------+--------------------------------------------------------------------+
-| create_snp_matrix.py      | | Creates a matrix of SNPs across all samples                      |
-+---------------------------+--------------------------------------------------------------------+
-| create_snp_reference_seq  | | Writes the reference sequence bases at SNP locations to          |
-|                           | | a fasta file                                                     |
-+---------------------------+--------------------------------------------------------------------+
++-----------------------------+--------------------------------------------------------------------+
+| Script                      | | Description                                                      |
++=============================+====================================================================+
+| copy_snppipeline_data.py    | | Copies supplied example data to a work directory                 |
++-----------------------------+--------------------------------------------------------------------+
+| run_snp_pipeline.sh         | | This do-it-all script runs all the other scripts listed below,   |
+|                             | | comprising all the pipeline steps                                |
++-----------------------------+--------------------------------------------------------------------+
+| prepReference.sh            | | Indexes the reference genome                                     |
++-----------------------------+--------------------------------------------------------------------+
+| alignSampleToReference.sh   | | Aligns samples to the reference genome                           |
++-----------------------------+--------------------------------------------------------------------+
+| prepSamples.sh              | | Finds variants in each sample                                    |
++-----------------------------+--------------------------------------------------------------------+
+| create_snp_list.py          | | Combines the SNP positions across all samples into a single      |
+|                             | | unified SNP list file                                            |
++-----------------------------+--------------------------------------------------------------------+
+| create_snp_pileup.py        | | Creates the SNP pileup file for a sample -- the pileup file at   |
+|                             | | the positions where SNPs were called in any of the samples       |
++-----------------------------+--------------------------------------------------------------------+
+| create_snp_matrix.py        | | Creates a matrix of SNPs across all samples                      |
++-----------------------------+--------------------------------------------------------------------+
+| create_snp_reference_seq.py | | Writes the reference sequence bases at SNP locations to          |
+|                             | | a fasta file                                                     |
++-----------------------------+--------------------------------------------------------------------+
 
 
 Inputs
@@ -70,10 +72,10 @@ Outputs
 
 By default, the SNP Pipeline generates the following output files.  If you 
 need more control over the output, you can run the pipeline one step at a time.  
-See the section *Step-by-Step Workflows* below.
+See :ref:`step-by-step-workflows`.
 
 * snplist.txt : contains a combined list of the SNP positions across all 
-  samples in a single unified SNP list file identifing the postions and sample 
+  samples in a single unified SNP list file identifing the positions and sample 
   names where SNPs were called.
 
 * reads.snp.pileup : for each sample, the pileup file at the positions where 
@@ -90,20 +92,111 @@ See the section *Step-by-Step Workflows* below.
   all the SNP locations.
 
 
+.. _all-in-one-script-label:
+
 All-In-One SNP Pipeline Script
 ------------------------------
 
-Most users should be able to run the SNP pipeline by launching a single script, 
+Most users should be able to run the SNP Pipeline by launching a single script, 
 ``run_snp_pipeline.sh``.  This script is easy to use and works equally well on
 your desktop workstation or on a High Performance Computing cluster.  You can 
 find examples of using the script in the sections below.
 
 If you need more flexibility, you can run the individual pipeline scripts one 
-step at a time.  See the section *Step-by-Step Workflows* below.
+step at a time.  See :ref:`step-by-step-workflows`.
 
+The sections below give detailed examples of workflows you can run with the
+all-in-one run_snp_pipeline.sh script.
+
+| :ref:`all-in-one-workflow-lambda`
+| :ref:`all-in-one-workflow-agona`
+| :ref:`all-in-one-workflow-listeria`
+|
+
+.. _logging-label:
+
+Logging
+-------
+
+When the SNP Pipeline is launched with the ``run_snp_pipeline.sh`` script,
+it generates log files for each processing step of the pipeline.  The logs for 
+each pipeline run are stored in a time-stamped directory under the output directory.
+If the pipeline is re-run on the same samples, the old log files are kept and
+a new log directory is created for the new run.  For example, the output 
+directory might look like this after two runs::
+
+    drwx------ 2 me group 4096 Oct 17 16:37 logs-20141017.154428/
+    drwx------ 2 me group 4096 Oct 17 16:38 logs-20141017.163848/
+    drwx------ 2 me group 4096 Oct 17 16:37 reference/
+    -rw------- 1 me group  194 Oct 17 16:38 referenceSNP.fasta
+    -rw------- 1 me group  104 Oct 17 16:38 sampleDirectories.txt
+    drwx------ 6 me group 4096 Oct 17 16:37 samples/
+    -rw------- 1 me group 7216 Oct 17 16:38 snplist.txt
+    -rw------- 1 me group  708 Oct 17 16:38 snpma.fasta
+
+A log file is created for each step of the pipeline for each sample.  For 
+performamnce reasons, the samples are sorted by size and processed largest
+first.  This sorting is reflected in the naming of the log files.  The log files
+are named with a suffix indicating the sample number::
+
+    -rw------- 1 me group  1330 Oct 17 16:37 alignSamples.log-1
+    -rw------- 1 me group  1330 Oct 17 16:37 alignSamples.log-2
+    -rw------- 1 me group  1330 Oct 17 16:37 alignSamples.log-3
+    -rw------- 1 me group 12045 Oct 17 16:37 prepReference.log
+    -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-1
+    -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-2
+    -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-3
+    -rw------- 1 me group   983 Oct 17 16:37 snpList.log
+    -rw------- 1 me group  1039 Oct 17 16:37 snpMatrix.log
+    -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-1
+    -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-2
+    -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-3
+    -rw------- 1 me group   806 Oct 17 16:37 snpReference.log
+
+To determine which samples correspond to which log files, you can either grep the
+log files for the sample name or inspect the sorted sampleDirectories.txt file to determine
+the sequential position of the sample.  The file names are consistent regardless of whether 
+the pipeline is run on a workstation or HPC cluster.
+
+In addition to the processing log files, the log directory also contains a copy of the
+configuration file used for each run -- capturing the parameters used during the run.
+
+
+.. _mirrored-input-label:
+
+Mirrored Inputs
+---------------
+
+When the SNP Pipeline is launched with the ``run_snp_pipeline.sh`` script, it has the
+optional capability to create a mirrored copy of the input fasta and fastq files.  You 
+might use this feature to avoid polluting the reference directory and sample directories 
+with the intermediate files generated by the snp pipeline.  The mirroring function can 
+either create normal copies of the files, or it can create links to the original files 
+-- saving both time and disk space.  With linked files, you can easily run multiple 
+experiments on the same data or different overlapping sets of samples without having 
+duplicate copies of the original sample files.  See the :ref:`cmd-ref-run-snp-pipeline` 
+command reference for the mirroring syntax.
+
+The mirroring function creates a "reference" subdirectory and a "samples" subdirectory under
+the main output directory.  One directory per sample is created under the "samples" directory.  
+The generated intermediate files are placed into the mirrored directories, not in the original
+locations of the inputs. The SNP Pipeline attempts to preserve the time stamps of the original 
+files in the mirrored directories.
+
+Keep in mind the following limitations when mirroring the inputs.
+
+* Some file systems do not support soft (symbolic) links.  If you attempt to create a soft link
+  on a file system without the capability, the operation will fail with an error message.
+* Hard links cannot be used to link files across two different file systems.  The original 
+  file and the link must both reside on the same file system.
+* Normal file copies should always work, but the copy operation can be lengthy and the duplicate 
+  files will consume extra storage space.
+
+
+.. _all-in-one-workflow-lambda:
 
 All-In-One Workflow - Lambda Virus
-----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The SNP Pipeline software distribution includes a small Lambda Virus data set 
 that can be quickly processed to verify the basic functionality of the software.
@@ -151,9 +244,10 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s snpma.fasta         expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
+.. _all-in-one-workflow-agona:
 
 All-In-One Workflow - Salmonella Agona
---------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Salmonella Agona data set contains a small number of realistic sequences that 
 can be processed in a reasonable amount of time.  Due to the large size of real
@@ -198,10 +292,10 @@ Step 2 - Run the SNP Pipeline::
 
     # Run the pipeline
     # Specify the following options:
-    #   -m : mirror link the input samples and reference files
+    #   -m : mirror the input samples and reference files
     #   -o : output directory
     #   -s : samples parent directory
-    run_snp_pipeline.sh -m -o work -s cleanInputs/samples cleanInputs/reference/NC_011149.fasta
+    run_snp_pipeline.sh -m soft -o outputDirectory -s cleanInputs/samples cleanInputs/reference/NC_011149.fasta
       
 Step 3 - View and verify the results:
 
@@ -209,18 +303,21 @@ Upon successful completion of the pipeline, the snplist.txt file should have 362
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     # Verify the result files were created
-    ls -l work/snplist.txt
-    ls -l work/snpma.fasta
-    ls -l work/referenceSNP.fasta
+    ls -l outputDirectory/snplist.txt
+    ls -l outputDirectory/snpma.fasta
+    ls -l outputDirectory/referenceSNP.fasta
 
     # Verify correct results
     copy_snppipeline_data.py agonaExpectedResults expectedResults
-    diff -q -s work/snplist.txt         expectedResults/snplist.txt
-    diff -q -s work/snpma.fasta         expectedResults/snpma.fasta
-    diff -q -s work/referenceSNP.fasta  expectedResults/referenceSNP.fasta
+    diff -q -s outputDirectory/snplist.txt         expectedResults/snplist.txt
+    diff -q -s outputDirectory/snpma.fasta         expectedResults/snpma.fasta
+    diff -q -s outputDirectory/referenceSNP.fasta  expectedResults/referenceSNP.fasta
+
+
+.. _all-in-one-workflow-listeria:
 
 All-In-One Workflow - Listeria monocytogenes
---------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This Listeria monocytogene data set is based on an oubreak investigation related
 to contamination in stone fruit. It only contains environmental/produce isolates,
@@ -270,25 +367,21 @@ Step 1 - Create dataset::
     
 Step 2 - Run the SNP Pipeline:
 
-In this case we show the command line options for running on a high performance 
-computing cluster.  If instead, you decide to run this on a workstation, there are
-a couple of parameters you may want/need to adjust for this  analysis or other analysis
+There are a couple of parameters you may need to adjust for this analysis or other analysis
 work that your do. These parameters are the number of CPU cores that are used, and the 
-amount of memory that is used by the java virtual machine. The number of cores can be 
-altered by changing the 'numCores' variable in the run_snp_pipeline.sh script. The 
-amount of memory used by the javavm can be set by using the -Xmx flag in the call to 
-java in the prepSamples.sh script. Remember that if you previously installed this code using 
-``python setup.py develop``, you will need to re-run ``python setup.py develop`` again, 
-or you will be wondering why your changes are not affecting anything.  Launch the
-pipeline::
+amount of memory that is used by the java virtual machine.  Both can be set in a
+configuration file you can pass to run_snp_pipeline.sh with the ``-c`` option.  
+See :ref:`faq-performance-label`.
+
+Launch the pipeline::
 
     # Run the pipeline. 
     # Specify the following options:
-    #   -m : mirror link the input samples and reference files
+    #   -m : mirror the input samples and reference files
     #   -Q : HPC job queue manager
     #   -o : output directory
     #   -s : samples parent directory
-    run_snp_pipeline.sh -m -Q torque -o outputDirectory -s cleanInputs/samples cleanInputs/reference/CFSAN023463.HGAP.draft.fasta
+    run_snp_pipeline.sh -m soft -Q torque -o outputDirectory -s cleanInputs/samples cleanInputs/reference/CFSAN023463.HGAP.draft.fasta
 
 Step 3 - View and verify the results::
 
@@ -308,8 +401,29 @@ bases are in the referenceSNP.fasta file::
     diff -q -s outputDirectory/referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
 
+.. _step-by-step-workflows:
+
+Step-by-Step Workflows
+----------------------
+
+The run_snp_pipeline.sh script described above provides a simplified interface
+for running all the pipeline steps from a single command.  If you need more
+control over the inputs, outputs, or processing steps, you can run the pipeline 
+one step at a time.
+
+The sections below give detailed examples of workflows you can run with the
+component tools of the pipeline.
+
+| :ref:`step-by-step-workflow-lambda`
+| :ref:`step-by-step-workflow-agona`
+| :ref:`step-by-step-workflow-general-case`
+|
+
+
+.. _step-by-step-workflow-lambda:
+
 Step-by-Step Workflow - Lambda Virus 
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The SNP Pipeline software distribution includes a small Lambda Virus data set 
 that can be quickly processed to verify the basic functionality of the software.
@@ -339,7 +453,7 @@ Step 2 - Prep work::
     rm sampleFullPathNames.txt 2>/dev/null
     cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
     # Determine the number of CPU cores in your computer
-    NUMCORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
+    numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 Step 3 - Prep the reference::
 
@@ -348,12 +462,13 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh -p $NUMCORES reference/lambda_virus.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/lambda_virus.fasta
 
 Step 5 - Prep the samples::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/lambda_virus.fasta
+    export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/lambda_virus.fasta
 
 Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -362,7 +477,7 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 Step 7 - Create pileups at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
 
 Step 8 - Create the SNP matrix::
 
@@ -390,9 +505,10 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
 
+.. _step-by-step-workflow-agona:
 
 Step-by-Step Workflow - Salmonella Agona
-----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Salmonella Agona data set contains realistic sequences that can be processed
 in a reasonable amount of time.  Due to the large size of real data, the sequences
@@ -438,7 +554,7 @@ Step 2 - Prep work::
     rm sampleFullPathNames.txt 2>/dev/null
     cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
     # Determine the number of CPU cores in your computer
-    NUMCORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
+    numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 Step 3 - Prep the reference::
 
@@ -447,12 +563,13 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh -p $NUMCORES reference/NC_011149.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/NC_011149.fasta
 
 Step 5 - Prep the samples::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/NC_011149.fasta
+    export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/NC_011149.fasta
 
 Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -461,7 +578,7 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 Step 7 - Create pileups at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
 
 Step 8 - Create the SNP matrix::
 
@@ -488,8 +605,11 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s snpma.fasta         expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
+
+.. _step-by-step-workflow-general-case:
+
 Step-by-Step Workflow - General Case
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Step 1 - Gather data:
 
@@ -526,7 +646,7 @@ Step 2 - Prep work::
     rm $TMPFILE1
     
     # Determine the number of CPU cores in your computer
-    NUMCORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
+    numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 Step 3 - Prep the reference::
 
@@ -535,12 +655,13 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh -p $NUMCORES reference/my_reference.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/my_reference.fasta
 
 Step 5 - Prep the samples::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES prepSamples.sh reference/my_reference.fasta
+    export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/my_reference.fasta
 
 Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -549,7 +670,7 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 Step 7 - Create pileups at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $NUMCORES -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
 
 Step 8 - Create the SNP matrix::
 

@@ -17,6 +17,8 @@ Contents:
    usage
    reproducible
    faq
+   configuration
+   cmd_ref
    contributing
    authors
    history

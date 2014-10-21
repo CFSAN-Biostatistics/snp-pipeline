@@ -56,16 +56,17 @@ results. We discuss these aspects of ensuring reproducibility in more detail in
 other portions of this document.
 
 The pipeline depends on some fairly complex software packages, and these packages have
-large numbers of parameters. We do not expose all of these parameters, but only those
-we have found it useful to modify in our work. Those wishing to further modify the
+large numbers of parameters. As released, the pipeline does not specify values
+for every possible parameter, but only those we have found it useful to modify in our work. 
+A configuration file used by the pipeline provides a record of the parameters used 
+and also makes it possible to customize the behavior of the pipeline by adding or 
+modifying parameters as needed. Those wishing to further modify the
 software behavior will have to adjust the code to meet their needs.
 
-We recommend recording the parameter values used for any important
-results, ideally in a script or configuration file that is under
-version control. Future versions of this software will probably
-contain both a configuration file that sets all parameters, as well as
-an output file documenting the run.
-
+We recommend retaining the parameter values used for any important results,  ideally 
+in a script or configuration file that is under version control.  The pipeline generates
+log files documenting each run by capturing software versions and parameters used for 
+each run.
 
 Concurrency
 -----------

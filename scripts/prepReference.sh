@@ -25,6 +25,8 @@
 #   20140905-scd: Expects the full file name of the reference on the command line.
 #   20140910-scd: Outputs are not rebuilt when already fresh, unless the -f (force) option is specified.
 #   20141003-scd: Enhance log output
+#   20141019-scd: Use the configuration parameter environment variable.
+#   20141020-scd: Check for empty target files.
 #Notes:
 #
 #Bugs:
@@ -46,7 +48,8 @@ usage()
     echo
     echo 'Options:'
     echo '  -h               : Show this help message and exit'
-    echo '  -f               : Force processing even when result files already exist and are newer than inputs'
+    echo '  -f               : Force processing even when result files already exist and'
+    echo '                     are newer than inputs'
     echo
 }
 
@@ -118,22 +121,22 @@ fi
 referenceBasePath=${referenceFilePath%.fasta} # strip the file extension
 
 #Create index file for reference
-if [[ $opt_f_set != "1" && "$referenceBasePath.rev.1.bt2" -nt "$referenceFilePath" ]]; then
+if [[ $opt_f_set != "1" && -s "$referenceBasePath.rev.1.bt2" && "$referenceBasePath.rev.1.bt2" -nt "$referenceFilePath" ]]; then
     echo "# Bowtie index $referenceBasePath.rev.1.bt2 is already freshly built.  Use the -f option to force a rebuild."
 else
-    echo "# "$(date +"%Y-%m-%d %T") bowtie2-build "$referenceFilePath" "$referenceBasePath"
+    echo "# "$(date +"%Y-%m-%d %T") bowtie2-build $Bowtie2Build_ExtraParams "$referenceFilePath" "$referenceBasePath"
     echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
-    bowtie2-build "$referenceFilePath" "$referenceBasePath"
+    bowtie2-build $Bowtie2Build_ExtraParams "$referenceFilePath" "$referenceBasePath"
     echo
 fi
 
 #Create fai index
-if [[ "$opt_f_set" != "1" && "$referenceFilePath.fai" -nt "$referenceFilePath" ]]; then
+if [[ "$opt_f_set" != "1" && -s "$referenceFilePath.fai" && "$referenceFilePath.fai" -nt "$referenceFilePath" ]]; then
     echo "# SAMtools fai index $referenceFilePath.fai is already freshly built.  Use the -f option to force a rebuild."
 else
-    echo "# "$(date +"%Y-%m-%d %T") samtools faidx "$referenceFilePath"
+    echo "# "$(date +"%Y-%m-%d %T") samtools faidx $SamtoolsFaidx_ExtraParams "$referenceFilePath"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-    samtools faidx "$referenceFilePath"
+    samtools faidx $SamtoolsFaidx_ExtraParams "$referenceFilePath"
     echo
 fi
 

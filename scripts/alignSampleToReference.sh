@@ -43,6 +43,8 @@
 #   20140910-scd: Outputs are not rebuilt when already fresh, unless the -f (force) option is specified.
 #   20140919-scd: Handle spaces in file names.
 #   20141003-scd: Enhance log output
+#   20141009-scd: Remove the -p option to specify the number of CPU cores.
+#   20141020-scd: Substitute the default parameters if the user did not specify bowtie parameters
 #Notes:
 #
 #Bugs:
@@ -51,7 +53,7 @@
 
 usage()
 {
-    echo usage: $0 [-h] [-f] [-p INT] referenceFile sampleFastqFile1 [sampleFastqFile2]
+    echo usage: $0 [-h] [-f] referenceFile sampleFastqFile1 [sampleFastqFile2]
     echo
     echo 'Align the sequence reads for a specified sample to a specified reference genome.'
     echo 'The output is written to the file "reads.sam" in the sample directory.'
@@ -63,8 +65,8 @@ usage()
     echo
     echo 'Options:'
     echo '  -h               : Show this help message and exit'
-    echo '  -p INT           : Number of CPU cores to use concurrently during bowtie alignment (default: all)'
-    echo '  -f               : Force processing even when result files already exist and are newer than inputs'
+    echo '  -f               : Force processing even when result files already exist and '
+    echo '                     are newer than inputs'
     echo
 }
 
@@ -99,7 +101,7 @@ echo
 # example: ":abc:d"
 # -abc 14 -d
 
-while getopts ":p:hf" option; do
+while getopts ":hf" option; do
   if [ "$option" = "h" ]; then
     usage
     exit 0
@@ -153,11 +155,20 @@ sampleId=${sampleId%_1.fq} # strip the _1.fq file extension if any
 sampleId=${sampleId%.fq} # strip the .fq file extension regardless of leading _1
 referenceId=${referenceBasePath##*/} # strip the directory
 
-if [ "$opt_p_set" = "1" ]; then
-    numCores="$opt_p_arg"
+# Parse the user-specified bowtie parameters to determine if the user specified the number of CPU cores
+regex="(-p[[:blank:]]*)([[:digit:]]+)"
+if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
+    numCoresParam=""
 else
-    numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
+    # if not user-specified, default to 8 on HPC or all cpu cores on workstation
+    if [[ "$PBS_JOBID" != "" ]]; then
+        numCores=8
+    else
+        numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
+    fi
+    numCoresParam="-p $numCores"
 fi
+
 
 # echo ==============================
 # echo numCores=$numCores
@@ -173,25 +184,30 @@ fi
 # echo ==============================
 # exit 0 
 
+
+# Substitute the default parameters if the user did not specify bowtie parameters
+defaultParams="--reorder -q"
+Bowtie2Align_Params=${Bowtie2Align_ExtraParams:-$defaultParams}
+
 #Check if alignment to reference has been done; if not align sequences to reference
 if [ $sampleFilePath2 ]; then
-    if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]; then
+    if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]; then
         echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
     else
         echo "# Align sequence $sampleId to reference $referenceId"
-        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" -1 \""$sampleFilePath1"\" -2 \""$sampleFilePath2"\"
+        echo "# "$(date +"%Y-%m-%d %T") bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -1 "$sampleFilePath1" -2 "$sampleFilePath2"
         echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
-        bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" -1 \""$sampleFilePath1"\" -2 \""$sampleFilePath2"\" > "$sampleDir/reads.sam"
+        bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -1 "$sampleFilePath1" -2 "$sampleFilePath2" > "$sampleDir/reads.sam"
         echo
     fi
 else
-    if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]; then
+    if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]; then
         echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
     else
         echo "# Align sequence $sampleId to reference $referenceId"
-        echo "# "$(date +"%Y-%m-%d %T") bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" \""$sampleFilePath1"\"
+        echo "# "$(date +"%Y-%m-%d %T") bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -U "$sampleFilePath1"
         echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
-        bowtie2 -p $numCores --reorder -q -x \""$referenceBasePath"\" \""$sampleFilePath1"\" > "$sampleDir/reads.sam"
+        bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -U "$sampleFilePath1" > "$sampleDir/reads.sam"
         echo
     fi
 fi

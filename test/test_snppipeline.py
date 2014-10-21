@@ -77,11 +77,13 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             'sampleDirsFile' : os.path.join(self.directory_run_result, 'sampleDirectories.txt'),
             'vcfFileName' : 'var.flt.vcf',
             'snpListFile' : os.path.join(self.directory_run_result, 'snplist.txt'),
+            'forceFlag' : True,
             }
         self.run_function_test(snppipeline.create_snp_list, args_dict, 'snplist.txt')
 
         args_dict = {
             'snpListFile' : os.path.join(self.directory_run_result, 'snplist.txt'),
+            'forceFlag' : True,
             }
         for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
             args_dict['allPileupFile'] = os.path.join(self.directory_run_result, dir, 'reads.all.pileup')
@@ -93,6 +95,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             'snpListFile' : os.path.join(self.directory_run_result, 'snplist.txt'),
             'pileupFileName' : 'reads.snp.pileup',
             'snpmaFile' : os.path.join(self.directory_run_result, 'snpma.fasta'),
+            'forceFlag' : True,
             }
         self.run_function_test(snppipeline.create_snp_matrix, args_dict, 'snpma.fasta')
 
@@ -100,6 +103,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             'referenceFile' : os.path.join(self.directory_run_result, 'reference/lambda_virus.fasta'),
             'snpListFile' : os.path.join(self.directory_run_result, 'snplist.txt'),
             'snpRefFile' : os.path.join(self.directory_run_result, 'referenceSNP.fasta'),
+            'forceFlag' : True,
             } 
         self.run_function_test(snppipeline.create_snp_reference_seq, args_dict, 'referenceSNP.fasta')
 

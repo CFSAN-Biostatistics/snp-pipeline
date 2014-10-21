@@ -1,5 +1,6 @@
 include README.rst
 include LICENSE.txt
+include snppipeline/data/configuration/snppipeline.conf
 include snppipeline/data/lambdaVirusInputs/reference/*.fasta
 include snppipeline/data/lambdaVirusInputs/samples/sample*/*.fastq
 include snppipeline/data/lambdaVirusExpectedResults/samples/sample*/reads.sam

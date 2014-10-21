@@ -3,34 +3,66 @@
 History
 -------
 
-0.3.0 (2014-??-??)
+0.3.0 (2014-10-22)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
 
-* Fixed some Mac incompatibilities.
+* Fixed some Mac OSX incompatibilities.
+* Fixed a bug in copy_snppipeline_data.py that caused copy failure when the destination
+  directory did not exist.
+* Fixed alignSampleToReference.sh to properly handle unpaired gzipped fastq files.
 
-**Other Changes:**
+**Installation Changes:**
 
 * There is a new dependency on the python psutil package.  When you install the SNP Pipeline, 
   pip will attempt to install the psutil package automatically.  If it fails, you may need to
   manually install the python-dev package.  In Ubuntu, ``sudo apt-get install python-dev``
-* Added a new script, run_snp_pipeline.sh, to run the entire pipeline either on 
+
+
+**Other Changes:**
+
+*Note a possible loss of backward compatibilty for existing workflows using 
+alignSampleToReference.sh and prepSamples.sh*
+
+
+* All-in-one script: Added a new script, run_snp_pipeline.sh, to run the entire pipeline either on 
   a workstation or on a High Performance Computing cluster with the Torque job 
-  queue manager.
-* The run_snp_pipeline.sh script adds consistent logging functionality for 
+  queue manager.  See :ref:`all-in-one-script-label`.
+* Logging: The run_snp_pipeline.sh script adds consistent logging functionality for 
   workstation and HPC runs.  The logs for each pipeline run are stored in a 
-  time-stamped directory under the output directory.
-* Changed the python scripts (create_snp_list.py, create_snp_pileup.py, create_snp_matrix.py, create_snp_reference.py) 
+  time-stamped directory under the output directory.  See :ref:`logging-label`.
+* Timestamp checking: Changed the python scripts (create_snp_list.py, create_snp_pileup.py, create_snp_matrix.py, create_snp_reference.py) 
   to skip processing steps when result files already exist and are newer than the input 
   files.  If you modify an upstream file, any dependent downstream files will be rebuilt.  
   You can force processing regardless of file timestamps with the ``-f`` option.
   Similar functionality for the shell scripts was previously implemented in release 0.2.0.
-* Added a Listeria monocytogenes data set.  Updated the usage instructions, illustrating 
+* Mirrored input files: The run_snp_pipeline.sh script has the capability to make a mirrored copy
+  of the input reference and samples to avoid polluting a clean repository.  You have the
+  choice to create copies, soft links, or hard links.  See :ref:`mirrored-input-label`.
+* Configuration file: Added the capability to customize the behavior of the SNP Pipeline by specifying parameters
+  either in a configuration file, or in environment variables.  You can create a configuration
+  file with default values pre-set by executing ``copy_snppipeline_data.py configurationFile``
+  from the command line.  Pass the configuration file to the run_snp_pipeline.sh script with
+  the ``-c`` option.  Alternatively, environment variables matching the names of the
+  parameters in the configuration file can be manually set (be sure to export the variables).
+  When the run_snp_pipeline.sh script is run, it copies the configuration file for the run into 
+  the log directory for the run. See :ref:`configuration-label`.
+* Removed the ``-p INT`` command line option, to specify the number of cpu cores, from the 
+  alignSampleToReference.sh script.  You can now control the number of cpu cores used by bowtie2 
+  with the ``-p INT`` option either in the configuration file when running run_snp_pipeline.sh, or 
+  in the ``Bowtie2Align_ExtraParams`` environment variable when running alignSampleToReference.sh 
+  directly. If not specified, it defaults to 8 cpu cores on a HPC cluster, or all cpu cores on 
+  a workstation.
+* Removed the ``--min-var-freq 0.90`` varscan mpileup2snp option from the prepSamples.sh script.  
+  This parameter is now specified in the ``VarscanMpileup2snp_ExtraParams`` environment variable 
+  or in the configuration file.
+* Listeria monocytogenes data set: Added a Listeria monocytogenes data set.  Updated the usage instructions, illustrating 
   how to download the Listeria samples from NCBI and how to run the SNP Pipeline on the 
   Listeria data set.  The distribution includes the expected result files for the Listeria 
   data set.  Note that due to the large file sizes, the Listeria expected results data set
   does not contain all the intermediate output files.
+* Added a command reference page to the documentation.  See :ref:`cmd-ref-label`.
 
 
 0.2.1 (2014-09-24)

@@ -36,6 +36,8 @@
 #   20140905-scd: Expects the full file name of the reference on the command line.
 #   20140910-scd: Outputs are not rebuilt when already fresh, unless the -f (force) option is specified.
 #   20141003-scd: Enhance log output
+#   20141019-scd: Use the configuration parameter environment variables.
+#   20141020-scd: Check for empty target files.
 #Notes:
 #
 #Bugs:
@@ -55,7 +57,8 @@ usage()
     echo
     echo 'Options:'
     echo '  -h               : Show this help message and exit'
-    echo '  -f               : Force processing even when result files already exist and are newer than inputs'
+    echo '  -f               : Force processing even when result files already exist and '
+    echo '                     are newer than inputs'
     echo
 }
 
@@ -134,50 +137,54 @@ fi
 
 sampleId=${sampleDir##*/} # strip the parent directories
 
+# Substitute the default parameters if the user did not specify samtools view parameters
+defaultParams="-F 4"
+SamtoolsSamFilter_Params=${SamtoolsSamFilter_ExtraParams:-$defaultParams}
+
 # Check for fresh bam file; if not, convert to bam file with only mapped positions
-if [[ "$opt_f_set" != "1" && "$sampleDir/reads.unsorted.bam" -nt "$sampleDir/reads.sam" ]]; then
+if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.unsorted.bam" && "$sampleDir/reads.unsorted.bam" -nt "$sampleDir/reads.sam" ]]; then
     echo "# Unsorted bam file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
     echo "# Convert sam file to bam file with only mapped positions."
-    echo "# "$(date +"%Y-%m-%d %T") samtools view -bS -F 4 -o "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sam"
+    echo "# "$(date +"%Y-%m-%d %T") samtools view -S -b $SamtoolsSamFilter_Params -o "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sam"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-    samtools view -bS -F 4 -o "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sam"
+    samtools view -S -b $SamtoolsSamFilter_Params -o "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sam"
     echo
 fi
 
 
 # Check for fresh sorted bam file; if not, sort it
-if [[ "$opt_f_set" != "1" && "$sampleDir/reads.sorted.bam" -nt "$sampleDir/reads.unsorted.bam" ]]; then
+if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sorted.bam" && "$sampleDir/reads.sorted.bam" -nt "$sampleDir/reads.unsorted.bam" ]]; then
     echo "# Sorted bam file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
     #Convert to a sorted bam
     echo "# Convert bam to sorted bam file."
-    echo "# "$(date +"%Y-%m-%d %T") samtools sort "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
+    echo "# "$(date +"%Y-%m-%d %T") samtools sort $SamtoolsSort_ExtraParams "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-    samtools sort "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
+    samtools sort $SamtoolsSort_ExtraParams "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
     echo
 fi
 
 #Check for fresh pileup; if not, create it 
-if [[ "$opt_f_set" != "1" && "$sampleDir/reads.all.pileup" -nt "$sampleDir/reads.sorted.bam" && "$sampleDir/reads.all.pileup" -nt "$referenceFilePath" ]]; then
+if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.all.pileup" && "$sampleDir/reads.all.pileup" -nt "$sampleDir/reads.sorted.bam" && "$sampleDir/reads.all.pileup" -nt "$referenceFilePath" ]]; then
     echo "# Pileup file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
     echo "# Create pileup from bam file."
-    echo "# "$(date +"%Y-%m-%d %T") samtools mpileup -f "$referenceFilePath" "$sampleDir/reads.sorted.bam"
+    echo "# "$(date +"%Y-%m-%d %T") samtools mpileup $SamtoolsMpileup_ExtraParams -f "$referenceFilePath" "$sampleDir/reads.sorted.bam"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-    samtools mpileup -f "$referenceFilePath" "$sampleDir/reads.sorted.bam" > "$sampleDir/reads.all.pileup"
+    samtools mpileup $SamtoolsMpileup_ExtraParams -f "$referenceFilePath" "$sampleDir/reads.sorted.bam" > "$sampleDir/reads.all.pileup"
     echo
 fi
 
 #Check for fresh unfiltered vcf; if not, create it
-if [[ "$opt_f_set" != "1" && "$sampleDir/var.flt.vcf" -nt "$sampleDir/reads.all.pileup" ]]; then
+if [[ "$opt_f_set" != "1" && -s "$sampleDir/var.flt.vcf" && "$sampleDir/var.flt.vcf" -nt "$sampleDir/reads.all.pileup" ]]; then
     echo "# Vcf file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
     echo "# Create vcf file"
     if [ ! -z "$CLASSPATH" ]; then
-        echo "# "$(date +"%Y-%m-%d %T") java net.sf.varscan.VarScan mpileup2snp "$sampleDir/reads.all.pileup" --min-var-freq 0.90 --output-vcf 1
+        echo "# "$(date +"%Y-%m-%d %T") java $VarscanJvm_ExtraParams net.sf.varscan.VarScan mpileup2snp "$sampleDir/reads.all.pileup"  --output-vcf 1 $VarscanMpileup2snp_ExtraParams
         echo "# "$(java net.sf.varscan.VarScan 2>&1 > /dev/null | head -n 1)
-        java net.sf.varscan.VarScan mpileup2snp "$sampleDir/reads.all.pileup" --min-var-freq 0.90 --output-vcf 1 > "$sampleDir/var.flt.vcf"
+        java $VarscanJvm_ExtraParams net.sf.varscan.VarScan mpileup2snp "$sampleDir/reads.all.pileup" --output-vcf 1 $VarscanMpileup2snp_ExtraParams > "$sampleDir/var.flt.vcf"
         echo
     else
         echo "*** Error: cannot execute VarScan. Define the path to VarScan in the CLASSPATH environment variable."

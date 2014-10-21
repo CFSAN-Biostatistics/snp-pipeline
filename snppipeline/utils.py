@@ -42,6 +42,9 @@ def target_needs_rebuild(source_files, target_file):
     if not os.path.isfile(target_file):
         return True;
 
+    if os.path.getsize(target_file) == 0:
+        return True;
+
     target_timestamp = os.stat(target_file).st_mtime
 
     for source_file in source_files:
