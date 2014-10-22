@@ -7,3 +7,4 @@ agonaInputs                - test data set (reference only) and SHA hashes for d
 agonaExpectedResults       - correct SNP Pipeline output
 listeriaExpectedResults    - test data set (reference only) and SHA hashes for data integrity check
 listeriaInputs             - correct SNP Pipeline output
+configuration              - default pipeline configuration file
