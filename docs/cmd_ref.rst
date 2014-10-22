@@ -90,12 +90,15 @@ run_snp_pipeline.sh
                      Currently only "torque" is supported.  If not specified, the pipeline will
                      execute locally.
   
-    -o DIR         : Output directory for the snp list, snp matrix, and reference snp files. 
+    -o DIR         : Output directory for the snp list, snp matrix, and reference snp files.
                      Additional subdirectories are automatically created under the output 
                      directory for logs files and the mirrored samples and reference files 
                      (see the -m option).  The output directory will be created if it does 
                      not already exist.  If not specified, the output files are written to 
-                     the current working directory.
+                     the current working directory.  If you re-run the pipeline on previously
+                     processed samples, and specify a different output directory, the 
+                     pipeline will not rebuild everything unless you either force a rebuild 
+                     (see the -f option) or you request mirrored inputs (see the -m option).
   
     -s DIRECTORY   : Relative or absolute path to the parent directory of all the sample 
                      directories.  The -s option should be used when all the sample directories
@@ -103,8 +106,9 @@ run_snp_pipeline.sh
                      Note: You must specify either the -s or -S option, but not both.
                      Note: The specified directory should contain only a collection of sample
                            directories, nothing else.
-                     Note: Additional files will be written to each of the sample directories
-                           during the execution of the SNP Pipeline
+                     Note: Unless you request mirrored inputs, see the -m option, additional files
+                           will be written to each of the sample directories during the execution 
+                           of the SNP Pipeline
   
     -S FILE        : Relative or absolute path to a file listing all of the sample directories.
                      The -S option should be used when the samples are not under a common parent 
@@ -114,8 +118,9 @@ run_snp_pipeline.sh
                            directories descending by size, largest first.  The -m option 
                            automatically generates a sorted directory list.
                      Note: You must specify either the -s or -S option, but not both.
-                     Note: Additional files will be written to each of the sample directories
-                           during the execution of the SNP Pipeline
+                     Note: Unless you request mirrored inputs, see the -m option, additional files
+                           will be written to each of the sample directories during the execution 
+                           of the SNP Pipeline
   
 
 prepReference.sh

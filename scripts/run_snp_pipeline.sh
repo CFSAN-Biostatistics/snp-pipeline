@@ -83,12 +83,15 @@ usagelong()
     echo '                   Currently only "torque" is supported.  If not specified, the pipeline will'
     echo '                   execute locally.'
     echo
-    echo '  -o DIR         : Output directory for the snp list, snp matrix, and reference snp files. '
+    echo '  -o DIR         : Output directory for the snp list, snp matrix, and reference snp files.'
     echo '                   Additional subdirectories are automatically created under the output '
     echo '                   directory for logs files and the mirrored samples and reference files '
     echo '                   (see the -m option).  The output directory will be created if it does '
     echo '                   not already exist.  If not specified, the output files are written to '
-    echo '                   the current working directory.'
+    echo '                   the current working directory.  If you re-run the pipeline on previously'
+    echo '                   processed samples, and specify a different output directory, the '
+    echo '                   pipeline will not rebuild everything unless you either force a rebuild '
+    echo '                   (see the -f option) or you request mirrored inputs (see the -m option).'
     echo
     echo '  -s DIRECTORY   : Relative or absolute path to the parent directory of all the sample '
     echo '                   directories.  The -s option should be used when all the sample directories'
@@ -96,8 +99,9 @@ usagelong()
     echo '                   Note: You must specify either the -s or -S option, but not both.'
     echo '                   Note: The specified directory should contain only a collection of sample'
     echo '                         directories, nothing else.'
-    echo '                   Note: Additional files will be written to each of the sample directories'
-    echo '                         during the execution of the SNP Pipeline'
+    echo '                   Note: Unless you request mirrored inputs, see the -m option, additional files'
+    echo '                         will be written to each of the sample directories during the execution '
+    echo '                         of the SNP Pipeline'
     echo 
     echo '  -S FILE        : Relative or absolute path to a file listing all of the sample directories.'
     echo '                   The -S option should be used when the samples are not under a common parent '
@@ -107,8 +111,9 @@ usagelong()
     echo '                         directories descending by size, largest first.  The -m option '
     echo '                         automatically generates a sorted directory list.'
     echo '                   Note: You must specify either the -s or -S option, but not both.'
-    echo '                   Note: Additional files will be written to each of the sample directories'
-    echo '                         during the execution of the SNP Pipeline'
+    echo '                   Note: Unless you request mirrored inputs, see the -m option, additional files'
+    echo '                         will be written to each of the sample directories during the execution '
+    echo '                         of the SNP Pipeline'
     echo
 }
 
