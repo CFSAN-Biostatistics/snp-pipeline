@@ -279,7 +279,7 @@ if [[ "$opt_m_set" = "1" ]]; then
     do
         baseDir=${dir##*/} # strip the parent directories
         mkdir -p "$workDir/samples/$baseDir"
-        # copy without stderr message and without exit error code
+        # copy without stderr message and without exit error code because the fastq or fq files might not exist
         absoluteSampleDir=$(get_abs_filename "$dir")
         cp -r -v -u -f $mirrorFlag "$absoluteSampleDir"/*.fastq* "$workDir/samples/$baseDir" 2> /dev/null || true
         cp -r -v -u -f $mirrorFlag "$absoluteSampleDir"/*.fq* "$workDir/samples/$baseDir" 2> /dev/null || true
