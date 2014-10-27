@@ -3,6 +3,15 @@
 History
 -------
 
+0.3.1 (2014-10-27)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* Fix a python 2.6 incompatibility with formatting syntax when printing the available RAM.
+  Also added the Python version to the log files.
+
+
 0.3.0 (2014-10-22)
 ~~~~~~~~~~~~~~~~~~
 

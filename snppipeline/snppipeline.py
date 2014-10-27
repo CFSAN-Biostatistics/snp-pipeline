@@ -11,6 +11,7 @@ import sys
 import time
 import platform
 import psutil
+import locale
 from __init__ import __version__
 
 
@@ -53,7 +54,11 @@ def print_log_header():
     if pbs_jobid:
         verbose_print("# $PBS_JOBID        : %s" % pbs_jobid)
     verbose_print("# Hostname          : %s" % platform.node())
-    verbose_print("# RAM               : {:,} MB".format(psutil.virtual_memory().total / 1024 / 1024))
+    locale.setlocale(locale.LC_ALL, '')
+    ram_bytes = psutil.virtual_memory().total / 1024 / 1024
+    ram_str = locale.format("%d", ram_bytes, grouping=True)
+    verbose_print("# RAM               : %s MB" % ram_str)
+    verbose_print("# Python Version    : %s" % sys.version.replace("\n", " "))
     verbose_print("")
 
 
