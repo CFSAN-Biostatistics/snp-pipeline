@@ -100,6 +100,11 @@ setup(
         'PyVCF',
         'setuptools',
         'psutil',
+        'Biopython',
+        # Below needed for Python 2.6
+        'argparse',
+        'ordereddict',
+        'counter',
     ],
 
     # package (aka directory) containing unit test modules

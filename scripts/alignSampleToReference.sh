@@ -44,7 +44,8 @@
 #   20140919-scd: Handle spaces in file names.
 #   20141003-scd: Enhance log output
 #   20141009-scd: Remove the -p option to specify the number of CPU cores.
-#   20141020-scd: Substitute the default parameters if the user did not specify bowtie parameters
+#   20141020-scd: Substitute the default parameters if the user did not specify bowtie parameters.
+#   20141030-scd: Fix Python 2.6 compatibility issue when logging RAM size.
 #Notes:
 #
 #Bugs:
@@ -78,7 +79,7 @@ if [[ "$PBS_JOBID" != "" ]]; then
 echo "# \$PBS_JOBID        : $PBS_JOBID"
 fi
 echo "# Hostname          :" $(hostname)
-echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; print("{:,} MB".format(psutil.virtual_memory().total / 1024 / 1024))')
+echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')
 echo
 
 # --------------------------------------------------------

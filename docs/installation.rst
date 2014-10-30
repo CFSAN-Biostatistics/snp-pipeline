@@ -43,7 +43,7 @@ the following (or something similiar) to your .bashrc file::
 Installing Python Package Dependencies
 --------------------------------------
 
-For the most part, the installer automatically installs the necessary python packages used by snp-pipeline.  However, not all python packages can be reliably installed automatically.  The packages listed below will need to be manually installed if not already provided by your python distribution.
+For the most part, the installer automatically installs the necessary python packages used by snp-pipeline.  However, not all python packages can be reliably installed automatically.  The packages listed below may need to be manually installed if automatic installation fails.
 
     * Biopython_, a set of tools for biological computation written in Python.
 

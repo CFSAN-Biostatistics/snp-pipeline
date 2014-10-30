@@ -3,6 +3,17 @@
 History
 -------
 
+0.3.2 (2014-??-??)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* Fixed (again) a Python 2.6 incompatibility with formatting syntax when printing the available RAM.
+  This affected the shell scripts (prepReference.sh, alignSampleToReference.sh, prepSamples.sh).
+* Improved installation in a Python 2.6 environment.  Added several Python packages to the automatic 
+  setup script.
+
+
 0.3.1 (2014-10-27)
 ~~~~~~~~~~~~~~~~~~
 

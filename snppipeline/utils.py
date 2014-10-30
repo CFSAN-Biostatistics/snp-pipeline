@@ -6,7 +6,6 @@ import operator
 import os
 import pprint
 import re
-import sets
 import sys
 import vcf
 
@@ -106,7 +105,7 @@ TODO: all these examples return the value of the 1st argument, can we get some o
     #TODO consider using a Counter
     base_count_dict = {'.,': 0, 'A': 0, 'C': 0, 'G': 0, 'N': 0, 'T': 0}
 
-    upper_lower_base_set = sets.Set(['A','a','C','c','T','t','G','g','N','n'])
+    upper_lower_base_set = set(['A','a','C','c','T','t','G','g','N','n'])
     i = 0
     while i < len(data):
         char = data[i]

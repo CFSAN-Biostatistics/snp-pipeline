@@ -55,8 +55,8 @@ def print_log_header():
         verbose_print("# $PBS_JOBID        : %s" % pbs_jobid)
     verbose_print("# Hostname          : %s" % platform.node())
     locale.setlocale(locale.LC_ALL, '')
-    ram_bytes = psutil.virtual_memory().total / 1024 / 1024
-    ram_str = locale.format("%d", ram_bytes, grouping=True)
+    ram_mbytes = psutil.virtual_memory().total / 1024 / 1024
+    ram_str = locale.format("%d", ram_mbytes, grouping=True)
     verbose_print("# RAM               : %s MB" % ram_str)
     verbose_print("# Python Version    : %s" % sys.version.replace("\n", " "))
     verbose_print("")
