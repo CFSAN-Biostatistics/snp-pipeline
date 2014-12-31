@@ -96,6 +96,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             'pileupFileName' : 'reads.snp.pileup',
             'snpmaFile' : os.path.join(self.directory_run_result, 'snpma.fasta'),
             'forceFlag' : True,
+            'minConsFreq' : 0.6,
             }
         self.run_function_test(snppipeline.create_snp_matrix, args_dict, 'snpma.fasta')
 

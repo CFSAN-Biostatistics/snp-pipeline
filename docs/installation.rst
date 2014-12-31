@@ -9,20 +9,17 @@ Installation
 The SNP Pipeline software package consists of python scripts and shell scripts
 with dependencies on executable programs launched by the scripts.
 
-Operating System Requirements
------------------------------
-
+Step 1 - Operating System Requirements
+--------------------------------------
 The SNP Pipeline runs in a Linux environment. It has been tested 
 on the following platforms:
 
     * Red Hat
     * CentOS
     * Ubuntu
-    * Mac OS X
 
-Executable Software Dependencies
---------------------------------
-
+Step 2 - Executable Software Dependencies
+-----------------------------------------
 You should have the following software installed before using the SNP Pipeline.
 
     * Bowtie2_, a tool for aligning reads to long reference sequences.
@@ -30,25 +27,49 @@ You should have the following software installed before using the SNP Pipeline.
     * VarScan_, a tool to detect variants in NGS data.
     * fastq-dump_, an SRA Toolkit utility for fetching samples from NCBI SRA.
 
-Environment Variables
----------------------
-
+Step 3 - Environment Variables
+------------------------------
 Define the CLASSPATH environment variable to specify the location of the VarScan jar file.  Add 
 the following (or something similiar) to your .bashrc file::
 
     export CLASSPATH=~/software/varscan.v2.3.6/VarScan.v2.3.6.jar:$CLASSPATH
 
 
+Step 4 - Python
+---------------
+The SNP pipeline requires python version 2.6 or 2.7.  The pipeline has not been tested on other python versions.
+If you do not already have python installed, you should install version 2.7.  You can either build from source
+or install a precompiled version with your Linux package manager.
+    
 
-Installing Python Package Dependencies
---------------------------------------
+Step 5 - Pip
+------------
+This can be a troublesome installation step -- proceed with caution.  The pip tool is used to install python packages
+including the snp-pipeline and other packages used by the snp-pipeline.  Some newer versions of Python include pip.  
+Check to see if pip is already installed::
 
-For the most part, the installer automatically installs the necessary python packages used by snp-pipeline.  However, not all python packages can be reliably installed automatically.  The packages listed below may need to be manually installed if automatic installation fails.
+    $ pip -V
+
+If pip is not already installed, proceed as follows::
+
+    Download get-pip.py from https://pip.pypa.io/en/latest/installing.html#install-pip
+    $ python get-pip.py --user
+
+Note: avoid using sudo when installing pip.  Some users have experienced problems installing and loading packages when pip is installed using sudo.
+
+
+Step 6 - Python Package Dependencies
+------------------------------------
+
+For the most part, the installer automatically installs the necessary python packages used by snp-pipeline.  However, 
+not all python packages can be reliably installed automatically.  The packages listed below may need to be manually 
+installed if automatic installation fails.  You can either install these packages 
+now, or hope for the best and manually install later if the automatic installation fails.
 
     * Biopython_, a set of tools for biological computation written in Python.
 
-Installing the SNP Pipeline Python Package
-------------------------------------------
+Step 7 - Install the SNP Pipeline Python Package
+------------------------------------------------
 There is more than one way to install the SNP Pipeline depending on whether you intend to work with the source code or just run it.
 
 Installation Method 1 for Most Users

@@ -60,7 +60,7 @@ def target_needs_rebuild(source_files, target_file):
 #==============================================================================
 
 
-def get_consensus_base_from_pileup(base, length, data):
+def get_consensus_base_from_pileup(base, length, data, min_cons_freq):
     """Call the base for each SNP position
 
     Description:
@@ -71,6 +71,7 @@ def get_consensus_base_from_pileup(base, length, data):
         base: Reference base.
         length: length cutoff.
         data: information from alignment in pileup format.
+        min_cons_freq: mimimum fraction of reads that must agree (0.0 - 1.0)
 
     Returns:
         consensus_base: Consensus base from alignment.
@@ -81,23 +82,23 @@ TODO: all these examples return the value of the 1st argument, can we get some o
 
     Examples:
 
-    >>> print(get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A'))
+    >>> print(get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A', 0.5))
     T
-    >>> print(get_consensus_base_from_pileup('A',10,',.$.....,,.,.,...,,,.,..^+.'))
+    >>> print(get_consensus_base_from_pileup('A',10,',.$.....,,.,.,...,,,.,..^+.', 0.5))
     A
-    >>> print(get_consensus_base_from_pileup('C',10,',.....,,.,.,...,,,.,..A'))
+    >>> print(get_consensus_base_from_pileup('C',10,',.....,,.,.,...,,,.,..A', 0.5))
     C
-    >>> print(get_consensus_base_from_pileup('T',10,',.$....,,.,.,...,,,.,...'))
+    >>> print(get_consensus_base_from_pileup('T',10,',.$....,,.,.,...,,,.,...', 0.5))
     T
-    >>> print(get_consensus_base_from_pileup('G',10,',$....,,.,.,...,,,.,...^l.'))
+    >>> print(get_consensus_base_from_pileup('G',10,',$....,,.,.,...,,,.,...^l.', 0.5))
     G
-    >>> print(get_consensus_base_from_pileup('G',10,'...T,,.,.,...,,,.,....'))
+    >>> print(get_consensus_base_from_pileup('G',10,'...T,,.,.,...,,,.,....', 0.5))
     G
-    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,.C.,,,.,..G.'))
+    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,.C.,,,.,..G.', 0.5))
     T
-    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,...,,,.,....^k.'))
+    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,...,,,.,....^k.', 0.5))
     T
-    >>> print(get_consensus_base_from_pileup('A',10,'A..T,,.,.,...,,,.,.....'))
+    >>> print(get_consensus_base_from_pileup('A',10,'A..T,,.,.,...,,,.,.....', 0.5))
     A
     """
 
@@ -128,7 +129,7 @@ TODO: all these examples return the value of the 1st argument, can we get some o
         i += 1
 
     consensus_base = max(base_count_dict.iteritems(), key=operator.itemgetter(1))[0]
-    if base_count_dict[consensus_base] <= (length/2):
+    if base_count_dict[consensus_base] < (length * min_cons_freq):
         consensus_base = "-"
     elif consensus_base == ".,":
         consensus_base = base
@@ -157,7 +158,7 @@ def create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, snp_set):
                     snp_pileup_file_object.write(pileup_line)
 
 
-def create_consensus_dict(pileup_file_path):
+def create_consensus_dict(pileup_file_path, min_cons_freq):
     """Create a dict based on the information in a pileup file.
 
     Given a path to a pileup file, create a dict based on the pileup
@@ -166,6 +167,7 @@ def create_consensus_dict(pileup_file_path):
 
     Args:
         pileup_file_path: full path to a pileup file.
+        min_cons_freq: mimimum fraction of reads that must agree (0.0 - 1.0)
 
     Returns:
         A dict mapping a key formed from a tuple(sequence, position) to a
@@ -178,7 +180,7 @@ def create_consensus_dict(pileup_file_path):
     Raises:
 
     Examples:
-    >>> consensus_dict = create_consensus_dict("snppipeline/data/lambdaVirusExpectedResults/samples/sample2/reads.snp.pileup")
+    >>> consensus_dict = create_consensus_dict("snppipeline/data/lambdaVirusExpectedResults/samples/sample2/reads.snp.pileup", 0.5)
     >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',3678)]
     'T'
     >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',40984)]
@@ -194,7 +196,7 @@ def create_consensus_dict(pileup_file_path):
                 seq_id, pos, ref_base, depth, bases_string = current_line_data[:5]
                 pos = int(pos)
                 depth = int(depth)
-                position_value_dict[(seq_id, pos)] = get_consensus_base_from_pileup(ref_base, depth, bases_string)
+                position_value_dict[(seq_id, pos)] = get_consensus_base_from_pileup(ref_base, depth, bases_string, min_cons_freq)
 
     return position_value_dict
 

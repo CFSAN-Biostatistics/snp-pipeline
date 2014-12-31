@@ -40,14 +40,14 @@ set -e
 
 usageshort()
 {
-    echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c|-C FILE] [-Q \"torque\"]  -o DIR  (-s DIR | -S FILE)  referenceFile"
+    echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q \"torque\"] [-o DIR] (-s DIR | -S FILE)  referenceFile"
     echo '  -h for detailed help message'
     echo 
 }
 
 usagelong()
 {
-    echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c|-C FILE] [-Q torque] -o DIR (-s DIR | -S FILE) "
+    echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q torque] [-o DIR] (-s DIR | -S FILE) "
     echo "                           referenceFile"
     echo 
     echo 'Run the SNP Pipeline on a specified data set.'

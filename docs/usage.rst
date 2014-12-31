@@ -105,14 +105,6 @@ find examples of using the script in the sections below.
 If you need more flexibility, you can run the individual pipeline scripts one 
 step at a time.  See :ref:`step-by-step-workflows`.
 
-The sections below give detailed examples of workflows you can run with the
-all-in-one run_snp_pipeline.sh script.
-
-| :ref:`all-in-one-workflow-lambda`
-| :ref:`all-in-one-workflow-agona`
-| :ref:`all-in-one-workflow-listeria`
-|
-
 .. _logging-label:
 
 Logging
@@ -191,6 +183,17 @@ Keep in mind the following limitations when mirroring the inputs.
   file and the link must both reside on the same file system.
 * Normal file copies should always work, but the copy operation can be lengthy and the duplicate 
   files will consume extra storage space.
+
+
+All-In-One SNP Pipeline Workflows
+---------------------------------
+The sections below give detailed examples of workflows you can run with the
+all-in-one run_snp_pipeline.sh script.
+
+| :ref:`all-in-one-workflow-lambda`
+| :ref:`all-in-one-workflow-agona`
+| :ref:`all-in-one-workflow-listeria`
+|
 
 
 .. _all-in-one-workflow-lambda:
@@ -383,7 +386,7 @@ Launch the pipeline::
     #   -s : samples parent directory
     run_snp_pipeline.sh -m soft -Q torque -o outputDirectory -s cleanInputs/samples cleanInputs/reference/CFSAN023463.HGAP.draft.fasta
 
-Step 3 - View and verify the results::
+Step 3 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 11,787
 entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference

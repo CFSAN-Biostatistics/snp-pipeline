@@ -54,7 +54,7 @@ run_snp_pipeline.sh
 ::
 
   
-  usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c|-C FILE] [-Q torque] -o DIR (-s DIR | -S FILE) 
+  usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q torque] [-o DIR] (-s DIR | -S FILE) 
                              referenceFile
   
   Run the SNP Pipeline on a specified data set.
@@ -249,8 +249,8 @@ create_snp_matrix.py
 
 ::
 
-  usage: create_snp_matrix.py [-h] [-f] [-l FILE] [-p NAME] [-o FILE] [-v 0..5]
-                              [--version]
+  usage: create_snp_matrix.py [-h] [-f] [-l FILE] [-p NAME] [-o FILE] [-c FREQ]
+                              [-v 0..5] [--version]
                               sampleDirsFile
   
   Create the SNP matrix containing the consensus base for each of the samples at
@@ -278,6 +278,9 @@ create_snp_matrix.py
     -o FILE, --output FILE
                           Output file. Relative or absolute path to the SNP
                           matrix file (default: snpma.fasta)
+    -c FREQ, --minConsFreq FREQ
+                          Mimimum fraction of reads that must agree to make a
+                          consensus call (default: 0.6)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit

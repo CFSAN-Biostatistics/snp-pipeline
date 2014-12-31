@@ -265,6 +265,7 @@ def create_snp_matrix(options_dict):
                     'snpListFile':'snplist.txt',
                     'pileupFileName':'reads.snp.pileup',
                     'snpmaFile':'snpma.fasta',
+                    'minConsFreq':0.6,
                    }
     create_snp_matrix(options_dict)
     """
@@ -312,7 +313,7 @@ def create_snp_matrix(options_dict):
 
         sample_name                  = os.path.basename(sample_directory)
         snp_pileup_file_path         = os.path.join(sample_directory, options_dict['pileupFileName'])
-        position_consensus_base_dict = utils.create_consensus_dict(snp_pileup_file_path)
+        position_consensus_base_dict = utils.create_consensus_dict(snp_pileup_file_path, options_dict['minConsFreq'])
         verbose_print("Sample %s consensus base coverage = %.2f%%" % (sample_name, 100.0 * len(position_consensus_base_dict) / snplist_length))
 
         snp_seq_string = ""

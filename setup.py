@@ -16,9 +16,25 @@ if install_unit_tests:
 else:
     packages_to_install = ['snppipeline']
 
+
+# Control which 3rd party packages should be installed 
+# depending on the python version
+install_requires = [
+    'PyVCF',
+    'setuptools',
+    'psutil',
+    'Biopython',
+]
+
+# Below needed for Python 2.6
+if sys.version_info < (2,7,):
+    install_requires.append('argparse')
+    install_requires.append('ordereddict')
+    install_requires.append('counter')
+
 setup(
     name='snp-pipeline',
-    version='0.3.1',
+    version='0.3.2',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -96,16 +112,7 @@ setup(
 
     keywords=['bioinformatics', 'NGS', 'SNP'],
     license='BSD',
-    install_requires=[
-        'PyVCF',
-        'setuptools',
-        'psutil',
-        'Biopython',
-        # Below needed for Python 2.6
-        'argparse',
-        'ordereddict',
-        'counter',
-    ],
+    install_requires=install_requires,
 
     # package (aka directory) containing unit test modules
     test_suite='test',

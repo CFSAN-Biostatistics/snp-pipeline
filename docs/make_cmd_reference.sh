@@ -81,7 +81,7 @@ echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 create_snp_reference_seq.py -h | sed 's/^/  /' >> x.txt
 
-cat x.txt | sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-venv/bin/~~' |  \
+cat x.txt | sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-2.7/bin/~~' |  \
 grep -v "# Command           :" | \
 grep -v "# Working Directory :" | \
 grep -v "# Hostname          :" | \

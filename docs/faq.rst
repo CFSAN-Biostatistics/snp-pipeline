@@ -161,7 +161,7 @@ Developer Questions
 
 A: The documentation uses the *Read The Docs* theme.  Install it like this::
 
-	$ pip install sphinx_rtd_theme
+	$ pip install --user sphinx_rtd_theme
 
 **Q: I installed sphinx_rtd_theme, but I still get error "ImportError: No module named sphinx_rtd_theme".**
 
