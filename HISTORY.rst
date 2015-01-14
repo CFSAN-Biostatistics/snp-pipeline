@@ -24,6 +24,7 @@ History
 * Changed the included snp matrix files for the agona and listeria data sets to match the new results
   obtained by setting minConsFreq=0.6.  The lambda virus results were not impacted by this change.
 * Revised the Installation instructions with more detailed step-by-step procedures.
+* Added a Dockerfile for automated docker builds.  This feature is still experimental.
 
 
 0.3.1 (2014-10-27)
