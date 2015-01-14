@@ -51,8 +51,15 @@ def print_log_header():
     verbose_print("# Command           : %s" % command_line_long())
     verbose_print("# Working Directory : %s" % os.getcwd())
     pbs_jobid = os.environ.get("PBS_JOBID")
+    sge_jobid = os.environ.get("JOB_ID")
+    sge_task_id = os.environ.get("SGE_TASK_ID")
     if pbs_jobid:
-        verbose_print("# $PBS_JOBID        : %s" % pbs_jobid)
+        verbose_print("# Job ID            : %s" % pbs_jobid)
+    elif sge_jobid and sge_task_id:
+        verbose_print("# Job ID            : %s[%s]" % (sge_jobid, sge_task_id))
+    elif sge_jobid:
+        verbose_print("# Job ID            : %s" % sge_jobid)
+
     verbose_print("# Hostname          : %s" % platform.node())
     locale.setlocale(locale.LC_ALL, '')
     ram_mbytes = psutil.virtual_memory().total / 1024 / 1024

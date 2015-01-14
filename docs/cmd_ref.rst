@@ -54,7 +54,7 @@ run_snp_pipeline.sh
 ::
 
   
-  usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q torque] [-o DIR] (-s DIR | -S FILE) 
+  usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q torque|grid] [-o DIR] (-s DIR|-S FILE)
                              referenceFile
   
   Run the SNP Pipeline on a specified data set.
@@ -86,9 +86,9 @@ run_snp_pipeline.sh
                            configuration file used for each run is copied into the log directory, 
                            capturing the parameters used during the run.
   
-    -Q "torque"    : Job queue manager for remote parallel job execution in an HPC environment.
-                     Currently only "torque" is supported.  If not specified, the pipeline will
-                     execute locally.
+    -Q torque|grid : Job queue manager for remote parallel job execution in an HPC environment.
+                     Currently "torque" and "grid" are supported.  If not specified, the pipeline 
+                     will execute locally.
   
     -o DIR         : Output directory for the snp list, snp matrix, and reference snp files.
                      Additional subdirectories are automatically created under the output 

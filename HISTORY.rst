@@ -3,7 +3,7 @@
 History
 -------
 
-0.3.2 (2014-??-??)
+0.3.2 (2015-01-14)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -15,6 +15,7 @@ History
 
 **Other Changes:**
 
+* Added support for the Grid Engine job queue manager.  See :ref:`hpc-usage-label`.
 * Added a configurable parameter, ``minConsFreq``, to the create_snp_matrix.py script.  This parameter specifies
   the mimimum fraction of reads that must agree at a position to make a consensus call.  Prior to version
   0.3.2, the snp pipeline required that a majority (more than half) of the reads must agree to make
@@ -22,7 +23,7 @@ History
   agree to make a consensus call.
 * Changed the included snp matrix files for the agona and listeria data sets to match the new results
   obtained by setting minConsFreq=0.6.  The lambda virus results were not impacted by this change.
-* Revised the Installation instructions with more detail and instructions for installing pip.
+* Revised the Installation instructions with more detailed step-by-step procedures.
 
 
 0.3.1 (2014-10-27)

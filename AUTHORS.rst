@@ -10,6 +10,8 @@ CFSAN BioInformatics Team
 * James Pettengill
 * Hugh A. Rand
 * Steve Davis
+* Justin Payne
+* Al Shpuntoff
 
 
 External Contributors

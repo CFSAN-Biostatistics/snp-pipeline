@@ -46,6 +46,7 @@
 #   20141009-scd: Remove the -p option to specify the number of CPU cores.
 #   20141020-scd: Substitute the default parameters if the user did not specify bowtie parameters.
 #   20141030-scd: Fix Python 2.6 compatibility issue when logging RAM size.
+#   20150109-scd: Log the Grid Engine job ID.
 #Notes:
 #
 #Bugs:
@@ -76,7 +77,9 @@ usage()
 echo "# Command           : $0 $@"
 echo "# Working Directory : $(pwd)"
 if [[ "$PBS_JOBID" != "" ]]; then
-echo "# \$PBS_JOBID        : $PBS_JOBID"
+echo "# Job ID            : $PBS_JOBID"
+elif [[ "$JOB_ID" != "" ]]; then
+echo "# Job ID            : $JOB_ID[$SGE_TASK_ID]"
 fi
 echo "# Hostname          :" $(hostname)
 echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')

@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 #Author: Steve Davis (scd)
+#  alterations for grid engine by Al Shpuntoff (afs)
 #Purpose: 
 #    Run the SNP Pipeline on a specified data set.
 #Input:
@@ -30,6 +31,7 @@
 #   20140910-scd: Started.
 #   20141008-scd: Added support for configuration files.
 #   20141015-scd: Support soft, hard, copy mirror modes.
+#   20141124-afs: support added for grid engine in addition to torque
 #Notes:
 #
 #Bugs:
@@ -40,14 +42,14 @@ set -e
 
 usageshort()
 {
-    echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q \"torque\"] [-o DIR] (-s DIR | -S FILE)  referenceFile"
+    echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q \"torque\"|\"grid\"]  [-o DIR]  (-s DIR | -S FILE)  referenceFile"
     echo '  -h for detailed help message'
     echo 
 }
 
 usagelong()
 {
-    echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q torque] [-o DIR] (-s DIR | -S FILE) "
+    echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q torque|grid] [-o DIR] (-s DIR|-S FILE)"
     echo "                           referenceFile"
     echo 
     echo 'Run the SNP Pipeline on a specified data set.'
@@ -79,9 +81,9 @@ usagelong()
     echo '                         configuration file used for each run is copied into the log directory, '
     echo '                         capturing the parameters used during the run.'
     echo 
-    echo '  -Q "torque"    : Job queue manager for remote parallel job execution in an HPC environment.'
-    echo '                   Currently only "torque" is supported.  If not specified, the pipeline will'
-    echo '                   execute locally.'
+    echo '  -Q torque|grid : Job queue manager for remote parallel job execution in an HPC environment.'
+    echo '                   Currently "torque" and "grid" are supported.  If not specified, the pipeline '
+    echo '                   will execute locally.'
     echo
     echo '  -o DIR         : Output directory for the snp list, snp matrix, and reference snp files.'
     echo '                   Additional subdirectories are automatically created under the output '
@@ -211,8 +213,8 @@ fi
 # Job queue manager for remote parallel job execution
 if [[ "$opt_Q_set" = "1" ]]; then
     platform=$(echo "$opt_Q_arg" | tr '[:upper:]' '[:lower:]')
-    if [[ "$platform" != "torque" ]]; then
-        echo "Only the torque job queue is currently supported."
+    if [[ "$platform" != "torque"  &&  "$platform" != "grid" ]]; then
+        echo "Only the torque and grid job queues are currently supported."
         echo
         usageshort
         exit 40
@@ -324,6 +326,7 @@ export CreateSnpList_ExtraParams
 export CreateSnpPileup_ExtraParams
 export CreateSnpMatrix_ExtraParams
 export CreateSnpReferenceSeq_ExtraParams
+export PEname
 
 
 # --------------------------------------------------------
@@ -336,14 +339,25 @@ grep -v '*.fq*' "$tmpFile" | grep -v '*.fastq*' > "$workDir/sampleFullPathNames.
 rm "$tmpFile"
 
 echo -e "\nStep 2 - Prep the reference"
-if [[ "$platform" == "torque" ]]; then
+if [[ "$platform" == "grid" ]]; then
+    prepReferenceJobId=$(echo | qsub -terse << _EOF_
+#$ -N job.prepReference
+#$ -V
+#$ -j y
+#$ -cwd
+#$ -o $logDir/prepReference.log
+#$ -v Bowtie2Build_ExtraParams,SamtoolsFaidx_ExtraParams
+    prepReference.sh $forceFlag "$referenceFilePath" 
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
     prepReferenceJobId=$(echo | qsub << _EOF_
     #PBS -N job.prepReference
     #PBS -j oe
     #PBS -d $(pwd)
     #PBS -o $logDir/prepReference.log
     #PBS -v Bowtie2Build_ExtraParams,SamtoolsFaidx_ExtraParams
-    prepReference.sh $forceFlag "$referenceFilePath" 
+    prepReference.sh $forceFlag "$referenceFilePath"
 _EOF_
 )
 else
@@ -351,7 +365,28 @@ else
 fi
 
 echo -e "\nStep 3 - Align the samples to the reference"
-if [[ "$platform" == "torque" ]]; then
+if [[ "$platform" == "grid" ]]; then
+    # Parse the user-specified bowtie parameters to find the number of CPU cores requested, for example, "-p 16"
+    regex="(-p[[:blank:]]*)([[:digit:]]+)"
+    if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
+        numAlignThreads=${BASH_REMATCH[2]}
+    else
+        numAlignThreads=8
+        Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
+    fi
+    alignSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+#$   -N job.alignSamples
+#$   -cwd
+#$   -V
+#$   -j y
+#$   -pe $PEname $numAlignThreads
+#$   -hold_jid $prepReferenceJobId
+#$   -o $logDir/alignSamples.log-\$TASK_ID
+#$   -v Bowtie2Align_ExtraParams
+    alignSampleToReference.sh $forceFlag "$referenceFilePath" \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
     # Parse the user-specified bowtie parameters to find the number of CPU cores requested, for example, "-p 16"
     regex="(-p[[:blank:]]*)([[:digit:]]+)"
     if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
@@ -377,7 +412,22 @@ else
 fi
 
 echo -e "\nStep 4 - Prep the samples"
-if [[ "$platform" == "torque" ]]; then
+if [[ "$platform" == "grid" ]]; then
+    sleep 2 # workaround potential bug when submitting two large consecutive array jobs
+    alignSamplesJobArray=${alignSamplesJobId%%.*}
+    prepSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+#$   -N job.prepSamples
+#$   -cwd
+#$   -V
+#$   -j y
+#$   -hold_jid $alignSamplesJobArray
+#$   -l h_rt=05:00:00
+#$   -o $logDir/prepSamples.log-\$TASK_ID
+#$   -v SamtoolsSamFilter_ExtraParams,SamtoolsSort_ExtraParams,SamtoolsMpileup_ExtraParams,VarscanMpileup2snp_ExtraParams,VarscanJvm_ExtraParams
+    prepSamples.sh $forceFlag "$referenceFilePath" "\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
     sleep 2 # workaround torque bug when submitting two large consecutive array jobs
     alignSamplesJobArray=${alignSamplesJobId%%.*}
     prepSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
@@ -402,7 +452,20 @@ else
 fi
 
 echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP list file"
-if [[ "$platform" == "torque" ]]; then
+if [[ "$platform" == "grid" ]]; then
+    prepSamplesJobArray=${prepSamplesJobId%%.*}
+    snpListJobId=$(echo | qsub  -terse << _EOF_
+#$ -N job.snpList
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $prepSamplesJobArray
+#$ -o $logDir/snpList.log
+#$ -v CreateSnpList_ExtraParams
+    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" 
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
     prepSamplesJobArray=${prepSamplesJobId%%.*}
     snpListJobId=$(echo | qsub << _EOF_
     #PBS -N job.snpList
@@ -419,7 +482,20 @@ else
 fi
 
 echo -e "\nStep 6 - Create pileups at SNP positions for each sample"
-if [[ "$platform" == "torque" ]]; then
+if [[ "$platform" == "grid" ]]; then
+    snpPileupJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+#$ -N job.snpPileup
+#$ -cwd
+#$ -V
+#$ -j y
+#$ -hold_jid $snpListJobId
+#$ -o $logDir/snpPileup.log-\$TASK_ID
+#$ -v CreateSnpPileup_ExtraParams
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
+    create_snp_pileup.py $forceFlag -l "$workDir/snplist.txt" -a "\$sampleDir/reads.all.pileup" -o "\$sampleDir/reads.snp.pileup" $CreateSnpPileup_ExtraParams
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
     snpPileupJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
     #PBS -N job.snpPileup
     #PBS -d $(pwd)
@@ -441,7 +517,21 @@ else
 fi
 
 echo -e "\nStep 7 - Create the SNP matrix"
-if [[ "$platform" == "torque" ]]; then
+if [[ "$platform" == "grid" ]]; then
+    snpPileupJobArray=${snpPileupJobId%%.*}
+    snpMatrixJobId=$(echo | qsub -terse << _EOF_
+#$ -N job.snpMatrix
+#$ -cwd
+#$ -V
+#$ -j y
+#$ -hold_jid $snpPileupJobArray
+#$ -l h_rt=05:00:00
+#$ -o $logDir/snpMatrix.log
+#$ -v CreateSnpMatrix_ExtraParams
+    create_snp_matrix.py $forceFlag -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
     snpPileupJobArray=${snpPileupJobId%%.*}
     snpMatrixJobId=$(echo | qsub << _EOF_
     #PBS -N job.snpMatrix
@@ -459,7 +549,19 @@ else
 fi    
 
 echo -e "\nStep 8 - Create the reference base sequence"
-if [[ "$platform" == "torque" ]]; then
+if [[ "$platform" == "grid" ]]; then
+    snpReferenceJobId=$(echo | qsub -terse << _EOF_
+#$ -V
+#$ -N job.snpReference 
+#$ -cwd
+#$ -j y 
+#$ -hold_jid $snpPileupJobArray
+#$ -o $logDir/snpReference.log
+#$ -v CreateSnpReferenceSeq_ExtraParams
+    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
     snpReferenceJobId=$(echo | qsub << _EOF_
     #PBS -N job.snpReference 
     #PBS -d $(pwd)

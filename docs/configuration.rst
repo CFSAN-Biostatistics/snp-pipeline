@@ -248,3 +248,13 @@ Specifies options passed to create_snp_reference_seq.py.
 **Example**::
 
     CreateSnpReferenceSeq_ExtraParams="--verbose 1"
+
+PEname
+------
+Specifies the name of the Grid Engine parallel environment.  This is only needed when running
+the SNP Pipeline on a High Performance Computing cluster with the Grid Engine job manager.  
+Contact your HPC system administrator to determine the name of your parallel environment.
+
+**Example**::
+
+    PEname="mpi"

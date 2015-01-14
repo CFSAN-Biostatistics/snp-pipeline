@@ -185,6 +185,40 @@ Keep in mind the following limitations when mirroring the inputs.
   files will consume extra storage space.
 
 
+.. _hpc-usage-label:
+
+High Performance Computing
+--------------------------
+The SNP Pipeline can be executed on a High Performamce Computing cluster.  The
+Torque and Grid Engine job queue managers are supported.
+
+Torque
+~~~~~~
+To run the SNP Pipeline on torque::
+
+    run_snp_pipeline.sh -Q torque -s mySamplesDir myReference.fasta
+
+Grid Engine
+~~~~~~~~~~~
+To run the SNP Pipeline on grid engine you must use a configuration file to specify
+the name of your parallel environment.
+
+Grab the default configuration file::
+
+    copy_snppipeline_data.py configurationFile
+
+
+Edit the snppipeline.conf file and make the following change::
+    
+    PEname="myPE" # substitute the name of your PE
+
+Then run the pipeline with the -c and -Q command line options::    
+    
+    run_snp_pipeline.sh -c snppipeline.conf -Q grid -s mySamplesDir myReference.fasta
+
+See also: :ref:`faq-performance-label`.
+
+
 All-In-One SNP Pipeline Workflows
 ---------------------------------
 The sections below give detailed examples of workflows you can run with the

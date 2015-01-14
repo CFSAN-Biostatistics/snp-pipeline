@@ -66,7 +66,7 @@ echo samplesDirectory=$samplesDirectory
 echo WORKDIR=$WORKDIR
 echo COMPAREDIR=$COMPAREDIR
 
-run_snp_pipeline.sh -m -o "$WORKDIR" -s "$samplesDirectory" "$referenceFile"
+run_snp_pipeline.sh -m soft -o "$WORKDIR" -s "$samplesDirectory" "$referenceFile"
 
 #cd $WORKDIR
 
