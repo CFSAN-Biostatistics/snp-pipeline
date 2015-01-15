@@ -1,29 +1,39 @@
 #!/usr/bin/env python2.7
 
 import argparse
+from snppipeline import __version__
 from snppipeline import snppipeline
-import multiprocessing
+from snppipeline import utils
 
 #==============================================================================
 # Command line driver
 #==============================================================================
 if __name__ == '__main__':
 
-#TODO Change -i and -o aruguments so that they use action='store_true' and act as just flags.
+    def minConsFreq(value):
+        fvalue = float(value)
+        if fvalue <= 0.5 or fvalue > 1:
+            raise argparse.ArgumentTypeError("Consensus threshold must be > 0.5 and <= 1.0")
+        return fvalue
 
-    parser = argparse.ArgumentParser(description='Run SNP pipeline.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    cpu_core_count = multiprocessing.cpu_count()
-    parser.add_argument('-n', '--n-processes',      dest='maxThread',                        type=int,   default=cpu_core_count,    help='Max number of concurrent worker processes launched.  Uses all cpu cores by default.')
-    parser.add_argument('-d', '--mainPath',         dest='mainPath',                         type=str,   default='',                help='Directory containing the reference subdirectory, path file name, snp list, snp matrix')
-    parser.add_argument('-r', '--Reference',        dest='Reference',                        type=str,   default='reference.fasta', help='Reference file for mapping')
-    parser.add_argument('-f', '--pathFileName',     dest='pathFileName',                     type=str,   default='path.txt',        help='File containing a list of directories -- one per sample')
-    parser.add_argument('-l', '--snplistFileName',  dest='snplistFileName',                  type=str,   default='snplist.txt',     help='Output Snplist file name')
-    parser.add_argument('-a', '--snpmaFileName',    dest='snpmaFileName',                    type=str,   default='snpma.fa',        help='Output fasta file name')
-    parser.add_argument('-b', '--bamFileName',      dest='bamFileName',                      type=str,   default='reads.bam',       help='bam file name')
-    parser.add_argument('-p', '--pileupFileName',   dest='pileupFileName',                   type=str,   default='reads.pileup',    help='pileup file name')
-    parser.add_argument('-v', '--verbose',          dest='verbose',                          type=int,   default=1,                 help='Verbose flag (0=no info, 5=lots)')
-    parser.add_argument('-i', '--includeReference', dest='includeReference',                 type=bool,  default=False,             help='Write reference sequence bases at SNP positions in fasta format.')
-    parser.add_argument('-o', '--useOldPileups',    dest='useOldPileups',                    type=bool,  default=False,             help='Use available pileup files.')
+    parser = argparse.ArgumentParser(description="""Create the SNP matrix containing the consensus base for each of the samples 
+                                                    at the positions where SNPs were called in any of the samples.  The matrix 
+                                                    contains one row per sample and one column per SNP position.  Non-SNP 
+                                                    positions are not included in the matrix.  The matrix is formatted as a fasta
+                                                    file, with each sequence (all of identical length) corresponding to the SNPs 
+                                                    in the correspondingly named sequence.""",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument(                          dest='sampleDirsFile',     type=str,                                               help='Relative or absolute path to file containing a list of directories -- one per sample')
+    parser.add_argument('-f', '--force',          dest='forceFlag',          action='store_true',                                    help='Force processing even when result file already exists and is newer than inputs')
+    parser.add_argument('-l', '--snpListFile',    dest='snpListFile',        type=str,   default='snplist.txt',      metavar='FILE', help='Relative or absolute path to the SNP list file')
+    parser.add_argument('-p', '--pileupFileName', dest='pileupFileName',     type=str,   default='reads.snp.pileup', metavar='NAME', help='File name of the SNP pileup files which must exist in each of the sample directories')
+    parser.add_argument('-o', '--output',         dest='snpmaFile',          type=str,   default='snpma.fasta',      metavar='FILE', help='Output file.  Relative or absolute path to the SNP matrix file')
+    parser.add_argument('-c', '--minConsFreq',    dest='minConsFreq',  type=minConsFreq, default=0.60,               metavar='FREQ', help='Mimimum fraction of reads that must agree to make a consensus call')
+    parser.add_argument('-v', '--verbose',        dest='verbose',            type=int,   default=1,                  metavar='0..5', help='Verbose message level (0=no info, 5=lots)')
+    parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
     args_dict = vars(parser.parse_args())
 
-    snppipeline.run_snp_pipeline(args_dict)
+    utils.set_logging_verbosity(args_dict)
+    snppipeline.set_logging_verbosity(args_dict)
+    snppipeline.create_snp_matrix(args_dict)

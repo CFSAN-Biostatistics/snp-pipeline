@@ -6,7 +6,7 @@ CFSAN SNP Pipeline
 .. image:: https://badge.fury.io/py/snp-pipeline.png
     :target: http://badge.fury.io/py/snp-pipeline
     
-.. Image showing the Travis Continuous Integration test status
+.. Image showing the Travis Continuous Integration test status, commented out for now
 .. .. image:: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline.png?branch=master
 ..        :target: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline
 
@@ -27,8 +27,8 @@ and Drug Administration, Center for Food Safety and Applied Nutrition.
 * Source Code: https://github.com/CFSAN-Biostatistics/snp-pipeline
 * PyPI Distribution: https://pypi.python.org/pypi/snp-pipeline
 
-Features
---------
+Introduction
+------------
 
 The CFSAN SNP Pipeline uses reference-based alignments to create a matrix of
 SNPs for a given set of samples. The process generally starts off by finding
@@ -51,12 +51,12 @@ analysis is desired.
 
 The CFSAN SNP Pipeline is written in a combination of bash and python. The
 code (including the bash scripts) is designed to be straighforward to
-install. A script is provided that allows the running of the Python code
-from the command line. All of the parameters used are available as command
-line options. In situations where additional customization is desired, the
+install. Scripts are provided to run the Python code
+from the command line. A configuration file supports customizing the
+behavior of the pipeline. In situations where additional customization is desired, the
 code is not highly complex and should be easy to modify as necessary.
 
-Two examples of using the code are provided. These examples serve as both
+Examples of using the code are provided. These examples serve as both
 unit tests, and as examples that can be modified to work on other data
 sets of interest.
 
@@ -70,10 +70,9 @@ To cite SNP Pipeline, please reference the SNP Pipeline GitHub repository:
 
 and cite the associated paper:
 
-    Pettengill, JB, Luo Y, Rand H, Chen Y, Gonzalez-Escalona N, Ottesen A,
-    Allard MW, Strain E. *In review*. An evaluation of alternative methods for
-    constructing phylogenies from whole genome sequence data: A case
-    study with *Salmonella*. PeerJ.
+    `Pettengill JB, Luo Y, Davis S, Chen Y, Gonzalez-Escalona N, Ottesen A, Rand H, Allard MW, Strain​ E
+    An evaluation of alternative methods for constructing phylogenies from whole genome sequence data: A case study with Salmonella. 
+    <https://peerj.com/articles/620/>`_
 
 
 License

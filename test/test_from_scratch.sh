@@ -16,7 +16,7 @@
 #    <compareDirectory>/snpma.fasta
 #    <compareDirectory>/samples/<multiple sample subdirectories>/reads.pileup
 #Output:
-#	 This script clones the <cleanDirectory> into a new <workDirectory>
+#    This script clones the <cleanDirectory> into a new <workDirectory>
 #    under the current working directory.  Within the <workDirectory>, the input 
 #    samples are copied and the outputs are generated.  Many intermediate files are
 #    generated, but the most important results are:
@@ -38,91 +38,41 @@
 #   20140721-scd: Enhanced to support mix of paired and unpaired samples.
 #   20140728-scd: Changed the comparison logic include the upstream files to detect reproducibility problems sooner.
 #   20140728-scd: Changed the comparison logic to easily allow running a test repeatedly overnight to verify repeatable results.
+#   20140818-scd: Split the create_snp_matrix script into 4 smaller scripts.
+#   20140919-scd: Changed to use the new script, run_snp_pipeline.sh
 #Notes:
 #Bugs:
 #
 
-if (($# < 3)) || (($# > 4)); then
-    echo usage: $0  cleanDirectory workDirectory compareDirectory platform
+if (($# < 4)) || (($# > 5)); then
+    echo usage: $0  referenceFile samplesDirectory workDirectory compareDirectory platform
     echo
-    echo 'cleanDirectory   : directory of reference and sample fastq data (lambdaVirusInputs or agonaInputs)'
+    echo 'referenceFile    : Relative or absolute path to the reference fasta file.'
+    echo 'samplesDirectory : Relative or absolute path to the parent directory of all the sample directories.'
     echo 'workDirectory    : directory where the clean data is copied and results will be generated'
     echo 'compareDirectory : directory containing correct result files (sample pileups, snplist, and snpma.fasta)'
     echo 'platform         : "torque" or can be omitted for regular non-HPC environments'
     exit 1
 fi
 
-CLEANDIR=$1
-WORKDIR=$2
-COMPAREDIR=$3
-PLATFORM=$4
+referenceFile="$1"
+samplesDirectory="$2"
+WORKDIR="$3"
+COMPAREDIR="$4"
+PLATFORM="$5"
 
-NUMCORES=$(grep -c ^processor /proc/cpuinfo)
+echo referenceFile=$referenceFile
+echo samplesDirectory=$samplesDirectory
+echo WORKDIR=$WORKDIR
+echo COMPAREDIR=$COMPAREDIR
 
-if (($# < 4)); then
-    PLATFORM=Regular
-fi
+run_snp_pipeline.sh -m soft -o "$WORKDIR" -s "$samplesDirectory" "$referenceFile"
 
-echo -e "\nStep 1 - Prep work"
-mkdir -p $WORKDIR
-cp -v -u -r $CLEANDIR/* $WORKDIR
-find $WORKDIR -name "*.bt2" -type f -delete
-find $WORKDIR -name "*.fai" -type f -delete
-find $WORKDIR -name "*.pileup" -type f -delete
-find $WORKDIR -name "*.sam" -type f -delete
-find $WORKDIR -name "*.bam" -type f -delete
-find $WORKDIR -name "*.vcf" -type f -delete
-rm $WORKDIR/*
-cd $WORKDIR
-ls -d --color=never samples/* > sampleDirectoryNames.txt
-rm sampleFullPathNames.txt
-cat sampleDirectoryNames.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
-sampleCount=$(cat sampleDirectoryNames.txt | wc -l)
+#cd $WORKDIR
 
-echo -e "\nStep 2 - Prep the reference"
-referencePath=$(ls reference/*.fasta)
-referenceBasePath=${referencePath%.fasta} # strip the file extension
-if [[ $PLATFORM == torque ]]; then
-    prepReferenceJobId=$(echo prepReference.sh $referenceBasePath | qsub -d $WORKDIR -N job.prepReference -j oe)
-else
-    prepReference.sh $referenceBasePath
-fi
 
-echo -e "\nStep 3 - Align the samples to the reference"
-if [[ $PLATFORM == torque ]]; then
-    numAlignThreads=8
-    alignSamplesJobId=$(echo | qsub -t 1-$sampleCount -d $WORKDIR -N job.alignSamples -j oe -W depend=afterok:$prepReferenceJobId -l nodes=1:ppn=$numAlignThreads << _EOF_
-    alignSamplesParameters=\$(cat sampleFullPathNames.txt | head -n \$PBS_ARRAYID | tail -n 1)
-    alignSampleToReference.sh $numAlignThreads $referenceBasePath \$alignSamplesParameters
-_EOF_
-)
-else
-    cat sampleFullPathNames.txt | xargs --max-args=2 --max-lines=1 alignSampleToReference.sh $NUMCORES $referenceBasePath
-fi
-
-echo -e "\nStep 4 - Prep the samples"
-if [[ $PLATFORM == torque ]]; then
-    alignSamplesJobArray=${alignSamplesJobId%%.*}
-    prepSamplesJobId=$(echo | qsub -t 1-$sampleCount -d $WORKDIR -N job.prepSamples -j oe -W depend=afterokarray:$alignSamplesJobArray << _EOF_
-    prepSamplesParameters=\$(cat sampleDirectoryNames.txt | head -n \$PBS_ARRAYID | tail -n 1)
-    prepSamples.sh $referenceBasePath \$prepSamplesParameters
-_EOF_
-)
-else
-    cat sampleDirectoryNames.txt | xargs -n 1 -P $NUMCORES prepSamples.sh $referenceBasePath
-fi
-        
-echo -e "\nStep 5 - Run snp pipeline (samtools pileup in parallel and combine alignment and pileup to generate snp matrix)"
-if [[ $PLATFORM == torque ]]; then
-    cmd="create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True"
-    prepSamplesJobArray=${prepSamplesJobId%%.*}
-    createSnpMatrixJobId=$(echo $cmd | qsub -d $WORKDIR -N job.createSnpMatrix -j oe -W depend=afterokarray:$prepSamplesJobArray)
-else
-    create_snp_matrix.py -d ./ -f sampleDirectoryNames.txt -r $referencePath -l snplist.txt -a snpma.fasta -i True
-fi    
-
-echo -e "\nStep 6 - compare results"
-if [[ $PLATFORM == torque ]]; then
+echo -e "\nStep 9 - compare results"
+if [[ "$PLATFORM" == "torque" ]]; then
     snpmaFileCount=0
     while ((snpmaFileCount == 0)); do
         qstat -a
@@ -131,65 +81,65 @@ if [[ $PLATFORM == torque ]]; then
         snpmaFileCount=$(ls snpma.fasta 2>/dev/null | wc -l) # wait for the SNP matrix to exist
     done
 fi
-if [[ $COMPAREDIR != /* ]] && [[ $COMPAREDIR != ~* ]]; then
-    COMPAREDIR=../$COMPAREDIR # handle relative path
-fi
 
 echo -e "\ndiff reads.sam"
-echo -n "reads.sam:" >> ../overnight_run.txt
-cat sampleDirectoryNames.txt | while read sampleDir
+echo -n "reads.sam:" >> overnight_run.txt
+cat $WORKDIR/sampleDirectories.txt | while read sampleDir
 do
-    diff -q --ignore-matching-lines=bowtie $COMPAREDIR/$sampleDir/reads.sam $sampleDir/reads.sam
+    partialDir=${sampleDir##*/samples/} # strip directories
+    diff -q --ignore-matching-lines=bowtie $COMPAREDIR/samples/$partialDir/reads.sam $sampleDir/reads.sam
     stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
-    echo -n $stat" " >> ../overnight_run.txt
+    echo -n $stat" " >> overnight_run.txt
 done
 
 echo -e "\ndiff reads.all.pileup"
-echo -n "  reads.all.pileup:" >> ../overnight_run.txt
-cat sampleDirectoryNames.txt | while read sampleDir
+echo -n "  reads.all.pileup:" >> overnight_run.txt
+cat $WORKDIR/sampleDirectories.txt | while read sampleDir
 do
-    diff -q $COMPAREDIR/$sampleDir/reads.all.pileup $sampleDir/reads.all.pileup
+    partialDir=${sampleDir##*/samples/} # strip directories
+    diff -q $COMPAREDIR/samples/$partialDir/reads.all.pileup $sampleDir/reads.all.pileup
     stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
-    echo -n $stat" " >> ../overnight_run.txt
+    echo -n $stat" " >> overnight_run.txt
 done
 
 echo -e "\ndiff var.flt.vcf"
-echo -n "  var.flt.vcf:" >> ../overnight_run.txt
-cat sampleDirectoryNames.txt | while read sampleDir
+echo -n "  var.flt.vcf:" >> overnight_run.txt
+cat $WORKDIR/sampleDirectories.txt | while read sampleDir
 do
-    diff -q $COMPAREDIR/$sampleDir/var.flt.vcf $sampleDir/var.flt.vcf
+    partialDir=${sampleDir##*/samples/} # strip directories
+    diff -q $COMPAREDIR/samples/$partialDir/var.flt.vcf $sampleDir/var.flt.vcf
     stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
-    echo -n $stat" " >> ../overnight_run.txt
+    echo -n $stat" " >> overnight_run.txt
 done
 
 echo -e "\ndiff snplist.txt"
-echo -n "  snplist.txt:" >> ../overnight_run.txt
-diff -q $COMPAREDIR/snplist.txt   snplist.txt
+echo -n "  snplist.txt:" >> overnight_run.txt
+diff -q $COMPAREDIR/snplist.txt   $WORKDIR/snplist.txt
 stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
-echo -n $stat" " >> ../overnight_run.txt
+echo -n $stat" " >> overnight_run.txt
 
-echo -e "\ndiff reads.pileup"
-echo -n "  reads.pileup:" >> ../overnight_run.txt
-cat sampleDirectoryNames.txt | while read sampleDir
+echo -e "\ndiff reads.snp.pileup"
+echo -n "  reads.snp.pileup:" >> overnight_run.txt
+cat $WORKDIR/sampleDirectories.txt | while read sampleDir
 do
-    diff -q $COMPAREDIR/$sampleDir/reads.pileup $sampleDir/reads.pileup
+    partialDir=${sampleDir##*/samples/} # strip directories
+    diff -q $COMPAREDIR/samples/$partialDir/reads.snp.pileup $sampleDir/reads.snp.pileup
     stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
-    echo -n $stat" " >> ../overnight_run.txt
+    echo -n $stat" " >> overnight_run.txt
 done
 
 echo -e "\ndiff snpma.fasta"
-echo -n "  snpma.fasta:" >> ../overnight_run.txt
-diff -q $COMPAREDIR/snpma.fasta   snpma.fasta
+echo -n "  snpma.fasta:" >> overnight_run.txt
+diff -q $COMPAREDIR/snpma.fasta   $WORKDIR/snpma.fasta
 stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
-echo -n $stat" " >> ../overnight_run.txt
+echo -n $stat" " >> overnight_run.txt
 
 echo -e "\ndiff referenceSNP.fasta"
-echo -n "  referenceSNP.fasta:" >> ../overnight_run.txt
-diff -q $COMPAREDIR/referenceSNP.fasta   referenceSNP.fasta
+echo -n "  referenceSNP.fasta:" >> overnight_run.txt
+diff -q $COMPAREDIR/referenceSNP.fasta   $WORKDIR/referenceSNP.fasta
 stat=$([ "$?" -eq 0 ] && echo OK || echo xx)
-echo -n $stat" " >> ../overnight_run.txt
+echo -n $stat" " >> overnight_run.txt
 
-echo >> ../overnight_run.txt
+echo >> overnight_run.txt
 
-cd - > /dev/null
 exit 0

@@ -15,7 +15,10 @@ Contents:
    dataflow
    installation
    usage
+   reproducible
    faq
+   configuration
+   cmd_ref
    contributing
    authors
    history

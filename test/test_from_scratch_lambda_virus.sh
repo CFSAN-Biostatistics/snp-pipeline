@@ -45,8 +45,23 @@
 #   20140624-scd: Started.
 #   20140625-scd: changed to a one-liner calling test_from_scratch.sh
 #   20140701-scd: move data under the snppipeline package
+#   20140919-scd: Changed to work with the new script, run_snp_pipeline.sh
 #Notes:
 #Bugs:
 #
 
-./test_from_scratch.sh  ../snppipeline/data/lambdaVirusInputs  testLambdaVirus  ../snppipeline/data/lambdaVirusExpectedResults
+rm -rf testLambdaVirus
+mkdir testLambdaVirus
+cd testLambdaVirus
+copy_snppipeline_data.py lambdaVirusInputs lambdaVirusInputs
+copy_snppipeline_data.py lambdaVirusExpectedResults lambdaVirusExpectedResults
+
+../test_from_scratch.sh  "lambdaVirusInputs/reference/lambda_virus.fasta"  \
+                        "lambdaVirusInputs/samples" \
+                        ./  \
+                        lambdaVirusExpectedResults
+
+#./test_from_scratch.sh  /home/steven.davis/Projects/snp-pipeline/snppipeline/data/lambdaVirusInputs/reference/lambda_virus.fasta  \
+#                        /home/steven.davis/Projects/snp-pipeline/snppipeline/data/lambdaVirusInputs/samples \
+#                        /home/steven.davis/Projects/snp-pipeline/test/testLambdaVirus  \
+#                        /home/steven.davis/Projects/snp-pipeline/snppipeline/data/lambdaVirusExpectedResults
