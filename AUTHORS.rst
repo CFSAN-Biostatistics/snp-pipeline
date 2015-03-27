@@ -12,7 +12,7 @@ CFSAN BioInformatics Team
 * Steve Davis
 * Justin Payne
 * Al Shpuntoff
-
+* Joseph D. Baugher
 
 External Contributors
 ---------------------

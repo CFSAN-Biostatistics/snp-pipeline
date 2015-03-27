@@ -119,7 +119,7 @@ A: If you are using a HPC with a job queue manager, the pipeline will automatica
 concurrent processes across multiple servers -- there are no options to control the number of 
 concurrent processes.  On a workstation, the pipeline uses all available CPU cores by default
 and spawns multiple concurrent processes to use all the cores.  However, you may want to 
-control the number of concurrent processes.  There are two steps in the pipeline where multiple
+control the number of concurrent processes.  There are three steps in the pipeline where multiple
 processes are launched on a workstation.  You can control the number of processes with the
 following parameters in the configuration file.  These parameters are used only by the
 run_snp_pipeline.sh script::
@@ -130,7 +130,8 @@ run_snp_pipeline.sh script::
     # Maximum concurrent create_snp_pileup.py processes
     MaxConcurrentCreateSnpPileup=
 
-
+    # Maximum concurrent collectSampleMetrics.sh processes
+    MaxConcurrentCollectSampleMetrics=
 
 **Q: How can I control the number of CPU cores used by the bowtie2 aligner?**
 

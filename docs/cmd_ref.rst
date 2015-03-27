@@ -313,3 +313,49 @@ create_snp_reference_seq.py
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
+
+collectSampleMetrics.sh
+---------------------------
+
+::
+
+  usage: collectSampleMetrics.sh [-h] [-f] [-m FILE] [-o FILE] sampleDir
+  
+  Collect alignment, coverage, and variant metrics for a single specified sample.
+  
+  Positional arguments:
+    sampleDir        : Relative or absolute directory of the sample
+  
+  Options:
+    -h               : Show this help message and exit
+    -f               : Force processing even when result files already exist and
+                       are newer than inputs
+    -m FILE          : Relative or absolute path to the SNP matrix file
+                       (default: snpma.fasta)
+    -o FILE          : Output file. Relative or absolute path to the metrics file
+                       (Default: stdout)
+
+combineSampleMetrics.sh
+---------------------------
+
+::
+
+  usage: combineSampleMetrics.sh [-h] [-n NAME] [-o FILE] sampleDirsFile
+  
+  Combine the metrics from all samples into a single table of metrics for all samples.
+  The output is a tab-separated-values file with a row for each sample and a column
+  for each metric.
+  
+  Before running this command, the metrics for each sample must be created by the
+  collectSampleMetrics.sh script.
+  
+  Positional arguments:
+    sampleDirsFile   : Relative or absolute path to file containing a list of
+                       directories -- one per sample
+  
+  Options:
+    -h               : Show this help message and exit
+    -n NAME          : File name of the metrics files which must exist in each of
+                       the sample directories. Default: metrics)
+    -o FILE          : Output file. Relative or absolute path to the combined metrics
+                       file. Default: stdout)

@@ -576,3 +576,65 @@ else
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
 fi
 
+echo -e "\nStep 9 - Collect metrics for each sample"
+if [[ "$platform" == "grid" ]]; then
+    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+#$ -N job.collectMetrics
+#$ -cwd
+#$ -V
+#$ -j y
+#$ -hold_jid $snpMatrixJobId
+#$   -l h_rt=02:00:00
+#$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
+    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    collectSampleMetricsJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
+    #PBS -N job.collectMetrics
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterany:$snpMatrixJobId
+    #PBS -l walltime=02:00:00
+    #PBS -o $logDir/collectSampleMetrics.log
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
+    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"
+_EOF_
+)
+else
+    if [[ "$MaxConcurrentCollectSampleMetrics" != "" ]]; then
+        numCollectSampleMetricsCores=$MaxConcurrentCollectSampleMetrics
+    else
+        numCollectSampleMetricsCores=$numCores
+    fi
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores sh -c 'collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" "$1" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+fi
+
+echo -e "\nStep 10 - Combine the metrics across all samples into the metrics table"
+if [[ "$platform" == "grid" ]]; then
+    collectSampleMetricsJobArray=${collectSampleMetricsJobId%%.*}
+    combineSampleMetricsJobId=$(echo | qsub  -terse << _EOF_
+#$ -N job.combineMetrics
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $collectSampleMetricsJobArray
+#$ -o $logDir/combineSampleMetrics.log
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" "$sampleDirsFile"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    collectSampleMetricsJobArray=${collectSampleMetricsJobId%%.*}
+    combineSampleMetricsJobId=$(echo | qsub << _EOF_
+    #PBS -N job.combineMetrics
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterokarray:$collectSampleMetricsJobArray
+    #PBS -o $logDir/combineSampleMetrics.log
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" "$sampleDirsFile"
+_EOF_
+)
+else
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
+fi

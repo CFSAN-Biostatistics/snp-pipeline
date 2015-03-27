@@ -69,6 +69,23 @@ This parameter is used by run_snp_pipeline.sh only.
     MaxConcurrentCreateSnpPileup=4
 
 
+MaxConcurrentCollectSampleMetrics
+----------------------------------
+
+Controls the number of collectSampleMetrics.sh  processes running concurrently 
+on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
+This parameter is used by run_snp_pipeline.sh only.
+
+**Default**: 
+
+    When this parameter is not set to a value, the pipeline will launch multiple concurrent 
+    processes using all available CPU cores on a workstation.
+
+**Example**::
+
+    MaxConcurrentCollectSampleMetrics=4
+
+
 Bowtie2Build_ExtraParams
 ------------------------
 

@@ -34,7 +34,7 @@ if sys.version_info < (2,7,):
 
 setup(
     name='snp-pipeline',
-    version='0.3.2',
+    version='0.3.3',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -76,7 +76,9 @@ setup(
         'scripts/create_snp_pileup.py',
         'scripts/create_snp_matrix.py',
         'scripts/create_snp_reference_seq.py',
-        'scripts/copy_snppipeline_data.py'
+        'scripts/copy_snppipeline_data.py',
+        'scripts/collectSampleMetrics.sh',
+        'scripts/combineSampleMetrics.sh',
     ],
 
     # Include the test data files listed below in the distribution.

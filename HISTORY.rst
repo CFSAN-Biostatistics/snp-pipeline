@@ -3,6 +3,22 @@
 History
 -------
 
+0.3.3 (2015-03-27)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* Improve HPC qsub submission speed throttling to avoid overload errors with the HPC job scheduler when 
+  submitting large numbers of tasks.  Dynamically adjust the delays between HPC array job submission so 
+  datasets with larger numbers of samples have larger delays between qsub submissions.
+
+**Other Changes:**
+
+* Sample Metrics.  The pipeline generates a table of sample metrics capturing various alignment, coverage, and snp statistics per sample.
+  See :ref:`metrics-usage-label`.
+
+
+
 0.3.2 (2015-01-14)
 ~~~~~~~~~~~~~~~~~~
 

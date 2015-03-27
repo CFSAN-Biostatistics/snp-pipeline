@@ -37,6 +37,12 @@ of shell scripts and python scripts.
 | create_snp_reference_seq.py | | Writes the reference sequence bases at SNP locations to          |
 |                             | | a fasta file                                                     |
 +-----------------------------+--------------------------------------------------------------------+
+| collectSampleMetrics.sh     | | Collects useful coverage and variant statistics about            |
+|                             | | each sample                                                      |
++-----------------------------+--------------------------------------------------------------------+
+| combineSampleMetrics.sh     | | Creates a table of coverage and variant statistics for           |
+|                             | | all samples                                                      |
++-----------------------------+--------------------------------------------------------------------+
 
 
 Inputs
@@ -91,6 +97,12 @@ See :ref:`step-by-step-workflows`.
 * referenceSNP.fasta : a fasta file containing the reference sequence bases at
   all the SNP locations.
 
+* metrics : for each sample, contains the size of the sample, number of reads, 
+  alignment rate, pileup depth, and number of SNPs found.
+
+* metrics.tsv : a tab-separated table of metrics for all samples containing 
+  the size of the samples, number of reads, alignment rate, pileup depth, and 
+  number of SNPs found.
 
 .. _all-in-one-script-label:
 
@@ -524,8 +536,15 @@ Step 9 - Create the reference base sequence::
 
     create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/lambda_virus.fasta
 
-        
-Step 10 - View and verify the results:
+Step 10 - Collect metrics for each sample::
+
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX
+
+Step 11 - Tabulate the metrics for all samples::
+
+    combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
+
+Step 12 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -540,6 +559,9 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s snplist.txt         expectedResults/snplist.txt
     diff -q -s snpma.fasta         expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
+
+    # View the per-sample metrics
+    xdg-open metrics.tsv
 
 
 .. _step-by-step-workflow-agona:
@@ -625,8 +647,15 @@ Step 9 - Create the reference base sequence::
 
     create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/NC_011149.fasta
 
-        
-Step 10 - View and verify the results:
+Step 10 - Collect metrics for each sample::
+
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX
+
+Step 11 - Tabulate the metrics for all samples::
+
+    combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
+
+Step 12 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 3624 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -642,6 +671,8 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s snpma.fasta         expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
+    # View the per-sample metrics
+    xdg-open metrics.tsv
 
 .. _step-by-step-workflow-general-case:
 
@@ -718,7 +749,15 @@ Step 9 - Create the reference base sequence::
     # Note the .fasta file extension
     create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/my_reference.fasta
 
-Step 10 - View the results:
+Step 10 - Collect metrics for each sample::
+
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX
+
+Step 11 - Tabulate the metrics for all samples::
+
+    combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
+
+Step 12 - View the results:
 
 Upon successful completion of the pipeline, the snplist.txt identifies the SNPs in all samples.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -726,3 +765,65 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snplist.txt
     ls -l snpma.fasta
     ls -l referenceSNP.fasta
+
+    # View the per-sample metrics
+    xdg-open metrics.tsv
+
+
+.. _metrics-usage-label:
+
+Metrics
+-------
+
+After creating the SNP matrix, the pipeline collects and tabulates metrics for all of the samples.  The metrics 
+are first collected in one file per sample in the sample directories.  A subsequent step combines the
+metrics for all the samples together into a single tab-separated file with one row per sample and one column
+per metric.  The tabulated metrics file is named metrics.tsv by default.
+
+The metrics are:
+
++-------------------------+------------------------------------------------------------------+
+| Column                  | | Description                                                    |
++=========================+==================================================================+
+| Sample                  | | The name of the directory containing the sample fastq files.   |
++-------------------------+------------------------------------------------------------------+
+| Fastq Files             | | List of fastq file names in the sample directory.              |
++-------------------------+------------------------------------------------------------------+
+| Fastq File Size         | | The sum of the sizes of the fastq files. This will be the      |
+|                         | | compressed size if the files are compressed.                   | 
++-------------------------+------------------------------------------------------------------+
+| Machine                 | | The sequencing instrument ID extracted from the compressed     |
+|                         | | fastq.gz file header.  If the fastq files are not compressed,  |
+|                         | | the machine ID is not captured.                                |
++-------------------------+------------------------------------------------------------------+
+| Flowcell                | | The flowcell used during the sequencing run, extracted from    |
+|                         | | the compressed fastq.gz file header. If the fastq files are    |
+|                         | | not compressed, the flowcell is not captured.                  |
++-------------------------+------------------------------------------------------------------+
+| Number of Reads         | | The number of reads in the SAM file.                           |
++-------------------------+------------------------------------------------------------------+
+| Percent of Reads Mapped | | The percentage of reference-aligned reads in the SAM file.     |
++-------------------------+------------------------------------------------------------------+
+| Average Pileup Depth    | | The average depth of coverage in the whole-genome sample       |
+|                         | | pileup file.                                                   |
++-------------------------+------------------------------------------------------------------+
+| Number of SNPs          | | The number of SNPs found for this sample.  The count is        |
+|                         | | computed as the number of SNP records in the VCF file          | 
+|                         | | generated by the snp caller (VarScan).                         |
++-------------------------+------------------------------------------------------------------+
+| Missing SNP Matrix      | | The number of positions in the SNP matrix for which a          |
+| Positions               | | consensus base could not be called for this sample.  The       |
+|                         | | inability to call a consensus base is caused by either a       |
+|                         | | pileup file with no coverage at a SNP position, or by          |
+|                         | | insufficient agreement among the pileup bases at the SNP       |
+|                         | | position.  The minimum fraction of reads that must agree at a  |
+|                         | | position to make a consensus call is controlled by the         |
+|                         | | ``minConsFreq`` parameter.                                     |
++-------------------------+------------------------------------------------------------------+
+| Warnings and Errors     | | A list of warnings or errors encountered while collecting the  |
+|                         | | metrics.                                                       |
++-------------------------+------------------------------------------------------------------+
+
+
+
+

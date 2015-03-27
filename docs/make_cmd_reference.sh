@@ -81,6 +81,18 @@ echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 create_snp_reference_seq.py -h | sed 's/^/  /' >> x.txt
 
+echo >> x.txt
+echo collectSampleMetrics.sh >> x.txt
+echo --------------------------- >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+collectSampleMetrics.sh -h | sed 's/^/  /' >> x.txt
+
+echo >> x.txt
+echo combineSampleMetrics.sh >> x.txt
+echo --------------------------- >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+combineSampleMetrics.sh -h | sed 's/^/  /' >> x.txt
+
 cat x.txt | sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-2.7/bin/~~' |  \
 grep -v "# Command           :" | \
 grep -v "# Working Directory :" | \
