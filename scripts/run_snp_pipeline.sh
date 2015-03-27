@@ -413,7 +413,7 @@ fi
 
 echo -e "\nStep 4 - Prep the samples"
 if [[ "$platform" == "grid" ]]; then
-    sleep 2 # workaround potential bug when submitting two large consecutive array jobs
+    sleep $((1 + sampleCount / 150)) # workaround potential bug when submitting two large consecutive array jobs
     alignSamplesJobArray=${alignSamplesJobId%%.*}
     prepSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
 #$   -N job.prepSamples
@@ -428,7 +428,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    sleep 2 # workaround torque bug when submitting two large consecutive array jobs
+    sleep $((1 + sampleCount / 150)) # workaround torque bug when submitting two large consecutive array jobs
     alignSamplesJobArray=${alignSamplesJobId%%.*}
     prepSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
     #PBS -N job.prepSamples
