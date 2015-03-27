@@ -8,14 +8,15 @@ History
 
 **Bug fixes:**
 
-* Improve HPC qsub submission speed throttling to avoid overload errors with the HPC job scheduler when 
-  submitting large numbers of tasks.  Dynamically adjust the delays between HPC array job submission so 
-  datasets with larger numbers of samples have larger delays between qsub submissions.
+* Improve HPC qsub submission speed throttling to avoid errors with the HPC job scheduler when 
+  submitting large and small jobs.  Dynamically adjust the delays between HPC array job submission so 
+  small datasets have small delays and large datasets have large delays between qsub submissions.
 
 **Other Changes:**
 
 * Sample Metrics.  The pipeline generates a table of sample metrics capturing various alignment, coverage, and snp statistics per sample.
   See :ref:`metrics-usage-label`.
+* Explicitly expose the ``minConsFreq`` parameter in the supplied default configuration file to make it easier to adjust.
 
 
 

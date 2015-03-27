@@ -251,9 +251,14 @@ Specifies options passed to create_snp_matrix.py.
 
 **Default**: None
 
+**Parameter Notes**:
+
+| --minConsFreq : Mimimum fraction of reads that must agree to make a consensus call
+|
+
 **Example**::
 
-    CreateSnpMatrix_ExtraParams="--verbose 1"
+    CreateSnpMatrix_ExtraParams="--verbose 1 --minConsFreq 0.6"
 
 
 CreateSnpReferenceSeq_ExtraParams
