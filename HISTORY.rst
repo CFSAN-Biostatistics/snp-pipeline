@@ -13,6 +13,7 @@ History
   small datasets have small delays and large datasets have large delays between qsub submissions.
 * Process the sample directories in order by size, largest first, considering only by the size of fastq 
   files and ignoring all other files.  Previously non-fastq files were affecting the processing order.
+* Fixed divide-by-zero error in create_snp_matrix when no snps are detected.
 
 **Other Changes:**
 
