@@ -3,7 +3,7 @@
 History
 -------
 
-0.3.3 (2015-03-27)
+0.3.3 (2015-03-31)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -11,6 +11,8 @@ History
 * Improve HPC qsub submission speed throttling to avoid errors with the HPC job scheduler when 
   submitting large and small jobs.  Dynamically adjust the delays between HPC array job submission so 
   small datasets have small delays and large datasets have large delays between qsub submissions.
+* Process the sample directories in order by size, largest first, considering only by the size of fastq 
+  files and ignoring all other files.  Previously non-fastq files were affecting the processing order.
 
 **Other Changes:**
 

@@ -31,7 +31,9 @@
 #   20140910-scd: Started.
 #   20141008-scd: Added support for configuration files.
 #   20141015-scd: Support soft, hard, copy mirror modes.
-#   20141124-afs: support added for grid engine in addition to torque
+#   20141124-afs: Support added for grid engine in addition to torque
+#   20150327-scd: Added sample metrics collection and tabulation.
+#   20150330-scd: Process sample directories in size order, considering only by the size of fastq files and ignoring all other files.
 #Notes:
 #
 #Bugs:
@@ -247,9 +249,9 @@ fi
 # --------------------------------------------------------
 # get sample directories sorted by size, largest first
 if [[ "$opt_s_set" = "1" ]]; then
-    samplesDir="$opt_s_arg"
+    samplesDir="${opt_s_arg%/}"  # strip trailing slash
     if [[ ! -d "$samplesDir" ]]; then echo "Samples directory $samplesDir does not exist."; exit 70; fi
-    ls -d "$samplesDir"/* | sed 's/.*/"&"/' | xargs ls -L -s -m | grep -E "($samplesDir|total)" | sed 'N;s/\n//;s/:total//' | sort -k 2 -n -r | sed 's/ \w*$//' > "$workDir/sampleDirectories.txt"
+    { du -b -L "$samplesDir"/*/*.fastq* 2> /dev/null; du -b -L "$samplesDir"/*/*.fq* 2> /dev/null; } | xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | sort -k 2 -n -r | cut -f 1 -d" " > "$workDir/sampleDirectories.txt"
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
 if [[ "$opt_S_set" = "1" ]]; then
@@ -293,7 +295,7 @@ if [[ "$opt_m_set" = "1" ]]; then
     done
     # since we mirrored the samples, we need to update our samples location and sorted list of samples
     samplesDir="$workDir/samples"
-    ls -d "$samplesDir"/* | sed 's/.*/"&"/' | xargs ls -L -s -m | grep -E "($samplesDir|total)" | sed 'N;s/\n//;s/:total//' | sort -k 2 -n -r | sed 's/ \w*$//' > "$workDir/sampleDirectories.txt"
+    { du -b -L "$samplesDir"/*/*.fastq* 2> /dev/null; du -b -L "$samplesDir"/*/*.fq* 2> /dev/null; } | xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | sort -k 2 -n -r | cut -f 1 -d" " > "$workDir/sampleDirectories.txt"
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
 
