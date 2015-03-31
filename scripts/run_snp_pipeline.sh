@@ -34,6 +34,7 @@
 #   20141124-afs: Support added for grid engine in addition to torque
 #   20150327-scd: Added sample metrics collection and tabulation.
 #   20150330-scd: Process sample directories in size order, considering only by the size of fastq files and ignoring all other files.
+#   20150331-scd: Don't skip the last sample when run with -S option and the file of directories is not terminated with a newline.
 #Notes:
 #
 #Bugs:
@@ -336,7 +337,7 @@ echo -e "\nStep 1 - Prep work"
 export numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 # get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
 tmpFile=$(mktemp -p "$workDir" tmp.fastqs.XXXXXXXX)
-cat "$sampleDirsFile" | while read dir; do echo $dir/*.fastq* >> "$tmpFile"; echo "$dir"/*.fq* >> "$tmpFile"; done
+cat "$sampleDirsFile" | while IFS=$'\n' read -r dir || [[ -n "$dir" ]]; do echo $dir/*.fastq* >> "$tmpFile"; echo "$dir"/*.fq* >> "$tmpFile"; done
 grep -v '*.fq*' "$tmpFile" | grep -v '*.fastq*' > "$workDir/sampleFullPathNames.txt"
 rm "$tmpFile"
 

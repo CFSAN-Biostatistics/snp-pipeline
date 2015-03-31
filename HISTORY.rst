@@ -14,6 +14,8 @@ History
 * Process the sample directories in order by size, largest first, considering only by the size of fastq 
   files and ignoring all other files.  Previously non-fastq files were affecting the processing order.
 * Fixed divide-by-zero error in create_snp_matrix when no snps are detected.
+* Don't skip the last sample when run_snp_pipeline is started with the -S option and the file of 
+  sample directories is not terminated with a newline.
 
 **Other Changes:**
 
