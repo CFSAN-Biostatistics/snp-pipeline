@@ -253,6 +253,8 @@ if [[ "$opt_s_set" = "1" ]]; then
     samplesDir="${opt_s_arg%/}"  # strip trailing slash
     if [[ ! -d "$samplesDir" ]]; then echo "Samples directory $samplesDir does not exist."; exit 70; fi
     if [[   -z $(ls -A "$samplesDir") ]]; then echo "Samples directory $samplesDir is empty."; exit 70; fi
+    fastqFiles=$({ find "$samplesDir" -path "$samplesDir"'/*/*.fastq*'; find "$samplesDir" -path "$samplesDir"'/*/*.fq*'; })
+    if [[   -z "$fastqFiles" ]]; then echo "Samples directory $samplesDir does not contain subdirectories with fastq files."; exit 70; fi
     { du -b -L "$samplesDir"/*/*.fastq* 2> /dev/null; du -b -L "$samplesDir"/*/*.fq* 2> /dev/null; } | xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | sort -k 2 -n -r | cut -f 1 -d" " > "$workDir/sampleDirectories.txt"
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
