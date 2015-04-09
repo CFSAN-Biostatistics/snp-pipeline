@@ -3,7 +3,7 @@
 History
 -------
 
-0.3.3 (2015-03-31)
+0.3.3 (2015-04-10)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -16,6 +16,8 @@ History
 * Fixed divide-by-zero error in create_snp_matrix when no snps are detected.
 * Don't skip the last sample when run_snp_pipeline is started with the -S option and the file of 
   sample directories is not terminated with a newline.
+* Gracefully exit run_snp_pipeline with an error message when run with -s option and the samples directory
+  is empty or contains no subdirectories with fastq files.
 
 **Other Changes:**
 

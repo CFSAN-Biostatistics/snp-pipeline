@@ -35,6 +35,8 @@
 #   20150327-scd: Added sample metrics collection and tabulation.
 #   20150330-scd: Process sample directories in size order, considering only by the size of fastq files and ignoring all other files.
 #   20150331-scd: Don't skip the last sample when run with -S option and the file of directories is not terminated with a newline.
+#   20150407-scd: Exit with an error message when run with -s option and the samples directory is empty or contains no subdirectories with fastq files
+#   20150408-scd: Don't exit upon du command error when there are no fastq files or no fq files.
 #Notes:
 #
 #Bugs:
@@ -249,13 +251,30 @@ fi
 
 # --------------------------------------------------------
 # get sample directories sorted by size, largest first
+
+persistSortedSampleDirs()
+{
+    local samplesDir=$1
+    local workDir=$2
+
+    tmpFile=$(mktemp -p "$workDir" tmp.sampleDirs.XXXXXXXX)
+    du -b -L "$samplesDir"/*/*.fastq* 2> /dev/null > "$tmpFile" || true
+    du -b -L "$samplesDir"/*/*.fq* 2> /dev/null >> "$tmpFile" || true
+    < "$tmpFile" xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | \
+    awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | \
+    sort -k 2 -n -r | \
+    cut -f 1 -d" " > "$workDir/sampleDirectories.txt"  
+    rm "$tmpFile"
+}
+
+
 if [[ "$opt_s_set" = "1" ]]; then
     samplesDir="${opt_s_arg%/}"  # strip trailing slash
     if [[ ! -d "$samplesDir" ]]; then echo "Samples directory $samplesDir does not exist."; exit 70; fi
     if [[   -z $(ls -A "$samplesDir") ]]; then echo "Samples directory $samplesDir is empty."; exit 70; fi
     fastqFiles=$({ find "$samplesDir" -path "$samplesDir"'/*/*.fastq*'; find "$samplesDir" -path "$samplesDir"'/*/*.fq*'; })
     if [[   -z "$fastqFiles" ]]; then echo "Samples directory $samplesDir does not contain subdirectories with fastq files."; exit 70; fi
-    { du -b -L "$samplesDir"/*/*.fastq* 2> /dev/null; du -b -L "$samplesDir"/*/*.fq* 2> /dev/null; } | xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | sort -k 2 -n -r | cut -f 1 -d" " > "$workDir/sampleDirectories.txt"
+    persistSortedSampleDirs "$samplesDir" "$workDir"
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
 if [[ "$opt_S_set" = "1" ]]; then
@@ -299,7 +318,7 @@ if [[ "$opt_m_set" = "1" ]]; then
     done
     # since we mirrored the samples, we need to update our samples location and sorted list of samples
     samplesDir="$workDir/samples"
-    { du -b -L "$samplesDir"/*/*.fastq* 2> /dev/null; du -b -L "$samplesDir"/*/*.fq* 2> /dev/null; } | xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | sort -k 2 -n -r | cut -f 1 -d" " > "$workDir/sampleDirectories.txt"
+    persistSortedSampleDirs "$samplesDir" "$workDir"
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
 
