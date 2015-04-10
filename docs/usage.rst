@@ -800,7 +800,9 @@ The metrics are:
 |                         | | the compressed fastq.gz file header. If the fastq files are    |
 |                         | | not compressed, the flowcell is not captured.                  |
 +-------------------------+------------------------------------------------------------------+
-| Number of Reads         | | The number of reads in the SAM file.                           |
+| Number of Reads         | | The number of reads in the SAM file.  When using paired fastq  |
+|                         | | files, this number will be twice the number of reads reported  |
+|                         | | by bowtie.                                                     |
 +-------------------------+------------------------------------------------------------------+
 | Percent of Reads Mapped | | The percentage of reference-aligned reads in the SAM file.     |
 +-------------------------+------------------------------------------------------------------+
