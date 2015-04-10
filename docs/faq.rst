@@ -26,6 +26,27 @@ Define it like this in your .bashrc file::
     export CLASSPATH=~/software/varscan.v2.3.6/VarScan.v2.3.6.jar:$CLASSPATH
 
 
+**Q: How can I uninstall the SNP pipeline?**
+
+A: If you installed with pip, you can uninstall from the command line::
+
+    $ pip uninstall snp-pipeline
+
+
+**Q: How can I rollback to an older version of the SNP pipeline?**
+
+A: You can revert to an older version with these commands::
+
+    $ pip uninstall snp-pipeline
+    $ pip install --user snp-pipeline==0.3.2  # substitute the version you want here
+
+
+**Q: Is there a way to install a specific release of the SNP pipeline from the github repository?**
+
+A: Yes, you can install a release from github with this command::
+
+    $ pip install --user https://github.com/CFSAN-Biostatistics/snp-pipeline/archive/v0.3.2  # substitute the version you want here
+
 
 Running the Pipeline
 --------------------

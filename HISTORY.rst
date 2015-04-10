@@ -26,6 +26,7 @@ History
 * Sample Metrics.  The pipeline generates a table of sample metrics capturing various alignment, coverage, and snp statistics per sample.
   See :ref:`metrics-usage-label`.
 * Explicitly expose the ``minConsFreq`` parameter in the supplied default configuration file to make it easier to adjust.
+* Updated the FAQ with instructions to install to an older version.
 
 
 
