@@ -11,11 +11,13 @@ History
 * Improve HPC qsub submission speed throttling to avoid errors with the HPC job scheduler when 
   submitting large and small jobs.  Dynamically adjust the delays between HPC array job submission so 
   small datasets have small delays and large datasets have large delays between qsub submissions.
-* Process the sample directories in order by size, largest first, considering only by the size of fastq 
+* Process the sample directories in order by size, largest first, considering only the size of fastq 
   files and ignoring all other files.  Previously non-fastq files were affecting the processing order.
 * Fixed divide-by-zero error in create_snp_matrix when no snps are detected.
 * Don't skip the last sample when run_snp_pipeline is started with the -S option and the file of 
   sample directories is not terminated with a newline.
+* Gracefully exit run_snp_pipeline with error messages when run with -S option and any of the sample 
+  directories in the sample directory file is missing, empty, or does not contain fastq files.
 * Gracefully exit run_snp_pipeline with an error message when run with -s option and the samples directory
   is empty or contains no subdirectories with fastq files.
 

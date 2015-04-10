@@ -37,6 +37,7 @@
 #   20150331-scd: Don't skip the last sample when run with -S option and the file of directories is not terminated with a newline.
 #   20150407-scd: Exit with an error message when run with -s option and the samples directory is empty or contains no subdirectories with fastq files
 #   20150408-scd: Don't exit upon du command error when there are no fastq files or no fq files.
+#   20150410-scd: Verify each of the sample directories in the sample directory file is not empty and contains fastq's.
 #Notes:
 #
 #Bugs:
@@ -249,6 +250,36 @@ if [[ "$opt_s_set" != "1" && "$opt_S_set" != "1" ]]; then
     exit 60
 fi
 
+
+# Verify each of the sample directories in the sample directory file is not empty and contains fastq's
+validateFileOfSampleDirs()
+{
+    local sampleDirsFile=$1
+    local foundError=false
+
+    if [[ ! -f "$sampleDirsFile" ]]; then echo "The file of samples directories, $sampleDirsFile, does not exist."; exit 70; fi
+    if [[ ! -s "$sampleDirsFile" ]]; then echo "The file of samples directories, $sampleDirsFile, is empty."; exit 70; fi
+
+    while IFS=$'\n' read -r dir || [[ -n "$dir" ]]
+    do 
+        if [[ ! -d "$dir" ]]; then 
+            echo "Sample directory $dir does not exist."
+            foundError=true
+        elif [[ -z $(ls -A "$dir") ]]; then 
+            echo "Sample directory $dir is empty."
+            foundError=true
+        else
+            fastqFiles=$({ find "$dir" -path "$dir"'/*.fastq*'; find "$dir" -path "$dir"'/*.fq*'; })
+            if [[ -z "$fastqFiles" ]]; then 
+                echo "Sample directory $dir does not contain any fastq files."
+                foundError=true
+            fi
+        fi
+    done  < "$sampleDirsFile" 
+    if [[ "$foundError" == true ]]; then exit 70; fi
+}
+
+
 # --------------------------------------------------------
 # get sample directories sorted by size, largest first
 
@@ -279,8 +310,7 @@ if [[ "$opt_s_set" = "1" ]]; then
 fi
 if [[ "$opt_S_set" = "1" ]]; then
     sampleDirsFile="$opt_S_arg"
-    if [[ ! -f "$sampleDirsFile" ]]; then echo "The file of samples directories, $sampleDirsFile, does not exist."; exit 70; fi
-    if [[ ! -s "$sampleDirsFile" ]]; then echo "The file of samples directories, $sampleDirsFile, is empty."; exit 70; fi
+    validateFileOfSampleDirs $sampleDirsFile
 fi
 sampleCount=$(cat "$sampleDirsFile" | wc -l)
 
