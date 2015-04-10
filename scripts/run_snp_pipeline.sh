@@ -337,7 +337,7 @@ if [[ "$opt_m_set" = "1" ]]; then
     referenceFilePath="$workDir/reference/$referenceFileName"
 
     # Mirror/link the samples
-    cat "$sampleDirsFile" | while read dir
+    cat "$sampleDirsFile" | while IFS=$'\n' read -r dir || [[ -n "$dir" ]]
     do
         baseDir=${dir##*/} # strip the parent directories
         mkdir -p "$workDir/samples/$baseDir"
