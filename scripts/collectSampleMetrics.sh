@@ -242,7 +242,7 @@ else
 fi
 
 #------------------------------------------
-echo "# "$(date +"%Y-%m-%d %T") Count missing positions in the snp matrixs 1>&2
+echo "# "$(date +"%Y-%m-%d %T") Count missing positions in the snp matrix 1>&2
 #------------------------------------------
 
 missingPos=$(python << END
