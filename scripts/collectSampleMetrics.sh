@@ -168,7 +168,7 @@ if [ -s ${fastqFileArray[0]} ]; then
   fields=(${fq_head//:/ })
   flowcell=${fields[2]}
 else
-  error="No fastq.gz or fq.gz files were found."
+  error="No compressed fastq.gz or fq.gz files were found."
   echo "$error" 1>&2
   errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
 fi
