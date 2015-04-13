@@ -319,12 +319,13 @@ collectSampleMetrics.sh
 
 ::
 
-  usage: collectSampleMetrics.sh [-h] [-f] [-m FILE] [-o FILE] sampleDir
+  usage: collectSampleMetrics.sh [-h] [-f] [-m FILE] [-o FILE] sampleDir referenceFile
   
   Collect alignment, coverage, and variant metrics for a single specified sample.
   
   Positional arguments:
     sampleDir        : Relative or absolute directory of the sample
+    referenceFile    : Relative or absolute path to the reference fasta file
   
   Options:
     -h               : Show this help message and exit

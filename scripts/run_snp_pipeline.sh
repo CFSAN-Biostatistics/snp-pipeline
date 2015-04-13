@@ -642,7 +642,7 @@ if [[ "$platform" == "grid" ]]; then
 #$   -l h_rt=02:00:00
 #$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"
+    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -654,7 +654,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -l walltime=02:00:00
     #PBS -o $logDir/collectSampleMetrics.log
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"
+    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 else
@@ -663,7 +663,7 @@ else
     else
         numCollectSampleMetricsCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores sh -c 'collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" "$1" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores sh -c 'collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
 echo -e "\nStep 10 - Combine the metrics across all samples into the metrics table"

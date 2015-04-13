@@ -14,6 +14,7 @@
 #History:
 #   20150311-jdb: Initial version authored by Joseph D. Baugher.
 #   20150324-scd: Modified to work as an integrated step within the CFSAN SNP Pipeline.
+#   20150413-scd: Calculate average depth using all reference positions, including those with zero coverage.
 #Notes:
 #
 #Bugs:
@@ -26,12 +27,13 @@
 
 usage()
 {
-  echo usage: $0 [-h] [-f] [-m FILE] [-o FILE] sampleDir
+  echo usage: $0 [-h] [-f] [-m FILE] [-o FILE] sampleDir referenceFile
   echo
   echo 'Collect alignment, coverage, and variant metrics for a single specified sample.'
   echo
   echo 'Positional arguments:'
   echo '  sampleDir        : Relative or absolute directory of the sample'
+  echo '  referenceFile    : Relative or absolute path to the reference fasta file'
   echo
   echo 'Options:'
   echo '  -h               : Show this help message and exit'
@@ -114,8 +116,21 @@ if [[ ! -d "$sampleDir" ]]; then echo "Sample directory $sampleDir does not exis
 sampleDirFiles=$(ls -A "$sampleDir")
 if [[ -z "$sampleDirFiles" ]]; then echo "Sample directory $sampleDir is empty."; exit 10 1>&2; fi
 
+# Get the reference file
+referenceFile="$2"
+if [ "$referenceFile" = "" ]; then
+  echo
+  echo "Missing reference file." 1>&2
+  usage
+  exit 10
+fi
+if [[ ! -e "$referenceFile" ]]; then echo "Reference file $referenceFile does not exist." 1>&2; exit 10; fi
+if [[ ! -f "$referenceFile" ]]; then echo "Reference file $referenceFile is not a file." 1>&2; exit 10; fi
+if [[ ! -s "$referenceFile" ]]; then echo "Reference file $referenceFile is empty." 1>&2; exit 10; fi
+
+
 # Extra arguments not allowed
-if [[ "$2" != "" ]]; then
+if [[ "$3" != "" ]]; then
   echo "Unexpected argument \"$2\" specified after the sample directory" 1>&2
   echo
   usage
@@ -209,7 +224,7 @@ if [ -s "$samFile" ]; then
   nreads=$(samtools view -S -c ${sampleDir}/reads.sam)
   mapped=$(samtools view -S -c -F 4 ${sampleDir}/reads.sam)
   perc_mapped=$(bc <<< "scale=4; ($mapped/$nreads)*100")
-  perc_mapped=$(printf '%.02f' $perc_mapped)
+  perc_mapped=$(printf '%.2f' $perc_mapped)
 else
   error="SAM file was not found."
   echo "$error" 1>&2
@@ -221,8 +236,9 @@ echo "# "$(date +"%Y-%m-%d %T") Calculate mean depth from pileup file 1>&2
 #-------------------------
 pileupFile=${sampleDir}/reads.all.pileup
 if [ -s "$pileupFile" ]; then
-  depth=$(awk '{sum+=$4}END{print sum/NR}' "$pileupFile")
-  depth=$(printf '%.0f' $depth)
+  sumDepth=$(awk '{sum+=$4}END{print sum}' "$pileupFile")
+  refLength=$(grep -v '>' "$referenceFile" | wc -m)
+  depth=$(printf %.2f $(echo "$sumDepth / $refLength" | bc -l))
 else
   error="Pileup file was not found."
   echo "$error" 1>&2
