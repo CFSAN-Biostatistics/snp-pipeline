@@ -806,8 +806,10 @@ The metrics are:
 +-------------------------+------------------------------------------------------------------+
 | Percent of Reads Mapped | | The percentage of reference-aligned reads in the SAM file.     |
 +-------------------------+------------------------------------------------------------------+
-| Average Pileup Depth    | | The average depth of coverage in the whole-genome sample       |
-|                         | | pileup file.                                                   |
+| Average Pileup Depth    | | The average depth of coverage in the sample pileup file.  This |
+|                         | | is calculated as the sum of the depth of the pileup across all |
+|                         | | pileup positions divided by the number of positions in the     |
+|                         | | reference.                                                     |
 +-------------------------+------------------------------------------------------------------+
 | Number of SNPs          | | The number of SNPs found for this sample.  The count is        |
 |                         | | computed as the number of SNP records in the VCF file          | 
