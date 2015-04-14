@@ -100,6 +100,13 @@ Installation Method 2 for Software Developers
 If you intend to work with the source code in the role of a software developer, you should clone the GitHub repository as described in the :ref:`contributing-label` section of this documentation.
 
 
+Upgrading SNP Pipeline
+----------------------
+If you previously installed with pip, you can upgrade to the newest version from the command line::
+
+    $ pip install --user --upgrade snp-pipeline
+
+
 Uninstalling SNP Pipeline 
 -------------------------
 
