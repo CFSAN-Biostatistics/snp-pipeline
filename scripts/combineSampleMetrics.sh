@@ -13,6 +13,7 @@
 #History:
 #   20150319-scd: Started
 #   20150324-scd: Integrated into the snp pipeline.
+#   20150413-scd: Fix the sun grid engine "undefined" task id.
 #Notes:
 #
 #Bugs:
@@ -54,7 +55,7 @@ echo "# Working Directory : $(pwd)" 1>&2
 if [[ "$PBS_JOBID" != "" ]]; then
 echo "# Job ID            : $PBS_JOBID" 1>&2
 elif [[ "$JOB_ID" != "" ]]; then
-echo "# Job ID            : $JOB_ID[$SGE_TASK_ID]" 1>&2
+echo "# Job ID            : $JOB_ID" 1>&2
 fi
 echo "# Hostname          :" $(hostname) 1>&2
 echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))') 1>&2

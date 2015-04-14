@@ -53,6 +53,8 @@ def print_log_header():
     pbs_jobid = os.environ.get("PBS_JOBID")
     sge_jobid = os.environ.get("JOB_ID")
     sge_task_id = os.environ.get("SGE_TASK_ID")
+    if sge_task_id == "undefined":
+        sge_task_id = None
     if pbs_jobid:
         verbose_print("# Job ID            : %s" % pbs_jobid)
     elif sge_jobid and sge_task_id:

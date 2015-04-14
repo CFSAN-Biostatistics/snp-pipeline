@@ -3,7 +3,7 @@
 History
 -------
 
-0.3.3 (2015-04-10)
+0.3.3 (2015-04-14)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -20,6 +20,7 @@ History
   directories in the sample directory file is missing, empty, or does not contain fastq files.
 * Gracefully exit run_snp_pipeline with an error message when run with -s option and the samples directory
   is empty or contains no subdirectories with fastq files.
+* Fixed the sun grid engine "undefined" task id reported in non-array job log files.
 
 **Other Changes:**
 
