@@ -293,6 +293,9 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s snpma.fasta         expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
+    # View the per-sample metrics
+    xdg-open metrics.tsv
+
 .. _all-in-one-workflow-agona:
 
 All-In-One Workflow - Salmonella Agona
@@ -362,6 +365,8 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s outputDirectory/snpma.fasta         expectedResults/snpma.fasta
     diff -q -s outputDirectory/referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
+    # View the per-sample metrics
+    xdg-open outputDirectory/metrics.tsv
 
 .. _all-in-one-workflow-listeria:
 
@@ -449,6 +454,8 @@ bases are in the referenceSNP.fasta file::
     diff -q -s outputDirectory/snpma.fasta         expectedResults/snpma.fasta
     diff -q -s outputDirectory/referenceSNP.fasta  expectedResults/referenceSNP.fasta
 
+    # View the per-sample metrics
+    xdg-open outputDirectory/metrics.tsv
 
 .. _step-by-step-workflows:
 
@@ -787,7 +794,8 @@ The metrics are:
 +=========================+==================================================================+
 | Sample                  | | The name of the directory containing the sample fastq files.   |
 +-------------------------+------------------------------------------------------------------+
-| Fastq Files             | | List of fastq file names in the sample directory.              |
+| Fastq Files             | | Comma separated list of fastq file names in the sample         |
+|                         | | directory.                                                     |
 +-------------------------+------------------------------------------------------------------+
 | Fastq File Size         | | The sum of the sizes of the fastq files. This will be the      |
 |                         | | compressed size if the files are compressed.                   | 
