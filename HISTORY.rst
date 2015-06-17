@@ -8,7 +8,13 @@ History
 
 **Bug fixes:**
 
-* Fix the broken pypi downloads per month badge on the readme page.
+* The referenceSNP.fasta file was missing newlines between sequences when the reference fasta file 
+  contained multiple sequences.  In addition, each sequence was written as a single long string of 
+  characters.  Changed to emit a valid fasta file.  Updated the expected result files for the
+  datasets included with the distribution accordingly.
+* Fixed the broken pypi downloads per month badge on the readme page.
+
+
 
 
 0.3.3 (2015-04-14)

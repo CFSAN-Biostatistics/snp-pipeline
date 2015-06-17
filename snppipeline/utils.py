@@ -2,6 +2,8 @@
 
 from __future__ import print_function
 from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 import operator
 import os
 import pprint
@@ -252,10 +254,12 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
 
     with open(snp_reference_file_path, "w") as snp_reference_file_object:
         for ordered_id in sorted(match_dict.keys()):
-            snp_reference_file_object.write(">" + ordered_id + "\n")
+            ref_str = ""
             for chrom_id, pos in position_list:
                 if chrom_id == ordered_id:
-                    snp_reference_file_object.write(match_dict[ordered_id][int(pos)-1].upper())
+                    ref_str += match_dict[ordered_id][int(pos) - 1].upper()
+            record = SeqRecord(Seq(ref_str), id=ordered_id, description="")
+            SeqIO.write([record], snp_reference_file_object, "fasta")
 
 
 def convert_vcf_files_to_snp_dict(sample_vcf_file_list):
