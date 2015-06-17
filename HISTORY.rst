@@ -3,6 +3,14 @@
 History
 -------
 
+0.3.4 (2015-06-18)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* Fix the broken pypi downloads per month badge on the readme page.
+
+
 0.3.3 (2015-04-14)
 ~~~~~~~~~~~~~~~~~~
 

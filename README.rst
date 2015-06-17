@@ -3,15 +3,15 @@ CFSAN SNP Pipeline
 ===============================
 
 .. Image showing the PyPI version badge - links to PyPI
-.. image:: https://badge.fury.io/py/snp-pipeline.png
-    :target: http://badge.fury.io/py/snp-pipeline
+.. image:: https://img.shields.io/pypi/v/snp-pipeline.svg
+        :target: https://pypi.python.org/pypi/snp-pipeline
     
 .. Image showing the Travis Continuous Integration test status, commented out for now
 .. .. image:: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline.png?branch=master
 ..        :target: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline
 
-.. Image showing the PyPi download count
-.. image:: https://pypip.in/download/snp-pipeline/badge.png
+.. Image showing the PyPi download per month count  - links to PyPI
+.. image:: https://img.shields.io/pypi/dm/snp-pipeline.svg
         :target: https://pypi.python.org/pypi/snp-pipeline
 
 
