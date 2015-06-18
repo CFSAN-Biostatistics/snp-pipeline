@@ -12,6 +12,8 @@ History
   contained multiple sequences.  In addition, each sequence was written as a single long string of 
   characters.  Changed to emit a valid fasta file.  Updated the expected result files for the
   datasets included with the distribution accordingly.
+* Changed the run_snp_pipeline.sh script to allow trailing slashes in the file of directory names 
+  when called with the -S option.
 * Fixed the broken pypi downloads per month badge on the readme page.
 
 

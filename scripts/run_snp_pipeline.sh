@@ -38,6 +38,7 @@
 #   20150407-scd: Exit with an error message when run with -s option and the samples directory is empty or contains no subdirectories with fastq files
 #   20150408-scd: Don't exit upon du command error when there are no fastq files or no fq files.
 #   20150410-scd: Verify each of the sample directories in the sample directory file is not empty and contains fastq's.
+#   20150618-scd: Allow trailing slashes in the file of sample directories.
 #Notes:
 #
 #Bugs:
@@ -251,6 +252,21 @@ if [[ "$opt_s_set" != "1" && "$opt_S_set" != "1" ]]; then
 fi
 
 
+# Rewrite the file of sample directories, removing trailing slashes
+rewriteCleansedFileOfSampleDirs()
+{
+    local inSampleDirsFile=$1
+    local outSampleDirsFile=$2
+
+    # Is the file of sample dirs the same as the file to be created?
+    if [ "$inSampleDirsFile" -ef "$outSampleDirsFile" ]; then
+        # Remove trailing slashes
+        sed --in-place -e "s,/\+$,," "$inSampleDirsFile"
+    else
+        sed            -e "s,/\+$,," "$inSampleDirsFile" > "$outSampleDirsFile"
+    fi
+}
+
 # Verify each of the sample directories in the sample directory file is not empty and contains fastq's
 validateFileOfSampleDirs()
 {
@@ -310,7 +326,9 @@ if [[ "$opt_s_set" = "1" ]]; then
 fi
 if [[ "$opt_S_set" = "1" ]]; then
     sampleDirsFile="$opt_S_arg"
-    validateFileOfSampleDirs $sampleDirsFile
+    rewriteCleansedFileOfSampleDirs "$sampleDirsFile" "$workDir/sampleDirectories.txt"
+    sampleDirsFile="$workDir/sampleDirectories.txt"
+    validateFileOfSampleDirs "$sampleDirsFile"
 fi
 sampleCount=$(cat "$sampleDirsFile" | wc -l)
 
