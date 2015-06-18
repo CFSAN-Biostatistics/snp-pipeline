@@ -98,7 +98,7 @@ Ready to contribute? Here's how to set up `snp-pipeline` for local development.
 
     $ cd docs
     $ sphinx-build -b html . ./_build
-    $ firefox ./_build/index.html
+    $ xdg-open _build/index.html
 
 #. Commit your changes and push your branch to GitHub::
 
