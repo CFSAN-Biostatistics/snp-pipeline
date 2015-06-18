@@ -74,16 +74,19 @@ usage()
 
 # --------------------------------------------------------
 # Log the starting conditions
-echo "# Command           : $0 $@"
-echo "# Working Directory : $(pwd)"
-if [[ "$PBS_JOBID" != "" ]]; then
-echo "# Job ID            : $PBS_JOBID"
-elif [[ "$JOB_ID" != "" ]]; then
-echo "# Job ID            : $JOB_ID[$SGE_TASK_ID]"
-fi
-echo "# Hostname          :" $(hostname)
-echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')
-echo
+logSysEnvironment()
+{
+    echo "# Command           : $0 $@"
+    echo "# Working Directory : $(pwd)"
+    if [[ "$PBS_JOBID" != "" ]]; then
+    echo "# Job ID            : $PBS_JOBID"
+    elif [[ "$JOB_ID" != "" ]]; then
+    echo "# Job ID            : $JOB_ID[$SGE_TASK_ID]"
+    fi
+    echo "# Hostname          :" $(hostname)
+    echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')
+    echo
+}
 
 # --------------------------------------------------------
 # getopts command line option handler: 
@@ -110,12 +113,10 @@ while getopts ":hf" option; do
     usage
     exit 0
   elif [ "$option" = "?" ]; then
-    echo
     echo "Invalid option -- '$OPTARG'"
     usage
     exit 1
   elif [ "$option" = ":" ]; then
-    echo
     echo "Missing argument for option -- '$OPTARG'"
     usage
     exit 2
@@ -147,6 +148,8 @@ if [ "$sampleFilePath1" = "" ]; then
   usage
   exit 4
 fi
+
+logSysEnvironment
 
 sampleFilePath2="$3"
 

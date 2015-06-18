@@ -153,7 +153,6 @@ get_abs_filename()
 # example: ":abc:d"
 # -abc 14 -d
 
-echo
 while getopts ":hfm:c:Q:o:s:S:" option; do
     if [ "$option" = "h" ]; then
         usagelong

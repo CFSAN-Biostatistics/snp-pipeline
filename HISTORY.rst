@@ -16,6 +16,7 @@ History
   when called with the -S option.
 * Changed the run_snp_pipeline.sh script to allow trailing slashes in the file of sample directories
   when called with the -S option.
+* Do not print system environment information when the user only requests command line help.
 * Fixed the broken pypi downloads per month badge on the readme page.
 
 
