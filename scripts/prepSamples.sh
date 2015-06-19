@@ -77,6 +77,7 @@ logSysEnvironment()
     fi
     echo "# Hostname          :" $(hostname)
     echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')
+    echo "# CLASSPATH         :" $CLASSPATH
     echo
 }
 

@@ -19,6 +19,9 @@ History
 * Do not print system environment information when the user only requests command line help.
 * Fixed the broken pypi downloads per month badge on the readme page.
 
+**Other Changes:**
+
+* Log the Java classpath to help determine which version of VarScan is executed.
 
 
 
