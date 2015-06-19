@@ -123,7 +123,7 @@ if [ "$referenceFilePath" = "" ]; then
   exit 3
 fi
 
-logSysEnvironment
+logSysEnvironment $@
 
 referenceBasePath=${referenceFilePath%.fasta} # strip the file extension
 

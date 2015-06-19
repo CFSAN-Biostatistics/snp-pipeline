@@ -149,7 +149,7 @@ if [ "$sampleFilePath1" = "" ]; then
   exit 4
 fi
 
-logSysEnvironment
+logSysEnvironment $@
 
 sampleFilePath2="$3"
 

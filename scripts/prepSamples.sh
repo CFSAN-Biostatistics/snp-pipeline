@@ -141,7 +141,7 @@ if [ "$sampleDir" = "" ]; then
   exit 4
 fi
 
-logSysEnvironment
+logSysEnvironment $@
 
 sampleId=${sampleDir##*/} # strip the parent directories
 

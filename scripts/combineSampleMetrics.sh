@@ -126,7 +126,7 @@ if [[ "$2" != "" ]]; then
   exit 20
 fi
 
-logSysEnvironment
+logSysEnvironment $@
 
 if [[ ! -e "$sampleDirsFile" ]]; then echo "Sample directories file $sampleDirsFile does not exist." 1>&2; exit 10; fi
 if [[ ! -f "$sampleDirsFile" ]]; then echo "Sample directories file $sampleDirsFile is not a file." 1>&2; exit 10; fi

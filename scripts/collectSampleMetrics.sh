@@ -86,7 +86,7 @@ while getopts ":hfm:o:" option; do
   fi
 done
 
-logSysEnvironment
+logSysEnvironment $@
 
 # SNP Matrix file
 if [ "$opt_m_set" = "1" ]; then
