@@ -23,7 +23,7 @@ jar file, but not execute-access.  The suppled shell scripts expect the CLASSPAT
 specify the path to the VarScan jar file.  The CLASSPATH should include the filename, not just the directory.
 Define it like this in your .bashrc file::
 
-    export CLASSPATH=~/software/varscan.v2.3.6/VarScan.v2.3.6.jar:$CLASSPATH
+    export CLASSPATH=~/software/varscan.v2.3.9/VarScan.v2.3.9.jar:$CLASSPATH
 
 
 **Q: How can I uninstall the SNP pipeline?**
@@ -101,7 +101,7 @@ these versions:
 	
 	* bowtie2 2.2.2
 	* samtools 0.1.19
-	* varscan 2.3.6
+	* varscan 2.3.9
 
 **Q: How can I run the SNP Pipeline with a mix of paired and unpaired samples?**
 
@@ -136,6 +136,10 @@ pipeline to re-run the impacted processing steps.  See the question above for gu
 A: Gaps, “-“, are either missing bases (indels) or cases where there is insufficient information to make a consensus call
 (coverage depth too low, or consensus base frequency too low).
 
+**Q: Why are some snps missing from the snp matrix even when the snps were called by VarScan?**
+
+A: Older versions of VarScan failed to generate the header section of some VCF files.  This in turn, caused the SNP Pipeline
+to ignore the first snp in the VCF file.  Upgrade to a newer version VarScan.
 
 .. _faq-performance-label:
 

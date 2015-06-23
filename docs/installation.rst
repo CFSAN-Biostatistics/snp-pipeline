@@ -32,7 +32,7 @@ Step 3 - Environment Variables
 Define the CLASSPATH environment variable to specify the location of the VarScan jar file.  Add 
 the following (or something similiar) to your .bashrc file::
 
-    export CLASSPATH=~/software/varscan.v2.3.6/VarScan.v2.3.6.jar:$CLASSPATH
+    export CLASSPATH=~/software/varscan.v2.3.9/VarScan.v2.3.9.jar:$CLASSPATH
 
 
 Step 4 - Python

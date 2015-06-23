@@ -3,7 +3,7 @@
 History
 -------
 
-0.3.4 (2015-06-18)
+0.3.4 (2015-06-23)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -21,6 +21,17 @@ History
 
 **Other Changes:**
 
+* Changed the default configuration file to specify the -X 1000 option to the bowtie2 aligner.  This
+  parameter is the maximum inter-mate distance (as measured from the furthest extremes of the mates) 
+  for valid concordant paired-end alignments.  Previously this value was not explicitly set and 
+  defaulted to 500.  As a result of this change, the generated SAM files may have a different number 
+  of mapped reads, the pileup files may have different depth, and the number of snps called may change.
+* We now recommend using VarScan version 2.3.9 or later.  We discoved VarScan v2.3.6 was occasionally
+  omitting the header section of the generated VCF files.  This in turn, caused the SNP Pipeline
+  to miss the first snp in the VCF file.  This is not a SNP Pipeline code change, only a 
+  documentation and procedural change.
+* Updated the result files in the included data sets with the results obtained using VarScan v2.3.9
+  and the Bowtie -X 1000 option.
 * Log the Java classpath to help determine which version of VarScan is executed.
 
 

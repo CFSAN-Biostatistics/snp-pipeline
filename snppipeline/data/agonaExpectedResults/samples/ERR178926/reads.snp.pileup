@@ -1330,7 +1330,7 @@ gi|197247352|ref|NC_011149.1|	772424	C	63	ttTTtTtTTtttttTTTttTTTTtTttttttTTTTTtT
 gi|197247352|ref|NC_011149.1|	780795	C	37	TTTTTtTttTTTtTttTtTTTTTTTTTTTtTTTtttt	1><549DGDA:=IGIIH>EH>B8HB?IIG27<IIABH
 gi|197247352|ref|NC_011149.1|	781180	C	54	..,,,,,,,.,,,,.,,,,,,,,.,,,.,,,,,,,,,,,,,,.,,.,,..,.,^K,	FC=FI3EGGIGI0>EI;H@@FIFA2DGHIHBHIH<FBBHBHHIHEHI2ABIA:E
 gi|197247352|ref|NC_011149.1|	782921	T	76	aAAAAAaaAAAaaaaAAaAaaAAaaAaaaAaAAAaaaaaaaaaaaaaaaaaaAAaaAAAAaAAAAAAAaAAaaaaa	/IH4I=IIFHEB;.5IIHHIIBIGI8BBCH5HIIABI:DI:HHGI@I7CCA@B?IHIH1A<IE<HI@III:=99=/
-gi|197247352|ref|NC_011149.1|	783018	A	63	ttTTTTttttTtttTtTTtTtttttTttttttttttttttTTTTTTTTTttttttttttTttt	4/IDEB?IGDDIGGFD<HH<:@HIIHIIGIIIIIIIIHII1IIBIIHFIGIHFBIBIGEG135
+gi|197247352|ref|NC_011149.1|	783018	A	59	ttTTTTttttTtttTtTTtTtttttTttttttttttttttTTTTTTTTTtttttttttt	4/IDEB?IGDDIGGFD<HH<:@HIIHIIGIIIIIIIIHII1IIBIIHFIGIHFBIBIGE
 gi|197247352|ref|NC_011149.1|	786001	G	63	.$.$.$.....,,,,,.,.,,,,,,....,,,.,,,.,.,.,.,.,...,,,..,,....,,,,,,	AEBC@BEHGHE;GDGEHBDGIIGI@FFFHEGGIGDIIDICIHIBIIG=DI;9HGIBGIHHGEG
 gi|197247352|ref|NC_011149.1|	891882	G	52	.,,,....,,.,.,,..,,,,.........,....,.,..,,,.,.,,.,,,	HHH;IHIFI90IFDGEIIGHHGHIBDHHHDEIHHH:H<DDAIBHFIB<D9HA
 gi|197247352|ref|NC_011149.1|	892720	G	71	..,,,...,,,,,,,,,,,,....,,....,,........,,,.,.,,,,,,,..,.,,,........,,^I,	HG>IGFFHIIHDDFBIIHII4GBGI5IBHA?I@D:EIIIGDIGDHHHHIBIHHIIDI>DEGIIEGDGHE>B
@@ -1993,7 +1993,7 @@ gi|197247352|ref|NC_011149.1|	2302312	G	19	aAaaaaAaAaaaAaaAAaa	DFC0.7H58D8CE:IGB
 gi|197247352|ref|NC_011149.1|	2303473	C	34	...,,..,.,.,..,,,...,,...,..,..,GG	BBEHB?EGD?G8HG<IFDHI<;CHEBGG>BB;.1
 gi|197247352|ref|NC_011149.1|	2362045	T	60	.$.,,..,,,,,,,......,.,.,,....,..,,...,.,...,...,.,,.,,.,.,^K,^K,	>E1@EFABDCGGBD9@HEEIHIIIIE2DHGHHFIH<HIIE@HHBH1BHIE<BCEHEBAB3
 gi|197247352|ref|NC_011149.1|	2376905	T	33	,,......,....,.....,...,.......,,	HG@A<>:@I92<B38E8AFIEBIE<>7EDB??I
-gi|197247352|ref|NC_011149.1|	2380318	G	28	CcCCccCcccCcCCCCCcccCcCccccC	=G>4DGAD>GCF?>H<DDIGDIIGD27H
+gi|197247352|ref|NC_011149.1|	2380318	G	18	ccccccccccCcCccccC	GDGD>GFDIGDIIGD27H
 gi|197247352|ref|NC_011149.1|	2480066	G	50	.$,...,....,.,,,,.,,.,.,.,......,.,.,...,,,,.,...,.	;IIGIGFHH@A=GIHII@IIGGIHB>HIIGIHDEIIEDGIG;G=IIIHEI
 gi|197247352|ref|NC_011149.1|	2496750	T	75	.$,,,,,,,,.,,,.C.,..,.,,,,,...,,.,,.,,,......,,......,,,...,,,,.,.,,..,.....	E/1///==BFG?EBDGHHEEIAA:;>:I;53I<1IF2IHGIIICCEF;IABGD?<?@DC39@H:G<:IH<IFDIH
 gi|197247352|ref|NC_011149.1|	2547940	A	83	,$,$ggGGGgggggggggGgGGgGGgggggGggggGggggGGGGggGgGGGGGGggGggggGGGgggGggggGggggGggggggg	EC.7HGBEEDB<I0??:@9IHHHGGIIBIH<BEH7GIHIIIHI@FDHIHGIHH@H@BGDHH@>B>HIGHBBHII8GBHDH883
@@ -2162,7 +2162,6 @@ gi|197247352|ref|NC_011149.1|	2793718	A	75	.$.$,$.....,.,,,..,,..,,,,,,...,,,,,,
 gi|197247352|ref|NC_011149.1|	2794554	C	104	.,..,.........,,,,....,,,,,,,,,,.,,..,,,,..,..,,..,..,,,,,,,,,,,,,,,,.,,,,,,,,,,,,...,,,,,.,,,,,.,,,,,..	E/HH@FIIGIHAGAGHIIFIIGHDHIIIIIGIIGHIIG=G?HIIHID;IHIIIHIGFIGGDDCH=GAIGIIIIADICEIG>HIIICDIIHDGFAGF:FHFIIII
 gi|197247352|ref|NC_011149.1|	2795163	G	128	.,.,,,,,,,,,,,,.,.,,,,,.,,,,,,....,,,,,,,,,,,,....,...,....,,..,.,.,,,,...,,,,,....,,,,,,....,..,,,,,,,,,...,.....,,,..,......,^',	@>EIIHIIHIII@IHGIHIHGGGHIIIIIGBEI:EIIGIIIG9HIIE2IH<GHIHGEGAIIGGIFIIIIII>IGGHHFI?E1CIHHHIIIHIIIEIII7DGHHII2A=HGIGH8AEH?HFB3IBB<=>
 gi|197247352|ref|NC_011149.1|	2795278	T	119	.$..............,......,,,...,,,....,,,,.,,,,...,..,...,,,,.....,.,...,,.,,,,.,,,,.,,,.,,,...,.,,,.,,,,,,,,..,,,,,,..,.,	3IIA9;I@IHIHGIIIHDII>H1D>I@E7<5DIHI/<;GIGCG</8IH:HIGGFI<DHIIHIHBH@DCIEIH;;FII=7I>DEIECA5D<ID<DIIHB5BCIECHBHIHGBHF<II1B>
-gi|197247352|ref|NC_011149.1|	2795293	A	112	.$.$,$,.,,,...,..,...,,,,.....,.,...,,.,,,,,,,.,,,.,,,...,.,,,.,,,,,,,,..,,,,,,..,.,...,,,.............,,....,,,,..	EED8I::7A:DI7IHGGH=BCBIDHBHA?EBGIF?G;;IF4?D;D<AB8BE/=HEEIHIBCEIIF0EHGIEHGBE@II8GBE:G62@H:EEB@><26>G>HCBGGICHBG..
 gi|197247352|ref|NC_011149.1|	2795308	T	110	.$.$.$.$,.,...,,.,,,,.,,,,,.,,,.,,,...,.,,,.,,,,,,,,.,,,,,,..,.,...,,,.............,,....,,,,,....,,...,.,,,,,G.^2,^2,	DBDE3BGB9BGIB19BDF:88?EAECBB9BA3DB<@IHIE@DIIG6GG3IHIEHEEH4EIB3C4=EI:DEA83?/36E3I1FGIEE<H8I4CD>8EFBD@E@BH<A>53:
 gi|197247352|ref|NC_011149.1|	2795335	T	119	,,,..,,,,,,..,.,...,.............,,....,,,,,....,,...,,.,,,,,.,,,..........,..,,,,................,.,,,..,,,.,,,,,,,,,,	2>DH:HGGD>7GH;8@H@BI@DEHDEB<@:@EGI>IGIID1AHIADIHCHHHIH=I3EI6=<C0HGIIDAFGEGGAHIFF09>CHBEHHEHDHBDGE8A<44<IDCAA=CD<=CCCCCD
 gi|197247352|ref|NC_011149.1|	2795383	A	128	.$.$.$....,..,,,................,,,..,,,.,,,,,,,,,,,,.,,...,,..,,....,,,.,,,,,....,.........,............,,,,,,,,,,,,,,,.,,,,,,.,,^-,	@8EI<II2HHGDI87GE<DI2IFDHIE7DA61GHEFDIBIII?2IHFIHHIB@=IHEIDCIG5GGIAI.IFCIH>GHIH<IIGHGHHIFFG:BGIGGIIIHG3?BBIHBD9BEBF>HI<985=0IH=E

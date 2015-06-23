@@ -130,11 +130,12 @@ can be specified.
 
 | -p        : bowtie2 uses the specified number of parallel search threads
 | --reorder : generate output records in the same order as the reads in the input file
+| -X        : maximum inter-mate fragment length for valid concordant paired-end alignments
 |
 
 **Example**::
 
-    Bowtie2Align_ExtraParams="--reorder -p 16"
+    Bowtie2Align_ExtraParams="--reorder -p 16 -X 1000"
 
 
 SamtoolsSamFilter_ExtraParams
