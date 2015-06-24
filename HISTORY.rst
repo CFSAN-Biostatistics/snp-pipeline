@@ -33,6 +33,8 @@ History
 * Updated the result files in the included data sets with the results obtained using VarScan v2.3.9
   and the Bowtie -X 1000 option.
 * Log the Java classpath to help determine which version of VarScan is executed.
+* Changed the python unit tests to execute the non-python processes in a temporary directory instead 
+  of assuming the processes were already run in the test directory.
 
 
 

@@ -4,34 +4,26 @@ import unittest
 
 import filecmp
 import os
-import inspect
+import subprocess
+from testfixtures import TempDirectory
 from pkg_resources import resource_filename
-
 from snppipeline import snppipeline
 
-test_directory = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 data_directory = resource_filename(snppipeline.__name__, 'data')
 
 # various directories of test files
-test_lambda_virus_directory = os.path.join(test_directory, 'testLambdaVirus')
-test_agona_directory = os.path.join(test_directory, 'testAgona')
 compare_lambda_virus_directory = os.path.join(data_directory, 'lambdaVirusExpectedResults')
 compare_agona_directory = os.path.join(data_directory, 'agonaExpectedResults')
-path_file_name = os.path.join(test_lambda_virus_directory, 'sampleDirectories.txt')
 
 class SnpPipelineTest(unittest.TestCase):
     '''Unit test for snppipeline.'''
 
     def setUp(self):
         """Create the list of sample directories"""
-
-        # TODO: Check to insure data files for the test exist.
-        #       if not then tell user what script to run to create such a directory
-
         samples_directory = os.path.join(self.directory_run_result, 'samples')
         subdir_list = [os.path.join(samples_directory, subdir) for subdir in os.listdir(samples_directory)]
 
-        with open(path_file_name, "w") as path_file_object:
+        with open(self.file_of_directories, "w") as path_file_object:
             for subdir in sorted(subdir_list):
                 path_file_object.write("%s\n" % subdir)
 
@@ -64,46 +56,85 @@ class SnpPipelineTest(unittest.TestCase):
 class SnpPipelineLambdaVirusTest(SnpPipelineTest):
     '''Unit test for snppipeline run with Lambda Virus data.'''
 
-    def __init__(self, *args):
-        self.directory_correct = compare_lambda_virus_directory
-        self.directory_run_result = test_lambda_virus_directory
-        super(SnpPipelineLambdaVirusTest, self).__init__(*args)
-
-    def test_snppipeline_lambda_virus(self):
-        """Run snppipeline with synthetic virus example.
+    @classmethod
+    def setUpClass(cls):
+        """Create directories and data files for subsequent tests.
         """
 
+        print "Preparing data files for tests.  This will take a minute..."
+        temp_dir = TempDirectory()
+        lambda_dir = os.path.join(temp_dir.path, "testLambdaVirus")
+        ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusInputs", lambda_dir])
+        samples_dir = os.path.join(lambda_dir, "samples")
+        reference_file = os.path.join(lambda_dir, "reference", "lambda_virus.fasta")
+
+        devNull = open(os.devnull, 'w')
+        ret = subprocess.call("run_snp_pipeline.sh -o %s -s %s %s" % (lambda_dir, samples_dir, reference_file), shell=True, stdout=devNull)
+        devNull.close()
+        cls.directory_run_result = lambda_dir
+        cls.directory_correct = compare_lambda_virus_directory
+        cls.file_of_directories = os.path.join(lambda_dir, 'sampleDirectories.txt')
+
+
+    @classmethod
+    def tearDownClass(self):
+        """
+        Delete all the temporary directories and files created during this 
+        testing session.
+        """
+        TempDirectory.cleanup_all()
+
+
+    def __init__(self, *args):
+        super(SnpPipelineLambdaVirusTest, self).__init__(*args)
+
+
+    def test_1_create_snp_list(self):
+        """Run create_snp_list and verify snplist.txt contains expected contents.
+        """
         args_dict = {
-            'sampleDirsFile' : os.path.join(self.directory_run_result, 'sampleDirectories.txt'),
+            'sampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt'),
             'vcfFileName' : 'var.flt.vcf',
-            'snpListFile' : os.path.join(self.directory_run_result, 'snplist.txt'),
+            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
             'forceFlag' : True,
             }
         self.run_function_test(snppipeline.create_snp_list, args_dict, 'snplist.txt')
 
+
+    def test_2_create_snp_pileup(self):
+        """Run create_snp_pileup and verify reads.snp.pileup contains expected contents for each sample.
+        """
         args_dict = {
-            'snpListFile' : os.path.join(self.directory_run_result, 'snplist.txt'),
+            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
             'forceFlag' : True,
             }
         for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
-            args_dict['allPileupFile'] = os.path.join(self.directory_run_result, dir, 'reads.all.pileup')
-            args_dict['snpPileupFile'] = os.path.join(self.directory_run_result, dir, 'reads.snp.pileup')
+            args_dict['allPileupFile'] = os.path.join(self.__class__.directory_run_result, dir, 'reads.all.pileup')
+            args_dict['snpPileupFile'] = os.path.join(self.__class__.directory_run_result, dir, 'reads.snp.pileup')
             self.run_function_test(snppipeline.create_snp_pileup, args_dict, os.path.join(dir, 'reads.snp.pileup'))
-        
+
+
+    def test_3_create_snp_matrix(self):
+        """Run create_snp_matrix and verify snpma.fasta contains expected contents.
+        """
         args_dict = {
-            'sampleDirsFile' : os.path.join(self.directory_run_result, 'sampleDirectories.txt'),
-            'snpListFile' : os.path.join(self.directory_run_result, 'snplist.txt'),
+            'sampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt'),
+            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
             'pileupFileName' : 'reads.snp.pileup',
-            'snpmaFile' : os.path.join(self.directory_run_result, 'snpma.fasta'),
+            'snpmaFile' : os.path.join(self.__class__.directory_run_result, 'snpma.fasta'),
             'forceFlag' : True,
             'minConsFreq' : 0.6,
             }
         self.run_function_test(snppipeline.create_snp_matrix, args_dict, 'snpma.fasta')
 
+
+    def test_4_create_snp_reference_seq(self):
+        """Run create_snp_reference_seq and verify referenceSNP.fasta contains expected contents for each sample.
+        """
         args_dict = {
-            'referenceFile' : os.path.join(self.directory_run_result, 'reference/lambda_virus.fasta'),
-            'snpListFile' : os.path.join(self.directory_run_result, 'snplist.txt'),
-            'snpRefFile' : os.path.join(self.directory_run_result, 'referenceSNP.fasta'),
+            'referenceFile' : os.path.join(self.__class__.directory_run_result, 'reference/lambda_virus.fasta'),
+            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
+            'snpRefFile' : os.path.join(self.__class__.directory_run_result, 'referenceSNP.fasta'),
             'forceFlag' : True,
             } 
         self.run_function_test(snppipeline.create_snp_reference_seq, args_dict, 'referenceSNP.fasta')

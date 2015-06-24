@@ -32,6 +32,10 @@ if sys.version_info < (2,7,):
     install_requires.append('ordereddict')
     install_requires.append('counter')
 
+test_requires = [
+    'testfixtures',
+]
+
 setup(
     name='snp-pipeline',
     version='0.3.4a',
@@ -118,4 +122,5 @@ setup(
 
     # package (aka directory) containing unit test modules
     test_suite='test',
+    tests_require=test_requires,
 )
