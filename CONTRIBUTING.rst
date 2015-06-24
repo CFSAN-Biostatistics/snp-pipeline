@@ -75,10 +75,9 @@ Ready to contribute? Here's how to set up `snp-pipeline` for local development.
     $ python setup.py develop
     $ pip install sphinx_rtd_theme    # the documentation uses the ReadTheDocs theme
 
-#. Run the pipeline on the supplied data set:
+#. Run the unit tests on the supplied data set to verify your installation is working::
 
-    The unit tests will not run successfully until after you prepare the reference and samples for the supplied 
-    Lambda Virus data set.  See the :ref:`usage-label` section.
+    $ python setup.py test
 
 #. Create a branch for local development::
 
