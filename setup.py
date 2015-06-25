@@ -99,6 +99,7 @@ setup(
                          'data/lambdaVirusExpectedResults/samples/sample*/reads.snp.pileup',
                          'data/lambdaVirusExpectedResults/snpma.fasta',
                          'data/lambdaVirusExpectedResults/referenceSNP.fasta',
+                         'data/lambdaVirusExpectedResults/metrics.tsv',
                          'data/agonaInputs/reference/*.fasta',
                          'data/agonaInputs/sha256sumCheck',
                          'data/agonaExpectedResults/referenceSNP.fasta',
@@ -106,6 +107,7 @@ setup(
                          'data/agonaExpectedResults/snplist.txt',
                          'data/agonaExpectedResults/samples/*/reads.snp.pileup',
                          'data/agonaExpectedResults/snpma.fasta',
+                         'data/agonaExpectedResults/metrics.tsv',
                          'data/listeriaInputs/reference/*.fasta',
                          'data/listeriaInputs/sampleList',
                          'data/listeriaInputs/sha256sumCheck',
@@ -113,6 +115,7 @@ setup(
                          'data/listeriaExpectedResults/samples/*/var.flt.vcf',
                          'data/listeriaExpectedResults/snplist.txt',
                          'data/listeriaExpectedResults/snpma.fasta',
+                         'data/listeriaExpectedResults/metrics.tsv',
                          ]
     },
 
