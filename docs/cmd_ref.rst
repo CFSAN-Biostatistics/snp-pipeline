@@ -53,7 +53,6 @@ run_snp_pipeline.sh
 
 ::
 
-  
   usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q torque|grid] [-o DIR] (-s DIR|-S FILE)
                              referenceFile
   
@@ -128,7 +127,6 @@ prepReference.sh
 
 ::
 
-  
   usage: prepReference.sh [-h] [-f] referenceFile
   
   Index the reference genome for subsequent alignment, and create
@@ -149,7 +147,6 @@ alignSampleToReference.sh
 
 ::
 
-  
   usage: alignSampleToReference.sh [-h] [-f] referenceFile sampleFastqFile1 [sampleFastqFile2]
   
   Align the sequence reads for a specified sample to a specified reference genome.
@@ -171,7 +168,6 @@ prepSamples.sh
 
 ::
 
-  
   usage: prepSamples.sh [-h] [-f] referenceFile sampleDir
   
   Find variants in a specified sample.
