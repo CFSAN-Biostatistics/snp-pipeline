@@ -3,7 +3,7 @@
 History
 -------
 
-0.3.4 (2015-06-23)
+0.3.4 (2015-06-25)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -21,7 +21,7 @@ History
 
 **Other Changes:**
 
-* Changed the default configuration file to specify the -X 1000 option to the bowtie2 aligner.  This
+* Changed the default configuration file to specify the ``-X 1000`` option to the bowtie2 aligner.  This
   parameter is the maximum inter-mate distance (as measured from the furthest extremes of the mates) 
   for valid concordant paired-end alignments.  Previously this value was not explicitly set and 
   defaulted to 500.  As a result of this change, the generated SAM files may have a different number 
