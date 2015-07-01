@@ -47,6 +47,7 @@
 #   20141020-scd: Substitute the default parameters if the user did not specify bowtie parameters.
 #   20141030-scd: Fix Python 2.6 compatibility issue when logging RAM size.
 #   20150109-scd: Log the Grid Engine job ID.
+#   20150630-scd: Add support for Smalt.
 #Notes:
 #
 #Bugs:
@@ -162,18 +163,12 @@ sampleId=${sampleId%_1.fq} # strip the _1.fq file extension if any
 sampleId=${sampleId%.fq} # strip the .fq file extension regardless of leading _1
 referenceId=${referenceBasePath##*/} # strip the directory
 
-# Parse the user-specified bowtie parameters to determine if the user specified the number of CPU cores
-regex="(-p[[:blank:]]*)([[:digit:]]+)"
-if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
-    numCoresParam=""
+
+# Default to 8 cores on HPC or all cpu cores on workstation
+if [[ "$PBS_JOBID" != "" ]]; then
+    numCores=8
 else
-    # if not user-specified, default to 8 on HPC or all cpu cores on workstation
-    if [[ "$PBS_JOBID" != "" ]]; then
-        numCores=8
-    else
-        numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
-    fi
-    numCoresParam="-p $numCores"
+    numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 fi
 
 
@@ -192,30 +187,80 @@ fi
 # exit 0 
 
 
-# Substitute the default parameters if the user did not specify bowtie parameters
-defaultParams="--reorder -q"
-Bowtie2Align_Params=${Bowtie2Align_ExtraParams:-$defaultParams}
+# An environment variable selects between bowtie2 and smalt
+SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]') # make lowercase 
+if [[ "$SnpPipeline_Aligner" == "" || "$SnpPipeline_Aligner" == "bowtie2" ]]; then
 
-#Check if alignment to reference has been done; if not align sequences to reference
-if [ $sampleFilePath2 ]; then
-    if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]; then
+    # Parse the user-specified bowtie parameters to determine if the user specified the number of CPU cores
+    regex="(-p[[:blank:]]*)([[:digit:]]+)"
+    if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
+        numCoresParam=""
+    else
+        numCoresParam="-p $numCores"
+    fi
+
+    # Substitute the default parameters if the user did not specify bowtie parameters
+    defaultParams="--reorder -q"
+    Bowtie2Align_Params=${Bowtie2Align_ExtraParams:-$defaultParams}
+
+    # Check if the fastq files are paired
+    if [ $sampleFilePath2 ]; then
+        #Check if alignment to reference has been done; if not align sequences to reference
+        if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]; then
+            echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
+        else
+            echo "# Align sequence $sampleId to reference $referenceId"
+            echo "# "$(date +"%Y-%m-%d %T") bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -1 "$sampleFilePath1" -2 "$sampleFilePath2"
+            echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
+            bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -1 "$sampleFilePath1" -2 "$sampleFilePath2" > "$sampleDir/reads.sam"
+            echo
+        fi
+    else
+        if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]; then
+            echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
+        else
+            echo "# Align sequence $sampleId to reference $referenceId"
+            echo "# "$(date +"%Y-%m-%d %T") bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -U "$sampleFilePath1"
+            echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
+            bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -U "$sampleFilePath1" > "$sampleDir/reads.sam"
+            echo
+        fi
+    fi
+elif [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
+
+    # Parse the user-specified bowtie parameters to determine if the user specified the number of CPU cores
+    regex="(-n[[:blank:]]*)([[:digit:]]+)"
+    if [[ "$SmaltAlign_ExtraParams" =~ $regex ]]; then
+        numCoresParam=""
+    else
+        numCoresParam="-n $numCores"
+    fi
+
+    # Substitute the default parameters if the user did not specify smalt parameters
+    defaultParams="-O"
+    SmaltAlign_Params=${SmaltAlign_ExtraParams:-$defaultParams}
+
+    # Check if the fastq files are paired
+    if [ $sampleFilePath2 ]; then
+        #Check if alignment to reference has been done; if not align sequences to reference
+        [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.smi" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]
+        alreadyFreshResultCode=$?
+    else
+        [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.smi" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]
+        alreadyFreshResultCode=$?
+    fi
+
+    if (( $alreadyFreshResultCode == 0 )); then
         echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
     else
         echo "# Align sequence $sampleId to reference $referenceId"
-        echo "# "$(date +"%Y-%m-%d %T") bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -1 "$sampleFilePath1" -2 "$sampleFilePath2"
-        echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
-        bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -1 "$sampleFilePath1" -2 "$sampleFilePath2" > "$sampleDir/reads.sam"
+        echo "# "$(date +"%Y-%m-%d %T") smalt map $numCoresParam $SmaltAlign_Params "$referenceBasePath" "$sampleFilePath1" "$sampleFilePath2"
+        echo "# Smalt "$(smalt version | grep -i -E "Version")
+        smalt map $numCoresParam $SmaltAlign_Params "$referenceBasePath" "$sampleFilePath1" "$sampleFilePath2" > "$sampleDir/reads.sam"
         echo
     fi
 else
-    if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]; then
-        echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
-    else
-        echo "# Align sequence $sampleId to reference $referenceId"
-        echo "# "$(date +"%Y-%m-%d %T") bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -U "$sampleFilePath1"
-        echo "# "$(bowtie2 --version | grep -i -E "bowtie.*version")
-        bowtie2 $numCoresParam $Bowtie2Align_Params -x "$referenceBasePath" -U "$sampleFilePath1" > "$sampleDir/reads.sam"
-        echo
-    fi
+    echo "Error: only bowtie2 and smalt aligners are supported."
+    exit 5
 fi
 echo $(date +"# %Y-%m-%d %T") alignSampleToReference.sh finished

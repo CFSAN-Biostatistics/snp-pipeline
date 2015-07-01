@@ -40,6 +40,7 @@
 #   20150410-scd: Verify each of the sample directories in the sample directory file is not empty and contains fastq's.
 #   20150618-scd: Allow trailing slashes in the file of sample directories.
 #   20150618-scd: Allow blank lines in the file of sample directories.
+#   20150630-scd: Add support for Smalt.
 #Notes:
 #
 #Bugs:
@@ -252,6 +253,54 @@ if [[ "$opt_s_set" != "1" && "$opt_S_set" != "1" ]]; then
 fi
 
 
+# Create the logs directory
+runTimeStamp=$(date +"%Y%m%d.%H%M%S")
+export logDir="$workDir/logs-$runTimeStamp"
+mkdir -p "$logDir"
+
+# Handle configuration file, use the specified file, or create a default file
+if [[ "$opt_c_set" = "1" ]]; then
+    configFilePath="$opt_c_arg"
+    if [[ ! -f "$configFilePath" ]]; then echo "Configuration file $configFilePath does not exist."; exit 80; fi
+    if [[ ! -s "$configFilePath" ]]; then echo "Configuration file $configFilePath is empty."; exit 80; fi
+    cp -p "$configFilePath" "$logDir"
+    source "$configFilePath"
+else
+    # true below is to ignore preserve timestamp error
+    copy_snppipeline_data.py configurationFile "$logDir" || true
+    source "$logDir/snppipeline.conf"
+fi
+
+# Validate the configured aligner choice
+if [[ "$SnpPipeline_Aligner" == "" ]]; then
+    SnpPipeline_Aligner="bowtie2"
+else
+    # make lowercase 
+    SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]')
+    if [[ "$SnpPipeline_Aligner" != "bowtie2" && "$SnpPipeline_Aligner" != "smalt" ]]; then
+        echo "Config file error in SnpPipeline_Aligner parameter: only bowtie2 and smalt aligners are supported."
+        exit 90
+    fi
+fi
+
+export SnpPipeline_Aligner
+export Bowtie2Build_ExtraParams
+export SmaltIndex_ExtraParams
+export SamtoolsFaidx_ExtraParams
+export Bowtie2Align_ExtraParams
+export SmaltAlign_ExtraParams
+export SamtoolsSamFilter_ExtraParams
+export SamtoolsSort_ExtraParams
+export SamtoolsMpileup_ExtraParams
+export VarscanMpileup2snp_ExtraParams
+export VarscanJvm_ExtraParams
+export CreateSnpList_ExtraParams
+export CreateSnpPileup_ExtraParams
+export CreateSnpMatrix_ExtraParams
+export CreateSnpReferenceSeq_ExtraParams
+export PEname
+
+
 # Rewrite the file of sample directories, removing trailing slashes and blank lines.
 rewriteCleansedFileOfSampleDirs()
 {
@@ -369,37 +418,6 @@ if [[ "$opt_m_set" = "1" ]]; then
     persistSortedSampleDirs "$samplesDir" "$workDir"
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
-
-# Create the logs directory
-runTimeStamp=$(date +"%Y%m%d.%H%M%S")
-export logDir="$workDir/logs-$runTimeStamp"
-mkdir -p "$logDir"
-
-# Handle configuration file, use the specified file, or create a default file
-if [[ "$opt_c_set" = "1" ]]; then
-    configFilePath="$opt_c_arg"
-    if [[ ! -f "$configFilePath" ]]; then echo "Configuration file $configFilePath does not exist."; exit 80; fi
-    if [[ ! -s "$configFilePath" ]]; then echo "Configuration file $configFilePath is empty."; exit 80; fi
-    cp -p "$configFilePath" "$logDir"
-    source "$configFilePath"
-else
-    # true below is to ignore preserve timestamp error
-    copy_snppipeline_data.py configurationFile "$logDir" || true
-    source "$logDir/snppipeline.conf"
-fi
-export Bowtie2Build_ExtraParams
-export SamtoolsFaidx_ExtraParams
-export Bowtie2Align_ExtraParams
-export SamtoolsSamFilter_ExtraParams
-export SamtoolsSort_ExtraParams
-export SamtoolsMpileup_ExtraParams
-export VarscanMpileup2snp_ExtraParams
-export VarscanJvm_ExtraParams
-export CreateSnpList_ExtraParams
-export CreateSnpPileup_ExtraParams
-export CreateSnpMatrix_ExtraParams
-export CreateSnpReferenceSeq_ExtraParams
-export PEname
 
 
 # --------------------------------------------------------

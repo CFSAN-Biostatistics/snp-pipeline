@@ -231,6 +231,37 @@ Then run the pipeline with the -c and -Q command line options::
 See also: :ref:`faq-performance-label`.
 
 
+.. _tool-selection-label:
+
+Tool Selection
+--------------
+The SNP Pipeline lets you choose either the Bowtie2 aligner or the Smalt aligner.  Your choice
+of aligner, as well as the command line options for the aligner are specified in the
+SNP Pipeline configuration file.
+
+Grab the default configuration file::
+
+    copy_snppipeline_data.py configurationFile
+
+To run the SNP Pipeline with Bowtie2, edit ``snppipeline.conf`` with these settings::
+
+    SnpPipeline_Aligner="bowtie2"
+    Bowtie2Build_ExtraParams="" # substitute the command line options you want here
+    Bowtie2Align_ExtraParams="" # substitute the command line options you want here
+
+To run the SNP Pipeline with Smalt, edit ``snppipeline.conf`` with these settings::
+
+    SnpPipeline_Aligner="smalt"
+    SmaltIndex_ExtraParams="" # substitute the command line options you want here
+    SmaltAlign_ExtraParams="" # substitute the command line options you want here
+
+Then run the pipeline with the -c command line option::    
+    
+    run_snp_pipeline.sh -c snppipeline.conf -s mySamplesDir myReference.fasta
+    
+See also :ref:`configuration-label`.
+
+
 All-In-One SNP Pipeline Workflows
 ---------------------------------
 The sections below give detailed examples of workflows you can run with the
