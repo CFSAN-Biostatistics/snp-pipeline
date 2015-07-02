@@ -6,6 +6,16 @@ History
 0.3.5 (2015-07-??)
 ~~~~~~~~~~~~~~~~~~
 
+**Bug fixes:**
+
+* When run on Grid Engine with the default settings, bowtie2 was consuming all available CPU cores 
+  per node while scheduled with Grid to use only 8 cores. On a lightly loaded cluster, this bug made 
+  the pipeline run faster, but when the cluster was full or nearly full, it would cause contention 
+  for available CPU resources and cause jobs to run more slowly.  Changed to use only 8 CPU cores 
+  by default.
+
+**Other Changes:**
+
 * Added support for the Smalt aligner.  You can choose either bowtie2 or smalt in the configuration file.
   A new parameter in the configuration file, ``SnpPipeline_Aligner``, selects the aligner to use.  
   Two additional configuration parameters, ``SmaltIndex_ExtraParams`` and ``SmaltAlign_ExtraParams`` 

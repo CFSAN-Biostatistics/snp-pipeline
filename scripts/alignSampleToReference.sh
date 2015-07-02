@@ -165,7 +165,7 @@ referenceId=${referenceBasePath##*/} # strip the directory
 
 
 # Default to 8 cores on HPC or all cpu cores on workstation
-if [[ "$PBS_JOBID" != "" ]]; then
+if [[ "$PBS_JOBID" != "" || "$JOB_ID" != "" ]]; then
     numCores=8
 else
     numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
