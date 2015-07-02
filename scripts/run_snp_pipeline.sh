@@ -456,15 +456,29 @@ else
 fi
 
 echo -e "\nStep 3 - Align the samples to the reference"
-if [[ "$platform" == "grid" ]]; then
-    # Parse the user-specified bowtie parameters to find the number of CPU cores requested, for example, "-p 16"
-    regex="(-p[[:blank:]]*)([[:digit:]]+)"
-    if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
-        numAlignThreads=${BASH_REMATCH[2]}
+# Parse the user-specified aligner parameters to find the number of CPU cores requested, for example, "-p 16" or "-n 16"
+# Set the default number of  CPU cores if the user did not configure a value.
+if [[ "$platform" == "grid" || "$platform" == "torque" ]]; then
+    if [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
+        regex="(-n[[:blank:]]*)([[:digit:]]+)"
+        if [[ "$SmaltAlign_ExtraParams" =~ $regex ]]; then
+            numAlignThreads=${BASH_REMATCH[2]}
+        else
+            numAlignThreads=8
+            SmaltAlign_ExtraParams="$SmaltAlign_ExtraParams -n $numAlignThreads"
+        fi
     else
-        numAlignThreads=8
-        Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
+        regex="(-p[[:blank:]]*)([[:digit:]]+)"
+        if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
+            numAlignThreads=${BASH_REMATCH[2]}
+        else
+            numAlignThreads=8
+            Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
+        fi
     fi
+fi
+
+if [[ "$platform" == "grid" ]]; then
     alignSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
 #$   -N job.alignSamples
 #$   -cwd
@@ -473,19 +487,11 @@ if [[ "$platform" == "grid" ]]; then
 #$   -pe $PEname $numAlignThreads
 #$   -hold_jid $prepReferenceJobId
 #$   -o $logDir/alignSamples.log-\$TASK_ID
-#$   -v Bowtie2Align_ExtraParams
+#$   -v SnpPipeline_Aligner,Bowtie2Align_ExtraParams,SmaltAlign_ExtraParams
     alignSampleToReference.sh $forceFlag "$referenceFilePath" \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    # Parse the user-specified bowtie parameters to find the number of CPU cores requested, for example, "-p 16"
-    regex="(-p[[:blank:]]*)([[:digit:]]+)"
-    if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
-        numAlignThreads=${BASH_REMATCH[2]}
-    else
-        numAlignThreads=8
-        Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
-    fi
     alignSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
     #PBS -N job.alignSamples
     #PBS -d $(pwd)
@@ -493,7 +499,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -l nodes=1:ppn=$numAlignThreads
     #PBS -W depend=afterok:$prepReferenceJobId
     #PBS -o $logDir/alignSamples.log
-    #PBS -v Bowtie2Align_ExtraParams
+    #PBS -v SnpPipeline_Aligner,Bowtie2Align_ExtraParams,SmaltAlign_ExtraParams
     samplesToAlign=\$(cat "$workDir/sampleFullPathNames.txt" | head -n \$PBS_ARRAYID | tail -n 1)
     alignSampleToReference.sh $forceFlag "$referenceFilePath" \$samplesToAlign
 _EOF_
