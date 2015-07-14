@@ -248,6 +248,7 @@ elif [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
     else
         [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.smi" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]
         alreadyFreshResultCode=$?
+        SmaltAlign_Params=$(echo $SmaltAlign_ExtraParams | sed -e 's,-i[[:space:]]\+[[:digit:]]\+,,g')  # strip the -i 1000 option
     fi
 
     if (( $alreadyFreshResultCode == 0 )); then
@@ -256,7 +257,7 @@ elif [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
         echo "# Align sequence $sampleId to reference $referenceId"
         echo "# "$(date +"%Y-%m-%d %T") smalt map $numCoresParam $SmaltAlign_Params "$referenceBasePath" "$sampleFilePath1" "$sampleFilePath2"
         echo "# Smalt "$(smalt version | grep -i -E "Version")
-        smalt map $numCoresParam $SmaltAlign_Params "$referenceBasePath" "$sampleFilePath1" "$sampleFilePath2" > "$sampleDir/reads.sam"
+        smalt map $numCoresParam $SmaltAlign_Params "$referenceBasePath" "$sampleFilePath1" $sampleFilePath2 > "$sampleDir/reads.sam"
         echo
     fi
 else
