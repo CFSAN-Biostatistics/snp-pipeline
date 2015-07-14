@@ -16,7 +16,7 @@ script without specifying a configuration file, it automatically uses the
 default supplied configuration file.  
 
 To get a copy of the default configuration file, run the following command.  This 
-will create a file called snppipeline.conf::
+will create a file called ``snppipeline.conf``::
 
     copy_snppipeline_data.py configurationFile
 
@@ -86,6 +86,20 @@ This parameter is used by run_snp_pipeline.sh only.
     MaxConcurrentCollectSampleMetrics=4
 
 
+SnpPipeline_Aligner
+-------------------
+Controls which reference-based aligner is used to map reads to the reference genome.
+The choices are ``bowtie2`` or ``smalt``.
+
+**Default**: 
+    
+    When this parameter is not set to a value, the pipeline will use the bowtie2 aligner.
+
+**Example**::
+    
+    SnpPipeline_Aligner="smalt"
+
+
 Bowtie2Build_ExtraParams
 ------------------------
 
@@ -97,6 +111,19 @@ can be specified.
 **Example**::
 
     Bowtie2Build_ExtraParams="--offrate 3"
+
+
+SmaltIndex_ExtraParams
+------------------------
+
+Specifies options passed to the smalt indexer.  Any of the smalt index options
+can be specified.
+
+**Default**: none
+
+**Example**::
+
+    SmaltIndex_ExtraParams="-k 20 -s 1"
 
 
 SamtoolsFaidx_ExtraParams
@@ -115,12 +142,12 @@ can be specified.
 Bowtie2Align_ExtraParams
 ------------------------
 
-Specifies options passed to the bowtie2 aligner indexer.  Any of the bowtie2 aligner options
+Specifies options passed to the bowtie2 aligner.  Any of the bowtie2 aligner options
 can be specified.
 
 **Default**: 
 
-|   If you do not specify the -p option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
+|   If you do not specify the ``-p`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
 |      There is no way to completely suppress the -p option.
 |   If Bowtie2Align_ExtraParams is not set to any value, the ``--reorder`` option is enabled by default.
 |      Any value, even a single space, will suppress this default option.
@@ -136,6 +163,34 @@ can be specified.
 **Example**::
 
     Bowtie2Align_ExtraParams="--reorder -p 16 -X 1000"
+
+
+SmaltAlign_ExtraParams
+----------------------
+
+Specifies options passed to the smalt mapper.  Any of the smalt map options
+can be specified.
+
+**Default**: 
+
+|   If you do not specify the ``-n`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
+|      There is no way to completely suppress the -n option.
+|   If SmaltAlign_ExtraParams is not set to any value, the ``-O`` option is enabled by default.
+|      Any value, even a single space, will suppress this default option.
+|
+
+**Parameter Notes**:
+
+| -n : number of parallel alignment threads
+| -O : generate output records in the same order as the reads in the input file
+| -i : maximum insert size for paired-end reads
+| -r : random number seed, if seed < 0 reads with multiple best mappings are reported as 'not mapped'
+| -y : filters output alignments by a threshold in the number of exactly matching nucleotides
+|
+
+**Example**::
+
+    SmaltAlign_ExtraParams="-O -i 1000 -r 1"
 
 
 SamtoolsSamFilter_ExtraParams

@@ -40,6 +40,7 @@
 #   20150410-scd: Verify each of the sample directories in the sample directory file is not empty and contains fastq's.
 #   20150618-scd: Allow trailing slashes in the file of sample directories.
 #   20150618-scd: Allow blank lines in the file of sample directories.
+#   20150630-scd: Add support for Smalt.
 #Notes:
 #
 #Bugs:
@@ -252,6 +253,54 @@ if [[ "$opt_s_set" != "1" && "$opt_S_set" != "1" ]]; then
 fi
 
 
+# Create the logs directory
+runTimeStamp=$(date +"%Y%m%d.%H%M%S")
+export logDir="$workDir/logs-$runTimeStamp"
+mkdir -p "$logDir"
+
+# Handle configuration file, use the specified file, or create a default file
+if [[ "$opt_c_set" = "1" ]]; then
+    configFilePath="$opt_c_arg"
+    if [[ ! -f "$configFilePath" ]]; then echo "Configuration file $configFilePath does not exist."; exit 80; fi
+    if [[ ! -s "$configFilePath" ]]; then echo "Configuration file $configFilePath is empty."; exit 80; fi
+    cp -p "$configFilePath" "$logDir"
+    source "$configFilePath"
+else
+    # true below is to ignore preserve timestamp error
+    copy_snppipeline_data.py configurationFile "$logDir" || true
+    source "$logDir/snppipeline.conf"
+fi
+
+# Validate the configured aligner choice
+if [[ "$SnpPipeline_Aligner" == "" ]]; then
+    SnpPipeline_Aligner="bowtie2"
+else
+    # make lowercase 
+    SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]')
+    if [[ "$SnpPipeline_Aligner" != "bowtie2" && "$SnpPipeline_Aligner" != "smalt" ]]; then
+        echo "Config file error in SnpPipeline_Aligner parameter: only bowtie2 and smalt aligners are supported."
+        exit 90
+    fi
+fi
+
+export SnpPipeline_Aligner
+export Bowtie2Build_ExtraParams
+export SmaltIndex_ExtraParams
+export SamtoolsFaidx_ExtraParams
+export Bowtie2Align_ExtraParams
+export SmaltAlign_ExtraParams
+export SamtoolsSamFilter_ExtraParams
+export SamtoolsSort_ExtraParams
+export SamtoolsMpileup_ExtraParams
+export VarscanMpileup2snp_ExtraParams
+export VarscanJvm_ExtraParams
+export CreateSnpList_ExtraParams
+export CreateSnpPileup_ExtraParams
+export CreateSnpMatrix_ExtraParams
+export CreateSnpReferenceSeq_ExtraParams
+export PEname
+
+
 # Rewrite the file of sample directories, removing trailing slashes and blank lines.
 rewriteCleansedFileOfSampleDirs()
 {
@@ -370,37 +419,6 @@ if [[ "$opt_m_set" = "1" ]]; then
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
 
-# Create the logs directory
-runTimeStamp=$(date +"%Y%m%d.%H%M%S")
-export logDir="$workDir/logs-$runTimeStamp"
-mkdir -p "$logDir"
-
-# Handle configuration file, use the specified file, or create a default file
-if [[ "$opt_c_set" = "1" ]]; then
-    configFilePath="$opt_c_arg"
-    if [[ ! -f "$configFilePath" ]]; then echo "Configuration file $configFilePath does not exist."; exit 80; fi
-    if [[ ! -s "$configFilePath" ]]; then echo "Configuration file $configFilePath is empty."; exit 80; fi
-    cp -p "$configFilePath" "$logDir"
-    source "$configFilePath"
-else
-    # true below is to ignore preserve timestamp error
-    copy_snppipeline_data.py configurationFile "$logDir" || true
-    source "$logDir/snppipeline.conf"
-fi
-export Bowtie2Build_ExtraParams
-export SamtoolsFaidx_ExtraParams
-export Bowtie2Align_ExtraParams
-export SamtoolsSamFilter_ExtraParams
-export SamtoolsSort_ExtraParams
-export SamtoolsMpileup_ExtraParams
-export VarscanMpileup2snp_ExtraParams
-export VarscanJvm_ExtraParams
-export CreateSnpList_ExtraParams
-export CreateSnpPileup_ExtraParams
-export CreateSnpMatrix_ExtraParams
-export CreateSnpReferenceSeq_ExtraParams
-export PEname
-
 
 # --------------------------------------------------------
 echo -e "\nStep 1 - Prep work"
@@ -438,15 +456,29 @@ else
 fi
 
 echo -e "\nStep 3 - Align the samples to the reference"
-if [[ "$platform" == "grid" ]]; then
-    # Parse the user-specified bowtie parameters to find the number of CPU cores requested, for example, "-p 16"
-    regex="(-p[[:blank:]]*)([[:digit:]]+)"
-    if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
-        numAlignThreads=${BASH_REMATCH[2]}
+# Parse the user-specified aligner parameters to find the number of CPU cores requested, for example, "-p 16" or "-n 16"
+# Set the default number of  CPU cores if the user did not configure a value.
+if [[ "$platform" == "grid" || "$platform" == "torque" ]]; then
+    if [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
+        regex="(-n[[:blank:]]*)([[:digit:]]+)"
+        if [[ "$SmaltAlign_ExtraParams" =~ $regex ]]; then
+            numAlignThreads=${BASH_REMATCH[2]}
+        else
+            numAlignThreads=8
+            SmaltAlign_ExtraParams="$SmaltAlign_ExtraParams -n $numAlignThreads"
+        fi
     else
-        numAlignThreads=8
-        Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
+        regex="(-p[[:blank:]]*)([[:digit:]]+)"
+        if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
+            numAlignThreads=${BASH_REMATCH[2]}
+        else
+            numAlignThreads=8
+            Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
+        fi
     fi
+fi
+
+if [[ "$platform" == "grid" ]]; then
     alignSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
 #$   -N job.alignSamples
 #$   -cwd
@@ -455,19 +487,11 @@ if [[ "$platform" == "grid" ]]; then
 #$   -pe $PEname $numAlignThreads
 #$   -hold_jid $prepReferenceJobId
 #$   -o $logDir/alignSamples.log-\$TASK_ID
-#$   -v Bowtie2Align_ExtraParams
+#$   -v SnpPipeline_Aligner,Bowtie2Align_ExtraParams,SmaltAlign_ExtraParams
     alignSampleToReference.sh $forceFlag "$referenceFilePath" \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    # Parse the user-specified bowtie parameters to find the number of CPU cores requested, for example, "-p 16"
-    regex="(-p[[:blank:]]*)([[:digit:]]+)"
-    if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
-        numAlignThreads=${BASH_REMATCH[2]}
-    else
-        numAlignThreads=8
-        Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
-    fi
     alignSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
     #PBS -N job.alignSamples
     #PBS -d $(pwd)
@@ -475,7 +499,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -l nodes=1:ppn=$numAlignThreads
     #PBS -W depend=afterok:$prepReferenceJobId
     #PBS -o $logDir/alignSamples.log
-    #PBS -v Bowtie2Align_ExtraParams
+    #PBS -v SnpPipeline_Aligner,Bowtie2Align_ExtraParams,SmaltAlign_ExtraParams
     samplesToAlign=\$(cat "$workDir/sampleFullPathNames.txt" | head -n \$PBS_ARRAYID | tail -n 1)
     alignSampleToReference.sh $forceFlag "$referenceFilePath" \$samplesToAlign
 _EOF_
