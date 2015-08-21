@@ -10,7 +10,7 @@ class Test(unittest.TestCase):
 
     def test_doctests(self):
         """Run utils doctests"""
-        doctest.testmod(utils, verbose=True)
+        doctest.testmod(utils, verbose=False)
 
 if __name__ == "__main__":
     unittest.main()
