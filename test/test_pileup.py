@@ -3,14 +3,14 @@
 import unittest
 import doctest
 
-from snppipeline import utils
+from snppipeline import pileup
 
 class Test(unittest.TestCase):
-    """Unit tests for utils."""
+    """Unit tests for pileup module."""
 
     def test_doctests(self):
-        """Run utils doctests"""
-        doctest.testmod(utils, verbose=False)
+        """Run pileup module doctests"""
+        doctest.testmod(pileup, verbose=False)
 
 if __name__ == "__main__":
     unittest.main()

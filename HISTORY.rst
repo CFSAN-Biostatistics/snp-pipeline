@@ -3,7 +3,7 @@
 History
 -------
 
-0.3.5 (2015-07-??)
+0.3.5 (2015-09-??)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -13,6 +13,10 @@ History
   the pipeline run faster, but when the cluster was full or nearly full, it would cause contention 
   for available CPU resources and cause jobs to run more slowly.  Changed to use only 8 CPU cores 
   by default.
+* The consensus snp caller miscounted the number of reference bases when the pileup record 
+  contained the ^ symbol marking the start of a read segment followed by a dot or comma.  In this
+  situation, the dot or comma should not be counted as reference bases.
+  
 
 **Other Changes:**
 

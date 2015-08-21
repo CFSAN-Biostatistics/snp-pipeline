@@ -6,6 +6,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import operator
 import os
+import pileup
 import pprint
 import re
 import sys
@@ -62,79 +63,83 @@ def target_needs_rebuild(source_files, target_file):
 #==============================================================================
 
 
-def get_consensus_base_from_pileup(base, length, data, min_cons_freq):
-    """Call the base for each SNP position
-
-    Description:
-    Calls the base based on the pileup data for a SNP position with a given
-        length cutoff and with a given reference base.
-
-    Args:
-        base: Reference base.
-        length: length cutoff.
-        data: information from alignment in pileup format.
-        min_cons_freq: mimimum fraction of reads that must agree (0.0 - 1.0)
-
-    Returns:
-        consensus_base: Consensus base from alignment.
-
-    Raises:
-
-TODO: all these examples return the value of the 1st argument, can we get some other examples?
-
-    Examples:
-
-    >>> print(get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A', 0.5))
-    T
-    >>> print(get_consensus_base_from_pileup('A',10,',.$.....,,.,.,...,,,.,..^+.', 0.5))
-    A
-    >>> print(get_consensus_base_from_pileup('C',10,',.....,,.,.,...,,,.,..A', 0.5))
-    C
-    >>> print(get_consensus_base_from_pileup('T',10,',.$....,,.,.,...,,,.,...', 0.5))
-    T
-    >>> print(get_consensus_base_from_pileup('G',10,',$....,,.,.,...,,,.,...^l.', 0.5))
-    G
-    >>> print(get_consensus_base_from_pileup('G',10,'...T,,.,.,...,,,.,....', 0.5))
-    G
-    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,.C.,,,.,..G.', 0.5))
-    T
-    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,...,,,.,....^k.', 0.5))
-    T
-    >>> print(get_consensus_base_from_pileup('A',10,'A..T,,.,.,...,,,.,.....', 0.5))
-    A
+def get_consensus_base_from_pileup(record, min_cons_freq, min_cons_strand_depth, min_cons_strand_freq):
     """
+    Call the consensus base for each SNP position with the specified thresholds.
 
-    consensus_base = ""
-    #TODO consider using a Counter
-    base_count_dict = {'.,': 0, 'A': 0, 'C': 0, 'G': 0, 'N': 0, 'T': 0}
+    Parameters
+    ----------
+    record : pileup.record
+        Parsed pileup record
+    min_cons_freq : float
+        Mimimum fraction of the high-quality reads supporting the consensus to
+        make a consensus call (0.0 - 1.0).  The numerator of this fraction
+        is the number of high-quality consensus supporting reads.  The
+        denominator of this fraction is the total number of high-quality reads.
+    min_cons_strand_depth : int
+        Minimum number of high-quality reads supporting the consensus which must
+        be present on both forward and reverse strands separately to make a
+        call.
+    min_cons_strand_freq : float
+        Minimum fraction of the high-quality consensus supporting reads which
+        must be present on both forward and reverse strands separately to make
+        a call (0.0 - 0.5).  The numerator of this fraction is the number of
+        high-quality consensus supporting reads on one strand at a time.  The
+        denominator of this fraction is the number of high-quality consensus
+        supporting reads.  
 
-    upper_lower_base_set = set(['A','a','C','c','T','t','G','g','N','n'])
-    i = 0
-    while i < len(data):
-        char = data[i]
-        if char in upper_lower_base_set:
-            base_count_dict[char.upper()] += 1
-        elif char == '.' or char == ',':
-            base_count_dict['.,'] += 1
-        elif char == '+' or char == '-':
-            count_str = ""
-            count = 1
-            while re.match("\d", data[i + 1]):
-                count_str += data[i + 1]
-                i += 1
-            if count_str != "":
-                count = int(count_str)
-            i += count
-        elif char == '^':
-            if data[i + 1] != "." and data[i + 1] != ',':
-                i += 1
-        i += 1
+    Returns
+    -------
+    consensus_base : str
+        Consensus base.
 
-    consensus_base = max(base_count_dict.iteritems(), key=operator.itemgetter(1))[0]
-    if base_count_dict[consensus_base] < (length * min_cons_freq):
-        consensus_base = "-"
-    elif consensus_base == ".,":
-        consensus_base = base
+    Examples
+    --------
+    >>> r = pileup.Record(['ID', 42, 'G', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
+    >>> get_consensus_base_from_pileup(r, 0.5, 0, 0.0)
+    'A'
+    >>> get_consensus_base_from_pileup(r, 0.6, 0, 0.0)
+    '-'
+    >>> get_consensus_base_from_pileup(r, 0.0, 5, 0.0)
+    '-'
+    >>> r = pileup.Record(['ID', 42, 'G', 14, 'aAAAAAAA...,,,', '00001111222333'], 15)
+    >>> get_consensus_base_from_pileup(r, 0.0, 0, 0.13)
+    '-'
+    >>> r = pileup.Record(['ID', 42, 'G', 14, 'aaaAAA....,,,,', '00011122223333'], 15)
+    >>> get_consensus_base_from_pileup(r, 0.0, 0, 0.0)
+    'G'
+    >>> r = pileup.Record(['ID', 42, 'g', 14, 'aaaAAA....,,,,', '00011122223333'], 15)
+    >>> get_consensus_base_from_pileup(r, 0.0, 0, 0.0)
+    'g'
+    >>> r = pileup.Record(['ID', 42, 'g', 0], 15)
+    >>> get_consensus_base_from_pileup(r, 0.0, 0, 0.0)
+    '-'
+    """
+    consensus_base = record.most_common_base
+    if consensus_base == None:
+        return "-"
+    good_depth = record.good_depth
+    good_cons_depth = record.base_good_depth[consensus_base]
+    fwd_good_cons_depth = record.forward_base_good_depth[consensus_base]
+    rev_good_cons_depth = record.reverse_base_good_depth[consensus_base]
+
+    # Filter: allele minimum frequency
+    if good_cons_depth < (good_depth * min_cons_freq):
+        return "-"
+    # Filter: allele minimum depth on each strand
+    if fwd_good_cons_depth < min_cons_strand_depth:
+        return "-"
+    if rev_good_cons_depth < min_cons_strand_depth:
+        return "-"
+    # Filter: strand bias
+    if fwd_good_cons_depth < (good_cons_depth * min_cons_strand_freq):
+        return "-"
+    if rev_good_cons_depth < (good_cons_depth * min_cons_strand_freq):
+        return "-"
+
+    # Keep the reference lowercase if it was lowercase in the pileup
+    if consensus_base == record.reference_base.upper():
+        consensus_base = record.reference_base 
 
     return consensus_base
 
@@ -190,15 +195,15 @@ def create_consensus_dict(pileup_file_path, min_cons_freq):
     """
 
     position_value_dict = dict()
-
-    with open(pileup_file_path, "r") as pileup_file_object:
-        for pileup_line in pileup_file_object:
-            current_line_data = pileup_line.rstrip().split()
-            if len(current_line_data) >= 5:   #don't process lines without 5 pieces of information or more
-                seq_id, pos, ref_base, depth, bases_string = current_line_data[:5]
-                pos = int(pos)
-                depth = int(depth)
-                position_value_dict[(seq_id, pos)] = get_consensus_base_from_pileup(ref_base, depth, bases_string, min_cons_freq)
+    chrom_position_set = None
+    min_cons_strand_depth = 0
+    min_cons_strand_freq = 0
+    min_base_quality = 0
+    reader = pileup.Reader(pileup_file_path, min_base_quality, chrom_position_set)
+    for record in reader:
+        chrom = record.chrom
+        pos = record.position
+        position_value_dict[(chrom, pos)] = get_consensus_base_from_pileup(record, min_cons_freq, min_cons_strand_depth, min_cons_strand_freq)
 
     return position_value_dict
 
