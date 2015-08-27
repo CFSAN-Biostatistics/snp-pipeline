@@ -101,7 +101,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         self.run_function_test(snppipeline.create_snp_list, args_dict, 'snplist.txt')
 
 
-    def test_2_create_snp_pileup(self):
+    def test_2a_create_snp_pileup(self):
         """Run create_snp_pileup and verify reads.snp.pileup contains expected contents for each sample.
         """
         args_dict = {
@@ -114,16 +114,32 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             self.run_function_test(snppipeline.create_snp_pileup, args_dict, os.path.join(dir, 'reads.snp.pileup'))
 
 
+    def test_2b_call_consensus(self):
+        """Run call_consensus and verify consensus.fasta contains expected contents for each sample.
+        """
+        args_dict = {
+            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
+            'forceFlag' : True,
+            }
+        for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
+            args_dict['allPileupFile'] = os.path.join(self.__class__.directory_run_result, dir, 'reads.all.pileup')
+            args_dict['consensusFile'] = os.path.join(self.__class__.directory_run_result, dir, 'consensus.fasta')
+            args_dict['minBaseQual'] = 0
+            args_dict['minConsFreq'] = 0.6
+            args_dict['minConsStrdDpth'] = 0
+            args_dict['minConsStrdBias'] = 0
+            args_dict['forceFlag'] = True
+            self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.fasta'))
+
+
     def test_3_create_snp_matrix(self):
         """Run create_snp_matrix and verify snpma.fasta contains expected contents.
         """
         args_dict = {
             'sampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt'),
-            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
-            'pileupFileName' : 'reads.snp.pileup',
+            'consFileName' : 'consensus.fasta',
             'snpmaFile' : os.path.join(self.__class__.directory_run_result, 'snpma.fasta'),
             'forceFlag' : True,
-            'minConsFreq' : 0.6,
             }
         self.run_function_test(snppipeline.create_snp_matrix, args_dict, 'snpma.fasta')
 

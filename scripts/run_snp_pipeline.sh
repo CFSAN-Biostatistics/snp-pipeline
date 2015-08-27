@@ -41,6 +41,7 @@
 #   20150618-scd: Allow trailing slashes in the file of sample directories.
 #   20150618-scd: Allow blank lines in the file of sample directories.
 #   20150630-scd: Add support for Smalt.
+#   20150824-scd: Replace create_snp_pileup.py with call_consensus.py.
 #Notes:
 #
 #Bugs:
@@ -295,7 +296,7 @@ export SamtoolsMpileup_ExtraParams
 export VarscanMpileup2snp_ExtraParams
 export VarscanJvm_ExtraParams
 export CreateSnpList_ExtraParams
-export CreateSnpPileup_ExtraParams
+export CallConsensus_ExtraParams
 export CreateSnpMatrix_ExtraParams
 export CreateSnpReferenceSeq_ExtraParams
 export PEname
@@ -578,71 +579,71 @@ else
     create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/snpList.log
 fi
 
-echo -e "\nStep 6 - Create pileups at SNP positions for each sample"
+echo -e "\nStep 6 - Call the consensus SNPs for each sample"
 if [[ "$platform" == "grid" ]]; then
-    snpPileupJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
-#$ -N job.snpPileup
+    callConsensusJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+#$ -N job.callConsensus
 #$ -cwd
 #$ -V
 #$ -j y
 #$ -hold_jid $snpListJobId
-#$ -o $logDir/snpPileup.log-\$TASK_ID
-#$ -v CreateSnpPileup_ExtraParams
+#$ -o $logDir/callConsensus.log-\$TASK_ID
+#$ -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    create_snp_pileup.py $forceFlag -l "$workDir/snplist.txt" -a "\$sampleDir/reads.all.pileup" -o "\$sampleDir/reads.snp.pileup" $CreateSnpPileup_ExtraParams
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    snpPileupJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
-    #PBS -N job.snpPileup
+    callConsensusJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
+    #PBS -N job.callConsensus
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterok:$snpListJobId
-    #PBS -o $logDir/snpPileup.log
-    #PBS -v CreateSnpPileup_ExtraParams
+    #PBS -o $logDir/callConsensus.log
+    #PBS -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    create_snp_pileup.py $forceFlag -l "$workDir/snplist.txt" -a "\$sampleDir/reads.all.pileup" -o "\$sampleDir/reads.snp.pileup" $CreateSnpPileup_ExtraParams
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 else
-    if [[ "$MaxConcurrentCreateSnpPileup" != "" ]]; then
-        numCreateSnpPileupCores=$MaxConcurrentCreateSnpPileup
+    if [[ "$MaxConcurrentCallConsensus" != "" ]]; then
+        numCallConsensusCores=$MaxConcurrentCallConsensus
     else
-        numCreateSnpPileupCores=$numCores
+        numCallConsensusCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCreateSnpPileupCores sh -c 'create_snp_pileup.py $forceFlag -l "$workDir/snplist.txt" -a "$1/reads.all.pileup" -o "$1/reads.snp.pileup" $CreateSnpPileup_ExtraParams 2>&1 | tee $logDir/snpPileup.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores sh -c 'call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" $CallConsensus_ExtraParams "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
 fi
 
 echo -e "\nStep 7 - Create the SNP matrix"
 if [[ "$platform" == "grid" ]]; then
-    snpPileupJobArray=${snpPileupJobId%%.*}
+    callConsensusJobArray=${callConsensusJobId%%.*}
     snpMatrixJobId=$(echo | qsub -terse << _EOF_
 #$ -N job.snpMatrix
 #$ -cwd
 #$ -V
 #$ -j y
-#$ -hold_jid $snpPileupJobArray
+#$ -hold_jid $callConsensusJobArray
 #$ -l h_rt=05:00:00
 #$ -o $logDir/snpMatrix.log
 #$ -v CreateSnpMatrix_ExtraParams
-    create_snp_matrix.py $forceFlag -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
+    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    snpPileupJobArray=${snpPileupJobId%%.*}
+    callConsensusJobArray=${callConsensusJobId%%.*}
     snpMatrixJobId=$(echo | qsub << _EOF_
     #PBS -N job.snpMatrix
     #PBS -d $(pwd)
     #PBS -j oe
-    #PBS -W depend=afterokarray:$snpPileupJobArray
+    #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -l walltime=05:00:00
     #PBS -o $logDir/snpMatrix.log
     #PBS -v CreateSnpMatrix_ExtraParams
-    create_snp_matrix.py $forceFlag -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
+    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
 _EOF_
 )
 else
-    create_snp_matrix.py $forceFlag -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
+    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
 fi    
 
 echo -e "\nStep 8 - Create the reference base sequence"
@@ -652,7 +653,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -N job.snpReference 
 #$ -cwd
 #$ -j y 
-#$ -hold_jid $snpPileupJobArray
+#$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/snpReference.log
 #$ -v CreateSnpReferenceSeq_ExtraParams
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
@@ -663,7 +664,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -N job.snpReference 
     #PBS -d $(pwd)
     #PBS -j oe 
-    #PBS -W depend=afterokarray:$snpPileupJobArray
+    #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -o $logDir/snpReference.log
     #PBS -v CreateSnpReferenceSeq_ExtraParams
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"

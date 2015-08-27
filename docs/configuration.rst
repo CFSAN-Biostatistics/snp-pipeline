@@ -52,10 +52,10 @@ This parameter is used by run_snp_pipeline.sh only.
     MaxConcurrentPrepSamples=2
 
 
-MaxConcurrentCreateSnpPileup
-----------------------------
+MaxConcurrentCallConsensus
+--------------------------
 
-Controls the number of create_snp_pileup.py  processes running concurrently 
+Controls the number of call_consensus.py processes running concurrently 
 on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
 This parameter is used by run_snp_pipeline.sh only.
 
@@ -66,13 +66,13 @@ This parameter is used by run_snp_pipeline.sh only.
 
 **Example**::
 
-    MaxConcurrentCreateSnpPileup=4
+    MaxConcurrentCallConsensus=4
 
 
 MaxConcurrentCollectSampleMetrics
 ----------------------------------
 
-Controls the number of collectSampleMetrics.sh  processes running concurrently 
+Controls the number of collectSampleMetrics.sh processes running concurrently 
 on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
 This parameter is used by run_snp_pipeline.sh only.
 
@@ -155,9 +155,9 @@ can be specified.
 
 **Parameter Notes**:
 
-| -p        : bowtie2 uses the specified number of parallel search threads
-| --reorder : generate output records in the same order as the reads in the input file
-| -X        : maximum inter-mate fragment length for valid concordant paired-end alignments
+| ``-p``        : bowtie2 uses the specified number of parallel search threads
+| ``--reorder`` : generate output records in the same order as the reads in the input file
+| ``-X``        : maximum inter-mate fragment length for valid concordant paired-end alignments
 |
 
 **Example**::
@@ -181,11 +181,11 @@ can be specified.
 
 **Parameter Notes**:
 
-| -n : number of parallel alignment threads
-| -O : generate output records in the same order as the reads in the input file
-| -i : maximum insert size for paired-end reads
-| -r : random number seed, if seed < 0 reads with multiple best mappings are reported as 'not mapped'
-| -y : filters output alignments by a threshold in the number of exactly matching nucleotides
+| ``-n`` : number of parallel alignment threads
+| ``-O`` : generate output records in the same order as the reads in the input file
+| ``-i`` : maximum insert size for paired-end reads
+| ``-r`` : random number seed, if seed < 0 reads with multiple best mappings are reported as 'not mapped'
+| ``-y`` : filters output alignments by a threshold in the number of exactly matching nucleotides
 |
 
 **Example**::
@@ -206,7 +206,7 @@ Any of the SAMtools view options can be specified.
 
 **Parameter Notes**:
 
-| -F 4      : discard unmapped reads
+| ``-F 4``      : discard unmapped reads
 |
 
 **Example**::
@@ -235,8 +235,8 @@ Any of the SAMtools mpileup options can be specified.
 
 **Parameter Notes**:
 
-| -q    : minimum mapping quality for an alignment to be used
-| -Q    : minimum base quality for a base to be considered 
+| ``-q``    : minimum mapping quality for an alignment to be used
+| ``-Q``    : minimum base quality for a base to be considered 
 |
 
 **Example**::
@@ -253,8 +253,8 @@ Any of the Varscan mpileup2snp options can be specified.
 
 **Parameter Notes**:
 
-| --min-avg-qual : minimum base quality at a position to count a read
-| --min-var-freq : minimum variant allele frequency threshold
+| ``--min-avg-qual`` : minimum base quality at a position to count a read
+| ``--min-var-freq`` : minimum variant allele frequency threshold
 |
 
 **Example**::
@@ -271,7 +271,7 @@ Any of the JVM options can be specified.
 
 **Parameter Notes**:
 
-| -Xmx300m  : use 300 MB memory (modify as needed)
+| ``-Xmx300m``  : use 300 MB memory (modify as needed)
 |
 
 **Example**::
@@ -290,15 +290,32 @@ Specifies options passed to create_snp_list.py.
     CreateSnpList_ExtraParams="--verbose 1"
 
 
-CreateSnpPileup_ExtraParams
----------------------------
-Specifies options passed to create_snp_pileup.py.
+CallConsensus_ExtraParams
+-------------------------
+Specifies options passed to call_consensus.py.
 
 **Default**: None
 
+**Parameter Notes**:
+
+``--minBaseQual``
+    Mimimum base quality score to count a read. All other snp filters take effect after the low-quality reads 
+    are discarded.
+``--minConsFreq``
+    Consensus frequency. Mimimum fraction of high-quality reads supporting the consensus to make a call.
+``--minConsStrdDpth``
+    Consensus strand depth. Minimum number of high-quality reads supporting the consensus which must be present 
+    on both the forward and reverse strands to make a call
+``--minConsStrdBias``
+    Strand bias. Minimum fraction of the high-quality consensus-supporting reads which must be present on both 
+    the forward and reverse strands to make a call. The numerator of this fraction is the number of high-quality 
+    consensus-supporting reads on one strand. The denominator is the total number of high-quality 
+    consensus-supporting reads on both strands combined.
+
+
 **Example**::
 
-    CreateSnpPileup_ExtraParams="--verbose 1"
+    CallConsensus_ExtraParams="--verbose 1 --minBaseQual 15"
 
 
 CreateSnpMatrix_ExtraParams
@@ -307,14 +324,9 @@ Specifies options passed to create_snp_matrix.py.
 
 **Default**: None
 
-**Parameter Notes**:
-
-| --minConsFreq : Mimimum fraction of reads that must agree to make a consensus call
-|
-
 **Example**::
 
-    CreateSnpMatrix_ExtraParams="--verbose 1 --minConsFreq 0.6"
+    CreateSnpMatrix_ExtraParams="--verbose 1"
 
 
 CreateSnpReferenceSeq_ExtraParams

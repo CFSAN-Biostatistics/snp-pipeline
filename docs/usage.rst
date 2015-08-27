@@ -29,8 +29,14 @@ of shell scripts and python scripts.
 | create_snp_list.py          | | Combines the SNP positions across all samples into a single      |
 |                             | | unified SNP list file                                            |
 +-----------------------------+--------------------------------------------------------------------+
-| create_snp_pileup.py        | | Creates the SNP pileup file for a sample -- the pileup file at   |
-|                             | | the positions where SNPs were called in any of the samples       |
+| create_snp_pileup.py        | | Deprecated -- this command is not used by the pipeline since     |
+|                             | | v0.3.5.  Replaced by call_consensus.py                           |
+|                             | |                                                                  |
+|                             | | Creates the SNP pileup file for a sample -- a subset of the      |
+|                             | | pileup file at only the positions where SNPs were called in any  |
+|                             | | of the samples                                                   |
++-----------------------------+--------------------------------------------------------------------+
+| call_consensus.py           | | Calls the consensus SNPs for each sample                         |
 +-----------------------------+--------------------------------------------------------------------+
 | create_snp_matrix.py        | | Creates a matrix of SNPs across all samples                      |
 +-----------------------------+--------------------------------------------------------------------+
@@ -84,8 +90,8 @@ See :ref:`step-by-step-workflows`.
   samples in a single unified SNP list file identifing the positions and sample 
   names where SNPs were called.
 
-* reads.snp.pileup : for each sample, the pileup file at the positions where 
-  SNPs were called in any of the samples.
+* consensus.fasta : for each sample, the consensus base call at the positions 
+  where SNPs were previously detected in any of the samples.
 
 * snpma.fasta : the SNP matrix containing the consensus base for each of 
   the samples at the positions where SNPs were called in any of the samples.  
@@ -561,14 +567,14 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
     create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
 
-Step 7 - Create pileups at SNP positions for each sample::
+Step 7 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt -o XX/consensus.fasta XX/reads.all.pileup
 
 Step 8 - Create the SNP matrix::
 
-    create_snp_matrix.py -l snplist.txt -p reads.snp.pileup -o snpma.fasta sampleDirectories.txt
+    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
 
 Step 9 - Create the reference base sequence::
 
@@ -576,7 +582,7 @@ Step 9 - Create the reference base sequence::
 
 Step 10 - Collect metrics for each sample::
 
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX reference/lambda_virus.fasta
 
 Step 11 - Tabulate the metrics for all samples::
 
@@ -672,14 +678,14 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
     create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
 
-Step 7 - Create pileups at SNP positions for each sample::
+Step 7 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt -o XX/consensus.fasta XX/reads.all.pileup
 
 Step 8 - Create the SNP matrix::
 
-    create_snp_matrix.py -l snplist.txt -p reads.snp.pileup -o snpma.fasta sampleDirectories.txt
+    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
 
 Step 9 - Create the reference base sequence::
 
@@ -687,7 +693,7 @@ Step 9 - Create the reference base sequence::
 
 Step 10 - Collect metrics for each sample::
 
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX reference/NC_011149.fasta
 
 Step 11 - Tabulate the metrics for all samples::
 
@@ -773,14 +779,14 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
     create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
 
-Step 7 - Create pileups at SNP positions for each sample::
+Step 7 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt -o XX/consensus.fasta XX/reads.all.pileup
 
 Step 8 - Create the SNP matrix::
 
-    create_snp_matrix.py -l snplist.txt -p reads.snp.pileup -o snpma.fasta sampleDirectories.txt
+    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
 
 Step 9 - Create the reference base sequence::
 
@@ -789,7 +795,7 @@ Step 9 - Create the reference base sequence::
 
 Step 10 - Collect metrics for each sample::
 
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX reference/my_reference.fasta
 
 Step 11 - Tabulate the metrics for all samples::
 

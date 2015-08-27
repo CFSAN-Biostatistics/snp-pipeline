@@ -70,6 +70,14 @@ echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 create_snp_pileup.py      -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
+echo '.. _cmd-ref-call-consensus:' >> x.txt
+echo >> x.txt
+echo call_consensus.py        >> x.txt
+echo ------------------------ >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+call_consensus.py      -h | sed 's/^/  /' >> x.txt
+echo >> x.txt
+
 echo create_snp_matrix.py     >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt

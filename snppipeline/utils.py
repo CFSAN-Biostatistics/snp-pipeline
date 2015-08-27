@@ -62,7 +62,6 @@ def target_needs_rebuild(source_files, target_file):
 #Define functions
 #==============================================================================
 
-
 def get_consensus_base_from_pileup(record, min_cons_freq, min_cons_strand_depth, min_cons_strand_freq):
     """
     Call the consensus base for each SNP position with the specified thresholds.
@@ -165,29 +164,56 @@ def create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, snp_set):
                     snp_pileup_file_object.write(pileup_line)
 
 
-def create_consensus_dict(pileup_file_path, min_cons_freq):
-    """Create a dict based on the information in a pileup file.
+def create_consensus_dict(pileup_file_path, min_base_qual, min_cons_freq, 
+                          min_cons_strand_depth, min_cons_strand_bias, 
+                          chrom_position_set=None):
+    """Create a consensus snp call dict based on the information in a pileup
+    file.
 
     Given a path to a pileup file, create a dict based on the pileup
-        data in that file. The dict contains the consensus
-        base calls for positions in the reference sequence.
+    data in that file. The dict contains the consensus base calls for
+    positions in the reference sequence.
 
-    Args:
-        pileup_file_path: full path to a pileup file.
-        min_cons_freq: mimimum fraction of reads that must agree (0.0 - 1.0)
+    Parameters
+    ----------
+    pileup_file_path : str
+        Full path to a pileup file.
+    min_base_qual : int
+        Mimimum base quality score to count a read. All other snp filters
+        take effect after the low-quality reads are discarded.
+    min_cons_freq : float
+        Mimimum fraction of reads that must agree (0.0 - 1.0)
+    min_cons_freq : float
+        Consensus frequency. Mimimum fraction of high-quality reads
+        supporting the consensus to make a call.
+    min_cons_strand_depth : int
+        Consensus strand depth. Minimum number of high-quality reads 
+        supporting the consensus which must be present on both the
+        forward and reverse strands to make a call.
+    min_cons_strand_bias : float
+        Strand bias. Minimum fraction of the high-quality 
+        consensus-supporting reads which must be present on both the 
+        forward and reverse strands to make a call. The numerator of this
+        fraction is the number of high-quality consensus-supporting reads
+        on one strand.  The denominator is the total number of high-quality
+        consensus-supporting reads on both strands combined.
+    chrom_position_set : set of (str, int), optional
+        Tuples of (chromosome name, position) identifying the positions to
+        be called in the pileup file.  If not specified, all positions will be
+        called.
 
-    Returns:
-        A dict mapping a key formed from a tuple(sequence, position) to a
+    Returns
+    -------
+    snp_dict : dict
+        A dict mapping a key formed from a tuple(chromosome name, position) to a
         consensus sequence base. For example:
-
         {('gi|9626243|ref|NC_001416.1|', 46842): 'G',
          ('gi|9626243|ref|NC_001416.1|', 47425): 'T',
          ('gi|9626243|ref|NC_001416.1|', 47893): 'A'}
 
-    Raises:
-
-    Examples:
-    >>> consensus_dict = create_consensus_dict("snppipeline/data/lambdaVirusExpectedResults/samples/sample2/reads.snp.pileup", 0.5)
+    Examples
+    --------
+    >>> consensus_dict = create_consensus_dict("snppipeline/data/lambdaVirusExpectedResults/samples/sample2/reads.snp.pileup", 0, 0.5, 0, 0)
     >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',3678)]
     'T'
     >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',40984)]
@@ -195,15 +221,11 @@ def create_consensus_dict(pileup_file_path, min_cons_freq):
     """
 
     position_value_dict = dict()
-    chrom_position_set = None
-    min_cons_strand_depth = 0
-    min_cons_strand_freq = 0
-    min_base_quality = 0
-    reader = pileup.Reader(pileup_file_path, min_base_quality, chrom_position_set)
+    reader = pileup.Reader(pileup_file_path, min_base_qual, chrom_position_set)
     for record in reader:
         chrom = record.chrom
         pos = record.position
-        position_value_dict[(chrom, pos)] = get_consensus_base_from_pileup(record, min_cons_freq, min_cons_strand_depth, min_cons_strand_freq)
+        position_value_dict[(chrom, pos)] = get_consensus_base_from_pileup(record, min_cons_freq, min_cons_strand_depth, min_cons_strand_bias)
 
     return position_value_dict
 

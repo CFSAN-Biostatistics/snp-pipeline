@@ -160,8 +160,8 @@ run_snp_pipeline.sh script::
     # Maximum concurrent prepSamples.sh processes (SAMtools and Varscan)
     MaxConcurrentPrepSamples=
     
-    # Maximum concurrent create_snp_pileup.py processes
-    MaxConcurrentCreateSnpPileup=
+    # Maximum concurrent call_consensus.py processes
+    MaxConcurrentCallConsensus=
 
     # Maximum concurrent collectSampleMetrics.sh processes
     MaxConcurrentCollectSampleMetrics=

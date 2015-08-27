@@ -222,6 +222,119 @@ def create_snp_pileup(options_dict):
     verbose_print("# %s %s finished" % (timestamp(), program_name()))
 
 
+def call_consensus(options_dict):
+    """Call the consensus base for a sample
+
+    Call the consensus base for a sample at the positions where SNPs were found
+    in any of the samples.
+    This function expects, or creates '(*)', the following
+        files arranged in the following way:
+            snplist.txt
+            samples
+                sample_name_one/reads.all.pileup
+                sample_name_one/consensus.fasta (*)
+
+    The files are used as follows:
+        1. The snplist.txt input file contains the list of SNP positions 
+           extracted from all the var.flt.vcf files combined.
+        2. The reads.all.pileup input file is a pileups at all positions
+           used to determine the nucleotide base at each SNP position.
+        3. The consensus.fasta output file contains the SNP calls for each 
+           sequence, arranged as a fasta file with one sequence per sample.
+
+    The snplist.txt, and reads.snp.pileup are created outside of this function.
+       The package documentation provides an example 
+        of creating these files based on the lambda_virus sequence that is used 
+        as one test for this package.
+
+    Args:
+        forceFlag : boolean 
+            flag to force processing even when result file already exists and
+            is newer than inputs
+        snpListFile : str
+            File path (not just file name) of text format list of SNP positions
+        allPileupFile : str
+            Relative or absolute path to the genome-wide pileup file for this 
+            sample
+        consensusFile : str
+            Output file. Relative or absolute path to the consensus fasta file
+            for this sample.
+        minBaseQual : int
+            Mimimum base quality score to count a read. All other snp filters
+            take effect after the low-quality reads are discarded.
+        minConsFreq : float
+            Consensus frequency. Mimimum fraction of high-quality reads
+            supporting the consensus to make a call.
+        minConsStrdDpth : int
+            Consensus strand depth. Minimum number of high-quality reads 
+            supporting the consensus which must be present on both the
+            forward and reverse strands to make a call.
+        minConsStrdBias : float
+            Strand bias. Minimum fraction of the high-quality 
+            consensus-supporting reads which must be present on both the 
+            forward and reverse strands to make a call. The numerator of this
+            fraction is the number of high-quality consensus-supporting reads
+            on one strand.  The denominator is the total number of high-quality
+            consensus-supporting reads on both strands combined.
+
+    Raises:
+
+    Examples:
+    options_dict = {'snpListFile':'snplist.txt',
+                    'allPileupFile':'reads.all.pileup',
+                    'consensusFile':'consensus.fasta',
+                    'minBaseQual':15,
+                    'minConsFreq':0.6,
+                    'minConsStrdDpth':4
+                    'minConsStrdBias':0.10
+                   }
+    call_consensus(options_dict)
+    """
+    print_log_header()
+    verbose_print("# %s %s" % (timestamp(), command_line_short()))
+    verbose_print("# %s version %s" % (program_name(), __version__))
+    print_arguments(options_dict)
+
+    snp_list_file_path = options_dict['snpListFile']
+    all_pileup_file_path = options_dict['allPileupFile']
+    consensus_file_path = options_dict['consensusFile']
+
+    # Check if the result is already fresh
+    source_files = [snp_list_file_path, all_pileup_file_path]
+    if not options_dict['forceFlag'] and not utils.target_needs_rebuild(source_files, consensus_file_path):
+        verbose_print("Consensus call file %s has already been freshly built.  Use the -f option to force a rebuild." % consensus_file_path)
+        verbose_print("# %s %s finished" % (timestamp(), program_name()))
+        return
+
+    # Load the list of which positions to called
+    snp_list = utils.read_snp_position_list(snp_list_file_path)
+    snplist_length = len(snp_list)
+    verbose_print("snp position list length = %d" % snplist_length)
+
+    # Call consensus. Write results to file.
+    position_consensus_base_dict = utils.create_consensus_dict(all_pileup_file_path, 
+                                                               options_dict['minBaseQual'], 
+                                                               options_dict['minConsFreq'], 
+                                                               options_dict['minConsStrdDpth'], 
+                                                               options_dict['minConsStrdBias'], 
+                                                               set(snp_list))
+
+    verbose_print("called consensus positions = %i" % (len(position_consensus_base_dict)))
+
+    consensus_list = [position_consensus_base_dict.get(key, '-') for key in snp_list]
+    consensus_str = ''.join(consensus_list)
+    sample_directory = os.path.dirname(os.path.abspath(all_pileup_file_path))
+    sample_name = os.path.basename(sample_directory)
+    snp_seq_record = SeqRecord(Seq(consensus_str), id=sample_name, description="")
+
+    # Write the consensus calls to a fasta file
+    with open(consensus_file_path, "w") as fasta_file_object:
+        SeqIO.write([snp_seq_record], fasta_file_object, "fasta")
+
+    verbose_print("")
+    verbose_print("# %s %s finished" % (timestamp(), program_name()))
+
+
 def create_snp_matrix(options_dict):
     """Create SNP matrix
 
@@ -233,46 +346,44 @@ def create_snp_matrix(options_dict):
     This function expects, or creates '(*)', the following
         files arranged in the following way:
             sampleDirectories.txt
-            snplist.txt
             samples
-                sample_name_one/reads.snp.pileup
+                sample_name_one/consensus.fasta
                 ...
             snpma.fasta (*)
 
     The files are used as follows:
         1. The sampleDirectories.txt input file contains a list of the paths to 
            the sample directories.
-        2. The snplist.txt input file contains the list of SNP positions 
-           extracted from the var.flt.vcf file.
-        3. The reads.snp.pileup input files are pileups at the SNP positions 
-           only, used to determine the nucleotide base at each SNP position 
+        2. The consensus.fasta input files are previously called consensus
            for each sample to construct the SNP matrix fasta file.
-        4. The snpma.fasta output file contains the SNP calls for each 
-           sequence, arranged as a fasta file with one sequence per sample.
+        3. The snpma.fasta output file contains the SNP calls for each 
+           sequence, arranged as a multi-fasta file with one sequence per 
+           sample.
 
-    The snplist.txt, sampleDirectories.txt, and reads.snp.pileup are created 
-        outside of this function. The package documentation provides an example 
-        of creating these files based on the lambda_virus sequence that is used 
-        as one test for this package.
+    The sampleDirectories.txt, and consensus.fasta are created outside of this
+        function. The package documentation provides an example of creating 
+        these files based on the lambda_virus sequence that is used as one 
+        test for this package.
 
     Args:
-        sampleDirsFile: File path (not just file name) of file containing paths 
-            to directories containing reads.snp.pileup file for each sequence.
-        snpListFile: File path (not just file name) of text format list 
-            of SNP positions
-        pileupFileName: File name of the SNP pileup files which must exist in
-            each of the sample directories')
-        snpmaFile: File path (not just file name) of the output snp matrix, 
-            formatted as a fasta file, with each sequence (all of identical 
-            length) corresponding to the SNPs in the correspondingly named 
-            sequence.
+        sampleDirsFile : str
+            File path (not just file name) of file containing paths 
+            to directories containing consensus.fasta file for each sequence.
+        snpListFile : str
+            File path (not just file name) of text format list of SNP positions
+        consFileName : str
+            File name of the previously called consensus fasta files which must
+            exist in each of the sample directories
+        snpmaFile : str
+            File path (not just file name) of the output snp matrix, formatted
+            as a fasta file, with each sequence (all of identical length) 
+            corresponding to the SNPs in the correspondingly named sequence.
 
     Raises:
 
     Examples:
     options_dict = {'sampleDirsFile':'sampleDirectories.txt',
-                    'snpListFile':'snplist.txt',
-                    'pileupFileName':'reads.snp.pileup',
+                    'consFileName':'consensus.fasta',
                     'snpmaFile':'snpma.fasta',
                     'minConsFreq':0.6,
                    }
@@ -295,50 +406,26 @@ def create_snp_matrix(options_dict):
     # Check if the result is already fresh
     #==========================================================================
     snpma_file_path = options_dict['snpmaFile']
-    snp_list_file_path = options_dict['snpListFile']
-    source_files = [snp_list_file_path]
+    source_files = []
     if not options_dict['forceFlag']:
         for sample_directory in list_of_sample_directories:
-            snp_pileup_file_path = os.path.join(sample_directory, options_dict['pileupFileName'])
-            source_files.append(snp_pileup_file_path)
+            consensus_file_path = os.path.join(sample_directory, options_dict['consFileName'])
+            source_files.append(consensus_file_path)
         if not utils.target_needs_rebuild(source_files, snpma_file_path):
             verbose_print("SNP matrix %s has already been freshly built.  Use the -f option to force a rebuild." % snpma_file_path)
             verbose_print("# %s %s finished" % (timestamp(), program_name()))
             return
 
     #==========================================================================
-    #   Read the list of SNP positions.
-    #==========================================================================
-    sorted_snp_position_list = utils.read_snp_position_list(snp_list_file_path)
-    snplist_length = len(sorted_snp_position_list)
-    verbose_print("snp position list length = %d" % snplist_length)
-
-    #==========================================================================
     #   Create snp matrix. Write results to file.
     #==========================================================================
-    snp_sequence_records_list = []
-
-    for sample_directory in list_of_sample_directories:
-
-        sample_name                  = os.path.basename(sample_directory)
-        snp_pileup_file_path         = os.path.join(sample_directory, options_dict['pileupFileName'])
-        position_consensus_base_dict = utils.create_consensus_dict(snp_pileup_file_path, options_dict['minConsFreq'])
-        if snplist_length > 0:
-            verbose_print("Sample %s consensus base coverage = %.2f%%" % (sample_name, 100.0 * len(position_consensus_base_dict) / snplist_length))
-
-        snp_seq_string = ""
-        for key in sorted_snp_position_list:
-            if position_consensus_base_dict.has_key(key):
-                snp_seq_string += position_consensus_base_dict[key]
-            else:
-                snp_seq_string += "-"
-
-        snp_seq_record = SeqRecord(Seq(snp_seq_string), id=sample_name, description="")
-        snp_sequence_records_list.append(snp_seq_record)
-
-    #Write bases for snps for each sequence to a fasta file
-    with open(snpma_file_path, "w") as fasta_file_object:
-        SeqIO.write(snp_sequence_records_list, fasta_file_object, "fasta")
+    with open(snpma_file_path, "w") as output_file:
+        for sample_directory in list_of_sample_directories:
+            consensus_file_path = os.path.join(sample_directory, options_dict['consFileName'])
+            verbose_print("Merging " + consensus_file_path)
+            with open(consensus_file_path, "r") as input_file:
+                for line in input_file:
+                    output_file.write(line)
 
     verbose_print("")
     verbose_print("# %s %s finished" % (timestamp(), program_name()))
