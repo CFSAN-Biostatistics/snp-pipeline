@@ -129,6 +129,8 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             args_dict['minConsStrdDpth'] = 0
             args_dict['minConsStrdBias'] = 0
             args_dict['forceFlag'] = True
+            args_dict['vcfFileName'] = None
+            args_dict['vcfAllPos'] = False
             self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.fasta'))
 
 

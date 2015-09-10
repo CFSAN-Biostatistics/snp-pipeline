@@ -4,12 +4,14 @@
 Pileup file parser.  Typical workflow would follow a pattern like this:
 
 import pileup as pileup
+caller = pileup.ConsensusCaller(min_freq, min_strand_depth, min_strand_bias)
 reader = pileup.Reader(file, min_base_quality, chrom_position_set=None)
 for record in reader:
     chrom = record.chrom
     pos = record.position
     ref = record.reference_base
-    alt = record.most_common_base  # how to handle ties?
+    most_common = record.most_common_base
+    alt, fail_reasons = caller.call_consensus(record)
     depth = record.raw_depth
     good_depth = record.good_depth
     good_ref_depth = record.base_good_depth[ref]
@@ -33,7 +35,7 @@ _re_indel_count = re.compile(r"[+-](\d+)")
 
 
 #==============================================================================
-#Define functions
+#Define classes and functions
 #==============================================================================
 
 class Record(object):
@@ -323,3 +325,148 @@ class Reader(object):
                         record = Record(split_line, self.min_base_quality)
                         yield record
 
+
+class ConsensusCaller(object):
+    def __init__(self, min_cons_freq, min_cons_strand_depth,
+                 min_cons_strand_bias):
+        """
+        Construct a consensus base caller object with various filter settings
+        for subsequent base calling.
+
+        Parameters
+        ----------
+        min_cons_freq : float
+            Mimimum fraction of the high-quality reads supporting the consensus
+            to make a consensus call (0.5 - 1.0).  The numerator of this
+            fraction is the number of high-quality consensus supporting reads.
+            The denominator of this fraction is the total number of high-quality
+            reads.
+        min_cons_strand_depth : int
+            Minimum number of high-quality reads supporting the consensus which
+            must be present on both forward and reverse strands separately to
+            make a call.
+        min_cons_strand_bias : float
+            Minimum fraction of the high-quality consensus supporting reads which
+            must be present on both forward and reverse strands separately to
+            make a call (0.0 - 0.5).  The numerator of this fraction is the
+            number of high-quality consensus supporting reads on one strand at
+            a time.  The denominator of this fraction is the number of high-
+            quality consensus supporting reads.
+        """
+        self.min_cons_freq = min_cons_freq
+        self.min_cons_strand_depth = min_cons_strand_depth
+        self.min_cons_strand_bias = min_cons_strand_bias
+
+        self.fail_raw_depth = "RawDpth"
+        self.fail_freq = "VarFreq" +  str(int(100 * min_cons_freq))
+        self.fail_strand_depth = "StrDpth" + str(min_cons_strand_depth)
+        self.fail_strand_bias = "StrBias" +  str(int(100 * min_cons_strand_bias))
+
+
+    def get_filter_descriptions(self):
+        """
+        Return a list of tuples of filters and corresponding descriptions.
+        This method is intended for use when writing a VCF file header.
+
+        Returns
+        -------
+        filter : str
+            Short string identifying the filter.
+        description : str
+            Long description of the filter
+        """
+        return [(self.fail_raw_depth, "No read depth" ),
+                (self.fail_freq, "Variant base frequency below %.2f" % self.min_cons_freq),
+                (self.fail_strand_depth, "Less than %i variant-supporing reads on at least one strand" % self.min_cons_strand_depth),
+                (self.fail_strand_bias, "Fraction of variant supporting reads below %.2f on one strand" % self.min_cons_strand_bias),
+               ]
+
+    def call_consensus(self, record):
+        """
+        Call the consensus base with a list of failed filters for a given 
+        pileup record using the filters previously configured in the 
+        constructor.  Calling code should always check the list of
+        failed filters before emitting the consensus base.
+
+        Parameters
+        ----------
+        record : Record
+            Parsed pileup record
+
+        Returns
+        -------
+        consensus_base : str
+            Consensus base or '-' if the most common base cannot be determined
+        failed_filters : list or str or None
+            List of failed filters or None if all filters passed
+
+        Examples
+        --------
+        >>> r = Record(['ID', 42, 'G', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
+        >>> caller = ConsensusCaller(0.5, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('A', None)
+        >>> caller = ConsensusCaller(0.6, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('A', ['VarFreq60'])
+        >>> caller = ConsensusCaller(0.0, 5, 0.0) # freq, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('A', ['StrDpth5'])
+        >>> r = Record(['ID', 42, 'G', 14, 'aAAAAAAA...,,,', '00001111222333'], 15)
+        >>> caller = ConsensusCaller(0.0, 0, 0.2) # freq, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('A', ['StrBias20'])
+        >>> r = Record(['ID', 42, 'G', 14, 'aaaAAAAA...,,,', '00001111222333'], 15)
+        >>> caller = ConsensusCaller(0.0, 4, 0.4) # freq, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('A', ['StrDpth4', 'StrBias40'])
+        >>> r = Record(['ID', 42, 'G', 14, 'aaaAAA....,,,,', '00011122223333'], 15)
+        >>> caller = ConsensusCaller(0.0, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('G', None)
+        >>> r = Record(['ID', 42, 'g', 14, 'aaaAAA....,,,,', '00011122223333'], 15)
+        >>> caller = ConsensusCaller(0.0, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('g', None)
+        >>> r = Record(['ID', 42, 'g', 0], 15) # zero depth
+        >>> caller = ConsensusCaller(0.0, 5, 0.0) # freq, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('-', ['RawDpth'])
+        """
+        consensus_base = record.most_common_base
+        if consensus_base == None:
+            failed_filters = [self.fail_raw_depth]
+            return ('-', failed_filters)
+
+        failed_filters = None
+
+        good_depth = record.good_depth
+        good_cons_depth = record.base_good_depth[consensus_base]
+        fwd_good_cons_depth = record.forward_base_good_depth[consensus_base]
+        rev_good_cons_depth = record.reverse_base_good_depth[consensus_base]
+
+        # Filter: allele minimum frequency
+        if good_cons_depth < (good_depth * self.min_cons_freq):
+            failed_filters = failed_filters or []
+            failed_filters.append(self.fail_freq)
+
+        # Filter: allele minimum depth on each strand
+        if fwd_good_cons_depth < self.min_cons_strand_depth or \
+           rev_good_cons_depth < self.min_cons_strand_depth:
+            failed_filters = failed_filters or []
+            failed_filters.append(self.fail_strand_depth)
+
+        # Filter: strand bias
+        min_strand_bias_depth = good_cons_depth * self.min_cons_strand_bias
+        if fwd_good_cons_depth < min_strand_bias_depth or \
+           rev_good_cons_depth < min_strand_bias_depth:
+            failed_filters = failed_filters or []
+            failed_filters.append(self.fail_strand_bias)
+
+        # Keep the reference lowercase if it was lowercase in the pileup
+        if consensus_base == record.reference_base.upper():
+            consensus_base = record.reference_base
+
+        return (consensus_base, failed_filters)
+
+ 

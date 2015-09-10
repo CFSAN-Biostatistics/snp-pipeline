@@ -12,6 +12,8 @@ import time
 import platform
 import psutil
 import locale
+import pileup as pileup
+import vcf_writer as vcf_writer
 from __init__ import __version__
 
 
@@ -297,7 +299,12 @@ def call_consensus(options_dict):
 
     snp_list_file_path = options_dict['snpListFile']
     all_pileup_file_path = options_dict['allPileupFile']
+    sample_directory = os.path.dirname(os.path.abspath(all_pileup_file_path))
+    sample_name = os.path.basename(sample_directory)
     consensus_file_path = options_dict['consensusFile']
+    consensus_file_dir = os.path.dirname(os.path.abspath(consensus_file_path))
+    vcf_file_name = options_dict['vcfFileName']
+    vcf_file_path = os.path.join(consensus_file_dir, vcf_file_name) if vcf_file_name else None
 
     # Check if the result is already fresh
     source_files = [snp_list_file_path, all_pileup_file_path]
@@ -312,19 +319,39 @@ def call_consensus(options_dict):
     verbose_print("snp position list length = %d" % snplist_length)
 
     # Call consensus. Write results to file.
-    position_consensus_base_dict = utils.create_consensus_dict(all_pileup_file_path, 
-                                                               options_dict['minBaseQual'], 
-                                                               options_dict['minConsFreq'], 
-                                                               options_dict['minConsStrdDpth'], 
-                                                               options_dict['minConsStrdBias'], 
-                                                               set(snp_list))
+    position_consensus_base_dict = dict()
+
+    caller = pileup.ConsensusCaller(options_dict['minConsFreq'], 
+                                    options_dict['minConsStrdDpth'], 
+                                    options_dict['minConsStrdBias'])
+    snp_positions = set(snp_list)
+    parse_positions = None if options_dict['vcfAllPos'] else snp_positions
+    pileup_reader = pileup.Reader(all_pileup_file_path, 
+                                  options_dict['minBaseQual'], 
+                                  parse_positions)
+    if vcf_file_name:
+        writer = vcf_writer.SingleSampleWriter(vcf_file_path)
+        filters = caller.get_filter_descriptions()
+        writer.write_header(sample_name, filters, options_dict['vcfRefName'])
+    for pileup_record in pileup_reader:
+        chrom = pileup_record.chrom
+        pos = pileup_record.position
+        consensus_base, fail_reasons = caller.call_consensus(pileup_record)
+        if (chrom, pos) in snp_positions:
+            if fail_reasons:
+                position_consensus_base_dict[(chrom, pos)] = '-'
+            else:
+                position_consensus_base_dict[(chrom, pos)] = consensus_base
+
+        if vcf_file_name:
+            writer.write_from_pileup(pileup_record, fail_reasons)
+    if vcf_file_name:
+        writer.close()
 
     verbose_print("called consensus positions = %i" % (len(position_consensus_base_dict)))
 
     consensus_list = [position_consensus_base_dict.get(key, '-') for key in snp_list]
     consensus_str = ''.join(consensus_list)
-    sample_directory = os.path.dirname(os.path.abspath(all_pileup_file_path))
-    sample_name = os.path.basename(sample_directory)
     snp_seq_record = SeqRecord(Seq(consensus_str), id=sample_name, description="")
 
     # Write the consensus calls to a fasta file
