@@ -42,6 +42,7 @@
 #   20150618-scd: Allow blank lines in the file of sample directories.
 #   20150630-scd: Add support for Smalt.
 #   20150824-scd: Replace create_snp_pileup.py with call_consensus.py.
+#   20150911-scd: Generate the consensus.vcf file for all samples.
 #Notes:
 #
 #Bugs:
@@ -191,6 +192,7 @@ if [ "$referenceFilePath" = "" ]; then
 fi
 if [[ ! -f "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath does not exist."; exit 10; fi
 if [[ ! -s "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath is empty."; exit 10; fi
+export referenceFileName=${referenceFilePath##*/} # strip directories
 
 # Extra arguments not allowed
 if [[ "$2" != "" ]]; then 
@@ -590,7 +592,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -o $logDir/callConsensus.log-\$TASK_ID
 #$ -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "\$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -602,7 +604,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/callConsensus.log
     #PBS -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "\$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 else
@@ -611,7 +613,7 @@ else
     else
         numCallConsensusCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores sh -c 'call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" $CallConsensus_ExtraParams "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores sh -c 'call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
 fi
 
 echo -e "\nStep 7 - Create the SNP matrix"

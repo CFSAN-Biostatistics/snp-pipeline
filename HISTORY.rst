@@ -35,7 +35,8 @@ History
   * ``minConsFreq`` : Minimum consensus frequency.
   * ``minConsStrdDpth`` : Minimum consensus-supporting strand depth.
   * ``minConsStrdBias``: Strand bias.
-* Added the capability to generate VCF files.
+* Added the capability to generate VCF files.  By default, a file named consensus.vcf is generated
+  by the consensus caller for each sample.
 
 0.3.4 (2015-06-25)
 ~~~~~~~~~~~~~~~~~~

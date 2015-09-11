@@ -311,11 +311,18 @@ Specifies options passed to call_consensus.py.
     the forward and reverse strands to make a call. The numerator of this fraction is the number of high-quality 
     consensus-supporting reads on one strand. The denominator is the total number of high-quality 
     consensus-supporting reads on both strands combined.
+``--vcfFileName``
+    VCF Output file name. If specified, a VCF file with this file name will be created in the same directory
+    as the consensus fasta file for this sample.
+``--vcfAllPos``
+    Flag to cause VCF file generation at all positions, not just the snp positions. This has no effect on the
+    consensus fasta file, it only affects the VCF file. This capability is intended primarily as a diagnostic
+    tool and enabling this flag will greatly increase execution time.
 
 
 **Example**::
 
-    CallConsensus_ExtraParams="--verbose 1 --minBaseQual 15"
+    CallConsensus_ExtraParams="--verbose 1 --minBaseQual 15 --vcfFileName consensus.vcf"
 
 
 CreateSnpMatrix_ExtraParams

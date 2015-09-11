@@ -115,7 +115,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 
 
     def test_2b_call_consensus(self):
-        """Run call_consensus and verify consensus.fasta contains expected contents for each sample.
+        """Run call_consensus and verify consensus.fasta and consensus.vcf contain expected contents for each sample.
         """
         args_dict = {
             'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
@@ -132,6 +132,9 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             args_dict['vcfFileName'] = None
             args_dict['vcfAllPos'] = False
             self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.fasta'))
+            args_dict['vcfFileName'] = 'consensus.vcf'
+            args_dict['vcfRefName'] = 'lambda_virus.fasta'
+            self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.vcf'))
 
 
     def test_3_create_snp_matrix(self):
