@@ -139,19 +139,30 @@ class SingleSampleWriter(object):
         ##FORMAT=<ID=ADF,Number=1,Type=Integer,Description="Depth of variant-supporting bases on forward strand (reads2plus)">
         ##FORMAT=<ID=ADR,Number=1,Type=Integer,Description="Depth of variant-supporting bases on reverse strand (reads2minus)">
         ##FORMAT=<ID=FT,Number=1,Type=String,Description="Genotype filters using the same codes as the FILTER data element">
-        if alt is None:
+
+        if alt is None:  # no good depth 
             gt = '.'
+            alt = '.'
+            ad = 0
+            adf = 0
+            adr = 0
         elif alt == ref:
+            # When we do not call an alt, the alt depths are counted as anything not matching the reference
             gt = '0'
+            alt = '.'
+            ad = pileup_record.good_depth - pileup_record.base_good_depth[ref]
+            adf = pileup_record.forward_good_depth - pileup_record.forward_base_good_depth[ref]
+            adr = pileup_record.reverse_good_depth - pileup_record.reverse_base_good_depth[ref]
         else:
+            # When we call an alt, the alt depths are only the specific alt base called
             gt = '1'
+            ad = pileup_record.base_good_depth[alt]
+            adf = pileup_record.forward_base_good_depth[alt]
+            adr = pileup_record.reverse_base_good_depth[alt]
         sdp = pileup_record.raw_depth
         rd = pileup_record.base_good_depth[ref]
-        ad = pileup_record.base_good_depth[alt]
         rdf = pileup_record.forward_base_good_depth[ref]
         rdr = pileup_record.reverse_base_good_depth[ref]
-        adf = pileup_record.forward_base_good_depth[alt]
-        adr = pileup_record.reverse_base_good_depth[alt]
         ft = ';'.join(failed_filters) if failed_filters else "PASS"
 
         #print("Position:", pileup_record.position, "Alt:", alt, gt, sdp, rd, ad, rdf, rdr, adf, adr, ft)
@@ -159,7 +170,7 @@ class SingleSampleWriter(object):
 
         # http://pyvcf.readthedocs.org/en/latest/API.html#vcf-model-call
         # vcf.model._Call(site, sample, data)
-        call = vcf.model._Call(None, None, sample_data)  # TODO: is sample_name really needed here?
+        call = vcf.model._Call(None, None, sample_data)
 
         # info_dict contains fields that match our VCF_HEAD info fields
         info_dict = {'NC' : 0}

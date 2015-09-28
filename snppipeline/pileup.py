@@ -14,6 +14,8 @@ for record in reader:
     alt, fail_reasons = caller.call_consensus(record)
     depth = record.raw_depth
     good_depth = record.good_depth
+    fwd_good_depth = record.forward_good_depth
+    rev_good_depth = record.reverse_good_depth
     good_ref_depth = record.base_good_depth[ref]
     good_alt_depth = record.base_good_depth[alt]
     fwd_good_ref_depth = record.forward_base_good_depth[ref]
@@ -69,6 +71,12 @@ class Record(object):
         good_depth : int
             The total depth of all reads where the base quality meets or
             exceeds the min_base_quality.
+        forward_good_depth : int
+            The total depth of all reads on the forward strand where the base
+            quality meets or exceeds the min_base_quality.
+        reverse_good_depth : int
+            The total depth of all reads on the reverse strand where the base
+            quality meets or exceeds the min_base_quality.
         base_good_depth : Counter
             Count of depth per base (A,C,G,T,N,-) on both forward and reverse 
             strands combined where the base quality meets or exceeds the 
@@ -95,6 +103,10 @@ class Record(object):
         9
         >>> r.good_depth
         8
+        >>> r.forward_good_depth
+        4
+        >>> r.reverse_good_depth
+        4
         >>> r.base_good_depth['A'], r.base_good_depth['T'], r.base_good_depth['G'], r.base_good_depth['C'],
         (5, 0, 3, 0)
         >>> fwd = r.forward_base_good_depth
@@ -118,6 +130,10 @@ class Record(object):
         9
         >>> r.good_depth
         8
+        >>> r.forward_good_depth
+        4
+        >>> r.reverse_good_depth
+        4
         >>> r.base_good_depth['A'], r.base_good_depth['T'], r.base_good_depth['G'], r.base_good_depth['C'],
         (5, 0, 3, 0)
         >>> fwd = r.forward_base_good_depth
@@ -134,6 +150,10 @@ class Record(object):
         2
         >>> r = Record(['gi|197247352|ref|NC_011149.1|', '4663812', 'T', '0'], 15)
         >>> r.good_depth
+        0
+        >>> r.forward_good_depth
+        0
+        >>> r.reverse_good_depth
         0
         >>> print(r.most_common_base)
         None
@@ -180,6 +200,8 @@ class Record(object):
         self.raw_depth = int(split_line[3])
         if self.raw_depth == 0 or len(split_line) < 5:
             self.good_depth = 0
+            self.forward_good_depth = 0
+            self.reverse_good_depth = 0
             self.base_good_depth = Counter()
             self.forward_base_good_depth = Counter()
             self.reverse_base_good_depth = Counter()
@@ -221,6 +243,8 @@ class Record(object):
         # Get counts of bases on each strand
         forward_bases_str = ''.join([c for c in bases_str if c <= 'Z'])
         reverse_bases_str = ''.join([c for c in bases_str if c >= 'a'])
+        self.forward_good_depth = len(forward_bases_str)
+        self.reverse_good_depth = len(reverse_bases_str)
         self.forward_base_good_depth = Counter(forward_bases_str)
         self.reverse_base_good_depth = Counter(reverse_bases_str.upper())
 
