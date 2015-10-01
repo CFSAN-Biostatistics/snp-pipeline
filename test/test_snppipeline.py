@@ -12,7 +12,6 @@ from snppipeline import snppipeline
 data_directory = resource_filename(snppipeline.__name__, 'data')
 
 # various directories of test files
-compare_lambda_virus_directory = os.path.join(data_directory, 'lambdaVirusExpectedResults')
 compare_agona_directory = os.path.join(data_directory, 'agonaExpectedResults')
 
 
@@ -103,6 +102,8 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         temp_dir = TempDirectory()
         lambda_dir = os.path.join(temp_dir.path, "testLambdaVirus")
         ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusInputs", lambda_dir])
+        cls.directory_correct = os.path.join(lambda_dir, "lambdaVirusExpectedResults")
+        ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusExpectedResults", cls.directory_correct])
         samples_dir = os.path.join(lambda_dir, "samples")
         reference_file = os.path.join(lambda_dir, "reference", "lambda_virus.fasta")
 
@@ -110,7 +111,6 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         ret = subprocess.call("run_snp_pipeline.sh -o %s -s %s %s" % (lambda_dir, samples_dir, reference_file), shell=True, stdout=devNull)
         devNull.close()
         cls.directory_run_result = lambda_dir
-        cls.directory_correct = compare_lambda_virus_directory
         cls.file_of_directories = os.path.join(lambda_dir, 'sampleDirectories.txt')
 
 
