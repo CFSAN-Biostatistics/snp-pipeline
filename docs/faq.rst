@@ -19,7 +19,7 @@ your user area instead of installing into your global site packages, do this::
 **Q: The SNP Pipeline cannot find VarScan.  How should I install it?**
 
 A: Download the VarScan jar file from SourceForge.  Put the jar file anywhere.  You need read-access to the
-jar file, but not execute-access.  The suppled shell scripts expect the CLASSPATH environment variable to 
+jar file, but not execute-access.  The supplied shell scripts expect the CLASSPATH environment variable to 
 specify the path to the VarScan jar file.  The CLASSPATH should include the filename, not just the directory.
 Define it like this in your .bashrc file::
 

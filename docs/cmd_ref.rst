@@ -248,7 +248,9 @@ call_consensus.py
 ::
 
   usage: call_consensus.py [-h] [-f] [-l FILE] [-o FILE] [-q INT] [-c FREQ]
-                           [-d INT] [-b FREQ] [-v 0..5] [--version]
+                           [-d INT] [-b FREQ] [--vcfFileName NAME]
+                           [--vcfRefName NAME] [--vcfAllPos] [-v 0..5]
+                           [--version]
                            allPileupFile
   
   Call the consensus base for a sample at the specified positions where SNPs
@@ -292,6 +294,19 @@ call_consensus.py
                           denominator is the total number of high-quality
                           consensus-supporting reads on both strands combined.
                           (default: 0)
+    --vcfFileName NAME    VCF Output file name. If specified, a VCF file with
+                          this file name will be created in the same directory
+                          as the consensus fasta file for this sample. (default:
+                          None)
+    --vcfRefName NAME     Name of the reference file. This is only used in the
+                          generated VCF file header. (default: Unknown
+                          reference)
+    --vcfAllPos           Flag to cause VCF file generation at all positions,
+                          not just the snp positions. This has no effect on the
+                          consensus fasta file, it only affects the VCF file.
+                          This capability is intended primarily as a diagnostic
+                          tool and enabling this flag will greatly increase
+                          execution time. (default: False)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
@@ -406,3 +421,28 @@ combineSampleMetrics.sh
                        the sample directories. Default: metrics)
     -o FILE          : Output file. Relative or absolute path to the combined metrics
                        file. Default: stdout)
+
+mergeVcf.sh
+---------------------------
+
+::
+
+  usage: mergeVcf.sh [-h] [-f] [-n NAME] [-o FILE] sampleDirsFile
+  
+  Merge the vcf files from all samples into a single multi-vcf file for all samples.
+  
+  Before running this command, the vcf file for each sample must be created by the
+  call_consensus.py script.
+  
+  Positional arguments:
+    sampleDirsFile   : Relative or absolute path to file containing a list of
+                       directories -- one per sample
+  
+  Options:
+    -h               : Show this help message and exit
+    -f               : Force processing even when result files already exist and 
+                       are newer than inputs
+    -n NAME          : File name of the vcf files which must exist in each of
+                       the sample directories. Default: consensus.vcf)
+    -o FILE          : Output file. Relative or absolute path to the merged
+                       multi-vcf file. Default: snpma.vcf)

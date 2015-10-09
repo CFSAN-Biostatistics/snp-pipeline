@@ -38,7 +38,7 @@ test_requires = [
 
 setup(
     name='snp-pipeline',
-    version='0.3.5a.7',
+    version='0.4.0a.1',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -84,6 +84,7 @@ setup(
         'scripts/copy_snppipeline_data.py',
         'scripts/collectSampleMetrics.sh',
         'scripts/combineSampleMetrics.sh',
+        'scripts/mergeVcf.sh',
     ],
 
     # Include the test data files listed below in the distribution.

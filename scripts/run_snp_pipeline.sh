@@ -43,6 +43,7 @@
 #   20150630-scd: Add support for Smalt.
 #   20150824-scd: Replace create_snp_pileup.py with call_consensus.py.
 #   20150911-scd: Generate the consensus.vcf file for all samples.
+#   20150928-scd: Merge the per-sample VCF files into a multi-vcf file.
 #Notes:
 #
 #Bugs:
@@ -676,7 +677,38 @@ else
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
 fi
 
-echo -e "\nStep 9 - Collect metrics for each sample"
+
+echo -e "\nStep 9 - Create the Multi-VCF file"
+if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
+    if [[ "$platform" == "grid" ]]; then
+        mergeVcfJobId=$(echo | qsub  -terse << _EOF_
+#$ -N job.mergeVcf
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $callConsensusJobArray
+#$ -o $logDir/mergeVcf.log
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+    elif [[ "$platform" == "torque" ]]; then
+        mergeVcfJobId=$(echo | qsub << _EOF_
+        #PBS -N job.mergeVcf
+        #PBS -d $(pwd)
+        #PBS -j oe
+        #PBS -W depend=afterokarray:$callConsensusJobArray
+        #PBS -o $logDir/mergeVcf.log
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+    else
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
+    fi
+else
+    echo -e "Skipped per CallConsensus_ExtraParams configuration"
+fi
+
+echo -e "\nStep 10 - Collect metrics for each sample"
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
 #$ -N job.collectMetrics
@@ -711,7 +743,7 @@ else
     nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores sh -c 'collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
-echo -e "\nStep 10 - Combine the metrics across all samples into the metrics table"
+echo -e "\nStep 11 - Combine the metrics across all samples into the metrics table"
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobArray=${collectSampleMetricsJobId%%.*}
     combineSampleMetricsJobId=$(echo | qsub  -terse << _EOF_

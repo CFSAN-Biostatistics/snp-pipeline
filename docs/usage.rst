@@ -49,6 +49,9 @@ of shell scripts and python scripts.
 | combineSampleMetrics.sh     | | Creates a table of coverage and variant statistics for           |
 |                             | | all samples                                                      |
 +-----------------------------+--------------------------------------------------------------------+
+| mergeVcf.sh                 | | Creates a multi-sample VCF file with the snps found in all       |
+|                             | | samples                                                          |
++-----------------------------+--------------------------------------------------------------------+
 
 
 Inputs
@@ -93,12 +96,19 @@ See :ref:`step-by-step-workflows`.
 * consensus.fasta : for each sample, the consensus base call at the positions 
   where SNPs were previously detected in any of the samples.
 
+* consensus.vcf : for each sample, the VCF file of snps called, as well as 
+  failed snps at the positions where SNPs were previously detected in any of 
+  the samples.
+
 * snpma.fasta : the SNP matrix containing the consensus base for each of 
   the samples at the positions where SNPs were called in any of the samples.  
   The matrix contains one row per sample and one column per SNP position.  
   Non-SNP positions are not included in the matrix.  The matrix is formatted 
   as a fasta file, with each sequence (all of identical length) corresponding 
   to the SNPs in the correspondingly named sequence.
+
+* snpma.vcf : contains the merged multi-sample VCF file identifying the positions
+  and snps for all samples.
 
 * referenceSNP.fasta : a fasta file containing the reference sequence bases at
   all the SNP locations.
@@ -322,6 +332,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     # Verify the result files were created
     ls -l snplist.txt
     ls -l snpma.fasta
+    ls -l snpma.vcf
     ls -l referenceSNP.fasta
 
     # Verify correct results
@@ -394,6 +405,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     # Verify the result files were created
     ls -l outputDirectory/snplist.txt
     ls -l outputDirectory/snpma.fasta
+    ls -l outputDirectory/snpma.vcf
     ls -l outputDirectory/referenceSNP.fasta
 
     # Verify correct results
@@ -483,6 +495,7 @@ bases are in the referenceSNP.fasta file::
     # Verify the result files were created
     ls -l outputDirectory/snplist.txt
     ls -l outputDirectory/snpma.fasta
+    ls -l outputDirectory/snpma.vcf
     ls -l outputDirectory/referenceSNP.fasta
 
     # Verify correct results
@@ -570,7 +583,7 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 Step 7 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
 
 Step 8 - Create the SNP matrix::
 
@@ -588,7 +601,11 @@ Step 11 - Tabulate the metrics for all samples::
 
     combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
 
-Step 12 - View and verify the results:
+Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
+
+    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
+
+Step 13 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -596,6 +613,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     # Verify the result files were created
     ls -l snplist.txt
     ls -l snpma.fasta
+    ls -l snpma.vcf
     ls -l referenceSNP.fasta
 
     # Verify correct results
@@ -681,7 +699,7 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 Step 7 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
 
 Step 8 - Create the SNP matrix::
 
@@ -699,7 +717,11 @@ Step 11 - Tabulate the metrics for all samples::
 
     combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
 
-Step 12 - View and verify the results:
+Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
+
+    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
+
+Step 13 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 3624 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -707,6 +729,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     # Verify the result files were created
     ls -l snplist.txt
     ls -l snpma.fasta
+    ls -l snpma.vcf
     ls -l referenceSNP.fasta
 
     # Verify correct results
@@ -782,7 +805,7 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 Step 7 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
 
 Step 8 - Create the SNP matrix::
 
@@ -801,13 +824,18 @@ Step 11 - Tabulate the metrics for all samples::
 
     combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
 
-Step 12 - View the results:
+Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
+
+    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
+
+Step 13 - View the results:
 
 Upon successful completion of the pipeline, the snplist.txt identifies the SNPs in all samples.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     ls -l snplist.txt
     ls -l snpma.fasta
+    ls -l snpma.vcf
     ls -l referenceSNP.fasta
 
     # View the per-sample metrics

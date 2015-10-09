@@ -346,6 +346,18 @@ Specifies options passed to create_snp_reference_seq.py.
 
     CreateSnpReferenceSeq_ExtraParams="--verbose 1"
 
+
+MergeVcf_ExtraParams
+--------------------
+Specifies options passed to mergeVcf.sh
+
+**Default**: none
+
+**Example**::
+
+    MergeVcf_ExtraParams="-n sample.vcf"
+
+
 PEname
 ------
 Specifies the name of the Grid Engine parallel environment.  This is only needed when running
