@@ -568,6 +568,7 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
+    export Bowtie2Align_ExtraParams="--reorder -X 1000"
     cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/lambda_virus.fasta
 
 Step 5 - Prep the samples::
@@ -684,6 +685,7 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
+    export Bowtie2Align_ExtraParams="--reorder -X 1000"
     cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/NC_011149.fasta
 
 Step 5 - Prep the samples::
@@ -790,6 +792,7 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
+    export Bowtie2Align_ExtraParams="--reorder -X 1000"
     cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/my_reference.fasta
 
 Step 5 - Prep the samples::
