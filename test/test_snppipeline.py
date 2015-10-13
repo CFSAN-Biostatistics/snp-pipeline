@@ -12,8 +12,33 @@ from snppipeline import snppipeline
 data_directory = resource_filename(snppipeline.__name__, 'data')
 
 # various directories of test files
-compare_lambda_virus_directory = os.path.join(data_directory, 'lambdaVirusExpectedResults')
 compare_agona_directory = os.path.join(data_directory, 'agonaExpectedResults')
+
+
+def grep_not_matching(in_path, out_path, not_match_list):
+    """
+    Copy all lines in a file except those containing any string in a given
+    list of strings.
+
+    Parameters
+    ----------
+    in_path : str
+        Path to input file
+    out_path : str
+        Path to output file
+    not_match_list : list of str
+        List of strings to exclude from the copy
+    """
+    with open(out_path, "w") as out_file:
+        for line in open(in_path):
+            found = False
+            for s in not_match_list:
+                if s in line:
+                    found = True
+                    break
+            if not found:            
+                out_file.write(line)
+
 
 class SnpPipelineTest(unittest.TestCase):
     '''Unit test for snppipeline.'''
@@ -28,29 +53,41 @@ class SnpPipelineTest(unittest.TestCase):
                 path_file_object.write("%s\n" % subdir)
 
 
-    def run_function_test(self, funct, args_dict, file_to_compare):
+    def run_function_test(self, funct, args_dict, file_to_compare, not_match_str_list=None):
         """Test one function and compare the generated file to the expected results.
         """
-        correct_result_file = os.path.join(self.directory_correct, file_to_compare)
-
         # remember the previous file timestamp, if any
         result_file = os.path.join(self.directory_run_result, file_to_compare)
         pre_exist = os.path.isfile(result_file)
         if pre_exist:
             old_timestamp = os.path.getmtime(result_file)
 
+        # Run the function under test and verify the output exists
         funct(args_dict)
         self.assertTrue(os.path.isfile(result_file), "Result file does not exist: %s" % file_to_compare)
+
+        # Verify result file has a newer timestamp if it previously existed
+        if pre_exist:
+            new_timestamp = os.path.getmtime(result_file)
+            self.assertTrue(new_timestamp > old_timestamp, "Old file was not overwritten with newer timestamp: %s" % file_to_compare)
+
+        # Strip unwanted lines, like dates and versions, before the file compare
+        correct_result_file = os.path.join(self.directory_correct, file_to_compare)
+        if not_match_str_list:
+            correct_result_file2 = os.path.join(self.directory_correct, file_to_compare+"2")
+            grep_not_matching(correct_result_file, correct_result_file2, not_match_str_list)
+            correct_result_file = correct_result_file2
+
+            result_file2 = os.path.join(self.directory_run_result, file_to_compare+"2")
+            grep_not_matching(result_file, result_file2, not_match_str_list)
+            result_file = result_file2
+
+        # Compare files
         match = filecmp.cmp(correct_result_file, result_file, shallow=False)
         self.assertTrue(match, "Incorrect file contents: %s" % file_to_compare)
         #print "\nMatch"
         #print correct_result_file
         #print result_file
-
-        # Verify file has a newer timestamp if it previously existed
-        if pre_exist:
-            new_timestamp = os.path.getmtime(result_file)
-            self.assertTrue(new_timestamp > old_timestamp, "Old file was not overwritten with newer timestamp: %s" % file_to_compare)
 
 
 class SnpPipelineLambdaVirusTest(SnpPipelineTest):
@@ -65,6 +102,8 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         temp_dir = TempDirectory()
         lambda_dir = os.path.join(temp_dir.path, "testLambdaVirus")
         ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusInputs", lambda_dir])
+        cls.directory_correct = os.path.join(lambda_dir, "lambdaVirusExpectedResults")
+        ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusExpectedResults", cls.directory_correct])
         samples_dir = os.path.join(lambda_dir, "samples")
         reference_file = os.path.join(lambda_dir, "reference", "lambda_virus.fasta")
 
@@ -72,7 +111,6 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         ret = subprocess.call("run_snp_pipeline.sh -o %s -s %s %s" % (lambda_dir, samples_dir, reference_file), shell=True, stdout=devNull)
         devNull.close()
         cls.directory_run_result = lambda_dir
-        cls.directory_correct = compare_lambda_virus_directory
         cls.file_of_directories = os.path.join(lambda_dir, 'sampleDirectories.txt')
 
 
@@ -115,12 +153,15 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 
 
     def test_2b_call_consensus(self):
-        """Run call_consensus and verify consensus.fasta contains expected contents for each sample.
+        """Run call_consensus and verify consensus.fasta and consensus.vcf contain expected contents for each sample.
         """
         args_dict = {
             'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
             'forceFlag' : True,
             }
+
+        ignore_lines = ["##fileDate", "##source"]
+
         for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
             args_dict['allPileupFile'] = os.path.join(self.__class__.directory_run_result, dir, 'reads.all.pileup')
             args_dict['consensusFile'] = os.path.join(self.__class__.directory_run_result, dir, 'consensus.fasta')
@@ -129,7 +170,12 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             args_dict['minConsStrdDpth'] = 0
             args_dict['minConsStrdBias'] = 0
             args_dict['forceFlag'] = True
+            args_dict['vcfFileName'] = None
+            args_dict['vcfAllPos'] = False
             self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.fasta'))
+            args_dict['vcfFileName'] = 'consensus.vcf'
+            args_dict['vcfRefName'] = 'lambda_virus.fasta'
+            self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.vcf'), ignore_lines)
 
 
     def test_3_create_snp_matrix(self):

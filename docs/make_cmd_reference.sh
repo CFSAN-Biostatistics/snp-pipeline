@@ -101,6 +101,12 @@ echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 combineSampleMetrics.sh -h | sed 's/^/  /' >> x.txt
 
+echo >> x.txt
+echo mergeVcf.sh >> x.txt
+echo --------------------------- >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+mergeVcf.sh -h | sed 's/^/  /' >> x.txt
+
 cat x.txt | sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-2.7/bin/~~' |  \
 grep -v "# Command           :" | \
 grep -v "# Working Directory :" | \

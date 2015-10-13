@@ -3,7 +3,7 @@
 History
 -------
 
-0.3.5 (2015-09-??)
+0.4.0 (2015-10-??)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -27,7 +27,7 @@ History
   default aligner is still bowtie2.
 * Split the create_snp_matrix.py script into two pieces.  The new script, call_consensus.py, is a redesigned
   consensus caller which can be run in parallel to call snps for multiple samples concurrently.  The
-  create_snp_matrix.py script smiply merges the consensus calls for all samples into a multi-fasta file.
+  create_snp_matrix.py script simply merges the consensus calls for all samples into a multi-fasta file.
 * The new consensus caller has the following adjustable parameters.  
   See the :ref:`cmd-ref-call-consensus` command reference.
 
@@ -35,7 +35,11 @@ History
   * ``minConsFreq`` : Minimum consensus frequency.
   * ``minConsStrdDpth`` : Minimum consensus-supporting strand depth.
   * ``minConsStrdBias``: Strand bias.
-
+* Added the capability to generate VCF files.  By default, a file named consensus.vcf is generated
+  by the consensus caller for each sample, and the merged multi-sample VCF file is called snpma.vcf.  
+  This capability introduces a new dependency on bgzip, tabix, and bcftools.  You can disable VCF file
+  generation by removing the ``--vcfFileName`` option in the configuration file. Also, be aware the 
+  contents of the VCF files may change in future versions of the SNP Pipeline.
 
 0.3.4 (2015-06-25)
 ~~~~~~~~~~~~~~~~~~

@@ -42,6 +42,8 @@
 #   20150618-scd: Allow blank lines in the file of sample directories.
 #   20150630-scd: Add support for Smalt.
 #   20150824-scd: Replace create_snp_pileup.py with call_consensus.py.
+#   20150911-scd: Generate the consensus.vcf file for all samples.
+#   20150928-scd: Merge the per-sample VCF files into a multi-vcf file.
 #Notes:
 #
 #Bugs:
@@ -191,6 +193,7 @@ if [ "$referenceFilePath" = "" ]; then
 fi
 if [[ ! -f "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath does not exist."; exit 10; fi
 if [[ ! -s "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath is empty."; exit 10; fi
+export referenceFileName=${referenceFilePath##*/} # strip directories
 
 # Extra arguments not allowed
 if [[ "$2" != "" ]]; then 
@@ -590,7 +593,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -o $logDir/callConsensus.log-\$TASK_ID
 #$ -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "\$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -602,7 +605,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/callConsensus.log
     #PBS -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "\$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 else
@@ -611,7 +614,7 @@ else
     else
         numCallConsensusCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores sh -c 'call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" $CallConsensus_ExtraParams "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores sh -c 'call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
 fi
 
 echo -e "\nStep 7 - Create the SNP matrix"
@@ -674,7 +677,38 @@ else
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
 fi
 
-echo -e "\nStep 9 - Collect metrics for each sample"
+
+echo -e "\nStep 9 - Create the Multi-VCF file"
+if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
+    if [[ "$platform" == "grid" ]]; then
+        mergeVcfJobId=$(echo | qsub  -terse << _EOF_
+#$ -N job.mergeVcf
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $callConsensusJobArray
+#$ -o $logDir/mergeVcf.log
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+    elif [[ "$platform" == "torque" ]]; then
+        mergeVcfJobId=$(echo | qsub << _EOF_
+        #PBS -N job.mergeVcf
+        #PBS -d $(pwd)
+        #PBS -j oe
+        #PBS -W depend=afterokarray:$callConsensusJobArray
+        #PBS -o $logDir/mergeVcf.log
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+    else
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
+    fi
+else
+    echo -e "Skipped per CallConsensus_ExtraParams configuration"
+fi
+
+echo -e "\nStep 10 - Collect metrics for each sample"
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
 #$ -N job.collectMetrics
@@ -709,7 +743,7 @@ else
     nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores sh -c 'collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
-echo -e "\nStep 10 - Combine the metrics across all samples into the metrics table"
+echo -e "\nStep 11 - Combine the metrics across all samples into the metrics table"
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobArray=${collectSampleMetricsJobId%%.*}
     combineSampleMetricsJobId=$(echo | qsub  -terse << _EOF_
