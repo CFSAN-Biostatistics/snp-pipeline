@@ -358,12 +358,35 @@ Specifies options passed to mergeVcf.sh
     MergeVcf_ExtraParams="-n sample.vcf"
 
 
-PEname
-------
-Specifies the name of the Grid Engine parallel environment.  This is only needed when running
-the SNP Pipeline on a High Performance Computing cluster with the Grid Engine job manager.  
-Contact your HPC system administrator to determine the name of your parallel environment.
+Torque_StripJobArraySuffix
+--------------------------
+Controls stripping the suffix from the job id when specifying Torque job array dependencies.
+It may be necessary to change this parameter if run_snp_pipeline.sh fails with an illegal qsub 
+dependency error.
 
 **Example**::
 
-    PEname="mpi"
+    Torque_StripJobArraySuffix=false
+
+
+GridEngine_StripJobArraySuffix
+------------------------------
+Controls stripping the suffix from the job id when specifying Grid Engine job array dependencies.
+It may be necessary to change this parameter if run_snp_pipeline.sh fails with an illegal qsub 
+dependency error.
+
+**Example**::
+
+    GridEngine_StripJobArraySuffix=true
+
+
+GridEngine_PEname
+-----------------
+Specifies the name of the Grid Engine parallel environment.  This is only needed when running
+the SNP Pipeline on a High Performance Computing cluster with the Grid Engine job manager.  
+Contact your HPC system administrator to determine the name of your parallel environment. 
+Note: the name of this parameter was PEname in releases prior to 0.4.0.
+
+**Example**::
+
+    GridEngine_PEname="mpi"

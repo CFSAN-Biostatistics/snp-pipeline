@@ -40,6 +40,10 @@ History
   This capability introduces a new dependency on bgzip, tabix, and bcftools.  You can disable VCF file
   generation by removing the ``--vcfFileName`` option in the configuration file. Also, be aware the 
   contents of the VCF files may change in future versions of the SNP Pipeline.
+* Added configuration parameters ``Torque_StripJobArraySuffix`` and ``GridEngine_StripJobArraySuffix`` to
+  improve compatibility with some HPC environments where array job id suffix stripping is 
+  incompatible with qsub.
+* Renamed the configuration parameter ``PEname`` to ``GridEngine_PEname``.
 
 0.3.4 (2015-06-25)
 ~~~~~~~~~~~~~~~~~~

@@ -44,6 +44,7 @@
 #   20150824-scd: Replace create_snp_pileup.py with call_consensus.py.
 #   20150911-scd: Generate the consensus.vcf file for all samples.
 #   20150928-scd: Merge the per-sample VCF files into a multi-vcf file.
+#   20151013-scd: Added a configuration parameter to control stripping the array jobid suffix.
 #Notes:
 #
 #Bugs:
@@ -135,6 +136,25 @@ get_abs_filename()
 {
   # $1 : relative filename
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+}
+
+
+stripTorqueJobArraySuffix()
+{
+  if [[ $Torque_StripJobArraySuffix = true ]]; then
+    echo ${1%%.*}
+  else
+    echo $1
+  fi
+}
+
+stripGridEngineJobArraySuffix()
+{
+  if [[ $GridEngine_StripJobArraySuffix = true ]]; then
+    echo ${1%%.*}
+  else
+    echo $1
+  fi
 }
 
 # --------------------------------------------------------
@@ -302,7 +322,7 @@ export CreateSnpList_ExtraParams
 export CallConsensus_ExtraParams
 export CreateSnpMatrix_ExtraParams
 export CreateSnpReferenceSeq_ExtraParams
-export PEname
+export GridEngine_PEname
 
 
 # Rewrite the file of sample directories, removing trailing slashes and blank lines.
@@ -488,7 +508,7 @@ if [[ "$platform" == "grid" ]]; then
 #$   -cwd
 #$   -V
 #$   -j y
-#$   -pe $PEname $numAlignThreads
+#$   -pe $GridEngine_PEname $numAlignThreads
 #$   -hold_jid $prepReferenceJobId
 #$   -o $logDir/alignSamples.log-\$TASK_ID
 #$   -v SnpPipeline_Aligner,Bowtie2Align_ExtraParams,SmaltAlign_ExtraParams
@@ -515,7 +535,7 @@ fi
 echo -e "\nStep 4 - Prep the samples"
 if [[ "$platform" == "grid" ]]; then
     sleep $((1 + sampleCount / 150)) # workaround potential bug when submitting two large consecutive array jobs
-    alignSamplesJobArray=${alignSamplesJobId%%.*}
+    alignSamplesJobArray=$(stripGridEngineJobArraySuffix $alignSamplesJobId)
     prepSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
 #$   -N job.prepSamples
 #$   -cwd
@@ -530,7 +550,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     sleep $((1 + sampleCount / 150)) # workaround torque bug when submitting two large consecutive array jobs
-    alignSamplesJobArray=${alignSamplesJobId%%.*}
+    alignSamplesJobArray=$(stripTorqueJobArraySuffix $alignSamplesJobId)
     prepSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
     #PBS -N job.prepSamples
     #PBS -d $(pwd)
@@ -554,7 +574,7 @@ fi
 
 echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP list file"
 if [[ "$platform" == "grid" ]]; then
-    prepSamplesJobArray=${prepSamplesJobId%%.*}
+    prepSamplesJobArray=$(stripGridEngineJobArraySuffix $prepSamplesJobId)
     snpListJobId=$(echo | qsub  -terse << _EOF_
 #$ -N job.snpList
 #$ -cwd
@@ -567,7 +587,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    prepSamplesJobArray=${prepSamplesJobId%%.*}
+    prepSamplesJobArray=$(stripTorqueJobArraySuffix $prepSamplesJobId)
     snpListJobId=$(echo | qsub << _EOF_
     #PBS -N job.snpList
     #PBS -d $(pwd)
@@ -593,7 +613,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -o $logDir/callConsensus.log-\$TASK_ID
 #$ -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "\$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -605,7 +625,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/callConsensus.log
     #PBS -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "\$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 else
@@ -619,7 +639,7 @@ fi
 
 echo -e "\nStep 7 - Create the SNP matrix"
 if [[ "$platform" == "grid" ]]; then
-    callConsensusJobArray=${callConsensusJobId%%.*}
+    callConsensusJobArray=$(stripGridEngineJobArraySuffix $callConsensusJobId)
     snpMatrixJobId=$(echo | qsub -terse << _EOF_
 #$ -N job.snpMatrix
 #$ -cwd
@@ -633,7 +653,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    callConsensusJobArray=${callConsensusJobId%%.*}
+    callConsensusJobArray=$(stripTorqueJobArraySuffix $callConsensusJobId)
     snpMatrixJobId=$(echo | qsub << _EOF_
     #PBS -N job.snpMatrix
     #PBS -d $(pwd)
@@ -745,7 +765,7 @@ fi
 
 echo -e "\nStep 11 - Combine the metrics across all samples into the metrics table"
 if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobArray=${collectSampleMetricsJobId%%.*}
+    collectSampleMetricsJobArray=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
     combineSampleMetricsJobId=$(echo | qsub  -terse << _EOF_
 #$ -N job.combineMetrics
 #$ -cwd
@@ -757,7 +777,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobArray=${collectSampleMetricsJobId%%.*}
+    collectSampleMetricsJobArray=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
     combineSampleMetricsJobId=$(echo | qsub << _EOF_
     #PBS -N job.combineMetrics
     #PBS -d $(pwd)

@@ -226,6 +226,9 @@ To run the SNP Pipeline on torque::
 
     run_snp_pipeline.sh -Q torque -s mySamplesDir myReference.fasta
 
+You may need to change the Torque_StripJobArraySuffix configuration parameter if
+you see qsub illegal dependency errors.
+
 Grid Engine
 ~~~~~~~~~~~
 To run the SNP Pipeline on grid engine you must use a configuration file to specify
@@ -238,7 +241,10 @@ Grab the default configuration file::
 
 Edit the snppipeline.conf file and make the following change::
     
-    PEname="myPE" # substitute the name of your PE
+    GridEngine_PEname="myPE" # substitute the name of your PE
+
+You may also need to change the GridEngine_StripJobArraySuffix configuration parameter if
+you see qsub illegal dependency errors.
 
 Then run the pipeline with the -c and -Q command line options::    
     
