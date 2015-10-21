@@ -30,7 +30,7 @@ of shell scripts and python scripts.
 |                             | | unified SNP list file                                            |
 +-----------------------------+--------------------------------------------------------------------+
 | create_snp_pileup.py        | | Deprecated -- this command is not used by the pipeline since     |
-|                             | | v0.3.5.  Replaced by call_consensus.py                           |
+|                             | | v0.4.0.  Replaced by call_consensus.py                           |
 |                             | |                                                                  |
 |                             | | Creates the SNP pileup file for a sample -- a subset of the      |
 |                             | | pileup file at only the positions where SNPs were called in any  |
@@ -226,7 +226,7 @@ To run the SNP Pipeline on torque::
 
     run_snp_pipeline.sh -Q torque -s mySamplesDir myReference.fasta
 
-You may need to change the Torque_StripJobArraySuffix configuration parameter if
+You may need to change the ``Torque_StripJobArraySuffix`` configuration parameter if
 you see qsub illegal dependency errors.
 
 Grid Engine
@@ -243,7 +243,7 @@ Edit the snppipeline.conf file and make the following change::
     
     GridEngine_PEname="myPE" # substitute the name of your PE
 
-You may also need to change the GridEngine_StripJobArraySuffix configuration parameter if
+You may also need to change the ``GridEngine_StripJobArraySuffix`` configuration parameter if
 you see qsub illegal dependency errors.
 
 Then run the pipeline with the -c and -Q command line options::    

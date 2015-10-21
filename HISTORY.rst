@@ -26,7 +26,7 @@ History
   can be configured with any Smalt command line options.  See :ref:`tool-selection-label`.  The
   default aligner is still bowtie2.
 * Split the create_snp_matrix.py script into two pieces.  The new script, call_consensus.py, is a redesigned
-  consensus caller which can be run in parallel to call snps for multiple samples concurrently.  The
+  consensus caller which is run in parallel to call snps for multiple samples concurrently.  The
   create_snp_matrix.py script simply merges the consensus calls for all samples into a multi-fasta file.
 * The new consensus caller has the following adjustable parameters.  
   See the :ref:`cmd-ref-call-consensus` command reference.
