@@ -28,11 +28,11 @@ from __init__ import __version__
 VCF_VERSION = '##fileformat=VCFv4.1\n'
 VCF_DATE    = '##fileDate=%Y%m%d\n'
 VCF_SOURCE  = '##source=CFSAN SNP-Pipeline %s\n' % __version__
-VCF_INFO    = '##INFO=<ID=NC,Number=1,Type=Integer,Description="Number of samples not called">\n'
+VCF_INFO    = '##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">\n'
 VCF_FILTER  = '##FILTER=<ID=%s,Description="%s">\n'
 VCF_FORMAT  = '''
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##FORMAT=<ID=SDP,Number=1,Type=Integer,Description="Raw Read Depth">
+##FORMAT=<ID=SDP,Number=1,Type=Integer,Description="Raw read depth">
 ##FORMAT=<ID=RD,Number=1,Type=Integer,Description="Depth of reference-supporting bases (reads1)">
 ##FORMAT=<ID=AD,Number=1,Type=Integer,Description="Depth of variant-supporting bases (reads2)">
 ##FORMAT=<ID=RDF,Number=1,Type=Integer,Description="Depth of reference-supporting bases on forward strand (reads1plus)">
@@ -173,7 +173,8 @@ class SingleSampleWriter(object):
         call = vcf.model._Call(None, None, sample_data)
 
         # info_dict contains fields that match our VCF_HEAD info fields
-        info_dict = {'NC' : 0}
+        # this sample has a pileup record at this position, so NS=1
+        info_dict = {'NS' : 1}
 
         # https://pyvcf.readthedocs.org/en/latest/API.html#vcf-model-record
         # vcf.model._Record(CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT, sample_indexes, samples=None)

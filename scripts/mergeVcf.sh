@@ -177,7 +177,7 @@ for filestoidx in *.gz; do tabix -f -p vcf $filestoidx; done
 cd - > /dev/null
 
 # Merge the VCFs
-bcftools merge -o "$outFilePath" $tempDir/*.gz
+bcftools merge --info-rules NS:sum -o "$outFilePath" $tempDir/*.gz
 
 # Clean up
 if [[ -e "$tempDir" ]]; then 
