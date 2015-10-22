@@ -22,13 +22,18 @@ Step 2 - Executable Software Dependencies
 -----------------------------------------
 You should have the following software installed before using the SNP Pipeline.
 
-    * Bowtie2_, a tool for aligning reads to long reference sequences.
-    * SAMtools_, utilities for manipulating alignments in the SAM format.
-    * VarScan_, a tool to detect variants in NGS data.
+    * Bowtie2_, a tool for aligning reads to long reference sequences
+    * SMALT_, a tool for aligning reads to long reference sequences
+    * SAMtools_, utilities for manipulating alignments in the SAM format
+    * VarScan_, a tool to detect variants in NGS data
     * tabix_, a generic indexer for tab-delimited genome position files
     * bgzip, part of the tabix package, bgzip is a block compression utility
-    * BcfTools_, utilities for variant calling and manipulating VCFs and BCFs.
-    * fastq-dump_, an SRA Toolkit utility for fetching samples from NCBI SRA.
+    * BcfTools_, utilities for variant calling and manipulating VCFs and BCFs
+    * fastq-dump_, an SRA Toolkit utility for fetching samples from NCBI SRA
+
+Note: you will need either Bowtie2 or SMALT.  You do not have to install both.
+However, the included result files were generated with Bowtie2.  Your results may differ
+when using SMALT.
 
 Step 3 - Environment Variables
 ------------------------------
@@ -136,3 +141,4 @@ In Ubuntu, use this command::
 .. _BcfTools: http://sourceforge.net/projects/samtools/files/samtools/1.1/
 .. _fastq-dump: http://www.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software
 .. _Biopython: http://biopython.org/wiki/Download
+.. _SMALT: http://sourceforge.net/projects/smalt/files
