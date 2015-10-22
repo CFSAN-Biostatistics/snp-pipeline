@@ -38,7 +38,7 @@ test_requires = [
 
 setup(
     name='snp-pipeline',
-    version='0.4.0a.4',
+    version='0.4.0',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
