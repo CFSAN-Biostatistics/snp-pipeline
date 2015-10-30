@@ -3,6 +3,18 @@
 History
 -------
 
+0.4.1 (2015-10-30)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* Fixed a Python 2.6 incompatibility with the new consensus caller.
+
+**Other Changes:**
+
+* Added Tox support for automatically testing installation and execution with multiple Python versions.
+
+
 0.4.0 (2015-10-22)
 ~~~~~~~~~~~~~~~~~~
 

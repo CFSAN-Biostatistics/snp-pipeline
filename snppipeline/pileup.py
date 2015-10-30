@@ -25,7 +25,10 @@ for record in reader:
 """
 
 from __future__ import print_function
-from collections import Counter
+try:
+    from collections import Counter
+except ImportError:
+    from counter import Counter
 import re
 
 

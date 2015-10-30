@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
 
+import sys
 import unittest
 
 import filecmp
@@ -43,8 +44,9 @@ def grep_not_matching(in_path, out_path, not_match_list):
 class SnpPipelineTest(unittest.TestCase):
     '''Unit test for snppipeline.'''
 
-    def setUp(self):
+    def setUpOnce(self):
         """Create the list of sample directories"""
+        print "Python version = " + sys.version
         samples_directory = os.path.join(self.directory_run_result, 'samples')
         subdir_list = [os.path.join(samples_directory, subdir) for subdir in os.listdir(samples_directory)]
 
@@ -73,6 +75,7 @@ class SnpPipelineTest(unittest.TestCase):
 
         # Strip unwanted lines, like dates and versions, before the file compare
         correct_result_file = os.path.join(self.directory_correct, file_to_compare)
+        self.assertTrue(os.path.isfile(correct_result_file), "The known correct result file does not exist: %s" % file_to_compare)
         if not_match_str_list:
             correct_result_file2 = os.path.join(self.directory_correct, file_to_compare+"2")
             grep_not_matching(correct_result_file, correct_result_file2, not_match_str_list)
@@ -93,29 +96,34 @@ class SnpPipelineTest(unittest.TestCase):
 class SnpPipelineLambdaVirusTest(SnpPipelineTest):
     '''Unit test for snppipeline run with Lambda Virus data.'''
 
-    @classmethod
-    def setUpClass(cls):
+    all_setup_done = False
+
+    def setUpOnce(self):
         """Create directories and data files for subsequent tests.
         """
-
-        print "Preparing data files for tests.  This will take a minute..."
+        print "\nPreparing data files for tests.  This will take a minute..."
         temp_dir = TempDirectory()
         lambda_dir = os.path.join(temp_dir.path, "testLambdaVirus")
         ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusInputs", lambda_dir])
-        cls.directory_correct = os.path.join(lambda_dir, "lambdaVirusExpectedResults")
-        ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusExpectedResults", cls.directory_correct])
+        SnpPipelineTest.directory_correct = os.path.join(lambda_dir, "lambdaVirusExpectedResults")
+        ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusExpectedResults", SnpPipelineTest.directory_correct])
         samples_dir = os.path.join(lambda_dir, "samples")
         reference_file = os.path.join(lambda_dir, "reference", "lambda_virus.fasta")
 
         devNull = open(os.devnull, 'w')
         ret = subprocess.call("run_snp_pipeline.sh -o %s -s %s %s" % (lambda_dir, samples_dir, reference_file), shell=True, stdout=devNull)
         devNull.close()
-        cls.directory_run_result = lambda_dir
-        cls.file_of_directories = os.path.join(lambda_dir, 'sampleDirectories.txt')
+        SnpPipelineTest.directory_run_result = lambda_dir
+        SnpPipelineTest.file_of_directories = os.path.join(lambda_dir, 'sampleDirectories.txt')
+
+        # Let the super class do some one-time setup
+        SnpPipelineTest.setUpOnce(self)
+        SnpPipelineLambdaVirusTest.all_setup_done = True
 
 
-    @classmethod
-    def tearDownClass(self):
+
+    @staticmethod
+    def tearDownAll():
         """
         Delete all the temporary directories and files created during this 
         testing session.
@@ -125,6 +133,12 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 
     def __init__(self, *args):
         super(SnpPipelineLambdaVirusTest, self).__init__(*args)
+
+
+    def setUp(self):
+        """Setup"""
+        if not SnpPipelineLambdaVirusTest.all_setup_done:
+            self.setUpOnce()
 
 
     def test_1_create_snp_list(self):
@@ -200,6 +214,11 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             'forceFlag' : True,
             } 
         self.run_function_test(snppipeline.create_snp_reference_seq, args_dict, 'referenceSNP.fasta')
+
+
+    def test_999(self):
+        """Tear down"""
+        self.tearDownAll()
 
 
 
