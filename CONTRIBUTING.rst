@@ -70,7 +70,6 @@ Ready to contribute? Here's how to set up `snp-pipeline` for local development.
 #. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
 
     $ mkvirtualenv snppipeline
-    $ toggleglobalsitepackages        # to access Biopython from the global site-packages
     $ cd snppipeline/
     $ python setup.py develop
     $ pip install sphinx_rtd_theme    # the documentation uses the ReadTheDocs theme

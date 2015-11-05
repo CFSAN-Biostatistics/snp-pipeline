@@ -53,10 +53,9 @@ Running the Pipeline
 
 **Q: Nothing works.**
 
-A: Make sure you have the proper dependencies on your path.  Modify your path if necessary to include bowtie 
-and samtools.  See the question above about installing VarScan.  Also make sure you install Biopython.  If 
-you are using virtual environments, make sure you issue the command "toggleglobalsitepackages" so Biopython 
-can be found.  See the :ref:`installation-label` section of this documentation.
+A: Make sure you have the proper dependencies on your path.  Modify your path if necessary to include bowtie,
+samtools, and bcftools.  See the question above about installing VarScan.  In some cases, you may need to manually
+install Biopython.  See the :ref:`installation-label` section of this documentation.
 
 **Q: How can I verify the pipeline is installed and working properly?**
 

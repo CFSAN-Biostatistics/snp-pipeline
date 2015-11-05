@@ -3,6 +3,11 @@
 History
 -------
 
+0.4.2 (2015-11-??)
+~~~~~~~~~~~~~~~~~~
+
+* Removed setuptools from the list of required installation dependencies.
+
 0.4.1 (2015-10-30)
 ~~~~~~~~~~~~~~~~~~
 

@@ -21,7 +21,6 @@ else:
 # depending on the python version
 install_requires = [
     'PyVCF',
-    'setuptools',
     'psutil',
     'Biopython',
 ]
