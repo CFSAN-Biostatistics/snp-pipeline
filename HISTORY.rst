@@ -7,6 +7,7 @@ History
 ~~~~~~~~~~~~~~~~~~
 
 * Removed setuptools from the list of required installation dependencies.
+* Added support for Python 3.3, 3.4, 3.5.
 
 0.4.1 (2015-10-30)
 ~~~~~~~~~~~~~~~~~~

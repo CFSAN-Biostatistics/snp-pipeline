@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
 from setuptools import setup
 import sys
@@ -37,7 +37,7 @@ test_requires = [
 
 setup(
     name='snp-pipeline',
-    version='0.4.1',
+    version='0.4.2a.1',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',

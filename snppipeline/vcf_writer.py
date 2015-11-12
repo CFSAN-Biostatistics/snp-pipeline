@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-
 """
 VCF file writer.  Typical workflow would follow a pattern like this:
 
@@ -18,12 +16,17 @@ writer.close()
 """
 
 from __future__ import print_function
+from __future__ import absolute_import
 import collections
 import datetime
-from StringIO import StringIO
-import pileup
+import sys
+if sys.version_info < (3,):
+    from StringIO import StringIO
+else:
+    from io import StringIO
 import vcf
-from __init__ import __version__
+from snppipeline.__init__ import __version__
+from snppipeline import pileup
 
 VCF_VERSION = '##fileformat=VCFv4.1\n'
 VCF_DATE    = '##fileDate=%Y%m%d\n'
@@ -60,7 +63,7 @@ class SingleSampleWriter(object):
         Initialize the VCF writer.
         """
         self.file_path = file_path
-        self.file_handle = open(file_path, "wb")
+        self.file_handle = open(file_path, "w")
 
     def close(self):
         """

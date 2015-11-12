@@ -1,20 +1,19 @@
-#!/usr/bin/env python2.7
-
 from __future__ import print_function
+from __future__ import absolute_import
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import os
 import pprint
-import utils
 import sys
 import time
 import platform
 import psutil
 import locale
-import pileup as pileup
-import vcf_writer as vcf_writer
-from __init__ import __version__
+from snppipeline.__init__ import __version__
+from snppipeline import pileup
+from snppipeline import utils
+from snppipeline import vcf_writer
 
 
 verbose_print  = lambda *a, **k: None
@@ -80,7 +79,7 @@ def print_arguments(options_dict):
         options_dict : Dictionary of program arguments
     """
     verbose_print("Options:")
-    for key in options_dict.keys():
+    for key in list(options_dict.keys()):
         verbose_print("    %s=%s" % (key, options_dict[key]))
 
 
@@ -138,8 +137,9 @@ def create_snp_list(options_dict):
     # Note use of filter on list_of_sample_directories to remove blank lines.
     #==========================================================================
     sample_directories_list_filename = options_dict['sampleDirsFile']
-    list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
-    list_of_sample_directories = sorted(filter(None, list_of_sample_directories))
+    with open(sample_directories_list_filename, "r") as sample_directories_list_file:
+        list_of_sample_directories = [line.rstrip() for line in sample_directories_list_file]
+    list_of_sample_directories = sorted([d for d in list_of_sample_directories if d])
 
     #==========================================================================
     # Read in all vcf files and process into dict of SNPs passing various
@@ -426,8 +426,9 @@ def create_snp_matrix(options_dict):
     # Note use of filter on list_of_sample_directories to remove blank lines.
     #==========================================================================
     sample_directories_list_filename = options_dict['sampleDirsFile']
-    list_of_sample_directories = [line.rstrip() for line in open(sample_directories_list_filename, "r")]
-    list_of_sample_directories = sorted(filter(None, list_of_sample_directories))
+    with open(sample_directories_list_filename, "r") as sample_directories_list_file:
+        list_of_sample_directories = [line.rstrip() for line in sample_directories_list_file]
+    list_of_sample_directories = sorted([d for d in list_of_sample_directories if d])
 
     #==========================================================================
     # Check if the result is already fresh

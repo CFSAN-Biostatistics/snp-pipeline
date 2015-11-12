@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-
 """
 Pileup file parser.  Typical workflow would follow a pattern like this:
 
@@ -327,7 +325,7 @@ class Reader(object):
         self.chrom_position_set = chrom_position_set
         # open and close the file to make sure it works
         f = open(file_path)
-        f.close
+        f.close()
 
     def __iter__(self):
         """

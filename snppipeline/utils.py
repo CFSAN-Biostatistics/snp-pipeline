@@ -1,12 +1,9 @@
-#!/usr/bin/env python2.7
-
 from __future__ import print_function
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import operator
 import os
-import pileup
 import pprint
 import re
 import sys
@@ -97,7 +94,7 @@ def write_list_of_snps(file_path, snp_dict):
     """
 
     with open(file_path, "w") as snp_list_file_object:
-        for key in sorted(snp_dict.iterkeys()):
+        for key in sorted(snp_dict.keys()):
             snp_list_file_object.write(key[0] + "\t" + str(key[1]))
             values = snp_dict[key]
             for value in values:
@@ -131,7 +128,8 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
     #TODO finish documentation
     #TODO actual code is more general than stated. Fix this.
 
-    position_list = [line.split()[0:2] for line in open(snp_list_file_path, "r")]
+    with open(snp_list_file_path, "r") as snp_list_file:
+        position_list = [line.split()[0:2] for line in snp_list_file]
     match_dict    = SeqIO.to_dict(SeqIO.parse(reference_file_path, "fasta"))
 
     with open(snp_reference_file_path, "w") as snp_reference_file_object:
@@ -174,7 +172,7 @@ def convert_vcf_files_to_snp_dict(sample_vcf_file_list):
             vcf_reader = vcf.Reader(vcf_file_object)
             for vcf_data_line in vcf_reader:
                 key = (vcf_data_line.CHROM, vcf_data_line.POS)
-                if not snp_dict.has_key(key):
+                if key not in snp_dict:
                     record = [1]
                     snp_dict[key] = record
                 else:

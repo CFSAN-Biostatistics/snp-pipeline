@@ -264,12 +264,13 @@ echo "# "$(date +"%Y-%m-%d %T") Count missing positions in the snp matrix 1>&2
 #------------------------------------------
 
 missingPos=$(python << END
+from __future__ import print_function
 from Bio import SeqIO
 handle = open("$snpmaFile", "rU")
 for record in SeqIO.parse(handle, "fasta"):
     if record.id == "$sampleDirBasename":
         missing = record.seq.count('-')
-        print missing
+        print(missing)
         break
 handle.close()
 END

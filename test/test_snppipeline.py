@@ -1,5 +1,6 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
+from __future__ import print_function
 import sys
 import unittest
 
@@ -31,14 +32,15 @@ def grep_not_matching(in_path, out_path, not_match_list):
         List of strings to exclude from the copy
     """
     with open(out_path, "w") as out_file:
-        for line in open(in_path):
-            found = False
-            for s in not_match_list:
-                if s in line:
-                    found = True
-                    break
-            if not found:            
-                out_file.write(line)
+        with open(in_path, "r") as in_file:
+            for line in in_file:
+                found = False
+                for s in not_match_list:
+                    if s in line:
+                        found = True
+                        break
+                if not found:            
+                    out_file.write(line)
 
 
 class SnpPipelineTest(unittest.TestCase):
@@ -46,13 +48,35 @@ class SnpPipelineTest(unittest.TestCase):
 
     def setUpOnce(self):
         """Create the list of sample directories"""
-        print "Python version = " + sys.version
+        print("Python version = " + sys.version)
         samples_directory = os.path.join(self.directory_run_result, 'samples')
         subdir_list = [os.path.join(samples_directory, subdir) for subdir in os.listdir(samples_directory)]
 
         with open(self.file_of_directories, "w") as path_file_object:
             for subdir in sorted(subdir_list):
                 path_file_object.write("%s\n" % subdir)
+
+
+    def compare_file(self, file_to_compare, not_match_str_list=None):
+        """Compare a generated file to the expected results.
+        """
+        result_file = os.path.join(self.directory_run_result, file_to_compare)
+
+        # Strip unwanted lines, like dates and versions, before the file compare
+        correct_result_file = os.path.join(self.directory_correct, file_to_compare)
+        self.assertTrue(os.path.isfile(correct_result_file), "The known correct result file does not exist: %s" % file_to_compare)
+        if not_match_str_list:
+            correct_result_file2 = os.path.join(self.directory_correct, file_to_compare+"2")
+            grep_not_matching(correct_result_file, correct_result_file2, not_match_str_list)
+            correct_result_file = correct_result_file2
+
+            result_file2 = os.path.join(self.directory_run_result, file_to_compare+"2")
+            grep_not_matching(result_file, result_file2, not_match_str_list)
+            result_file = result_file2
+
+        # Compare files
+        match = filecmp.cmp(correct_result_file, result_file, shallow=False)
+        self.assertTrue(match, "Incorrect file contents: %s" % file_to_compare)
 
 
     def run_function_test(self, funct, args_dict, file_to_compare, not_match_str_list=None):
@@ -73,24 +97,8 @@ class SnpPipelineTest(unittest.TestCase):
             new_timestamp = os.path.getmtime(result_file)
             self.assertTrue(new_timestamp > old_timestamp, "Old file was not overwritten with newer timestamp: %s" % file_to_compare)
 
-        # Strip unwanted lines, like dates and versions, before the file compare
-        correct_result_file = os.path.join(self.directory_correct, file_to_compare)
-        self.assertTrue(os.path.isfile(correct_result_file), "The known correct result file does not exist: %s" % file_to_compare)
-        if not_match_str_list:
-            correct_result_file2 = os.path.join(self.directory_correct, file_to_compare+"2")
-            grep_not_matching(correct_result_file, correct_result_file2, not_match_str_list)
-            correct_result_file = correct_result_file2
-
-            result_file2 = os.path.join(self.directory_run_result, file_to_compare+"2")
-            grep_not_matching(result_file, result_file2, not_match_str_list)
-            result_file = result_file2
-
-        # Compare files
-        match = filecmp.cmp(correct_result_file, result_file, shallow=False)
-        self.assertTrue(match, "Incorrect file contents: %s" % file_to_compare)
-        #print "\nMatch"
-        #print correct_result_file
-        #print result_file
+        # Strip unwanted lines, like dates and versions, and compare file
+        self.compare_file(file_to_compare, not_match_str_list)
 
 
 class SnpPipelineLambdaVirusTest(SnpPipelineTest):
@@ -101,7 +109,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
     def setUpOnce(self):
         """Create directories and data files for subsequent tests.
         """
-        print "\nPreparing data files for tests.  This will take a minute..."
+        print("\nPreparing data files for tests.  This will take a minute...")
         temp_dir = TempDirectory()
         lambda_dir = os.path.join(temp_dir.path, "testLambdaVirus")
         ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusInputs", lambda_dir])
@@ -139,6 +147,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         """Setup"""
         if not SnpPipelineLambdaVirusTest.all_setup_done:
             self.setUpOnce()
+            self.compare_file('metrics.tsv')
 
 
     def test_1_create_snp_list(self):
