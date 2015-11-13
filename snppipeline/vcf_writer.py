@@ -11,7 +11,7 @@ filters = caller.get_filter_descriptions()
 writer.write_header(sample_id, filters, reference)
 for pileup_record in pileup_reader:
     alt, fail_reasons = caller.call_consensus(record)
-    writer.write_from_pileup(pileup_record, alt, fail_reasons)
+    writer.write_from_pileup(pileup_record, fail_reasons)
 writer.close()
 """
 
@@ -118,9 +118,9 @@ class SingleSampleWriter(object):
         self.format_str = ':'.join(tokens)
         self.VcfCallData = collections.namedtuple('VcfCallData', tokens)  # this creates a new class called VcfCallData
 
-    def write_from_pileup(self, pileup_record, failed_filters):
+    def _make_vcf_record_from_pileup(self, pileup_record, failed_filters):
         """
-        Write a single VCF record for a single sample from a single pileup 
+        Create a PyVCF model record for a single sample from a single pileup 
         record.
 
         Parameters
@@ -129,8 +129,50 @@ class SingleSampleWriter(object):
             Previously parsed pileup record.
         failed_filters : list of str or None
             List of failed snp filters or None if all filters passed
+
+        Returns
+        -------
+        record : vcf.model._Record
+            PyVCF record with attributes describing chrom, pos, ref, alt, depth, etc.
+
+        Examples
+        --------
+        >>> writer = SingleSampleWriter("/dev/null")
+        >>> caller = pileup.ConsensusCaller(0.5, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> filters = caller.get_filter_descriptions()
+        >>> writer.write_header("dummy-sample-name", filters, "dummy_reference-name")
+        >>>
+        >>> r = pileup.Record(['ID', 42, 'G', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
+        >>> v = writer._make_vcf_record_from_pileup(r, None)
+        >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
+        ('ID', 42, None, 'G', 'A', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        >>> v.samples[0]
+        Call(sample=None, VcfCallData(GT='1', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='PASS'))
+        >>>
+        >>> r = pileup.Record(['ID', 42, 'g', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
+        >>> v = writer._make_vcf_record_from_pileup(r, None)
+        >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
+        ('ID', 42, None, 'g', 'A', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        >>> v.samples[0]
+        Call(sample=None, VcfCallData(GT='1', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='PASS'))
+        >>>
+        >>> r = pileup.Record(['ID', 42, 'G', 14, 'gaaaGGGG...,,,', '00001111222333'], 15)
+        >>> v = writer._make_vcf_record_from_pileup(r, None)
+        >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
+        ('ID', 42, None, 'G', '.', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        >>> v.samples[0]
+        Call(sample=None, VcfCallData(GT='0', SDP=14, RD=11, AD=3, RDF=7, RDR=4, ADF=0, ADR=3, FT='PASS'))
+        >>>
+        >>> r = pileup.Record(['ID', 42, 'g', 14, 'ggggGGGG...,,,', '00001111222333'], 15)
+        >>> v = writer._make_vcf_record_from_pileup(r, None)
+        >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
+        ('ID', 42, None, 'g', '.', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        >>> v.samples[0]
+        Call(sample=None, VcfCallData(GT='0', SDP=14, RD=14, AD=0, RDF=7, RDR=7, ADF=0, ADR=0, FT='PASS'))
+        >>> writer.close()
         """
         ref = pileup_record.reference_base
+        upper_ref = ref.upper()
         alt = pileup_record.most_common_base
 
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -149,13 +191,13 @@ class SingleSampleWriter(object):
             ad = 0
             adf = 0
             adr = 0
-        elif alt == ref:
+        elif alt == upper_ref:
             # When we do not call an alt, the alt depths are counted as anything not matching the reference
             gt = '0'
             alt = '.'
-            ad = pileup_record.good_depth - pileup_record.base_good_depth[ref]
-            adf = pileup_record.forward_good_depth - pileup_record.forward_base_good_depth[ref]
-            adr = pileup_record.reverse_good_depth - pileup_record.reverse_base_good_depth[ref]
+            ad = pileup_record.good_depth - pileup_record.base_good_depth[upper_ref]
+            adf = pileup_record.forward_good_depth - pileup_record.forward_base_good_depth[upper_ref]
+            adr = pileup_record.reverse_good_depth - pileup_record.reverse_base_good_depth[upper_ref]
         else:
             # When we call an alt, the alt depths are only the specific alt base called
             gt = '1'
@@ -163,9 +205,9 @@ class SingleSampleWriter(object):
             adf = pileup_record.forward_base_good_depth[alt]
             adr = pileup_record.reverse_base_good_depth[alt]
         sdp = pileup_record.raw_depth
-        rd = pileup_record.base_good_depth[ref]
-        rdf = pileup_record.forward_base_good_depth[ref]
-        rdr = pileup_record.reverse_base_good_depth[ref]
+        rd = pileup_record.base_good_depth[upper_ref]
+        rdf = pileup_record.forward_base_good_depth[upper_ref]
+        rdr = pileup_record.reverse_base_good_depth[upper_ref]
         ft = ';'.join(failed_filters) if failed_filters else "PASS"
 
         #print("Position:", pileup_record.position, "Alt:", alt, gt, sdp, rd, ad, rdf, rdr, adf, adr, ft)
@@ -181,7 +223,7 @@ class SingleSampleWriter(object):
 
         # https://pyvcf.readthedocs.org/en/latest/API.html#vcf-model-record
         # vcf.model._Record(CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT, sample_indexes, samples=None)
-        record = vcf.model._Record(
+        vcf_record = vcf.model._Record(
             pileup_record.chrom, 
             pileup_record.position, 
             None,  # Id
@@ -194,7 +236,23 @@ class SingleSampleWriter(object):
             None, # Sample indexes
             [call]  # Samples
         )
+        return vcf_record
+
+
+    def write_from_pileup(self, pileup_record, failed_filters):
+        """
+        Write a single VCF record for a single sample from a single pileup 
+        record.
+
+        Parameters
+        ----------
+        pileup_record : pileup.Record
+            Previously parsed pileup record.
+        failed_filters : list of str or None
+            List of failed snp filters or None if all filters passed
+        """
+        # Create the PyVCF record
+        vcf_record = self._make_vcf_record_from_pileup(pileup_record, failed_filters)
 
         # Tell PyVCF to write the record
-        self.pyvcf_writer.write_record(record)
-
+        self.pyvcf_writer.write_record(vcf_record)

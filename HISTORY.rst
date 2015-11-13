@@ -6,6 +6,12 @@ History
 0.4.2 (2015-11-??)
 ~~~~~~~~~~~~~~~~~~
 
+**Bug fixes:**
+
+* Changed VCF file generator to not emit multiple alleles when the reference base is lowercase.
+
+**Other Changes:**
+
 * Removed setuptools from the list of required installation dependencies.
 * Added support for Python 3.3, 3.4, 3.5.
 
