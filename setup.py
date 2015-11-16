@@ -35,6 +35,15 @@ test_requires = [
     'testfixtures',
 ]
 
+if sys.version_info < (2,7,):
+    test_requires.append('unittest2')
+
+if sys.version_info < (2,7,):
+    test_suite='unittest2.collector'
+else:
+    test_suite='test'
+
+
 setup(
     name='snp-pipeline',
     version='0.4.2a.2',
@@ -112,6 +121,6 @@ setup(
     install_requires=install_requires,
 
     # package (aka directory) containing unit test modules
-    test_suite='test',
+    test_suite=test_suite,
     tests_require=test_requires,
 )
