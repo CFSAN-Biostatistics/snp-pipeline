@@ -249,8 +249,8 @@ call_consensus.py
 
   usage: call_consensus.py [-h] [-f] [-l FILE] [-o FILE] [-q INT] [-c FREQ]
                            [-d INT] [-b FREQ] [--vcfFileName NAME]
-                           [--vcfRefName NAME] [--vcfAllPos] [-v 0..5]
-                           [--version]
+                           [--vcfRefName NAME] [--vcfAllPos]
+                           [--vcfPreserveRefCase] [-v 0..5] [--version]
                            allPileupFile
   
   Call the consensus base for a sample at the specified positions where SNPs
@@ -307,6 +307,11 @@ call_consensus.py
                           This capability is intended primarily as a diagnostic
                           tool and enabling this flag will greatly increase
                           execution time. (default: False)
+    --vcfPreserveRefCase  Flag to cause the VCF file generator to emit each
+                          reference base in uppercase/lowercase as it appears in
+                          the reference sequence file. If not specified, the
+                          reference base is emitted in uppercase. (default:
+                          False)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit

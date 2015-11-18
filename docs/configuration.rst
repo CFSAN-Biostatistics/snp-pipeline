@@ -318,7 +318,9 @@ Specifies options passed to call_consensus.py.
     Flag to cause VCF file generation at all positions, not just the snp positions. This has no effect on the
     consensus fasta file, it only affects the VCF file. This capability is intended primarily as a diagnostic
     tool and enabling this flag will greatly increase execution time.
-
+``--vcfPreserveRefCase``
+    Flag to cause the VCF file generator to emit each reference base in uppercase/lowercase as it appears in the 
+    reference sequence file.  If not specified, the reference bases are emitted in uppercase.
 
 **Example**::
 

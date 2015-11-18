@@ -181,6 +181,13 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         args_dict = {
             'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
             'forceFlag' : True,
+            'minBaseQual' : 0,
+            'minConsFreq' : 0.6,
+            'minConsStrdDpth' : 0,
+            'minConsStrdBias' : 0,
+            'vcfRefName' : 'lambda_virus.fasta',
+            'vcfAllPos' : False,
+            'vcfPreserveRefCase' : True,
             }
 
         ignore_lines = ["##fileDate", "##source"]
@@ -188,16 +195,9 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
             args_dict['allPileupFile'] = os.path.join(self.__class__.directory_run_result, dir, 'reads.all.pileup')
             args_dict['consensusFile'] = os.path.join(self.__class__.directory_run_result, dir, 'consensus.fasta')
-            args_dict['minBaseQual'] = 0
-            args_dict['minConsFreq'] = 0.6
-            args_dict['minConsStrdDpth'] = 0
-            args_dict['minConsStrdBias'] = 0
-            args_dict['forceFlag'] = True
             args_dict['vcfFileName'] = None
-            args_dict['vcfAllPos'] = False
             self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.fasta'))
             args_dict['vcfFileName'] = 'consensus.vcf'
-            args_dict['vcfRefName'] = 'lambda_virus.fasta'
             self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.vcf'), ignore_lines)
 
 

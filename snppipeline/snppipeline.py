@@ -330,7 +330,7 @@ def call_consensus(options_dict):
                                   options_dict['minBaseQual'], 
                                   parse_positions)
     if vcf_file_name:
-        writer = vcf_writer.SingleSampleWriter(vcf_file_path)
+        writer = vcf_writer.SingleSampleWriter(vcf_file_path, options_dict['vcfPreserveRefCase'])
         filters = caller.get_filter_descriptions()
         writer.write_header(sample_name, filters, options_dict['vcfRefName'])
     for pileup_record in pileup_reader:

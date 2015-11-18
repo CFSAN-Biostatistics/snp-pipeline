@@ -58,12 +58,22 @@ class SingleSampleWriter(object):
     parsed by the pileup module.
     """
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, preserve_ref_case=False):
         """
         Initialize the VCF writer.
+
+        Parameters
+        ----------
+        file_path : str
+            Path to output vcf file.
+        preserve_ref_case : boolean, optional
+            If true, emit the reference base in the same uppercase/lowercase as
+            the original reference fasta sequence.  If not specified, the 
+            reference base is emitted in uppercase.
         """
         self.file_path = file_path
         self.file_handle = open(file_path, "w")
+        self.preserve_ref_case = preserve_ref_case
 
     def close(self):
         """
@@ -152,7 +162,7 @@ class SingleSampleWriter(object):
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None)
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
-        ('ID', 42, None, 'g', 'A', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        ('ID', 42, None, 'G', 'A', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='1', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='PASS'))
         >>>
@@ -166,13 +176,28 @@ class SingleSampleWriter(object):
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'ggggGGGG...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None)
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
+        ('ID', 42, None, 'G', '.', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        >>> v.samples[0]
+        Call(sample=None, VcfCallData(GT='0', SDP=14, RD=14, AD=0, RDF=7, RDR=7, ADF=0, ADR=0, FT='PASS'))
+        >>>
+        >>> writer.close()
+        >>>
+        >>> writer = SingleSampleWriter("/dev/null", preserve_ref_case=True)
+        >>> filters = caller.get_filter_descriptions()
+        >>> writer.write_header("dummy-sample-name", filters, "dummy_reference-name")
+        >>> r = pileup.Record(['ID', 42, 'g', 14, 'ggggGGGG...,,,', '00001111222333'], 15)
+        >>> v = writer._make_vcf_record_from_pileup(r, None)
+        >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
         ('ID', 42, None, 'g', '.', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='0', SDP=14, RD=14, AD=0, RDF=7, RDR=7, ADF=0, ADR=0, FT='PASS'))
+        >>>
         >>> writer.close()
         """
         ref = pileup_record.reference_base
         upper_ref = ref.upper()
+        if not self.preserve_ref_case:
+            ref = upper_ref
         alt = pileup_record.most_common_base
 
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">

@@ -46,20 +46,23 @@ if __name__ == '__main__':
     help['vcfAllPos']      = """Flag to cause VCF file generation at all positions, not just the snp positions.  This has no effect on
                                 the consensus fasta file, it only affects the VCF file.  This capability is intended primarily as a diagnostic tool and
                                 enabling this flag will greatly increase execution time."""
+    help['vcfPreserveRefCase'] = """Flag to cause the VCF file generator to emit each reference base in uppercase/lowercase as it appears in the reference
+                                    sequence file.  If not specified, the reference base is emitted in uppercase."""
     help['verbose']        = """Verbose message level (0=no info, 5=lots)"""
 
-    parser.add_argument(                          dest='allPileupFile',  type=str,                                                        help=help['allPileupFile'])
-    parser.add_argument('-f', '--force',          dest='forceFlag',      action='store_true',                                             help=help['force'])
-    parser.add_argument('-l', '--snpListFile',    dest='snpListFile',    type=str,            default='snplist.txt',      metavar='FILE', help=help['snpListFile'])
-    parser.add_argument('-o', '--output',         dest='consensusFile',  type=str,            default='consensus.fasta',  metavar='FILE', help=help['output'])
-    parser.add_argument('-q', '--minBaseQual',    dest='minBaseQual',    type=int,            default=0,                  metavar='INT',  help=help['minBaseQual'])
-    parser.add_argument('-c', '--minConsFreq',    dest='minConsFreq',    type=minConsFreq,    default=0.60,               metavar='FREQ', help=help['minConsFreq'])
-    parser.add_argument('-d', '--minConsStrdDpth',dest='minConsStrdDpth',type=int,            default=0,                  metavar='INT',  help=help['minConsStrdDpth'])
-    parser.add_argument('-b', '--minConsStrdBias',dest='minConsStrdBias',type=minConsStrdBias,default=0,                  metavar='FREQ', help=help['minConsStrdBias'])
-    parser.add_argument(      '--vcfFileName',    dest='vcfFileName',    type=str,            default=None,               metavar='NAME', help=help['vcfFileName'])
-    parser.add_argument(      '--vcfRefName',     dest='vcfRefName',     type=str,            default='Unknown reference',metavar='NAME', help=help['vcfRefName'])
-    parser.add_argument(      '--vcfAllPos',      dest='vcfAllPos',      action='store_true',                                             help=help['vcfAllPos'])
-    parser.add_argument('-v', '--verbose',        dest='verbose',        type=int,            default=1,                  metavar='0..5', help=help['verbose'])
+    parser.add_argument(                              dest='allPileupFile',      type=str,                                                        help=help['allPileupFile'])
+    parser.add_argument('-f', '--force',              dest='forceFlag',          action='store_true',                                             help=help['force'])
+    parser.add_argument('-l', '--snpListFile',        dest='snpListFile',        type=str,            default='snplist.txt',      metavar='FILE', help=help['snpListFile'])
+    parser.add_argument('-o', '--output',             dest='consensusFile',      type=str,            default='consensus.fasta',  metavar='FILE', help=help['output'])
+    parser.add_argument('-q', '--minBaseQual',        dest='minBaseQual',        type=int,            default=0,                  metavar='INT',  help=help['minBaseQual'])
+    parser.add_argument('-c', '--minConsFreq',        dest='minConsFreq',        type=minConsFreq,    default=0.60,               metavar='FREQ', help=help['minConsFreq'])
+    parser.add_argument('-d', '--minConsStrdDpth',    dest='minConsStrdDpth',    type=int,            default=0,                  metavar='INT',  help=help['minConsStrdDpth'])
+    parser.add_argument('-b', '--minConsStrdBias',    dest='minConsStrdBias',    type=minConsStrdBias,default=0,                  metavar='FREQ', help=help['minConsStrdBias'])
+    parser.add_argument(      '--vcfFileName',        dest='vcfFileName',        type=str,            default=None,               metavar='NAME', help=help['vcfFileName'])
+    parser.add_argument(      '--vcfRefName',         dest='vcfRefName',         type=str,            default='Unknown reference',metavar='NAME', help=help['vcfRefName'])
+    parser.add_argument(      '--vcfAllPos',          dest='vcfAllPos',          action='store_true',                                             help=help['vcfAllPos'])
+    parser.add_argument(      '--vcfPreserveRefCase', dest='vcfPreserveRefCase', action='store_true',                                             help=help['vcfPreserveRefCase'])
+    parser.add_argument('-v', '--verbose',            dest='verbose',            type=int,            default=1,                  metavar='0..5', help=help['verbose'])
     parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
     args_dict = vars(parser.parse_args())
 
