@@ -29,6 +29,7 @@
 #   20141020-scd: Check for empty target files.
 #   20141030-scd: Fix Python 2.6 compatibility issue when logging RAM size.
 #   20150109-scd: Log the Grid Engine job ID.
+#   20150630-scd: Add support for Smalt.
 #Notes:
 #
 #Bugs:
@@ -57,16 +58,19 @@ usage()
 
 # --------------------------------------------------------
 # Log the starting conditions
-echo "# Command           : $0 $@"
-echo "# Working Directory : $(pwd)"
-if [[ "$PBS_JOBID" != "" ]]; then
-echo "# Job ID            : $PBS_JOBID"
-elif [[ "$JOB_ID" != "" ]]; then
-echo "# Job ID            : $JOB_ID"
-fi
-echo "# Hostname          :" $(hostname)
-echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')
-echo
+logSysEnvironment()
+{
+    echo "# Command           : $0 $@"
+    echo "# Working Directory : $(pwd)"
+    if [[ "$PBS_JOBID" != "" ]]; then
+    echo "# Job ID            : $PBS_JOBID"
+    elif [[ "$JOB_ID" != "" ]]; then
+    echo "# Job ID            : $JOB_ID"
+    fi
+    echo "# Hostname          :" $(hostname)
+    echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')
+    echo
+}
 
 # --------------------------------------------------------
 # getopts command line option handler: 
@@ -93,12 +97,10 @@ while getopts ":hf" option; do
     usage
     exit 0
   elif [ "$option" = "?" ]; then
-    echo
     echo "Invalid option -- '$OPTARG'"
     usage
     exit 1
   elif [ "$option" = ":" ]; then
-    echo
     echo "Missing argument for option -- '$OPTARG'"
     usage
     exit 2
@@ -122,16 +124,34 @@ if [ "$referenceFilePath" = "" ]; then
   exit 3
 fi
 
+logSysEnvironment $@
+
 referenceBasePath=${referenceFilePath%.fasta} # strip the file extension
 
-#Create index file for reference
-if [[ $opt_f_set != "1" && -s "$referenceBasePath.rev.1.bt2" && "$referenceBasePath.rev.1.bt2" -nt "$referenceFilePath" ]]; then
-    echo "# Bowtie index $referenceBasePath.rev.1.bt2 is already freshly built.  Use the -f option to force a rebuild."
+# Create index file for reference
+# An environment variable selects between bowtie2 and smalt
+SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]') # make lowercase 
+if [[ "$SnpPipeline_Aligner" == "" || "$SnpPipeline_Aligner" == "bowtie2" ]]; then
+    if [[ $opt_f_set != "1" && -s "$referenceBasePath.rev.1.bt2" && "$referenceBasePath.rev.1.bt2" -nt "$referenceFilePath" ]]; then
+        echo "# Bowtie index $referenceBasePath.rev.1.bt2 is already freshly built.  Use the -f option to force a rebuild."
+    else
+        echo "# "$(date +"%Y-%m-%d %T") bowtie2-build $Bowtie2Build_ExtraParams "$referenceFilePath" "$referenceBasePath"
+        echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
+        bowtie2-build $Bowtie2Build_ExtraParams "$referenceFilePath" "$referenceBasePath"
+        echo
+    fi
+elif [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
+    if [[ $opt_f_set != "1" && -s "$referenceBasePath.smi" && "$referenceBasePath.smi" -nt "$referenceFilePath" ]]; then
+        echo "# Smalt index $referenceBasePath.smi is already freshly built.  Use the -f option to force a rebuild."
+    else
+        echo "# "$(date +"%Y-%m-%d %T") smalt index $SmaltIndex_ExtraParams "$referenceBasePath" "$referenceFilePath" 
+        echo "# Smalt "$(smalt version | grep -i -E "Version")
+        smalt index $SmaltIndex_ExtraParams "$referenceBasePath" "$referenceFilePath"
+        echo
+    fi
 else
-    echo "# "$(date +"%Y-%m-%d %T") bowtie2-build $Bowtie2Build_ExtraParams "$referenceFilePath" "$referenceBasePath"
-    echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
-    bowtie2-build $Bowtie2Build_ExtraParams "$referenceFilePath" "$referenceBasePath"
-    echo
+    echo "Error: only bowtie2 and smalt aligners are supported."
+    exit 4
 fi
 
 #Create fai index

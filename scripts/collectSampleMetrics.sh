@@ -48,17 +48,19 @@ usage()
 # --------------------------------------------------------
 # Log the starting conditions
 # --------------------------------------------------------
-echo "# Command           : $0 $@" 1>&2
-echo "# Working Directory : $(pwd)" 1>&2 
-if [[ "$PBS_JOBID" != "" ]]; then
-echo "# Job ID            : $PBS_JOBID" 1>&2
-elif [[ "$JOB_ID" != "" ]]; then
-echo "# Job ID            : $JOB_ID[$SGE_TASK_ID]" 1>&2
-fi
-echo "# Hostname          :" $(hostname) 1>&2
-echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))') 1>&2
-echo 1>&2
-
+logSysEnvironment()
+{
+  echo "# Command           : $0 $@" 1>&2
+  echo "# Working Directory : $(pwd)" 1>&2 
+  if [[ "$PBS_JOBID" != "" ]]; then
+  echo "# Job ID            : $PBS_JOBID" 1>&2
+  elif [[ "$JOB_ID" != "" ]]; then
+  echo "# Job ID            : $JOB_ID[$SGE_TASK_ID]" 1>&2
+  fi
+  echo "# Hostname          :" $(hostname) 1>&2
+  echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))') 1>&2
+  echo 1>&2
+}
 
 #--------
 # Options
@@ -69,12 +71,10 @@ while getopts ":hfm:o:" option; do
     usage
     exit 0
   elif [ "$option" = "?" ]; then
-    echo
     echo "Invalid option -- '$OPTARG'" 1>&2
     usage
     exit 1
   elif [ "$option" = ":" ]; then
-    echo
     echo "Missing argument for option -- '$OPTARG'" 1>&2
     usage
     exit 2
@@ -85,6 +85,8 @@ while getopts ":hfm:o:" option; do
     fi
   fi
 done
+
+logSysEnvironment $@
 
 # SNP Matrix file
 if [ "$opt_m_set" = "1" ]; then
@@ -262,12 +264,13 @@ echo "# "$(date +"%Y-%m-%d %T") Count missing positions in the snp matrix 1>&2
 #------------------------------------------
 
 missingPos=$(python << END
+from __future__ import print_function
 from Bio import SeqIO
 handle = open("$snpmaFile", "rU")
 for record in SeqIO.parse(handle, "fasta"):
     if record.id == "$sampleDirBasename":
         missing = record.seq.count('-')
-        print missing
+        print(missing)
         break
 handle.close()
 END

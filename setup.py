@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
 from setuptools import setup
 import sys
@@ -21,7 +21,6 @@ else:
 # depending on the python version
 install_requires = [
     'PyVCF',
-    'setuptools',
     'psutil',
     'Biopython',
 ]
@@ -32,9 +31,22 @@ if sys.version_info < (2,7,):
     install_requires.append('ordereddict')
     install_requires.append('counter')
 
+test_requires = [
+    'testfixtures',
+]
+
+if sys.version_info < (2,7,):
+    test_requires.append('unittest2')
+
+if sys.version_info < (2,7,):
+    test_suite='unittest2.collector'
+else:
+    test_suite='test'
+
+
 setup(
     name='snp-pipeline',
-    version='0.3.3',
+    version='0.4.2a.3',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -74,11 +86,13 @@ setup(
         'scripts/prepSamples.sh',
         'scripts/create_snp_list.py',
         'scripts/create_snp_pileup.py',
+        'scripts/call_consensus.py',
         'scripts/create_snp_matrix.py',
         'scripts/create_snp_reference_seq.py',
         'scripts/copy_snppipeline_data.py',
         'scripts/collectSampleMetrics.sh',
         'scripts/combineSampleMetrics.sh',
+        'scripts/mergeVcf.sh',
     ],
 
     # Include the test data files listed below in the distribution.
@@ -86,29 +100,19 @@ setup(
     # The same list of files is in MANIFEST.in for sdist distributions.
     package_data={
         'snppipeline' : ['data/configuration/snppipeline.conf',
-                         'data/lambdaVirusInputs/reference/*.fasta',
-                         'data/lambdaVirusInputs/samples/sample*/*.fastq',
-                         'data/lambdaVirusExpectedResults/samples/sample*/reads.sam',
-                         'data/lambdaVirusExpectedResults/samples/sample*/reads.all.pileup',
-                         'data/lambdaVirusExpectedResults/samples/sample*/var.flt.vcf',
-                         'data/lambdaVirusExpectedResults/snplist.txt',
-                         'data/lambdaVirusExpectedResults/samples/sample*/reads.snp.pileup',
-                         'data/lambdaVirusExpectedResults/snpma.fasta',
-                         'data/lambdaVirusExpectedResults/referenceSNP.fasta',
-                         'data/agonaInputs/reference/*.fasta',
+                         'data/lambdaVirusInputs/reference/*',
+                         'data/lambdaVirusInputs/samples/*/*',
+                         'data/lambdaVirusExpectedResults/samples/*/*',
+                         'data/lambdaVirusExpectedResults/*.*',
+                         'data/agonaInputs/reference/*',
                          'data/agonaInputs/sha256sumCheck',
-                         'data/agonaExpectedResults/referenceSNP.fasta',
-                         'data/agonaExpectedResults/samples/*/var.flt.vcf',
-                         'data/agonaExpectedResults/snplist.txt',
-                         'data/agonaExpectedResults/samples/*/reads.snp.pileup',
-                         'data/agonaExpectedResults/snpma.fasta',
-                         'data/listeriaInputs/reference/*.fasta',
+                         'data/agonaExpectedResults/*.*',
+                         'data/agonaExpectedResults/samples/*/*',
+                         'data/listeriaInputs/reference/*',
                          'data/listeriaInputs/sampleList',
                          'data/listeriaInputs/sha256sumCheck',
-                         'data/listeriaExpectedResults/referenceSNP.fasta',
-                         'data/listeriaExpectedResults/samples/*/var.flt.vcf',
-                         'data/listeriaExpectedResults/snplist.txt',
-                         'data/listeriaExpectedResults/snpma.fasta',
+                         'data/listeriaExpectedResults/*.*',
+                         'data/listeriaExpectedResults/samples/*/*',
                          ]
     },
 
@@ -117,5 +121,6 @@ setup(
     install_requires=install_requires,
 
     # package (aka directory) containing unit test modules
-    test_suite='test',
+    test_suite=test_suite,
+    tests_require=test_requires,
 )

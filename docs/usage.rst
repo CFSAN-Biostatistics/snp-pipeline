@@ -29,8 +29,14 @@ of shell scripts and python scripts.
 | create_snp_list.py          | | Combines the SNP positions across all samples into a single      |
 |                             | | unified SNP list file                                            |
 +-----------------------------+--------------------------------------------------------------------+
-| create_snp_pileup.py        | | Creates the SNP pileup file for a sample -- the pileup file at   |
-|                             | | the positions where SNPs were called in any of the samples       |
+| create_snp_pileup.py        | | Deprecated -- this command is not used by the pipeline since     |
+|                             | | v0.4.0.  Replaced by call_consensus.py                           |
+|                             | |                                                                  |
+|                             | | Creates the SNP pileup file for a sample -- a subset of the      |
+|                             | | pileup file at only the positions where SNPs were called in any  |
+|                             | | of the samples                                                   |
++-----------------------------+--------------------------------------------------------------------+
+| call_consensus.py           | | Calls the consensus SNPs for each sample                         |
 +-----------------------------+--------------------------------------------------------------------+
 | create_snp_matrix.py        | | Creates a matrix of SNPs across all samples                      |
 +-----------------------------+--------------------------------------------------------------------+
@@ -42,6 +48,9 @@ of shell scripts and python scripts.
 +-----------------------------+--------------------------------------------------------------------+
 | combineSampleMetrics.sh     | | Creates a table of coverage and variant statistics for           |
 |                             | | all samples                                                      |
++-----------------------------+--------------------------------------------------------------------+
+| mergeVcf.sh                 | | Creates a multi-sample VCF file with the snps found in all       |
+|                             | | samples                                                          |
 +-----------------------------+--------------------------------------------------------------------+
 
 
@@ -84,8 +93,12 @@ See :ref:`step-by-step-workflows`.
   samples in a single unified SNP list file identifing the positions and sample 
   names where SNPs were called.
 
-* reads.snp.pileup : for each sample, the pileup file at the positions where 
-  SNPs were called in any of the samples.
+* consensus.fasta : for each sample, the consensus base call at the positions 
+  where SNPs were previously detected in any of the samples.
+
+* consensus.vcf : for each sample, the VCF file of snps called, as well as 
+  failed snps at the positions where SNPs were previously detected in any of 
+  the samples.
 
 * snpma.fasta : the SNP matrix containing the consensus base for each of 
   the samples at the positions where SNPs were called in any of the samples.  
@@ -93,6 +106,9 @@ See :ref:`step-by-step-workflows`.
   Non-SNP positions are not included in the matrix.  The matrix is formatted 
   as a fasta file, with each sequence (all of identical length) corresponding 
   to the SNPs in the correspondingly named sequence.
+
+* snpma.vcf : contains the merged multi-sample VCF file identifying the positions
+  and snps for all samples.
 
 * referenceSNP.fasta : a fasta file containing the reference sequence bases at
   all the SNP locations.
@@ -210,6 +226,9 @@ To run the SNP Pipeline on torque::
 
     run_snp_pipeline.sh -Q torque -s mySamplesDir myReference.fasta
 
+You may need to change the ``Torque_StripJobArraySuffix`` configuration parameter if
+you see qsub illegal dependency errors.
+
 Grid Engine
 ~~~~~~~~~~~
 To run the SNP Pipeline on grid engine you must use a configuration file to specify
@@ -222,13 +241,47 @@ Grab the default configuration file::
 
 Edit the snppipeline.conf file and make the following change::
     
-    PEname="myPE" # substitute the name of your PE
+    GridEngine_PEname="myPE" # substitute the name of your PE
+
+You may also need to change the ``GridEngine_StripJobArraySuffix`` configuration parameter if
+you see qsub illegal dependency errors.
 
 Then run the pipeline with the -c and -Q command line options::    
     
     run_snp_pipeline.sh -c snppipeline.conf -Q grid -s mySamplesDir myReference.fasta
 
 See also: :ref:`faq-performance-label`.
+
+
+.. _tool-selection-label:
+
+Tool Selection
+--------------
+The SNP Pipeline lets you choose either the Bowtie2 aligner or the Smalt aligner.  Your choice
+of aligner, as well as the command line options for the aligner are specified in the
+SNP Pipeline configuration file.
+
+Grab the default configuration file::
+
+    copy_snppipeline_data.py configurationFile
+
+To run the SNP Pipeline with Bowtie2, edit ``snppipeline.conf`` with these settings::
+
+    SnpPipeline_Aligner="bowtie2"
+    Bowtie2Build_ExtraParams="" # substitute the command line options you want here
+    Bowtie2Align_ExtraParams="" # substitute the command line options you want here
+
+To run the SNP Pipeline with Smalt, edit ``snppipeline.conf`` with these settings::
+
+    SnpPipeline_Aligner="smalt"
+    SmaltIndex_ExtraParams="" # substitute the command line options you want here
+    SmaltAlign_ExtraParams="" # substitute the command line options you want here
+
+Then run the pipeline with the -c command line option::    
+    
+    run_snp_pipeline.sh -c snppipeline.conf -s mySamplesDir myReference.fasta
+    
+See also :ref:`configuration-label`.
 
 
 All-In-One SNP Pipeline Workflows
@@ -285,6 +338,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     # Verify the result files were created
     ls -l snplist.txt
     ls -l snpma.fasta
+    ls -l snpma.vcf
     ls -l referenceSNP.fasta
 
     # Verify correct results
@@ -357,6 +411,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     # Verify the result files were created
     ls -l outputDirectory/snplist.txt
     ls -l outputDirectory/snpma.fasta
+    ls -l outputDirectory/snpma.vcf
     ls -l outputDirectory/referenceSNP.fasta
 
     # Verify correct results
@@ -446,6 +501,7 @@ bases are in the referenceSNP.fasta file::
     # Verify the result files were created
     ls -l outputDirectory/snplist.txt
     ls -l outputDirectory/snpma.fasta
+    ls -l outputDirectory/snpma.vcf
     ls -l outputDirectory/referenceSNP.fasta
 
     # Verify correct results
@@ -518,6 +574,7 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
+    export Bowtie2Align_ExtraParams="--reorder -X 1000"
     cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/lambda_virus.fasta
 
 Step 5 - Prep the samples::
@@ -530,14 +587,14 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
     create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
 
-Step 7 - Create pileups at SNP positions for each sample::
+Step 7 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
 
 Step 8 - Create the SNP matrix::
 
-    create_snp_matrix.py -l snplist.txt -p reads.snp.pileup -o snpma.fasta sampleDirectories.txt
+    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
 
 Step 9 - Create the reference base sequence::
 
@@ -545,13 +602,17 @@ Step 9 - Create the reference base sequence::
 
 Step 10 - Collect metrics for each sample::
 
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX reference/lambda_virus.fasta
 
 Step 11 - Tabulate the metrics for all samples::
 
     combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
 
-Step 12 - View and verify the results:
+Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
+
+    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
+
+Step 13 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -559,6 +620,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     # Verify the result files were created
     ls -l snplist.txt
     ls -l snpma.fasta
+    ls -l snpma.vcf
     ls -l referenceSNP.fasta
 
     # Verify correct results
@@ -629,6 +691,7 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
+    export Bowtie2Align_ExtraParams="--reorder -X 1000"
     cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/NC_011149.fasta
 
 Step 5 - Prep the samples::
@@ -641,14 +704,14 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
     create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
 
-Step 7 - Create pileups at SNP positions for each sample::
+Step 7 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
 
 Step 8 - Create the SNP matrix::
 
-    create_snp_matrix.py -l snplist.txt -p reads.snp.pileup -o snpma.fasta sampleDirectories.txt
+    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
 
 Step 9 - Create the reference base sequence::
 
@@ -656,13 +719,17 @@ Step 9 - Create the reference base sequence::
 
 Step 10 - Collect metrics for each sample::
 
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX reference/NC_011149.fasta
 
 Step 11 - Tabulate the metrics for all samples::
 
     combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
 
-Step 12 - View and verify the results:
+Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
+
+    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
+
+Step 13 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 3624 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -670,6 +737,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     # Verify the result files were created
     ls -l snplist.txt
     ls -l snpma.fasta
+    ls -l snpma.vcf
     ls -l referenceSNP.fasta
 
     # Verify correct results
@@ -730,6 +798,7 @@ Step 3 - Prep the reference::
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
+    export Bowtie2Align_ExtraParams="--reorder -X 1000"
     cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/my_reference.fasta
 
 Step 5 - Prep the samples::
@@ -742,14 +811,14 @@ Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
     create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
 
-Step 7 - Create pileups at SNP positions for each sample::
+Step 7 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX create_snp_pileup.py -l snplist.txt -a XX/reads.all.pileup -o XX/reads.snp.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
 
 Step 8 - Create the SNP matrix::
 
-    create_snp_matrix.py -l snplist.txt -p reads.snp.pileup -o snpma.fasta sampleDirectories.txt
+    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
 
 Step 9 - Create the reference base sequence::
 
@@ -758,19 +827,24 @@ Step 9 - Create the reference base sequence::
 
 Step 10 - Collect metrics for each sample::
 
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX reference/my_reference.fasta
 
 Step 11 - Tabulate the metrics for all samples::
 
     combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
 
-Step 12 - View the results:
+Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
+
+    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
+
+Step 13 - View the results:
 
 Upon successful completion of the pipeline, the snplist.txt identifies the SNPs in all samples.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     ls -l snplist.txt
     ls -l snpma.fasta
+    ls -l snpma.vcf
     ls -l referenceSNP.fasta
 
     # View the per-sample metrics

@@ -38,6 +38,13 @@
 #   20150407-scd: Exit with an error message when run with -s option and the samples directory is empty or contains no subdirectories with fastq files
 #   20150408-scd: Don't exit upon du command error when there are no fastq files or no fq files.
 #   20150410-scd: Verify each of the sample directories in the sample directory file is not empty and contains fastq's.
+#   20150618-scd: Allow trailing slashes in the file of sample directories.
+#   20150618-scd: Allow blank lines in the file of sample directories.
+#   20150630-scd: Add support for Smalt.
+#   20150824-scd: Replace create_snp_pileup.py with call_consensus.py.
+#   20150911-scd: Generate the consensus.vcf file for all samples.
+#   20150928-scd: Merge the per-sample VCF files into a multi-vcf file.
+#   20151013-scd: Added a configuration parameter to control stripping the array jobid suffix.
 #Notes:
 #
 #Bugs:
@@ -131,6 +138,25 @@ get_abs_filename()
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
+
+stripTorqueJobArraySuffix()
+{
+  if [[ $Torque_StripJobArraySuffix = true ]]; then
+    echo ${1%%.*}
+  else
+    echo $1
+  fi
+}
+
+stripGridEngineJobArraySuffix()
+{
+  if [[ $GridEngine_StripJobArraySuffix = true ]]; then
+    echo ${1%%.*}
+  else
+    echo $1
+  fi
+}
+
 # --------------------------------------------------------
 # getopts command line option handler: 
 
@@ -151,7 +177,6 @@ get_abs_filename()
 # example: ":abc:d"
 # -abc 14 -d
 
-echo
 while getopts ":hfm:c:Q:o:s:S:" option; do
     if [ "$option" = "h" ]; then
         usagelong
@@ -188,6 +213,7 @@ if [ "$referenceFilePath" = "" ]; then
 fi
 if [[ ! -f "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath does not exist."; exit 10; fi
 if [[ ! -s "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath is empty."; exit 10; fi
+export referenceFileName=${referenceFilePath##*/} # strip directories
 
 # Extra arguments not allowed
 if [[ "$2" != "" ]]; then 
@@ -251,6 +277,69 @@ if [[ "$opt_s_set" != "1" && "$opt_S_set" != "1" ]]; then
 fi
 
 
+# Create the logs directory
+runTimeStamp=$(date +"%Y%m%d.%H%M%S")
+export logDir="$workDir/logs-$runTimeStamp"
+mkdir -p "$logDir"
+
+# Handle configuration file, use the specified file, or create a default file
+if [[ "$opt_c_set" = "1" ]]; then
+    configFilePath="$opt_c_arg"
+    if [[ ! -f "$configFilePath" ]]; then echo "Configuration file $configFilePath does not exist."; exit 80; fi
+    if [[ ! -s "$configFilePath" ]]; then echo "Configuration file $configFilePath is empty."; exit 80; fi
+    cp -p "$configFilePath" "$logDir"
+    source "$configFilePath"
+else
+    # true below is to ignore preserve timestamp error
+    copy_snppipeline_data.py configurationFile "$logDir" || true
+    source "$logDir/snppipeline.conf"
+fi
+
+# Validate the configured aligner choice
+if [[ "$SnpPipeline_Aligner" == "" ]]; then
+    SnpPipeline_Aligner="bowtie2"
+else
+    # make lowercase 
+    SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]')
+    if [[ "$SnpPipeline_Aligner" != "bowtie2" && "$SnpPipeline_Aligner" != "smalt" ]]; then
+        echo "Config file error in SnpPipeline_Aligner parameter: only bowtie2 and smalt aligners are supported."
+        exit 90
+    fi
+fi
+
+export SnpPipeline_Aligner
+export Bowtie2Build_ExtraParams
+export SmaltIndex_ExtraParams
+export SamtoolsFaidx_ExtraParams
+export Bowtie2Align_ExtraParams
+export SmaltAlign_ExtraParams
+export SamtoolsSamFilter_ExtraParams
+export SamtoolsSort_ExtraParams
+export SamtoolsMpileup_ExtraParams
+export VarscanMpileup2snp_ExtraParams
+export VarscanJvm_ExtraParams
+export CreateSnpList_ExtraParams
+export CallConsensus_ExtraParams
+export CreateSnpMatrix_ExtraParams
+export CreateSnpReferenceSeq_ExtraParams
+export GridEngine_PEname
+
+
+# Rewrite the file of sample directories, removing trailing slashes and blank lines.
+rewriteCleansedFileOfSampleDirs()
+{
+    local inSampleDirsFile=$1
+    local outSampleDirsFile=$2
+
+    # Is the file of sample dirs the same as the file to be created?
+    if [ "$inSampleDirsFile" -ef "$outSampleDirsFile" ]; then
+        # Remove trailing slashes and blank lines
+        sed --in-place -e "s,/\+$,," -e '/^[[:space:]]*$/d' "$inSampleDirsFile"
+    else
+        sed            -e "s,/\+$,," -e '/^[[:space:]]*$/d' "$inSampleDirsFile" > "$outSampleDirsFile"
+    fi
+}
+
 # Verify each of the sample directories in the sample directory file is not empty and contains fastq's
 validateFileOfSampleDirs()
 {
@@ -310,7 +399,9 @@ if [[ "$opt_s_set" = "1" ]]; then
 fi
 if [[ "$opt_S_set" = "1" ]]; then
     sampleDirsFile="$opt_S_arg"
-    validateFileOfSampleDirs $sampleDirsFile
+    rewriteCleansedFileOfSampleDirs "$sampleDirsFile" "$workDir/sampleDirectories.txt"
+    sampleDirsFile="$workDir/sampleDirectories.txt"
+    validateFileOfSampleDirs "$sampleDirsFile"
 fi
 sampleCount=$(cat "$sampleDirsFile" | wc -l)
 
@@ -352,37 +443,6 @@ if [[ "$opt_m_set" = "1" ]]; then
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
 
-# Create the logs directory
-runTimeStamp=$(date +"%Y%m%d.%H%M%S")
-export logDir="$workDir/logs-$runTimeStamp"
-mkdir -p "$logDir"
-
-# Handle configuration file, use the specified file, or create a default file
-if [[ "$opt_c_set" = "1" ]]; then
-    configFilePath="$opt_c_arg"
-    if [[ ! -f "$configFilePath" ]]; then echo "Configuration file $configFilePath does not exist."; exit 80; fi
-    if [[ ! -s "$configFilePath" ]]; then echo "Configuration file $configFilePath is empty."; exit 80; fi
-    cp -p "$configFilePath" "$logDir"
-    source "$configFilePath"
-else
-    # true below is to ignore preserve timestamp error
-    copy_snppipeline_data.py configurationFile "$logDir" || true
-    source "$logDir/snppipeline.conf"
-fi
-export Bowtie2Build_ExtraParams
-export SamtoolsFaidx_ExtraParams
-export Bowtie2Align_ExtraParams
-export SamtoolsSamFilter_ExtraParams
-export SamtoolsSort_ExtraParams
-export SamtoolsMpileup_ExtraParams
-export VarscanMpileup2snp_ExtraParams
-export VarscanJvm_ExtraParams
-export CreateSnpList_ExtraParams
-export CreateSnpPileup_ExtraParams
-export CreateSnpMatrix_ExtraParams
-export CreateSnpReferenceSeq_ExtraParams
-export PEname
-
 
 # --------------------------------------------------------
 echo -e "\nStep 1 - Prep work"
@@ -420,36 +480,42 @@ else
 fi
 
 echo -e "\nStep 3 - Align the samples to the reference"
-if [[ "$platform" == "grid" ]]; then
-    # Parse the user-specified bowtie parameters to find the number of CPU cores requested, for example, "-p 16"
-    regex="(-p[[:blank:]]*)([[:digit:]]+)"
-    if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
-        numAlignThreads=${BASH_REMATCH[2]}
+# Parse the user-specified aligner parameters to find the number of CPU cores requested, for example, "-p 16" or "-n 16"
+# Set the default number of  CPU cores if the user did not configure a value.
+if [[ "$platform" == "grid" || "$platform" == "torque" ]]; then
+    if [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
+        regex="(-n[[:blank:]]*)([[:digit:]]+)"
+        if [[ "$SmaltAlign_ExtraParams" =~ $regex ]]; then
+            numAlignThreads=${BASH_REMATCH[2]}
+        else
+            numAlignThreads=8
+            SmaltAlign_ExtraParams="$SmaltAlign_ExtraParams -n $numAlignThreads"
+        fi
     else
-        numAlignThreads=8
-        Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
+        regex="(-p[[:blank:]]*)([[:digit:]]+)"
+        if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
+            numAlignThreads=${BASH_REMATCH[2]}
+        else
+            numAlignThreads=8
+            Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
+        fi
     fi
+fi
+
+if [[ "$platform" == "grid" ]]; then
     alignSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
 #$   -N job.alignSamples
 #$   -cwd
 #$   -V
 #$   -j y
-#$   -pe $PEname $numAlignThreads
+#$   -pe $GridEngine_PEname $numAlignThreads
 #$   -hold_jid $prepReferenceJobId
 #$   -o $logDir/alignSamples.log-\$TASK_ID
-#$   -v Bowtie2Align_ExtraParams
+#$   -v SnpPipeline_Aligner,Bowtie2Align_ExtraParams,SmaltAlign_ExtraParams
     alignSampleToReference.sh $forceFlag "$referenceFilePath" \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    # Parse the user-specified bowtie parameters to find the number of CPU cores requested, for example, "-p 16"
-    regex="(-p[[:blank:]]*)([[:digit:]]+)"
-    if [[ "$Bowtie2Align_ExtraParams" =~ $regex ]]; then
-        numAlignThreads=${BASH_REMATCH[2]}
-    else
-        numAlignThreads=8
-        Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
-    fi
     alignSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
     #PBS -N job.alignSamples
     #PBS -d $(pwd)
@@ -457,7 +523,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -l nodes=1:ppn=$numAlignThreads
     #PBS -W depend=afterok:$prepReferenceJobId
     #PBS -o $logDir/alignSamples.log
-    #PBS -v Bowtie2Align_ExtraParams
+    #PBS -v SnpPipeline_Aligner,Bowtie2Align_ExtraParams,SmaltAlign_ExtraParams
     samplesToAlign=\$(cat "$workDir/sampleFullPathNames.txt" | head -n \$PBS_ARRAYID | tail -n 1)
     alignSampleToReference.sh $forceFlag "$referenceFilePath" \$samplesToAlign
 _EOF_
@@ -469,7 +535,7 @@ fi
 echo -e "\nStep 4 - Prep the samples"
 if [[ "$platform" == "grid" ]]; then
     sleep $((1 + sampleCount / 150)) # workaround potential bug when submitting two large consecutive array jobs
-    alignSamplesJobArray=${alignSamplesJobId%%.*}
+    alignSamplesJobArray=$(stripGridEngineJobArraySuffix $alignSamplesJobId)
     prepSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
 #$   -N job.prepSamples
 #$   -cwd
@@ -484,7 +550,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     sleep $((1 + sampleCount / 150)) # workaround torque bug when submitting two large consecutive array jobs
-    alignSamplesJobArray=${alignSamplesJobId%%.*}
+    alignSamplesJobArray=$(stripTorqueJobArraySuffix $alignSamplesJobId)
     prepSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
     #PBS -N job.prepSamples
     #PBS -d $(pwd)
@@ -508,7 +574,7 @@ fi
 
 echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP list file"
 if [[ "$platform" == "grid" ]]; then
-    prepSamplesJobArray=${prepSamplesJobId%%.*}
+    prepSamplesJobArray=$(stripGridEngineJobArraySuffix $prepSamplesJobId)
     snpListJobId=$(echo | qsub  -terse << _EOF_
 #$ -N job.snpList
 #$ -cwd
@@ -521,7 +587,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    prepSamplesJobArray=${prepSamplesJobId%%.*}
+    prepSamplesJobArray=$(stripTorqueJobArraySuffix $prepSamplesJobId)
     snpListJobId=$(echo | qsub << _EOF_
     #PBS -N job.snpList
     #PBS -d $(pwd)
@@ -536,71 +602,71 @@ else
     create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/snpList.log
 fi
 
-echo -e "\nStep 6 - Create pileups at SNP positions for each sample"
+echo -e "\nStep 6 - Call the consensus SNPs for each sample"
 if [[ "$platform" == "grid" ]]; then
-    snpPileupJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
-#$ -N job.snpPileup
+    callConsensusJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+#$ -N job.callConsensus
 #$ -cwd
 #$ -V
 #$ -j y
 #$ -hold_jid $snpListJobId
-#$ -o $logDir/snpPileup.log-\$TASK_ID
-#$ -v CreateSnpPileup_ExtraParams
+#$ -o $logDir/callConsensus.log-\$TASK_ID
+#$ -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    create_snp_pileup.py $forceFlag -l "$workDir/snplist.txt" -a "\$sampleDir/reads.all.pileup" -o "\$sampleDir/reads.snp.pileup" $CreateSnpPileup_ExtraParams
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    snpPileupJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
-    #PBS -N job.snpPileup
+    callConsensusJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
+    #PBS -N job.callConsensus
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterok:$snpListJobId
-    #PBS -o $logDir/snpPileup.log
-    #PBS -v CreateSnpPileup_ExtraParams
+    #PBS -o $logDir/callConsensus.log
+    #PBS -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    create_snp_pileup.py $forceFlag -l "$workDir/snplist.txt" -a "\$sampleDir/reads.all.pileup" -o "\$sampleDir/reads.snp.pileup" $CreateSnpPileup_ExtraParams
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 else
-    if [[ "$MaxConcurrentCreateSnpPileup" != "" ]]; then
-        numCreateSnpPileupCores=$MaxConcurrentCreateSnpPileup
+    if [[ "$MaxConcurrentCallConsensus" != "" ]]; then
+        numCallConsensusCores=$MaxConcurrentCallConsensus
     else
-        numCreateSnpPileupCores=$numCores
+        numCallConsensusCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCreateSnpPileupCores sh -c 'create_snp_pileup.py $forceFlag -l "$workDir/snplist.txt" -a "$1/reads.all.pileup" -o "$1/reads.snp.pileup" $CreateSnpPileup_ExtraParams 2>&1 | tee $logDir/snpPileup.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores sh -c 'call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
 fi
 
 echo -e "\nStep 7 - Create the SNP matrix"
 if [[ "$platform" == "grid" ]]; then
-    snpPileupJobArray=${snpPileupJobId%%.*}
+    callConsensusJobArray=$(stripGridEngineJobArraySuffix $callConsensusJobId)
     snpMatrixJobId=$(echo | qsub -terse << _EOF_
 #$ -N job.snpMatrix
 #$ -cwd
 #$ -V
 #$ -j y
-#$ -hold_jid $snpPileupJobArray
+#$ -hold_jid $callConsensusJobArray
 #$ -l h_rt=05:00:00
 #$ -o $logDir/snpMatrix.log
 #$ -v CreateSnpMatrix_ExtraParams
-    create_snp_matrix.py $forceFlag -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
+    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    snpPileupJobArray=${snpPileupJobId%%.*}
+    callConsensusJobArray=$(stripTorqueJobArraySuffix $callConsensusJobId)
     snpMatrixJobId=$(echo | qsub << _EOF_
     #PBS -N job.snpMatrix
     #PBS -d $(pwd)
     #PBS -j oe
-    #PBS -W depend=afterokarray:$snpPileupJobArray
+    #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -l walltime=05:00:00
     #PBS -o $logDir/snpMatrix.log
     #PBS -v CreateSnpMatrix_ExtraParams
-    create_snp_matrix.py $forceFlag -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
+    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
 _EOF_
 )
 else
-    create_snp_matrix.py $forceFlag -l "$workDir/snplist.txt" -p reads.snp.pileup -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
+    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
 fi    
 
 echo -e "\nStep 8 - Create the reference base sequence"
@@ -610,7 +676,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -N job.snpReference 
 #$ -cwd
 #$ -j y 
-#$ -hold_jid $snpPileupJobArray
+#$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/snpReference.log
 #$ -v CreateSnpReferenceSeq_ExtraParams
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
@@ -621,7 +687,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -N job.snpReference 
     #PBS -d $(pwd)
     #PBS -j oe 
-    #PBS -W depend=afterokarray:$snpPileupJobArray
+    #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -o $logDir/snpReference.log
     #PBS -v CreateSnpReferenceSeq_ExtraParams
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
@@ -631,7 +697,38 @@ else
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
 fi
 
-echo -e "\nStep 9 - Collect metrics for each sample"
+
+echo -e "\nStep 9 - Create the Multi-VCF file"
+if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
+    if [[ "$platform" == "grid" ]]; then
+        mergeVcfJobId=$(echo | qsub  -terse << _EOF_
+#$ -N job.mergeVcf
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $callConsensusJobArray
+#$ -o $logDir/mergeVcf.log
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+    elif [[ "$platform" == "torque" ]]; then
+        mergeVcfJobId=$(echo | qsub << _EOF_
+        #PBS -N job.mergeVcf
+        #PBS -d $(pwd)
+        #PBS -j oe
+        #PBS -W depend=afterokarray:$callConsensusJobArray
+        #PBS -o $logDir/mergeVcf.log
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+    else
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
+    fi
+else
+    echo -e "Skipped per CallConsensus_ExtraParams configuration"
+fi
+
+echo -e "\nStep 10 - Collect metrics for each sample"
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
 #$ -N job.collectMetrics
@@ -666,9 +763,9 @@ else
     nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores sh -c 'collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
-echo -e "\nStep 10 - Combine the metrics across all samples into the metrics table"
+echo -e "\nStep 11 - Combine the metrics across all samples into the metrics table"
 if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobArray=${collectSampleMetricsJobId%%.*}
+    collectSampleMetricsJobArray=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
     combineSampleMetricsJobId=$(echo | qsub  -terse << _EOF_
 #$ -N job.combineMetrics
 #$ -cwd
@@ -680,7 +777,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobArray=${collectSampleMetricsJobId%%.*}
+    collectSampleMetricsJobArray=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
     combineSampleMetricsJobId=$(echo | qsub << _EOF_
     #PBS -N job.combineMetrics
     #PBS -d $(pwd)

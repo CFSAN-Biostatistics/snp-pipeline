@@ -53,7 +53,6 @@ run_snp_pipeline.sh
 
 ::
 
-  
   usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q torque|grid] [-o DIR] (-s DIR|-S FILE)
                              referenceFile
   
@@ -128,7 +127,6 @@ prepReference.sh
 
 ::
 
-  
   usage: prepReference.sh [-h] [-f] referenceFile
   
   Index the reference genome for subsequent alignment, and create
@@ -149,7 +147,6 @@ alignSampleToReference.sh
 
 ::
 
-  
   usage: alignSampleToReference.sh [-h] [-f] referenceFile sampleFastqFile1 [sampleFastqFile2]
   
   Align the sequence reads for a specified sample to a specified reference genome.
@@ -171,7 +168,6 @@ prepSamples.sh
 
 ::
 
-  
   usage: prepSamples.sh [-h] [-f] referenceFile sampleDir
   
   Find variants in a specified sample.
@@ -244,13 +240,89 @@ create_snp_pileup.py
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
+.. _cmd-ref-call-consensus:
+
+call_consensus.py
+------------------------
+
+::
+
+  usage: call_consensus.py [-h] [-f] [-l FILE] [-o FILE] [-q INT] [-c FREQ]
+                           [-d INT] [-b FREQ] [--vcfFileName NAME]
+                           [--vcfRefName NAME] [--vcfAllPos]
+                           [--vcfPreserveRefCase] [-v 0..5] [--version]
+                           allPileupFile
+  
+  Call the consensus base for a sample at the specified positions where SNPs
+  were previously called in any of the samples. Generates a single-sequence
+  fasta file with one base per specified position.
+  
+  positional arguments:
+    allPileupFile         Relative or absolute path to the genome-wide pileup
+                          file for this sample.
+  
+  optional arguments:
+    -h, --help            show this help message and exit
+    -f, --force           Force processing even when result file already exists
+                          and is newer than inputs. (default: False)
+    -l FILE, --snpListFile FILE
+                          Relative or absolute path to the SNP list file across
+                          all samples. (default: snplist.txt)
+    -o FILE, --output FILE
+                          Output file. Relative or absolute path to the
+                          consensus fasta file for this sample. (default:
+                          consensus.fasta)
+    -q INT, --minBaseQual INT
+                          Mimimum base quality score to count a read. All other
+                          snp filters take effect after the low-quality reads
+                          are discarded. (default: 0)
+    -c FREQ, --minConsFreq FREQ
+                          Consensus frequency. Mimimum fraction of high-quality
+                          reads supporting the consensus to make a call.
+                          (default: 0.6)
+    -d INT, --minConsStrdDpth INT
+                          Consensus strand depth. Minimum number of high-quality
+                          reads supporting the consensus which must be present
+                          on both the forward and reverse strands to make a
+                          call. (default: 0)
+    -b FREQ, --minConsStrdBias FREQ
+                          Strand bias. Minimum fraction of the high-quality
+                          consensus-supporting reads which must be present on
+                          both the forward and reverse strands to make a call.
+                          The numerator of this fraction is the number of high-
+                          quality consensus-supporting reads on one strand. The
+                          denominator is the total number of high-quality
+                          consensus-supporting reads on both strands combined.
+                          (default: 0)
+    --vcfFileName NAME    VCF Output file name. If specified, a VCF file with
+                          this file name will be created in the same directory
+                          as the consensus fasta file for this sample. (default:
+                          None)
+    --vcfRefName NAME     Name of the reference file. This is only used in the
+                          generated VCF file header. (default: Unknown
+                          reference)
+    --vcfAllPos           Flag to cause VCF file generation at all positions,
+                          not just the snp positions. This has no effect on the
+                          consensus fasta file, it only affects the VCF file.
+                          This capability is intended primarily as a diagnostic
+                          tool and enabling this flag will greatly increase
+                          execution time. (default: False)
+    --vcfPreserveRefCase  Flag to cause the VCF file generator to emit each
+                          reference base in uppercase/lowercase as it appears in
+                          the reference sequence file. If not specified, the
+                          reference base is emitted in uppercase. (default:
+                          False)
+    -v 0..5, --verbose 0..5
+                          Verbose message level (0=no info, 5=lots) (default: 1)
+    --version             show program's version number and exit
+
 create_snp_matrix.py
 ------------------------
 
 ::
 
-  usage: create_snp_matrix.py [-h] [-f] [-l FILE] [-p NAME] [-o FILE] [-c FREQ]
-                              [-v 0..5] [--version]
+  usage: create_snp_matrix.py [-h] [-f] [-c NAME] [-o FILE] [-v 0..5]
+                              [--version]
                               sampleDirsFile
   
   Create the SNP matrix containing the consensus base for each of the samples at
@@ -268,19 +340,13 @@ create_snp_matrix.py
     -h, --help            show this help message and exit
     -f, --force           Force processing even when result file already exists
                           and is newer than inputs (default: False)
-    -l FILE, --snpListFile FILE
-                          Relative or absolute path to the SNP list file
-                          (default: snplist.txt)
-    -p NAME, --pileupFileName NAME
-                          File name of the SNP pileup files which must exist in
-                          each of the sample directories (default:
-                          reads.snp.pileup)
+    -c NAME, --consFileName NAME
+                          File name of the previously created consensus SNP call
+                          file which must exist in each of the sample
+                          directories (default: consensus.fasta)
     -o FILE, --output FILE
                           Output file. Relative or absolute path to the SNP
                           matrix file (default: snpma.fasta)
-    -c FREQ, --minConsFreq FREQ
-                          Mimimum fraction of reads that must agree to make a
-                          consensus call (default: 0.6)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
@@ -360,3 +426,28 @@ combineSampleMetrics.sh
                        the sample directories. Default: metrics)
     -o FILE          : Output file. Relative or absolute path to the combined metrics
                        file. Default: stdout)
+
+mergeVcf.sh
+---------------------------
+
+::
+
+  usage: mergeVcf.sh [-h] [-f] [-n NAME] [-o FILE] sampleDirsFile
+  
+  Merge the vcf files from all samples into a single multi-vcf file for all samples.
+  
+  Before running this command, the vcf file for each sample must be created by the
+  call_consensus.py script.
+  
+  Positional arguments:
+    sampleDirsFile   : Relative or absolute path to file containing a list of
+                       directories -- one per sample
+  
+  Options:
+    -h               : Show this help message and exit
+    -f               : Force processing even when result files already exist and 
+                       are newer than inputs
+    -n NAME          : File name of the vcf files which must exist in each of
+                       the sample directories. Default: consensus.vcf)
+    -o FILE          : Output file. Relative or absolute path to the merged
+                       multi-vcf file. Default: snpma.vcf)

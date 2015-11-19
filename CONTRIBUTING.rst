@@ -70,15 +70,13 @@ Ready to contribute? Here's how to set up `snp-pipeline` for local development.
 #. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
 
     $ mkvirtualenv snppipeline
-    $ toggleglobalsitepackages        # to access Biopython from the global site-packages
     $ cd snppipeline/
     $ python setup.py develop
     $ pip install sphinx_rtd_theme    # the documentation uses the ReadTheDocs theme
 
-#. Run the pipeline on the supplied data set:
+#. Run the unit tests on the supplied data set to verify your installation is working::
 
-    The unit tests will not run successfully until after you prepare the reference and samples for the supplied 
-    Lambda Virus data set.  See the :ref:`usage-label` section.
+    $ python setup.py test
 
 #. Create a branch for local development::
 
@@ -98,7 +96,7 @@ Ready to contribute? Here's how to set up `snp-pipeline` for local development.
 
     $ cd docs
     $ sphinx-build -b html . ./_build
-    $ firefox ./_build/index.html
+    $ xdg-open _build/index.html
 
 #. Commit your changes and push your branch to GitHub::
 

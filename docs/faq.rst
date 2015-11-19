@@ -19,11 +19,11 @@ your user area instead of installing into your global site packages, do this::
 **Q: The SNP Pipeline cannot find VarScan.  How should I install it?**
 
 A: Download the VarScan jar file from SourceForge.  Put the jar file anywhere.  You need read-access to the
-jar file, but not execute-access.  The suppled shell scripts expect the CLASSPATH environment variable to 
+jar file, but not execute-access.  The supplied shell scripts expect the CLASSPATH environment variable to 
 specify the path to the VarScan jar file.  The CLASSPATH should include the filename, not just the directory.
 Define it like this in your .bashrc file::
 
-    export CLASSPATH=~/software/varscan.v2.3.6/VarScan.v2.3.6.jar:$CLASSPATH
+    export CLASSPATH=~/software/varscan.v2.3.9/VarScan.v2.3.9.jar:$CLASSPATH
 
 
 **Q: How can I uninstall the SNP pipeline?**
@@ -53,10 +53,9 @@ Running the Pipeline
 
 **Q: Nothing works.**
 
-A: Make sure you have the proper dependencies on your path.  Modify your path if necessary to include bowtie 
-and samtools.  See the question above about installing VarScan.  Also make sure you install Biopython.  If 
-you are using virtual environments, make sure you issue the command "toggleglobalsitepackages" so Biopython 
-can be found.  See the :ref:`installation-label` section of this documentation.
+A: Make sure you have the proper dependencies on your path.  Modify your path if necessary to include bowtie,
+samtools, and bcftools.  See the question above about installing VarScan.  In some cases, you may need to manually
+install Biopython.  See the :ref:`installation-label` section of this documentation.
 
 **Q: How can I verify the pipeline is installed and working properly?**
 
@@ -101,11 +100,12 @@ these versions:
 	
 	* bowtie2 2.2.2
 	* samtools 0.1.19
-	* varscan 2.3.6
+	* varscan 2.3.9
 
 **Q: How can I run the SNP Pipeline with a mix of paired and unpaired samples?**
 
-A: Run the alignSampleToReference script once per sample with either 1 fastq file or 2 fastq files.  
+A: This is handled automatically if you use the run_snp_pipeline.sh script.  If you are running alignSampleToReference.sh, 
+run the script once per sample with either 1 fastq file or 2 fastq files.  
 For example::
 
     alignSampleToReference.sh  reference/NC_011149  samples/CFSAN000448/G0H235M04.RL10.fastq
@@ -129,6 +129,17 @@ A: It doesn't.  If you change the configuration file, you may want to re-run som
 Pipeline does not detect which parameters have changed since the last run.  You must manually intervene to cause the 
 pipeline to re-run the impacted processing steps.  See the question above for guidance.
 
+
+**Q: What do the dashes (“-“) in the snp matrix indicate?**
+
+A: Gaps, “-“, are either missing bases (indels) or cases where there is insufficient information to make a consensus call
+(coverage depth too low, or consensus base frequency too low).
+
+**Q: Why are some snps missing from the snp matrix even when the snps were called by VarScan?**
+
+A: Older versions of VarScan failed to generate the header section of some VCF files.  This in turn, caused the SNP Pipeline
+to ignore the first snp in the VCF file.  Upgrade to a newer version VarScan.
+
 .. _faq-performance-label:
 
 Performance
@@ -148,8 +159,8 @@ run_snp_pipeline.sh script::
     # Maximum concurrent prepSamples.sh processes (SAMtools and Varscan)
     MaxConcurrentPrepSamples=
     
-    # Maximum concurrent create_snp_pileup.py processes
-    MaxConcurrentCreateSnpPileup=
+    # Maximum concurrent call_consensus.py processes
+    MaxConcurrentCallConsensus=
 
     # Maximum concurrent collectSampleMetrics.sh processes
     MaxConcurrentCollectSampleMetrics=

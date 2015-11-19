@@ -16,7 +16,7 @@ script without specifying a configuration file, it automatically uses the
 default supplied configuration file.  
 
 To get a copy of the default configuration file, run the following command.  This 
-will create a file called snppipeline.conf::
+will create a file called ``snppipeline.conf``::
 
     copy_snppipeline_data.py configurationFile
 
@@ -52,10 +52,10 @@ This parameter is used by run_snp_pipeline.sh only.
     MaxConcurrentPrepSamples=2
 
 
-MaxConcurrentCreateSnpPileup
-----------------------------
+MaxConcurrentCallConsensus
+--------------------------
 
-Controls the number of create_snp_pileup.py  processes running concurrently 
+Controls the number of call_consensus.py processes running concurrently 
 on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
 This parameter is used by run_snp_pipeline.sh only.
 
@@ -66,13 +66,13 @@ This parameter is used by run_snp_pipeline.sh only.
 
 **Example**::
 
-    MaxConcurrentCreateSnpPileup=4
+    MaxConcurrentCallConsensus=4
 
 
 MaxConcurrentCollectSampleMetrics
 ----------------------------------
 
-Controls the number of collectSampleMetrics.sh  processes running concurrently 
+Controls the number of collectSampleMetrics.sh processes running concurrently 
 on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
 This parameter is used by run_snp_pipeline.sh only.
 
@@ -86,6 +86,20 @@ This parameter is used by run_snp_pipeline.sh only.
     MaxConcurrentCollectSampleMetrics=4
 
 
+SnpPipeline_Aligner
+-------------------
+Controls which reference-based aligner is used to map reads to the reference genome.
+The choices are ``bowtie2`` or ``smalt``.
+
+**Default**: 
+    
+    When this parameter is not set to a value, the pipeline will use the bowtie2 aligner.
+
+**Example**::
+    
+    SnpPipeline_Aligner="smalt"
+
+
 Bowtie2Build_ExtraParams
 ------------------------
 
@@ -97,6 +111,19 @@ can be specified.
 **Example**::
 
     Bowtie2Build_ExtraParams="--offrate 3"
+
+
+SmaltIndex_ExtraParams
+------------------------
+
+Specifies options passed to the smalt indexer.  Any of the smalt index options
+can be specified.
+
+**Default**: none
+
+**Example**::
+
+    SmaltIndex_ExtraParams="-k 20 -s 1"
 
 
 SamtoolsFaidx_ExtraParams
@@ -115,12 +142,12 @@ can be specified.
 Bowtie2Align_ExtraParams
 ------------------------
 
-Specifies options passed to the bowtie2 aligner indexer.  Any of the bowtie2 aligner options
+Specifies options passed to the bowtie2 aligner.  Any of the bowtie2 aligner options
 can be specified.
 
 **Default**: 
 
-|   If you do not specify the -p option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
+|   If you do not specify the ``-p`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
 |      There is no way to completely suppress the -p option.
 |   If Bowtie2Align_ExtraParams is not set to any value, the ``--reorder`` option is enabled by default.
 |      Any value, even a single space, will suppress this default option.
@@ -128,13 +155,42 @@ can be specified.
 
 **Parameter Notes**:
 
-| -p        : bowtie2 uses the specified number of parallel search threads
-| --reorder : generate output records in the same order as the reads in the input file
+| ``-p``        : bowtie2 uses the specified number of parallel search threads
+| ``--reorder`` : generate output records in the same order as the reads in the input file
+| ``-X``        : maximum inter-mate fragment length for valid concordant paired-end alignments
 |
 
 **Example**::
 
-    Bowtie2Align_ExtraParams="--reorder -p 16"
+    Bowtie2Align_ExtraParams="--reorder -p 16 -X 1000"
+
+
+SmaltAlign_ExtraParams
+----------------------
+
+Specifies options passed to the smalt mapper.  Any of the smalt map options
+can be specified.
+
+**Default**: 
+
+|   If you do not specify the ``-n`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
+|      There is no way to completely suppress the -n option.
+|   If SmaltAlign_ExtraParams is not set to any value, the ``-O`` option is enabled by default.
+|      Any value, even a single space, will suppress this default option.
+|
+
+**Parameter Notes**:
+
+| ``-n`` : number of parallel alignment threads
+| ``-O`` : generate output records in the same order as the reads in the input file
+| ``-i`` : maximum insert size for paired-end reads
+| ``-r`` : random number seed, if seed < 0 reads with multiple best mappings are reported as 'not mapped'
+| ``-y`` : filters output alignments by a threshold in the number of exactly matching nucleotides
+|
+
+**Example**::
+
+    SmaltAlign_ExtraParams="-O -i 1000 -r 1"
 
 
 SamtoolsSamFilter_ExtraParams
@@ -150,7 +206,7 @@ Any of the SAMtools view options can be specified.
 
 **Parameter Notes**:
 
-| -F 4      : discard unmapped reads
+| ``-F 4``      : discard unmapped reads
 |
 
 **Example**::
@@ -179,8 +235,8 @@ Any of the SAMtools mpileup options can be specified.
 
 **Parameter Notes**:
 
-| -q    : minimum mapping quality for an alignment to be used
-| -Q    : minimum base quality for a base to be considered 
+| ``-q``    : minimum mapping quality for an alignment to be used
+| ``-Q``    : minimum base quality for a base to be considered 
 |
 
 **Example**::
@@ -197,8 +253,8 @@ Any of the Varscan mpileup2snp options can be specified.
 
 **Parameter Notes**:
 
-| --min-avg-qual : minimum base quality at a position to count a read
-| --min-var-freq : minimum variant allele frequency threshold
+| ``--min-avg-qual`` : minimum base quality at a position to count a read
+| ``--min-var-freq`` : minimum variant allele frequency threshold
 |
 
 **Example**::
@@ -215,7 +271,7 @@ Any of the JVM options can be specified.
 
 **Parameter Notes**:
 
-| -Xmx300m  : use 300 MB memory (modify as needed)
+| ``-Xmx300m``  : use 300 MB memory (modify as needed)
 |
 
 **Example**::
@@ -234,15 +290,41 @@ Specifies options passed to create_snp_list.py.
     CreateSnpList_ExtraParams="--verbose 1"
 
 
-CreateSnpPileup_ExtraParams
----------------------------
-Specifies options passed to create_snp_pileup.py.
+CallConsensus_ExtraParams
+-------------------------
+Specifies options passed to call_consensus.py.
 
 **Default**: None
 
+**Parameter Notes**:
+
+``--minBaseQual``
+    Mimimum base quality score to count a read. All other snp filters take effect after the low-quality reads 
+    are discarded.
+``--minConsFreq``
+    Consensus frequency. Mimimum fraction of high-quality reads supporting the consensus to make a call.
+``--minConsStrdDpth``
+    Consensus strand depth. Minimum number of high-quality reads supporting the consensus which must be present 
+    on both the forward and reverse strands to make a call
+``--minConsStrdBias``
+    Strand bias. Minimum fraction of the high-quality consensus-supporting reads which must be present on both 
+    the forward and reverse strands to make a call. The numerator of this fraction is the number of high-quality 
+    consensus-supporting reads on one strand. The denominator is the total number of high-quality 
+    consensus-supporting reads on both strands combined.
+``--vcfFileName``
+    VCF Output file name. If specified, a VCF file with this file name will be created in the same directory
+    as the consensus fasta file for this sample.
+``--vcfAllPos``
+    Flag to cause VCF file generation at all positions, not just the snp positions. This has no effect on the
+    consensus fasta file, it only affects the VCF file. This capability is intended primarily as a diagnostic
+    tool and enabling this flag will greatly increase execution time.
+``--vcfPreserveRefCase``
+    Flag to cause the VCF file generator to emit each reference base in uppercase/lowercase as it appears in the 
+    reference sequence file.  If not specified, the reference bases are emitted in uppercase.
+
 **Example**::
 
-    CreateSnpPileup_ExtraParams="--verbose 1"
+    CallConsensus_ExtraParams="--verbose 1 --minBaseQual 15 --vcfFileName consensus.vcf"
 
 
 CreateSnpMatrix_ExtraParams
@@ -251,14 +333,9 @@ Specifies options passed to create_snp_matrix.py.
 
 **Default**: None
 
-**Parameter Notes**:
-
-| --minConsFreq : Mimimum fraction of reads that must agree to make a consensus call
-|
-
 **Example**::
 
-    CreateSnpMatrix_ExtraParams="--verbose 1 --minConsFreq 0.6"
+    CreateSnpMatrix_ExtraParams="--verbose 1"
 
 
 CreateSnpReferenceSeq_ExtraParams
@@ -271,12 +348,47 @@ Specifies options passed to create_snp_reference_seq.py.
 
     CreateSnpReferenceSeq_ExtraParams="--verbose 1"
 
-PEname
-------
-Specifies the name of the Grid Engine parallel environment.  This is only needed when running
-the SNP Pipeline on a High Performance Computing cluster with the Grid Engine job manager.  
-Contact your HPC system administrator to determine the name of your parallel environment.
+
+MergeVcf_ExtraParams
+--------------------
+Specifies options passed to mergeVcf.sh
+
+**Default**: none
 
 **Example**::
 
-    PEname="mpi"
+    MergeVcf_ExtraParams="-n sample.vcf"
+
+
+Torque_StripJobArraySuffix
+--------------------------
+Controls stripping the suffix from the job id when specifying Torque job array dependencies.
+It may be necessary to change this parameter if run_snp_pipeline.sh fails with an illegal qsub 
+dependency error.
+
+**Example**::
+
+    Torque_StripJobArraySuffix=false
+
+
+GridEngine_StripJobArraySuffix
+------------------------------
+Controls stripping the suffix from the job id when specifying Grid Engine job array dependencies.
+It may be necessary to change this parameter if run_snp_pipeline.sh fails with an illegal qsub 
+dependency error.
+
+**Example**::
+
+    GridEngine_StripJobArraySuffix=true
+
+
+GridEngine_PEname
+-----------------
+Specifies the name of the Grid Engine parallel environment.  This is only needed when running
+the SNP Pipeline on a High Performance Computing cluster with the Grid Engine job manager.  
+Contact your HPC system administrator to determine the name of your parallel environment. 
+Note: the name of this parameter was PEname in releases prior to 0.4.0.
+
+**Example**::
+
+    GridEngine_PEname="mpi"

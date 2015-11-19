@@ -1,16 +1,18 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-import unittest
+import sys
+if sys.version_info < (2,7,):
+    import unittest2 as unittest
+else:
+    import unittest
 import doctest
 
 from snppipeline import utils
 
-class Test(unittest.TestCase):
-    """Unit tests for utils."""
-
-    def test_doctests(self):
-        """Run utils doctests"""
-        doctest.testmod(utils, verbose=True)
+def load_tests(loader, tests, pattern):
+    """Run utils doctests"""
+    tests.addTests(doctest.DocTestSuite(utils))
+    return tests
 
 if __name__ == "__main__":
     unittest.main()

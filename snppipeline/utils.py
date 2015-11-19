@@ -1,7 +1,7 @@
-#!/usr/bin/env python2.7
-
 from __future__ import print_function
 from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 import operator
 import os
 import pprint
@@ -59,84 +59,6 @@ def target_needs_rebuild(source_files, target_file):
 #Define functions
 #==============================================================================
 
-
-def get_consensus_base_from_pileup(base, length, data, min_cons_freq):
-    """Call the base for each SNP position
-
-    Description:
-    Calls the base based on the pileup data for a SNP position with a given
-        length cutoff and with a given reference base.
-
-    Args:
-        base: Reference base.
-        length: length cutoff.
-        data: information from alignment in pileup format.
-        min_cons_freq: mimimum fraction of reads that must agree (0.0 - 1.0)
-
-    Returns:
-        consensus_base: Consensus base from alignment.
-
-    Raises:
-
-TODO: all these examples return the value of the 1st argument, can we get some other examples?
-
-    Examples:
-
-    >>> print(get_consensus_base_from_pileup('T',10,',.....,,.,.,...,,,.,..A', 0.5))
-    T
-    >>> print(get_consensus_base_from_pileup('A',10,',.$.....,,.,.,...,,,.,..^+.', 0.5))
-    A
-    >>> print(get_consensus_base_from_pileup('C',10,',.....,,.,.,...,,,.,..A', 0.5))
-    C
-    >>> print(get_consensus_base_from_pileup('T',10,',.$....,,.,.,...,,,.,...', 0.5))
-    T
-    >>> print(get_consensus_base_from_pileup('G',10,',$....,,.,.,...,,,.,...^l.', 0.5))
-    G
-    >>> print(get_consensus_base_from_pileup('G',10,'...T,,.,.,...,,,.,....', 0.5))
-    G
-    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,.C.,,,.,..G.', 0.5))
-    T
-    >>> print(get_consensus_base_from_pileup('T',10,'....,,.,.,...,,,.,....^k.', 0.5))
-    T
-    >>> print(get_consensus_base_from_pileup('A',10,'A..T,,.,.,...,,,.,.....', 0.5))
-    A
-    """
-
-    consensus_base = ""
-    #TODO consider using a Counter
-    base_count_dict = {'.,': 0, 'A': 0, 'C': 0, 'G': 0, 'N': 0, 'T': 0}
-
-    upper_lower_base_set = set(['A','a','C','c','T','t','G','g','N','n'])
-    i = 0
-    while i < len(data):
-        char = data[i]
-        if char in upper_lower_base_set:
-            base_count_dict[char.upper()] += 1
-        elif char == '.' or char == ',':
-            base_count_dict['.,'] += 1
-        elif char == '+' or char == '-':
-            count_str = ""
-            count = 1
-            while re.match("\d", data[i + 1]):
-                count_str += data[i + 1]
-                i += 1
-            if count_str != "":
-                count = int(count_str)
-            i += count
-        elif char == '^':
-            if data[i + 1] != "." and data[i + 1] != ',':
-                i += 1
-        i += 1
-
-    consensus_base = max(base_count_dict.iteritems(), key=operator.itemgetter(1))[0]
-    if base_count_dict[consensus_base] < (length * min_cons_freq):
-        consensus_base = "-"
-    elif consensus_base == ".,":
-        consensus_base = base
-
-    return consensus_base
-
-
 def create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, snp_set):
     """Create a subset pileup with SNP locations only.
 
@@ -158,47 +80,6 @@ def create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, snp_set):
                     snp_pileup_file_object.write(pileup_line)
 
 
-def create_consensus_dict(pileup_file_path, min_cons_freq):
-    """Create a dict based on the information in a pileup file.
-
-    Given a path to a pileup file, create a dict based on the pileup
-        data in that file. The dict contains the consensus
-        base calls for positions in the reference sequence.
-
-    Args:
-        pileup_file_path: full path to a pileup file.
-        min_cons_freq: mimimum fraction of reads that must agree (0.0 - 1.0)
-
-    Returns:
-        A dict mapping a key formed from a tuple(sequence, position) to a
-        consensus sequence base. For example:
-
-        {('gi|9626243|ref|NC_001416.1|', 46842): 'G',
-         ('gi|9626243|ref|NC_001416.1|', 47425): 'T',
-         ('gi|9626243|ref|NC_001416.1|', 47893): 'A'}
-
-    Raises:
-
-    Examples:
-    >>> consensus_dict = create_consensus_dict("snppipeline/data/lambdaVirusExpectedResults/samples/sample2/reads.snp.pileup", 0.5)
-    >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',3678)]
-    'T'
-    >>> consensus_dict[('gi|9626243|ref|NC_001416.1|',40984)]
-    'A'
-    """
-
-    position_value_dict = dict()
-
-    with open(pileup_file_path, "r") as pileup_file_object:
-        for pileup_line in pileup_file_object:
-            current_line_data = pileup_line.rstrip().split()
-            if len(current_line_data) >= 5:   #don't process lines without 5 pieces of information or more
-                seq_id, pos, ref_base, depth, bases_string = current_line_data[:5]
-                pos = int(pos)
-                depth = int(depth)
-                position_value_dict[(seq_id, pos)] = get_consensus_base_from_pileup(ref_base, depth, bases_string, min_cons_freq)
-
-    return position_value_dict
 
 
 def write_list_of_snps(file_path, snp_dict):
@@ -213,7 +94,7 @@ def write_list_of_snps(file_path, snp_dict):
     """
 
     with open(file_path, "w") as snp_list_file_object:
-        for key in sorted(snp_dict.iterkeys()):
+        for key in sorted(snp_dict.keys()):
             snp_list_file_object.write(key[0] + "\t" + str(key[1]))
             values = snp_dict[key]
             for value in values:
@@ -247,15 +128,18 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
     #TODO finish documentation
     #TODO actual code is more general than stated. Fix this.
 
-    position_list = [line.split()[0:2] for line in open(snp_list_file_path, "r")]
+    with open(snp_list_file_path, "r") as snp_list_file:
+        position_list = [line.split()[0:2] for line in snp_list_file]
     match_dict    = SeqIO.to_dict(SeqIO.parse(reference_file_path, "fasta"))
 
     with open(snp_reference_file_path, "w") as snp_reference_file_object:
         for ordered_id in sorted(match_dict.keys()):
-            snp_reference_file_object.write(">" + ordered_id + "\n")
+            ref_str = ""
             for chrom_id, pos in position_list:
                 if chrom_id == ordered_id:
-                    snp_reference_file_object.write(match_dict[ordered_id][int(pos)-1].upper())
+                    ref_str += match_dict[ordered_id][int(pos) - 1].upper()
+            record = SeqRecord(Seq(ref_str), id=ordered_id, description="")
+            SeqIO.write([record], snp_reference_file_object, "fasta")
 
 
 def convert_vcf_files_to_snp_dict(sample_vcf_file_list):
@@ -288,7 +172,7 @@ def convert_vcf_files_to_snp_dict(sample_vcf_file_list):
             vcf_reader = vcf.Reader(vcf_file_object)
             for vcf_data_line in vcf_reader:
                 key = (vcf_data_line.CHROM, vcf_data_line.POS)
-                if not snp_dict.has_key(key):
+                if key not in snp_dict:
                     record = [1]
                     snp_dict[key] = record
                 else:

@@ -3,6 +3,112 @@
 History
 -------
 
+0.4.2 (2015-11-??)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* Changed VCF file generator to not emit multiple alleles when the reference base is lowercase.
+
+**Other Changes:**
+
+* Changed the vcf file generator to emit reference bases in uppercase.  Added the ``vcfPreserveRefCase``
+  flag to the call_consensus.py script to cause the vcf file generator to emit each reference base in
+  uppercase/lowercase as it appears in the original reference sequence file.  If not specified, the
+  reference bases are emitted in uppercase.  Prior to v0.4.2, the behavior was to always preserve the
+  original case.
+* Removed setuptools from the list of required installation dependencies.
+* Added support for Python 3.3, 3.4, 3.5.
+
+0.4.1 (2015-10-30)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* Fixed a Python 2.6 incompatibility with the new consensus caller.
+
+**Other Changes:**
+
+* Added Tox support for automatically testing installation and execution with multiple Python versions.
+
+
+0.4.0 (2015-10-22)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* When run on Grid Engine with the default settings, bowtie2 was consuming all available CPU cores 
+  per node while scheduled with Grid to use only 8 cores. On a lightly loaded cluster, this bug made 
+  the pipeline run faster, but when the cluster was full or nearly full, it would cause contention 
+  for available CPU resources and cause jobs to run more slowly.  Changed to use only 8 CPU cores 
+  by default.
+* The consensus snp caller miscounted the number of reference bases when the pileup record 
+  contained the ^ symbol marking the start of a read segment followed by a dot or comma.  In this
+  situation, the dot or comma should not be counted as reference bases.
+  
+
+**Other Changes:**
+
+* Added support for the Smalt aligner.  You can choose either bowtie2 or smalt in the configuration file.
+  A new parameter in the configuration file, ``SnpPipeline_Aligner``, selects the aligner to use.  
+  Two additional configuration parameters, ``SmaltIndex_ExtraParams`` and ``SmaltAlign_ExtraParams`` 
+  can be configured with any Smalt command line options.  See :ref:`tool-selection-label`.  The
+  default aligner is still bowtie2.
+* Split the create_snp_matrix.py script into two pieces.  The new script, call_consensus.py, is a redesigned
+  consensus caller which is run in parallel to call snps for multiple samples concurrently.  The
+  create_snp_matrix.py script simply merges the consensus calls for all samples into a multi-fasta file.
+* The new consensus caller has the following adjustable parameters.  
+  See the :ref:`cmd-ref-call-consensus` command reference.
+
+  * ``minBaseQual`` : Mimimum base quality score to count a read.
+  * ``minConsFreq`` : Minimum consensus frequency.
+  * ``minConsStrdDpth`` : Minimum consensus-supporting strand depth.
+  * ``minConsStrdBias``: Strand bias.
+* Added the capability to generate VCF files.  By default, a file named consensus.vcf is generated
+  by the consensus caller for each sample, and the merged multi-sample VCF file is called snpma.vcf.  
+  This capability introduces a new dependency on bgzip, tabix, and bcftools.  You can disable VCF file
+  generation by removing the ``--vcfFileName`` option in the configuration file. Also, be aware the 
+  contents of the VCF files may change in future versions of the SNP Pipeline.
+* Added configuration parameters ``Torque_StripJobArraySuffix`` and ``GridEngine_StripJobArraySuffix`` to
+  improve compatibility with some HPC environments where array job id suffix stripping is 
+  incompatible with qsub.
+* Renamed the configuration parameter ``PEname`` to ``GridEngine_PEname``.
+
+0.3.4 (2015-06-25)
+~~~~~~~~~~~~~~~~~~
+
+**Bug fixes:**
+
+* The referenceSNP.fasta file was missing newlines between sequences when the reference fasta file 
+  contained multiple sequences.  In addition, each sequence was written as a single long string of 
+  characters.  Changed to emit a valid fasta file.  Updated the expected result files for the
+  datasets included with the distribution accordingly.
+* Changed the run_snp_pipeline.sh script to allow blank lines in the file of sample directories
+  when called with the -S option.
+* Changed the run_snp_pipeline.sh script to allow trailing slashes in the file of sample directories
+  when called with the -S option.
+* Do not print system environment information when the user only requests command line help.
+* Fixed the broken pypi downloads per month badge on the readme page.
+
+**Other Changes:**
+
+* Changed the default configuration file to specify the ``-X 1000`` option to the bowtie2 aligner.  This
+  parameter is the maximum inter-mate distance (as measured from the furthest extremes of the mates) 
+  for valid concordant paired-end alignments.  Previously this value was not explicitly set and 
+  defaulted to 500.  As a result of this change, the generated SAM files may have a different number 
+  of mapped reads, the pileup files may have different depth, and the number of snps called may change.
+* We now recommend using VarScan version 2.3.9 or later.  We discoved VarScan v2.3.6 was occasionally
+  omitting the header section of the generated VCF files.  This in turn, caused the SNP Pipeline
+  to miss the first snp in the VCF file.  This is not a SNP Pipeline code change, only a 
+  documentation and procedural change.
+* Updated the result files in the included data sets with the results obtained using VarScan v2.3.9
+  and the Bowtie -X 1000 option.
+* Log the Java classpath to help determine which version of VarScan is executed.
+* Changed the python unit tests to execute the non-python processes in a temporary directory instead 
+  of assuming the processes were already run in the test directory.
+
+
+
 0.3.3 (2015-04-14)
 ~~~~~~~~~~~~~~~~~~
 
