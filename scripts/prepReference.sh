@@ -135,6 +135,10 @@ if [[ "$SnpPipeline_Aligner" == "" || "$SnpPipeline_Aligner" == "bowtie2" ]]; th
     if [[ $opt_f_set != "1" && -s "$referenceBasePath.rev.1.bt2" && "$referenceBasePath.rev.1.bt2" -nt "$referenceFilePath" ]]; then
         echo "# Bowtie index $referenceBasePath.rev.1.bt2 is already freshly built.  Use the -f option to force a rebuild."
     else
+        if [[ "$(which bowtie2-build >/dev/null 2>&1; echo $?)" -gt 0 ]]; then
+          echo "Could not find bowtie2-build in your PATH";
+          exit 127
+        fi
         echo "# "$(date +"%Y-%m-%d %T") bowtie2-build $Bowtie2Build_ExtraParams "$referenceFilePath" "$referenceBasePath"
         echo "# "$(bowtie2-build --version | grep -i -E "bowtie.*version")
         bowtie2-build $Bowtie2Build_ExtraParams "$referenceFilePath" "$referenceBasePath"
@@ -144,6 +148,10 @@ elif [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
     if [[ $opt_f_set != "1" && -s "$referenceBasePath.smi" && "$referenceBasePath.smi" -nt "$referenceFilePath" ]]; then
         echo "# Smalt index $referenceBasePath.smi is already freshly built.  Use the -f option to force a rebuild."
     else
+        if [[ "$(which smalt >/dev/null 2>&1; echo $?)" -gt 0 ]]; then
+          echo "Could not find smalt in your PATH";
+          exit 127
+        fi
         echo "# "$(date +"%Y-%m-%d %T") smalt index $SmaltIndex_ExtraParams "$referenceBasePath" "$referenceFilePath" 
         echo "# Smalt "$(smalt version | grep -i -E "Version")
         smalt index $SmaltIndex_ExtraParams "$referenceBasePath" "$referenceFilePath"
@@ -158,6 +166,10 @@ fi
 if [[ "$opt_f_set" != "1" && -s "$referenceFilePath.fai" && "$referenceFilePath.fai" -nt "$referenceFilePath" ]]; then
     echo "# SAMtools fai index $referenceFilePath.fai is already freshly built.  Use the -f option to force a rebuild."
 else
+    if [[ "$(which samtools >/dev/null 2>&1; echo $?)" -gt 0 ]]; then
+      echo "Could not find samtools in your path"
+      exit 127
+    fi
     echo "# "$(date +"%Y-%m-%d %T") samtools faidx $SamtoolsFaidx_ExtraParams "$referenceFilePath"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
     samtools faidx $SamtoolsFaidx_ExtraParams "$referenceFilePath"
