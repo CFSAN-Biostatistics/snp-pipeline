@@ -40,11 +40,15 @@
 #   20141020-scd: Check for empty target files.
 #   20141030-scd: Fix Python 2.6 compatibility issue when logging RAM size.
 #   20150109-scd: Log the Grid Engine job ID.
+#   20151214-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
 #Notes:
 #
 #Bugs:
 #   1. Should add prints to stdout to show progress to user
 #
+
+# source the utility functions
+. snp_pipeline_inc.sh
 
 usage()
 {
@@ -142,6 +146,18 @@ if [ "$sampleDir" = "" ]; then
 fi
 
 logSysEnvironment $@
+setupSampleErrorHandler
+
+# Verify reference fasta file exists and is not empty
+if [[ ! -e "$referenceFilePath" ]]; then globalError "Reference file $referenceFilePath does not exist."; fi
+if [[ ! -f "$referenceFilePath" ]]; then globalError "Reference file $referenceFilePath is not a file."; fi
+if [[ ! -s "$referenceFilePath" ]]; then globalError "Reference file $referenceFilePath is empty."; fi
+
+# Verify SAM file exists and is not empty
+samFile="$sampleDir/reads.sam"
+if [[ ! -e "$samFile" ]]; then sampleError "Sample SAM file $samFile does not exist." false; fi
+if [[ ! -f "$samFile" ]]; then sampleError "Sample SAM file $samFile is not a file." false; fi
+if [[ ! -s "$samFile" ]]; then sampleError "Sample SAM file $samFile is empty." false; fi
 
 sampleId=${sampleDir##*/} # strip the parent directories
 
@@ -193,10 +209,11 @@ else
         echo "# "$(date +"%Y-%m-%d %T") java $VarscanJvm_ExtraParams net.sf.varscan.VarScan mpileup2snp "$sampleDir/reads.all.pileup"  --output-vcf 1 $VarscanMpileup2snp_ExtraParams
         echo "# "$(java net.sf.varscan.VarScan 2>&1 > /dev/null | head -n 1)
         java $VarscanJvm_ExtraParams net.sf.varscan.VarScan mpileup2snp "$sampleDir/reads.all.pileup" --output-vcf 1 $VarscanMpileup2snp_ExtraParams > "$sampleDir/var.flt.vcf"
+        if [[ ! -e "$sampleDir/var.flt.vcf" ]]; then sampleError "Error: $sampleDir/var.flt.vcf does not exist after running VarScan." false; fi
+        if [[ ! -s "$sampleDir/var.flt.vcf" ]]; then sampleError "Error: $sampleDir/var.flt.vcf is empty after running VarScan." false; fi
         echo
     else
-        echo "*** Error: cannot execute VarScan. Define the path to VarScan in the CLASSPATH environment variable."
-        exit 2
+        globalError "Error: cannot execute VarScan. Define the path to VarScan in the CLASSPATH environment variable."
     fi
 fi
 

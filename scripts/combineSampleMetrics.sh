@@ -14,10 +14,14 @@
 #   20150319-scd: Started
 #   20150324-scd: Integrated into the snp pipeline.
 #   20150413-scd: Fix the sun grid engine "undefined" task id.
+#   20151230-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
 #Notes:
 #
 #Bugs:
 #
+
+# source the utility functions
+. snp_pipeline_inc.sh
 
 
 #------
@@ -42,9 +46,9 @@ usage()
   echo 'Options:'
   echo '  -h               : Show this help message and exit'
   echo '  -n NAME          : File name of the metrics files which must exist in each of'
-  echo '                     the sample directories. Default: metrics)'
+  echo '                     the sample directories. (default: metrics)'
   echo '  -o FILE          : Output file. Relative or absolute path to the combined metrics'
-  echo '                     file. Default: stdout)'
+  echo '                     file. (default: stdout)'
 }
 
 # --------------------------------------------------------
@@ -127,10 +131,11 @@ if [[ "$2" != "" ]]; then
 fi
 
 logSysEnvironment $@
+setupGlobalErrorHandler
 
-if [[ ! -e "$sampleDirsFile" ]]; then echo "Sample directories file $sampleDirsFile does not exist." 1>&2; exit 10; fi
-if [[ ! -f "$sampleDirsFile" ]]; then echo "Sample directories file $sampleDirsFile is not a file." 1>&2; exit 10; fi
-if [[ ! -s "$sampleDirsFile" ]]; then echo "Sample directories file $sampleDirsFile is empty." 1>&2; exit 10; fi
+if [[ ! -e "$sampleDirsFile" ]]; then globalError "Sample directories file $sampleDirsFile does not exist."; fi
+if [[ ! -f "$sampleDirsFile" ]]; then globalError "Sample directories file $sampleDirsFile is not a file."; fi
+if [[ ! -s "$sampleDirsFile" ]]; then globalError "Sample directories file $sampleDirsFile is empty."; fi
 
 
 #-------------------------------------------------------
@@ -143,9 +148,9 @@ cat "$sampleDirsFile" | while IFS='' read -r dir || [[ -n "$dir" ]]
 do
   metricsFilePath="$dir/$metricsFileName"
   echo Processing $metricsFilePath 1>&2
-  if [[ ! -e "$metricsFilePath" ]]; then echo "Sample metrics file $metricsFilePath does not exist." >&3; continue; fi
-  if [[ ! -f "$metricsFilePath" ]]; then echo "Sample metrics file $metricsFilePath is not a file." >&3; continue; fi
-  if [[ ! -s "$metricsFilePath" ]]; then echo "Sample metrics file $metricsFilePath is empty." >&3; continue; fi
+  if [[ ! -e "$metricsFilePath" ]]; then echo "Sample metrics file $metricsFilePath does not exist." >&3; sampleWarning "Sample metrics file $metricsFilePath does not exist."; continue; fi
+  if [[ ! -f "$metricsFilePath" ]]; then echo "Sample metrics file $metricsFilePath is not a file."  >&3; sampleWarning "Sample metrics file $metricsFilePath is not a file." ; continue; fi
+  if [[ ! -s "$metricsFilePath" ]]; then echo "Sample metrics file $metricsFilePath is empty."       >&3; sampleWarning "Sample metrics file $metricsFilePath is empty."      ; continue; fi
   while IFS='' read -r line || [[ -n "$line" ]]
   do
     if [[ "$line" =~ "=" ]]; then

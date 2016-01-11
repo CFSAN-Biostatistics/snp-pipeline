@@ -120,6 +120,8 @@ See :ref:`step-by-step-workflows`.
   the size of the samples, number of reads, alignment rate, pileup depth, and 
   number of SNPs found.
 
+* error.log : a summary of errors detected during SNP Pipeline execution
+
 .. _all-in-one-script-label:
 
 All-In-One SNP Pipeline Script
@@ -911,5 +913,26 @@ The metrics are:
 +-------------------------+------------------------------------------------------------------+
 
 
+.. _error-handling-label:
 
+Error Handling
+--------------
+The SNP Pipeline detects errors during execution and prevents execution of subsequent
+steps when earlier steps fail.  A summary of errors is written to the ``error.log`` file.
+Detailed error messages are found in the log files for each process.  
+See :ref:`logging-label`.
 
+By default, the SNP Pipeline is configured to stop when execution errors occur.  However, it is
+possible some errors may affect only individual samples and other samples can still be
+processed.  If you want the pipeline to continue processing after an error affecting only 
+a single sample has occurred, you can try disabling the ``SnpPipeline_StopOnSampleError`` 
+configuration parameter (not recommended).  When ``SnpPipeline_StopOnSampleError`` is ``false``
+the pipeline will attempt to continue subsequent processing steps when an error does not
+affect all samples.  Errors are logged in the ``error.log`` file regardless of how the
+``SnpPipeline_StopOnSampleError`` parameter is configured.  You should review the ``error.log``
+after running the pipeline to see a summary of any errors detected during execution.
+
+Note: currently, when using the Torque job queue manager, the pipeline will always stop on
+errors regardless of the ``SnpPipeline_StopOnSampleError`` parameter setting.
+
+See also: :ref:`configuration-label`.

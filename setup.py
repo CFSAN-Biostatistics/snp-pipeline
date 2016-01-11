@@ -46,7 +46,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='0.4.2a.3',
+    version='0.4.2a5',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -92,6 +92,7 @@ setup(
         'scripts/copy_snppipeline_data.py',
         'scripts/collectSampleMetrics.sh',
         'scripts/combineSampleMetrics.sh',
+        'scripts/snp_pipeline_inc.sh',
         'scripts/mergeVcf.sh',
     ],
 

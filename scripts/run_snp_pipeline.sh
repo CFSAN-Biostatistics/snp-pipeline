@@ -45,13 +45,74 @@
 #   20150911-scd: Generate the consensus.vcf file for all samples.
 #   20150928-scd: Merge the per-sample VCF files into a multi-vcf file.
 #   20151013-scd: Added a configuration parameter to control stripping the array jobid suffix.
+#   20151210-scd: Trap errors and shutdown the pipeline if configured to do so.
 #Notes:
 #
 #Bugs:
 #
 
-# Exit on error
-set -e
+# Source the utility functions
+. snp_pipeline_inc.sh
+
+# Trap errors
+set -o pipefail  # Set the exit status of a unix pipe to the exit code of the last program to exit non-zero
+
+# Log a fatal error to the error summary file and to stderr and then exit.
+fatalError()
+{
+    reportError "$1"
+
+    exit 1
+}
+
+# This function is automatically called by bash upon any command error.
+# It Logs the error and exits the SNP Pipeline if configured to do so.
+handleTrappedErrors()
+{
+    errorCode=$?
+    bashCommand="$BASH_COMMAND"
+    bashLineNo=${BASH_LINENO[0]}
+
+    # A subprocess failed and was already trapped.
+    # Actually, we cannot be 100% certain the error was trapped if the error code is 123.  This
+    # indicates an error in an array of sample jobs launched in parallel by xargs; but since 
+    # SnpPipeline_StopOnSampleError is true, we will assume the error was already trapped.
+    if [[ $errorCode = 100 || $errorCode = 123 && $SnpPipeline_StopOnSampleError = true ]]; then
+        logError "See also the log files in directory $logDir"
+        logError "Shutting down the SNP Pipeline."
+        logError "================================================================================"
+        cat "$errorOutputFile" 1>&2
+        exit 1
+    fi
+
+    # When configured to ignore single-sample errors, try to continue execution if
+    # xargs returns 123 when executing an array of jobs, one per sample
+    if [[ $errorCode = 123 && $SnpPipeline_StopOnSampleError != true ]]; then
+        return 0
+    fi
+
+    # Error code 98 indicates an error affecting a single sample when the pipeline is configured to
+    # ignore such errors
+    #if [[ $errorCode = 98 ]]; then
+    #fi
+
+    # An error occured and was not already trapped.  Error code 98 indicates an error
+    # affecting a single sample only.
+    if [[ $errorCode != 98 ]]; then
+        logError "Error detected while running $(basename $0)."
+        logError ""
+        logError "The command at line $bashLineNo returned error code $errorCode:"
+        logError "    $bashCommand"
+        logError ""
+        logError "Shutting down the SNP Pipeline."
+        logError "================================================================================"
+        cat "$errorOutputFile" 1>&2
+        exit 1
+    fi
+}
+
+trap handleTrappedErrors ERR
+
 
 usageshort()
 {
@@ -199,6 +260,22 @@ while getopts ":hfm:c:Q:o:s:S:" option; do
     fi
 done
 
+
+
+# Handle output working directory.  Create the directory if it does not exist.
+if [[ "$opt_o_set" = "1" ]]; then
+    export workDir="$opt_o_arg"
+    if ! mkdir -p "$workDir"; then echo "Could not create the output directory $workDir"; exit 50; fi
+    if [[ ! -w "$workDir" ]]; then echo "Output directory $workDir is not writable."; exit 50; fi
+else
+    export workDir="$(pwd)"
+fi
+
+# The error log is in the main workdir
+export errorOutputFile="$workDir/error.log"
+rm  "$errorOutputFile" 2> /dev/null || true
+
+
 # --------------------------------------------------------
 # get the arguments
 shift $((OPTIND-1))
@@ -211,8 +288,8 @@ if [ "$referenceFilePath" = "" ]; then
     usageshort
     exit 10
 fi
-if [[ ! -f "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath does not exist."; exit 10; fi
-if [[ ! -s "$referenceFilePath" ]]; then echo "Reference file $referenceFilePath is empty."; exit 10; fi
+if [[ ! -f "$referenceFilePath" ]]; then fatalError "Reference file $referenceFilePath does not exist."; fi
+if [[ ! -s "$referenceFilePath" ]]; then fatalError "Reference file $referenceFilePath is empty."; fi
 export referenceFileName=${referenceFilePath##*/} # strip directories
 
 # Extra arguments not allowed
@@ -253,15 +330,6 @@ if [[ "$opt_Q_set" = "1" ]]; then
     fi
 fi
 
-# Handle output working directory.  Create the directory if it does not exist.
-if [[ "$opt_o_set" = "1" ]]; then
-    export workDir="$opt_o_arg"
-    if ! mkdir -p "$workDir"; then echo "Could not create the output directory $workDir"; exit 50; fi
-    if [[ ! -w "$workDir" ]]; then echo "Output directory $workDir is not writable."; exit 50; fi
-else
-    export workDir="$(pwd)"
-fi
-
 # Handle sample directories
 if [[ "$opt_s_set" = "1" && "$opt_S_set" = "1" ]]; then
     echo "Options -s and -S are mutually exclusive."
@@ -285,8 +353,8 @@ mkdir -p "$logDir"
 # Handle configuration file, use the specified file, or create a default file
 if [[ "$opt_c_set" = "1" ]]; then
     configFilePath="$opt_c_arg"
-    if [[ ! -f "$configFilePath" ]]; then echo "Configuration file $configFilePath does not exist."; exit 80; fi
-    if [[ ! -s "$configFilePath" ]]; then echo "Configuration file $configFilePath is empty."; exit 80; fi
+    if [[ ! -f "$configFilePath" ]]; then fatalError "Configuration file $configFilePath does not exist."; fi
+    if [[ ! -s "$configFilePath" ]]; then fatalError "Configuration file $configFilePath is empty."; fi
     cp -p "$configFilePath" "$logDir"
     source "$configFilePath"
 else
@@ -302,11 +370,16 @@ else
     # make lowercase 
     SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]')
     if [[ "$SnpPipeline_Aligner" != "bowtie2" && "$SnpPipeline_Aligner" != "smalt" ]]; then
-        echo "Config file error in SnpPipeline_Aligner parameter: only bowtie2 and smalt aligners are supported."
-        exit 90
+        fatalError "Config file error in SnpPipeline_Aligner parameter: only bowtie2 and smalt aligners are supported."
     fi
 fi
 
+# Stop the pipeline by default upon single sample errors if not configured either way
+if [ -z $SnpPipeline_StopOnSampleError ]; then
+    SnpPipeline_StopOnSampleError=true
+fi
+
+export SnpPipeline_StopOnSampleError
 export SnpPipeline_Aligner
 export Bowtie2Build_ExtraParams
 export SmaltIndex_ExtraParams
@@ -323,6 +396,33 @@ export CallConsensus_ExtraParams
 export CreateSnpMatrix_ExtraParams
 export CreateSnpReferenceSeq_ExtraParams
 export GridEngine_PEname
+
+
+# Verify the scripts and needed tools were properly installed on the path
+(( dependencyErrors = 0 )) || true
+onPath=$(verifyOnPath "prepReference.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "alignSampleToReference.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "prepSamples.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "create_snp_list.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "call_consensus.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "create_snp_matrix.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "create_snp_reference_seq.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "collectSampleMetrics.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "combineSampleMetrics.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "$SnpPipeline_Aligner"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "samtools"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "java"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "tabix"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "bgzip"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "bcftools"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+result=$(java net.sf.varscan.VarScan 2>&1) || true
+if [[ $result =~ .*Error.* ]]; then
+    reportError "CLASSPATH is not configured with the path to VarScan"
+    (( dependencyErrors += 1 ))
+fi
+if (( $dependencyErrors > 0 )); then
+    fatalError 'Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html'
+fi
 
 
 # Rewrite the file of sample directories, removing trailing slashes and blank lines.
@@ -346,26 +446,29 @@ validateFileOfSampleDirs()
     local sampleDirsFile=$1
     local foundError=false
 
-    if [[ ! -f "$sampleDirsFile" ]]; then echo "The file of samples directories, $sampleDirsFile, does not exist."; exit 70; fi
-    if [[ ! -s "$sampleDirsFile" ]]; then echo "The file of samples directories, $sampleDirsFile, is empty."; exit 70; fi
-
     while IFS=$'\n' read -r dir || [[ -n "$dir" ]]
     do 
         if [[ ! -d "$dir" ]]; then 
-            echo "Sample directory $dir does not exist."
+            reportError "Sample directory $dir does not exist."
             foundError=true
         elif [[ -z $(ls -A "$dir") ]]; then 
-            echo "Sample directory $dir is empty."
+            reportError "Sample directory $dir is empty."
             foundError=true
         else
             fastqFiles=$({ find "$dir" -path "$dir"'/*.fastq*'; find "$dir" -path "$dir"'/*.fq*'; })
             if [[ -z "$fastqFiles" ]]; then 
-                echo "Sample directory $dir does not contain any fastq files."
+                reportError "Sample directory $dir does not contain any fastq files."
                 foundError=true
             fi
         fi
     done  < "$sampleDirsFile" 
-    if [[ "$foundError" == true ]]; then exit 70; fi
+    if [[ "$foundError" == true ]]; then 
+        if [[ -z $SnpPipeline_StopOnSampleError || $SnpPipeline_StopOnSampleError == true ]]; then
+            exit 1
+        else
+            logError "================================================================================"
+        fi
+    fi
 }
 
 
@@ -390,15 +493,17 @@ persistSortedSampleDirs()
 
 if [[ "$opt_s_set" = "1" ]]; then
     samplesDir="${opt_s_arg%/}"  # strip trailing slash
-    if [[ ! -d "$samplesDir" ]]; then echo "Samples directory $samplesDir does not exist."; exit 70; fi
-    if [[   -z $(ls -A "$samplesDir") ]]; then echo "Samples directory $samplesDir is empty."; exit 70; fi
+    if [[ ! -d "$samplesDir" ]]; then fatalError "Samples directory $samplesDir does not exist."; fi
+    if [[   -z $(ls -A "$samplesDir") ]]; then fatalError "Samples directory $samplesDir is empty."; fi
     fastqFiles=$({ find "$samplesDir" -path "$samplesDir"'/*/*.fastq*'; find "$samplesDir" -path "$samplesDir"'/*/*.fq*'; })
-    if [[   -z "$fastqFiles" ]]; then echo "Samples directory $samplesDir does not contain subdirectories with fastq files."; exit 70; fi
+    if [[   -z "$fastqFiles" ]]; then fatalError "Samples directory $samplesDir does not contain subdirectories with fastq files."; fi
     persistSortedSampleDirs "$samplesDir" "$workDir"
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
 if [[ "$opt_S_set" = "1" ]]; then
     sampleDirsFile="$opt_S_arg"
+    if [[ ! -f "$sampleDirsFile" ]]; then fatalError "The file of samples directories, $sampleDirsFile, does not exist."; fi
+    if [[ ! -s "$sampleDirsFile" ]]; then fatalError "The file of samples directories, $sampleDirsFile, is empty."; fi
     rewriteCleansedFileOfSampleDirs "$sampleDirsFile" "$workDir/sampleDirectories.txt"
     sampleDirsFile="$workDir/sampleDirectories.txt"
     validateFileOfSampleDirs "$sampleDirsFile"
@@ -529,7 +634,7 @@ elif [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    nl "$workDir/sampleFullPathNames.txt" | xargs -n 3 -L 1 sh -c 'alignSampleToReference.sh $forceFlag "$referenceFilePath" $1 $2 2>&1 | tee $logDir/alignSamples.log-$0'
+    nl "$workDir/sampleFullPathNames.txt" | xargs -n 3 -L 1 bash -c 'set -o pipefail; alignSampleToReference.sh $forceFlag "$referenceFilePath" $1 $2 2>&1 | tee $logDir/alignSamples.log-$0'
 fi
 
 echo -e "\nStep 4 - Prep the samples"
@@ -569,7 +674,7 @@ else
     else
         numPrepSamplesCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numPrepSamplesCores sh -c 'prepSamples.sh $forceFlag "$referenceFilePath" $1 2>&1 | tee $logDir/prepSamples.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numPrepSamplesCores bash -c 'set -o pipefail; prepSamples.sh $forceFlag "$referenceFilePath" $1 2>&1 | tee $logDir/prepSamples.log-$0'
 fi
 
 echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP list file"
@@ -634,7 +739,7 @@ else
     else
         numCallConsensusCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores sh -c 'call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
 fi
 
 echo -e "\nStep 7 - Create the SNP matrix"
@@ -760,7 +865,7 @@ else
     else
         numCollectSampleMetricsCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores sh -c 'collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
 echo -e "\nStep 11 - Combine the metrics across all samples into the metrics table"
@@ -790,3 +895,12 @@ _EOF_
 else
     combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
 fi
+
+
+# Step 12 - Notify user of any non-fatal errors accumulated during processing
+if [[ -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true ]]; then
+    echo "" 1>&2
+    echo "There were errors processing some samples." 1>&2
+    echo "See the log file $errorOutputFile for a summary of errors." 1>&2
+fi
+

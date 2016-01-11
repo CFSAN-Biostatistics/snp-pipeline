@@ -34,6 +34,22 @@ variables with the same names as the parameters in the configuration file.
 
 The available configuration parameters are described below.
 
+SnpPipeline_StopOnSampleError
+-----------------------------
+Controls whether the pipeline exits upon detecting errors affecting only a single
+sample.  The pipeline will always stop upon detecting global errors affecting all
+samples.
+
+**Default**: 
+
+    When this parameter is not set to a value, the pipeline will stop upon detecting 
+    single sample errors.  If you want the pipeline to continue, you must explicitly set
+    this parameter false.
+
+**Example**::
+
+    SnpPipeline_StopOnSampleError=false
+
 
 MaxConcurrentPrepSamples
 ------------------------

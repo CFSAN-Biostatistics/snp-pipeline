@@ -48,15 +48,18 @@
 #   20141030-scd: Fix Python 2.6 compatibility issue when logging RAM size.
 #   20150109-scd: Log the Grid Engine job ID.
 #   20150630-scd: Add support for Smalt.
+#   20151211-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
 #Notes:
 #
 #Bugs:
 #
 
+# source the utility functions
+. snp_pipeline_inc.sh
 
 usage()
 {
-    echo usage: $0 [-h] [-f] referenceFile sampleFastqFile1 [sampleFastqFile2]
+    echo "usage: $0 [-h] [-f] referenceFile sampleFastqFile1 [sampleFastqFile2]"
     echo
     echo 'Align the sequence reads for a specified sample to a specified reference genome.'
     echo 'The output is written to the file "reads.sam" in the sample directory.'
@@ -151,8 +154,25 @@ if [ "$sampleFilePath1" = "" ]; then
 fi
 
 logSysEnvironment $@
+setupSampleErrorHandler
 
 sampleFilePath2="$3"
+
+# Verify reference fasta file exists and is not empty
+if [[ ! -e "$referenceFilePath" ]]; then globalError "Reference file $referenceFilePath does not exist."; fi
+if [[ ! -f "$referenceFilePath" ]]; then globalError "Reference file $referenceFilePath is not a file."; fi
+if [[ ! -s "$referenceFilePath" ]]; then globalError "Reference file $referenceFilePath is empty."; fi
+
+# Verify fastq file exists and is not empty
+if [[ ! -e "$sampleFilePath1" ]]; then sampleError "Sample file $sampleFilePath1 does not exist." false; fi
+if [[ ! -f "$sampleFilePath1" ]]; then sampleError "Sample file $sampleFilePath1 is not a file." false; fi
+if [[ ! -s "$sampleFilePath1" ]]; then sampleError "Sample file $sampleFilePath1 is empty." false; fi
+
+if [ -n "$sampleFilePath2" ]; then
+    if [[ ! -e "$sampleFilePath2" ]]; then sampleError "Sample file $sampleFilePath2 does not exist." false; fi
+    if [[ ! -f "$sampleFilePath2" ]]; then sampleError "Sample file $sampleFilePath2 is not a file." false; fi
+    if [[ ! -s "$sampleFilePath2" ]]; then sampleError "Sample file $sampleFilePath2 is empty." false; fi
+fi
 
 sampleDir=${sampleFilePath1%/*}
 sampleId=${sampleFilePath1##*/} # strip the directory
@@ -204,7 +224,7 @@ if [[ "$SnpPipeline_Aligner" == "" || "$SnpPipeline_Aligner" == "bowtie2" ]]; th
     Bowtie2Align_Params=${Bowtie2Align_ExtraParams:-$defaultParams}
 
     # Check if the fastq files are paired
-    if [ $sampleFilePath2 ]; then
+    if [ -n "$sampleFilePath2" ]; then
         #Check if alignment to reference has been done; if not align sequences to reference
         if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.rev.1.bt2" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]; then
             echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
@@ -241,17 +261,20 @@ elif [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
     SmaltAlign_Params=${SmaltAlign_ExtraParams:-$defaultParams}
 
     # Check if the fastq files are paired
+    alreadyFresh=false
     if [ $sampleFilePath2 ]; then
         #Check if alignment to reference has been done; if not align sequences to reference
-        [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.smi" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]
-        alreadyFreshResultCode=$?
+        if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.smi" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" && "$sampleDir/reads.sam" -nt "$sampleFilePath2" ]]; then
+            alreadyFresh=true
+        fi
     else
-        [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.smi" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]
-        alreadyFreshResultCode=$?
+        if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sam" && "$sampleDir/reads.sam" -nt "$referenceBasePath.smi" && "$sampleDir/reads.sam" -nt "$sampleFilePath1" ]]; then
+            alreadyFresh=true
+        fi
         SmaltAlign_Params=$(echo $SmaltAlign_ExtraParams | sed -e 's,-i[[:space:]]\+[[:digit:]]\+,,g')  # strip the -i 1000 option
     fi
 
-    if (( $alreadyFreshResultCode == 0 )); then
+    if [[ $alreadyFresh = true ]]; then
         echo "# $sampleId has already been aligned to $referenceId.  Use the -f option to force a rebuild."
     else
         echo "# Align sequence $sampleId to reference $referenceId"
@@ -261,7 +284,6 @@ elif [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
         echo
     fi
 else
-    echo "Error: only bowtie2 and smalt aligners are supported."
-    exit 5
+    globalError "Error: only bowtie2 and smalt aligners are supported."
 fi
 echo $(date +"# %Y-%m-%d %T") alignSampleToReference.sh finished

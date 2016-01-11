@@ -7,6 +7,8 @@ import os
 import pprint
 import re
 import sys
+import time
+import traceback
 import vcf
 
 
@@ -30,6 +32,220 @@ def set_logging_verbosity(options_dict):
 
 
 
+#==============================================================================
+#Define functions
+#==============================================================================
+
+def timestamp():
+    """Return a timestamp string."""
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+
+def program_name():
+    """Return the basename of the python script being executed."""
+    return os.path.basename(sys.argv[0])
+
+def command_line_short():
+    """Return the command line string without the full path to the program."""
+    return "%s %s" % (program_name(), " ".join(sys.argv[1:]))
+
+def command_line_long():
+    """Return the command line string with the full path to the program."""
+    return " ".join(sys.argv)
+
+
+def global_error(message):
+    """ 
+    Log a fatal error to the error summary file and exit with error code 100
+    to cause Sun Grid Engine to also detect the error.
+
+    Args:
+        message : str
+            Error message
+    """
+    # Log the event to the error log
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            print("%s failed." % program_name(), file=err_log)
+            if message:
+                print(message, file=err_log)
+            print("=" * 80, file=err_log)
+
+    # send the detail error message to stderr -- this will put the error
+    # message in the process-specific log file.
+    sys.stdout.flush() # make sure stdout is flushed before printing the error
+    if message:
+        print(message, file=sys.stderr)
+
+    # Exit 100 does two things:
+    # 1. Sun Grid Engine will stop execution of dependent jobs
+    # 2. run_snp_pipeline.sh will know this error has already been reported
+    sys.exit(100)
+
+
+def sample_error(message, continue_possible=False):
+    """ 
+    Log a fatal error to the error summary file and exit with error code 100
+    to cause Sun Grid Engine to also detect the error.
+
+    Args:
+        message : str
+            Error message
+        continue_possible : boolean
+            Indicates if it is possible to continue execution.  Setting this
+            flag true may allow the code to continue withou exiting if 
+            configured to do so.
+    """
+    stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
+    stop_on_error = stop_on_error_env == None or stop_on_error_env == "true"
+
+    # Log the event to the error log
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            if stop_on_error or not continue_possible:
+                print("%s failed." % program_name(), file=err_log)
+            else:
+                print("%s" % program_name(), file=err_log)
+            print(message, file=err_log)
+            print("=" * 80, file=err_log)
+
+    # send the detail error message to stderr -- this will put the error
+    # message in the process-specific log file.
+    sys.stdout.flush() # make sure stdout is flushed before printing the error
+    print(message, file=sys.stderr)
+
+    # Exit 100 does two things:
+    # 1. Sun Grid Engine will stop execution of dependent jobs
+    # 2. run_snp_pipeline.sh will know this error has already been reported
+    if stop_on_error:
+        # run_snp_pipeline.sh will know this error has already been reported
+        sys.exit(100)
+    else:
+        # run_snp_pipeline.sh will know this error has already been reported, 
+        # but it should not stop execution
+        if not continue_possible:
+            sys.exit(98) 
+
+
+def handle_global_exception(exc_type, exc_value, exc_traceback):
+    """
+    This function replaces the default python unhandled exception handler.
+    It Logs the error and returns error code 100 to cause Sun Grid Engine to
+    also detect the error.
+    """
+    # Report the exception in the error log if configuired
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            trace_entries = traceback.extract_tb(exc_traceback)
+            file_name, line_number, function_name, code_text = trace_entries[-1]
+            exc_type_name = exc_type.__name__
+
+            print("Error detected while running %s." % program_name(), file=err_log)
+            print("", file=err_log)
+            print("The command line was:", file=err_log)
+            print("    %s" % command_line_short(), file=err_log)
+            print("", file=err_log)
+            print("%s exception in function %s at line %d in file %s" % (exc_type_name, function_name, line_number, file_name), file=err_log)
+            print("    %s" % code_text, file=err_log)
+            print("=" * 80, file=err_log)
+
+    # Report the exception in the usual way to stderr
+    sys.stdout.flush() # make sure stdout is flushed before printing the trace
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+
+    # Exit 100 does two things:
+    # 1. Sun Grid Engine will stop execution of dependent jobs
+    # 2. run_snp_pipeline.sh will know this error has already been reported
+    sys.exit(100)
+
+
+def handle_sample_exception(exc_type, exc_value, exc_traceback):
+    """
+    This function replaces the default python unhandled exception handler.
+    It Logs the error and returns error code 100 to cause Sun Grid Engine to
+    also detect the error.
+    """
+    # Report the exception in the error log if configuired
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            trace_entries = traceback.extract_tb(exc_traceback)
+            file_name, line_number, function_name, code_text = trace_entries[-1]
+            exc_type_name = exc_type.__name__
+
+            print("Error detected while running %s." % program_name(), file=err_log)
+            print("", file=err_log)
+            print("The command line was:", file=err_log)
+            print("    %s" % command_line_short(), file=err_log)
+            print("", file=err_log)
+            print("%s exception in function %s at line %d in file %s" % (exc_type_name, function_name, line_number, file_name), file=err_log)
+            print("    %s" % code_text, file=err_log)
+            print("=" * 80, file=err_log)
+
+    # Report the exception in the usual way to stderr
+    sys.stdout.flush() # make sure stdout is flushed before printing the trace
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+
+    # Exit 100 does two things:
+    # 1. Sun Grid Engine will stop execution of dependent jobs
+    # 2. run_snp_pipeline.sh will know this error has already been reported
+    stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
+    stop_on_error = stop_on_error_env == None or stop_on_error_env == "true"
+    if stop_on_error:
+        # run_snp_pipeline.sh will know this error has already been reported
+        sys.exit(100)
+    else:
+        # run_snp_pipeline.sh will know this error has already been reported, 
+        # but it should not stop execution
+        sys.exit(98) 
+
+
+def report_error(message):
+    """Send an error message to the error log and to stderr.
+    """
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            print(message, file=err_log)
+
+    # send the detail error message to stderr -- this will put the error
+    # message in the process-specific log file.
+    sys.stdout.flush() # make sure stdout is flushed before printing the error
+    if message:
+        print(message, file=sys.stderr)
+
+
+def verify_non_empty_input_files(error_prefix, file_list):
+    """Verify each file in a list of files exists and is non-empty.
+    Missing or empty files are reported in the verbose log.
+
+    Args:
+        error_prefix : first part of error message to be logged
+        file_list : list of relative or absolute paths to files
+
+    Returns:
+        int number of missing or empty files
+    """
+    bad_count = 0
+    for file_path in file_list:
+
+        if not os.path.isfile(file_path):
+            bad_count += 1
+            err_message = "%s %s does not exist." % (error_prefix, file_path)
+            report_error(err_message)
+            continue
+        if os.path.getsize(file_path) == 0:
+            bad_count += 1
+            err_message = "%s %s is empty." % (error_prefix, file_path)
+            report_error(err_message)
+            continue
+
+    return bad_count
+
+
+
 def target_needs_rebuild(source_files, target_file):
     """Determine if a target file needs a fresh rebuild, i.e. the target does
     not exist or its modification time is older than any of its source files.
@@ -39,25 +255,26 @@ def target_needs_rebuild(source_files, target_file):
         target_file : relative or absolute path to target file
     """
     if not os.path.isfile(target_file):
-        return True;
+        return True
 
     if os.path.getsize(target_file) == 0:
-        return True;
+        return True
 
     target_timestamp = os.stat(target_file).st_mtime
 
     for source_file in source_files:
+        # Non existing or empty source file should not force a rebuild
+        if not os.path.isfile(source_file):
+            return False
+        if os.path.getsize(source_file) == 0:
+            return False
+
         source_timestamp = os.stat(source_file).st_mtime
         if source_timestamp > target_timestamp:
             return True
 
     return False
 
-
-
-#==============================================================================
-#Define functions
-#==============================================================================
 
 def create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, snp_set):
     """Create a subset pileup with SNP locations only.
@@ -158,10 +375,10 @@ def convert_vcf_files_to_snp_dict(sample_vcf_file_list):
     for vcf_file_path in sample_vcf_file_list:
 
         if not os.path.isfile(vcf_file_path):
-            verbose_print("ERROR: Missing VCF file %s" % vcf_file_path)
+            verbose_print("Error: Missing VCF file %s" % vcf_file_path)
             continue
         if os.path.getsize(vcf_file_path) == 0:
-            verbose_print("ERROR: Empty VCF file %s" % vcf_file_path)
+            verbose_print("Error: Empty VCF file %s" % vcf_file_path)
             continue
 
         verbose_print("Processing VCF file %s" % vcf_file_path)

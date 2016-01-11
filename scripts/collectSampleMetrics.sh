@@ -15,11 +15,14 @@
 #   20150311-jdb: Initial version authored by Joseph D. Baugher.
 #   20150324-scd: Modified to work as an integrated step within the CFSAN SNP Pipeline.
 #   20150413-scd: Calculate average depth using all reference positions, including those with zero coverage.
+#   20151229-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
 #Notes:
 #
 #Bugs:
 #
 
+# source the utility functions
+. snp_pipeline_inc.sh
 
 #------
 # Usage
@@ -42,7 +45,7 @@ usage()
   echo '  -m FILE          : Relative or absolute path to the SNP matrix file'
   echo '                     (default: snpma.fasta)'
   echo '  -o FILE          : Output file. Relative or absolute path to the metrics file'
-  echo '                     (Default: stdout)'
+  echo '                     (default: stdout)'
 }
 
 # --------------------------------------------------------
@@ -87,6 +90,8 @@ while getopts ":hfm:o:" option; do
 done
 
 logSysEnvironment $@
+setupSampleErrorHandler
+
 
 # SNP Matrix file
 if [ "$opt_m_set" = "1" ]; then
@@ -94,9 +99,9 @@ if [ "$opt_m_set" = "1" ]; then
 else
   snpmaFile="snpma.fasta"
 fi
-if [[ ! -e "$snpmaFile" ]]; then echo "SNP matrix file $snpmaFile does not exist." 1>&2; exit 3; fi
-if [[ ! -f "$snpmaFile" ]]; then echo "SNP matrix file $snpmaFile is not a file." 1>&2; exit 3; fi
-if [[ ! -s "$snpmaFile" ]]; then echo "SNP matrix file $snpmaFile is empty." 1>&2; exit 3; fi
+if [[ ! -e "$snpmaFile" ]]; then globalError "SNP matrix file $snpmaFile does not exist."; fi
+if [[ ! -f "$snpmaFile" ]]; then globalError "SNP matrix file $snpmaFile is not a file."; fi
+if [[ ! -s "$snpmaFile" ]]; then globalError "SNP matrix file $snpmaFile is empty."; fi
 
 
 #----------
@@ -113,10 +118,10 @@ if [ "$sampleDir" = "" ]; then
   usage
   exit 10
 fi
-if [[   -f "$sampleDir" ]]; then echo "$sampleDir is a file, expecting a directory."; exit 10 1>&2; fi
-if [[ ! -d "$sampleDir" ]]; then echo "Sample directory $sampleDir does not exist."; exit 10 1>&2; fi
+if [[   -f "$sampleDir" ]]; then sampleError "$sampleDir is a file, expecting a directory."; false; fi
+if [[ ! -d "$sampleDir" ]]; then sampleError "Sample directory $sampleDir does not exist."; false; fi
 sampleDirFiles=$(ls -A "$sampleDir")
-if [[ -z "$sampleDirFiles" ]]; then echo "Sample directory $sampleDir is empty."; exit 10 1>&2; fi
+if [[ -z "$sampleDirFiles" ]]; then sampleError "Sample directory $sampleDir is empty."; false; fi
 
 # Get the reference file
 referenceFile="$2"
@@ -126,9 +131,9 @@ if [ "$referenceFile" = "" ]; then
   usage
   exit 10
 fi
-if [[ ! -e "$referenceFile" ]]; then echo "Reference file $referenceFile does not exist." 1>&2; exit 10; fi
-if [[ ! -f "$referenceFile" ]]; then echo "Reference file $referenceFile is not a file." 1>&2; exit 10; fi
-if [[ ! -s "$referenceFile" ]]; then echo "Reference file $referenceFile is empty." 1>&2; exit 10; fi
+if [[ ! -e "$referenceFile" ]]; then globalError "Reference file $referenceFile does not exist."; fi
+if [[ ! -f "$referenceFile" ]]; then globalError "Reference file $referenceFile is not a file."; fi
+if [[ ! -s "$referenceFile" ]]; then globalError "Reference file $referenceFile is empty."; fi
 
 
 # Extra arguments not allowed
@@ -251,8 +256,8 @@ fi
 echo "# "$(date +"%Y-%m-%d %T") Count number of SNPs from vcf file 1>&2
 #-------------------------
 vcfFile=${sampleDir}/var.flt.vcf
-if [ -s "$samFile" ]; then
-  snps=$(grep -c -v '^#' "$vcfFile")
+if [ -s "$vcfFile" ]; then
+  snps=$(grep -c -v '^#' "$vcfFile") || true
 else
   error="VCF file was not found."
   echo "$error" 1>&2

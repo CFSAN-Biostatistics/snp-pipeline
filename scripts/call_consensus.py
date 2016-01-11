@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import sys
 from snppipeline import __version__
 from snppipeline import snppipeline
 from snppipeline import utils
@@ -66,6 +67,7 @@ if __name__ == '__main__':
     parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
     args_dict = vars(parser.parse_args())
 
+    sys.excepthook = utils.handle_sample_exception
     utils.set_logging_verbosity(args_dict)
     snppipeline.set_logging_verbosity(args_dict)
     snppipeline.call_consensus(args_dict)

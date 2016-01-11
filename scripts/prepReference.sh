@@ -30,6 +30,7 @@
 #   20141030-scd: Fix Python 2.6 compatibility issue when logging RAM size.
 #   20150109-scd: Log the Grid Engine job ID.
 #   20150630-scd: Add support for Smalt.
+#   20151207-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
 #Notes:
 #
 #Bugs:
@@ -37,6 +38,9 @@
 #References:
 #   http://stackoverflow.com/questions/14008125/shell-script-common-template
 #
+
+# source the utility functions
+. snp_pipeline_inc.sh
 
 usage()
 {
@@ -125,6 +129,12 @@ if [ "$referenceFilePath" = "" ]; then
 fi
 
 logSysEnvironment $@
+setupGlobalErrorHandler
+
+# Verify reference fasta file exists and is not empty
+if [[ ! -e "$referenceFilePath" ]]; then globalError "Reference file $referenceFilePath does not exist."; fi
+if [[ ! -f "$referenceFilePath" ]]; then globalError "Reference file $referenceFilePath is not a file."; fi
+if [[ ! -s "$referenceFilePath" ]]; then globalError "Reference file $referenceFilePath is empty."; fi
 
 referenceBasePath=${referenceFilePath%.fasta} # strip the file extension
 
@@ -150,8 +160,7 @@ elif [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
         echo
     fi
 else
-    echo "Error: only bowtie2 and smalt aligners are supported."
-    exit 4
+    globalError "Error: only bowtie2 and smalt aligners are supported."
 fi
 
 #Create fai index

@@ -16,12 +16,15 @@
 #
 #History:
 #   20150915-scd: Started.
+#   20151217-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
 #
 #Notes:
 #
 #Bugs:
 #
 
+# source the utility functions
+. snp_pipeline_inc.sh
 
 usage()
 {
@@ -41,9 +44,9 @@ usage()
   echo '  -f               : Force processing even when result files already exist and '
   echo '                     are newer than inputs'
   echo '  -n NAME          : File name of the vcf files which must exist in each of'
-  echo '                     the sample directories. Default: consensus.vcf)'
+  echo '                     the sample directories. (default: consensus.vcf)'
   echo '  -o FILE          : Output file. Relative or absolute path to the merged'
-  echo '                     multi-vcf file. Default: snpma.vcf)'
+  echo '                     multi-vcf file. (default: snpma.vcf)'
 }
 
 
@@ -125,25 +128,26 @@ if [[ "$2" != "" ]]; then
 fi
 
 logSysEnvironment $@
+setupGlobalErrorHandler
 
-if [[ ! -e "$sampleDirsFile" ]]; then echo "Sample directories file $sampleDirsFile does not exist." 1>&2; exit 30; fi
-if [[ ! -f "$sampleDirsFile" ]]; then echo "Sample directories file $sampleDirsFile is not a file." 1>&2; exit 30; fi
-if [[ ! -s "$sampleDirsFile" ]]; then echo "Sample directories file $sampleDirsFile is empty." 1>&2; exit 30; fi
-
+if [[ ! -e "$sampleDirsFile" ]]; then globalError "Sample directories file $sampleDirsFile does not exist."; fi
+if [[ ! -f "$sampleDirsFile" ]]; then globalError "Sample directories file $sampleDirsFile is not a file."; fi
+if [[ ! -s "$sampleDirsFile" ]]; then globalError "Sample directories file $sampleDirsFile is empty."; fi
 
 # Validate the single sample VCF files
-(( needRebuild = 0 ))
+(( needRebuild = 0 )) || true
 while IFS='' read -r dir || [[ -n "$dir" ]]
 do
   inFilePath="$dir/$inFileName"
-  if [[ ! -e "$inFilePath" ]]; then echo "Sample vcf file $inFilePath does not exist." 1>&2; exit 40; fi
-  if [[ ! -f "$inFilePath" ]]; then echo "Sample vcf file $inFilePath is not a file." 1>&2; exit 40; fi
-  if [[ ! -s "$inFilePath" ]]; then echo "Sample vcf file $inFilePath is empty." 1>&2; exit 40; fi
+  if   [[ ! -e "$inFilePath" ]]; then sampleError "Sample vcf file $inFilePath does not exist." true;
+  elif [[ ! -f "$inFilePath" ]]; then sampleError "Sample vcf file $inFilePath is not a file." true;
+  elif [[ ! -s "$inFilePath" ]]; then sampleError "Sample vcf file $inFilePath is empty." true;
+  fi
   # Check if rebuild is needed
   if [[ "$opt_f_set" == "1" || ! -s "$outFilePath" || "$inFilePath" -nt "$outFilePath" ]]; then
-    (( needRebuild++ ))
+    (( needRebuild++ )) || true
   fi
-done < "$sampleDirsFile" 
+done < "$sampleDirsFile"
 
 if [ $needRebuild -eq 0 ]; then
   echo "# Multi-VCF file is already freshly created.  Use the -f option to force a rebuild."
@@ -157,24 +161,19 @@ tempDir=$(mktemp -d tmp.vcf.XXXXXXXX)
 cat "$sampleDirsFile" | while IFS='' read -r dir || [[ -n "$dir" ]]
 do
   inFilePath="$dir/$inFileName"
-  echo Processing $inFilePath 1>&2
-  if [[ ! -e "$inFilePath" ]]; then echo "Sample vcf file $inFilePath does not exist." 1>&2; exit 40; fi
-  if [[ ! -f "$inFilePath" ]]; then echo "Sample vcf file $inFilePath is not a file." 1>&2; exit 40; fi
-  if [[ ! -s "$inFilePath" ]]; then echo "Sample vcf file $inFilePath is empty." 1>&2; exit 40; fi
-  cp -p -u "$inFilePath" $tempDir/$(basename $dir).vcf
-done
-
-# Replace "Sample1" with sample names in all single sample files
-cd $tempDir
-for filename in *.vcf; do
-  samplename="${filename%.*}"
-  sed -i s/Sample1/$samplename/ $filename
+  echo Copying $inFilePath to $tempDir/$(basename $dir).vcf
+  cp -p -u "$inFilePath" $tempDir/$(basename $dir).vcf || true
 done
 
 # Zip and create index for all sample files
-for filestozip in *.vcf; do bgzip -c $filestozip > $filestozip.gz; done
-for filestoidx in *.gz; do tabix -f -p vcf $filestoidx; done
-cd - > /dev/null
+for filestozip in $tempDir/*.vcf; do
+  echo Compressing $filestozip
+  bgzip -c $filestozip > $filestozip.gz
+done
+for filestoidx in $tempDir/*.gz; do
+  echo Indexing $filestoidx
+  tabix -f -p vcf $filestoidx
+done
 
 # Merge the VCFs
 bcftools merge --info-rules NS:sum -o "$outFilePath" $tempDir/*.gz
@@ -185,4 +184,3 @@ if [[ -e "$tempDir" ]]; then
 fi
 
 echo "# "$(date +"%Y-%m-%d %T") mergeVcf.sh finished
-

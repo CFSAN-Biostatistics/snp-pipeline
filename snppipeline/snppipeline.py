@@ -6,7 +6,6 @@ from Bio.SeqRecord import SeqRecord
 import os
 import pprint
 import sys
-import time
 import platform
 import psutil
 import locale
@@ -31,25 +30,9 @@ def set_logging_verbosity(options_dict):
     verbose_pprint = pprint.pprint if options_dict['verbose'] > 0 else lambda *a, **k: None
 
 
-def timestamp():
-    """Return a timestamp string."""
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-
-def program_name():
-    """Return the basename of the python script being executed."""
-    return os.path.basename(sys.argv[0])
-
-def command_line_short():
-    """Return the command line string without the full path to the program."""
-    return "%s %s" % (program_name(), " ".join(sys.argv[1:]))
-
-def command_line_long():
-    """Return the command line string with the full path to the program."""
-    return " ".join(sys.argv)
-
 def print_log_header():
     """Print a standardized header for the log with starting conditions."""
-    verbose_print("# Command           : %s" % command_line_long())
+    verbose_print("# Command           : %s" % utils.command_line_long())
     verbose_print("# Working Directory : %s" % os.getcwd())
     pbs_jobid = os.environ.get("PBS_JOBID")
     sge_jobid = os.environ.get("JOB_ID")
@@ -128,15 +111,18 @@ def create_snp_list(options_dict):
     create_snp_list(options_dict)
     """
     print_log_header()
-    verbose_print("# %s %s" % (timestamp(), command_line_short()))
-    verbose_print("# %s version %s" % (program_name(), __version__))
+    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
+    verbose_print("# %s version %s" % (utils.program_name(), __version__))
     print_arguments(options_dict)
 
     #==========================================================================
     # Prep work
-    # Note use of filter on list_of_sample_directories to remove blank lines.
     #==========================================================================
     sample_directories_list_filename = options_dict['sampleDirsFile']
+    bad_file_count = utils.verify_non_empty_input_files("File of sample directories", [sample_directories_list_filename])
+    if bad_file_count > 0:
+        utils.global_error(None)
+
     with open(sample_directories_list_filename, "r") as sample_directories_list_file:
         list_of_sample_directories = [line.rstrip() for line in sample_directories_list_file]
     list_of_sample_directories = sorted([d for d in list_of_sample_directories if d])
@@ -149,6 +135,12 @@ def create_snp_list(options_dict):
     vcf_file_name = options_dict['vcfFileName']
     list_of_vcf_files = [os.path.join(dir, vcf_file_name) for dir in list_of_sample_directories]
 
+    bad_file_count = utils.verify_non_empty_input_files("VCF file", list_of_vcf_files)
+    if bad_file_count == len(list_of_vcf_files):
+        utils.global_error("Error: all %d VCF files were missing or empty." % bad_file_count)
+    elif bad_file_count > 0:
+        utils.sample_error("Error: %d VCF files were missing or empty." % bad_file_count, continue_possible=True)
+
     if options_dict['forceFlag'] or utils.target_needs_rebuild(list_of_vcf_files, snp_list_file_path):
         snp_dict = utils.convert_vcf_files_to_snp_dict(list_of_vcf_files)
         verbose_print('Found %d snp positions across %d sample vcf files.' % (len(snp_dict), len(list_of_vcf_files)))
@@ -156,7 +148,7 @@ def create_snp_list(options_dict):
         verbose_print("")
     else:
         verbose_print("SNP list %s has already been freshly built.  Use the -f option to force a rebuild." % snp_list_file_path)
-    verbose_print("# %s %s finished" % (timestamp(), program_name()))
+    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def create_snp_pileup(options_dict):
@@ -204,8 +196,8 @@ def create_snp_pileup(options_dict):
     create_snp_pileup(options_dict)
     """
     print_log_header()
-    verbose_print("# %s %s" % (timestamp(), command_line_short()))
-    verbose_print("# %s version %s" % (program_name(), __version__))
+    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
+    verbose_print("# %s version %s" % (utils.program_name(), __version__))
     print_arguments(options_dict)
 
     snp_list_file_path = options_dict['snpListFile']
@@ -221,7 +213,7 @@ def create_snp_pileup(options_dict):
         verbose_print("")
     else:
         verbose_print("SNP pileup %s has already been freshly built.  Use the -f option to force a rebuild." % snp_pileup_file_path)
-    verbose_print("# %s %s finished" % (timestamp(), program_name()))
+    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def call_consensus(options_dict):
@@ -293,8 +285,8 @@ def call_consensus(options_dict):
     call_consensus(options_dict)
     """
     print_log_header()
-    verbose_print("# %s %s" % (timestamp(), command_line_short()))
-    verbose_print("# %s version %s" % (program_name(), __version__))
+    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
+    verbose_print("# %s version %s" % (utils.program_name(), __version__))
     print_arguments(options_dict)
 
     snp_list_file_path = options_dict['snpListFile']
@@ -306,11 +298,19 @@ def call_consensus(options_dict):
     vcf_file_name = options_dict['vcfFileName']
     vcf_file_path = os.path.join(consensus_file_dir, vcf_file_name) if vcf_file_name else None
 
+    bad_file_count = utils.verify_non_empty_input_files("Snplist file", [snp_list_file_path])
+    if bad_file_count > 0:
+        utils.global_error("Error: cannot call consensus without the snplist file.")
+
+    bad_file_count = utils.verify_non_empty_input_files("Pileup file", [all_pileup_file_path])
+    if bad_file_count > 0:
+        utils.sample_error("Error: cannot call consensus without the pileup file.", continue_possible=False)
+
     # Check if the result is already fresh
     source_files = [snp_list_file_path, all_pileup_file_path]
     if not options_dict['forceFlag'] and not utils.target_needs_rebuild(source_files, consensus_file_path):
         verbose_print("Consensus call file %s has already been freshly built.  Use the -f option to force a rebuild." % consensus_file_path)
-        verbose_print("# %s %s finished" % (timestamp(), program_name()))
+        verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
         return
 
     # Load the list of which positions to called
@@ -359,7 +359,7 @@ def call_consensus(options_dict):
         SeqIO.write([snp_seq_record], fasta_file_object, "fasta")
 
     verbose_print("")
-    verbose_print("# %s %s finished" % (timestamp(), program_name()))
+    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def create_snp_matrix(options_dict):
@@ -417,46 +417,63 @@ def create_snp_matrix(options_dict):
     create_snp_matrix(options_dict)
     """
     print_log_header()
-    verbose_print("# %s %s" % (timestamp(), command_line_short()))
-    verbose_print("# %s version %s" % (program_name(), __version__))
+    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
+    verbose_print("# %s version %s" % (utils.program_name(), __version__))
     print_arguments(options_dict)
 
     #==========================================================================
     # Prep work
-    # Note use of filter on list_of_sample_directories to remove blank lines.
     #==========================================================================
-    sample_directories_list_filename = options_dict['sampleDirsFile']
+    sample_directories_list_filename = options_dict['sampleDirsFile']   
+    bad_file_count = utils.verify_non_empty_input_files("File of sample directories", [sample_directories_list_filename])
+    if bad_file_count > 0:
+        utils.global_error(None)
+
     with open(sample_directories_list_filename, "r") as sample_directories_list_file:
         list_of_sample_directories = [line.rstrip() for line in sample_directories_list_file]
     list_of_sample_directories = sorted([d for d in list_of_sample_directories if d])
 
     #==========================================================================
+    # Verify input consensus.fasta files exist
+    #==========================================================================
+    consensus_files = []
+    bad_file_count = 0
+    for sample_directory in list_of_sample_directories:
+        consensus_file_path = os.path.join(sample_directory, options_dict['consFileName'])
+        bad_count = utils.verify_non_empty_input_files("Consensus fasta file", [consensus_file_path])
+        if bad_count == 1:
+            bad_file_count += 1;
+        else:
+            consensus_files.append(consensus_file_path)  # keep the list of good files
+
+    if bad_file_count == len(list_of_sample_directories):
+        utils.global_error("Error: all %d consensus fasta files were missing or empty." % bad_file_count)
+    elif bad_file_count > 0:
+        utils.sample_error("Error: %d consensus fasta files were missing or empty." % bad_file_count, continue_possible=True)
+
+    #==========================================================================
     # Check if the result is already fresh
     #==========================================================================
     snpma_file_path = options_dict['snpmaFile']
-    source_files = []
+    source_files = consensus_files
     if not options_dict['forceFlag']:
-        for sample_directory in list_of_sample_directories:
-            consensus_file_path = os.path.join(sample_directory, options_dict['consFileName'])
-            source_files.append(consensus_file_path)
         if not utils.target_needs_rebuild(source_files, snpma_file_path):
             verbose_print("SNP matrix %s has already been freshly built.  Use the -f option to force a rebuild." % snpma_file_path)
-            verbose_print("# %s %s finished" % (timestamp(), program_name()))
+            verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
             return
 
     #==========================================================================
     #   Create snp matrix. Write results to file.
     #==========================================================================
     with open(snpma_file_path, "w") as output_file:
-        for sample_directory in list_of_sample_directories:
-            consensus_file_path = os.path.join(sample_directory, options_dict['consFileName'])
+        for consensus_file_path in consensus_files:
             verbose_print("Merging " + consensus_file_path)
             with open(consensus_file_path, "r") as input_file:
                 for line in input_file:
                     output_file.write(line)
 
     verbose_print("")
-    verbose_print("# %s %s finished" % (timestamp(), program_name()))
+    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 
@@ -500,8 +517,8 @@ def create_snp_reference_seq(options_dict):
     create_snp_reference_seq(options_dict)
     """
     print_log_header()
-    verbose_print("# %s %s" % (timestamp(), command_line_short()))
-    verbose_print("# %s version %s" % (program_name(), __version__))
+    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
+    verbose_print("# %s version %s" % (utils.program_name(), __version__))
     print_arguments(options_dict)
 
     #==========================================================================
@@ -511,6 +528,20 @@ def create_snp_reference_seq(options_dict):
     snp_list_file_path = options_dict['snpListFile']
     snp_ref_seq_path = options_dict['snpRefFile']
 
+    #==========================================================================
+    # Verify input files exist
+    #==========================================================================
+    bad_file_count = utils.verify_non_empty_input_files("Snplist file", [snp_list_file_path])
+    if bad_file_count > 0:
+        utils.global_error("Error: cannot create the snp reference sequence without the snplist file.")
+
+    bad_file_count = utils.verify_non_empty_input_files("Reference file", [reference_file])
+    if bad_file_count > 0:
+        utils.global_error("Error: cannot create the snp reference sequence without the reference fasta file.")
+
+    #==========================================================================
+    # Find the reference bases at the snp positions
+    #==========================================================================
     source_files = [reference_file, snp_list_file_path]
     if options_dict['forceFlag'] or utils.target_needs_rebuild(source_files, snp_ref_seq_path):
         utils.write_reference_snp_file(reference_file, snp_list_file_path, snp_ref_seq_path)
@@ -518,6 +549,6 @@ def create_snp_reference_seq(options_dict):
     else:
         verbose_print("SNP reference sequence %s has already been freshly built.  Use the -f option to force a rebuild." % snp_ref_seq_path)
 
-    verbose_print("# %s %s finished" % (timestamp(), program_name()))
+    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 

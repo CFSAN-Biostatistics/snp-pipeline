@@ -3,7 +3,7 @@
 History
 -------
 
-0.4.2 (2015-11-??)
+0.4.2 (2016-01-??)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -12,6 +12,12 @@ History
 
 **Other Changes:**
 
+* Trap errors, shutdown the pipeline, and prevent execution of subsequent steps when earlier processing 
+  steps fail. A summary of errors is written to the ``error.log`` file.
+  See :ref:`error-handling-label`.
+* Check for the necessary software tools (bowtie, samtools, etc.) on the path at the start of each 
+  pipeline run.
+* Check for missing or empty input files at the start of each processing step.
 * Changed the vcf file generator to emit reference bases in uppercase.  Added the ``vcfPreserveRefCase``
   flag to the call_consensus.py script to cause the vcf file generator to emit each reference base in
   uppercase/lowercase as it appears in the original reference sequence file.  If not specified, the
@@ -19,6 +25,8 @@ History
   original case.
 * Removed setuptools from the list of required installation dependencies.
 * Added support for Python 3.3, 3.4, 3.5.
+* Implemented a regression test suite for the bash shell scripts, using the shUnit2 package.
+
 
 0.4.1 (2015-10-30)
 ~~~~~~~~~~~~~~~~~~
