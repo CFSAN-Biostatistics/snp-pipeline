@@ -231,6 +231,9 @@ To run the SNP Pipeline on torque::
 You may need to change the ``Torque_StripJobArraySuffix`` configuration parameter if
 you see qsub illegal dependency errors.
 
+You can pass extra options to the Torque qsub command by configuring the ``Torque_QsubExtraParams``
+parameter in the configuration file.
+
 Grid Engine
 ~~~~~~~~~~~
 To run the SNP Pipeline on grid engine you must use a configuration file to specify
@@ -251,6 +254,10 @@ you see qsub illegal dependency errors.
 Then run the pipeline with the -c and -Q command line options::    
     
     run_snp_pipeline.sh -c snppipeline.conf -Q grid -s mySamplesDir myReference.fasta
+
+You can pass extra options to the Grid Engine qsub command by configuring the ``GridEngine_QsubExtraParams``
+parameter in the configuration file.  Among other things, you can control which queue the
+snp-pipeline will use when executing on an HPC with multiple queues. 
 
 See also: :ref:`faq-performance-label`.
 

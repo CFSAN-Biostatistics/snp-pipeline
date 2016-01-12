@@ -560,7 +560,7 @@ rm "$tmpFile"
 
 echo -e "\nStep 2 - Prep the reference"
 if [[ "$platform" == "grid" ]]; then
-    prepReferenceJobId=$(echo | qsub -terse << _EOF_
+    prepReferenceJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N job.prepReference
 #$ -V
 #$ -j y
@@ -571,7 +571,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    prepReferenceJobId=$(echo | qsub << _EOF_
+    prepReferenceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
     #PBS -N job.prepReference
     #PBS -j oe
     #PBS -d $(pwd)
@@ -608,7 +608,7 @@ if [[ "$platform" == "grid" || "$platform" == "torque" ]]; then
 fi
 
 if [[ "$platform" == "grid" ]]; then
-    alignSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+    alignSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
 #$   -N job.alignSamples
 #$   -cwd
 #$   -V
@@ -621,7 +621,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    alignSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
+    alignSamplesJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
     #PBS -N job.alignSamples
     #PBS -d $(pwd)
     #PBS -j oe
@@ -641,7 +641,7 @@ echo -e "\nStep 4 - Prep the samples"
 if [[ "$platform" == "grid" ]]; then
     sleep $((1 + sampleCount / 150)) # workaround potential bug when submitting two large consecutive array jobs
     alignSamplesJobArray=$(stripGridEngineJobArraySuffix $alignSamplesJobId)
-    prepSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+    prepSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
 #$   -N job.prepSamples
 #$   -cwd
 #$   -V
@@ -656,7 +656,7 @@ _EOF_
 elif [[ "$platform" == "torque" ]]; then
     sleep $((1 + sampleCount / 150)) # workaround torque bug when submitting two large consecutive array jobs
     alignSamplesJobArray=$(stripTorqueJobArraySuffix $alignSamplesJobId)
-    prepSamplesJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
+    prepSamplesJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
     #PBS -N job.prepSamples
     #PBS -d $(pwd)
     #PBS -j oe
@@ -680,7 +680,7 @@ fi
 echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP list file"
 if [[ "$platform" == "grid" ]]; then
     prepSamplesJobArray=$(stripGridEngineJobArraySuffix $prepSamplesJobId)
-    snpListJobId=$(echo | qsub  -terse << _EOF_
+    snpListJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N job.snpList
 #$ -cwd
 #$ -j y
@@ -693,7 +693,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     prepSamplesJobArray=$(stripTorqueJobArraySuffix $prepSamplesJobId)
-    snpListJobId=$(echo | qsub << _EOF_
+    snpListJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
     #PBS -N job.snpList
     #PBS -d $(pwd)
     #PBS -j oe
@@ -709,7 +709,7 @@ fi
 
 echo -e "\nStep 6 - Call the consensus SNPs for each sample"
 if [[ "$platform" == "grid" ]]; then
-    callConsensusJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+    callConsensusJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
 #$ -N job.callConsensus
 #$ -cwd
 #$ -V
@@ -722,7 +722,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    callConsensusJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
+    callConsensusJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
     #PBS -N job.callConsensus
     #PBS -d $(pwd)
     #PBS -j oe
@@ -745,7 +745,7 @@ fi
 echo -e "\nStep 7 - Create the SNP matrix"
 if [[ "$platform" == "grid" ]]; then
     callConsensusJobArray=$(stripGridEngineJobArraySuffix $callConsensusJobId)
-    snpMatrixJobId=$(echo | qsub -terse << _EOF_
+    snpMatrixJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N job.snpMatrix
 #$ -cwd
 #$ -V
@@ -759,7 +759,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     callConsensusJobArray=$(stripTorqueJobArraySuffix $callConsensusJobId)
-    snpMatrixJobId=$(echo | qsub << _EOF_
+    snpMatrixJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
     #PBS -N job.snpMatrix
     #PBS -d $(pwd)
     #PBS -j oe
@@ -776,7 +776,7 @@ fi
 
 echo -e "\nStep 8 - Create the reference base sequence"
 if [[ "$platform" == "grid" ]]; then
-    snpReferenceJobId=$(echo | qsub -terse << _EOF_
+    snpReferenceJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -V
 #$ -N job.snpReference 
 #$ -cwd
@@ -788,7 +788,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    snpReferenceJobId=$(echo | qsub << _EOF_
+    snpReferenceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
     #PBS -N job.snpReference 
     #PBS -d $(pwd)
     #PBS -j oe 
@@ -806,7 +806,7 @@ fi
 echo -e "\nStep 9 - Create the Multi-VCF file"
 if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
     if [[ "$platform" == "grid" ]]; then
-        mergeVcfJobId=$(echo | qsub  -terse << _EOF_
+        mergeVcfJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N job.mergeVcf
 #$ -cwd
 #$ -j y
@@ -817,7 +817,7 @@ if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
 _EOF_
 )
     elif [[ "$platform" == "torque" ]]; then
-        mergeVcfJobId=$(echo | qsub << _EOF_
+        mergeVcfJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
         #PBS -N job.mergeVcf
         #PBS -d $(pwd)
         #PBS -j oe
@@ -835,7 +835,7 @@ fi
 
 echo -e "\nStep 10 - Collect metrics for each sample"
 if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount << _EOF_
+    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
 #$ -N job.collectMetrics
 #$ -cwd
 #$ -V
@@ -848,7 +848,7 @@ if [[ "$platform" == "grid" ]]; then
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobId=$(echo | qsub -t 1-$sampleCount << _EOF_
+    collectSampleMetricsJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
     #PBS -N job.collectMetrics
     #PBS -d $(pwd)
     #PBS -j oe
@@ -871,7 +871,7 @@ fi
 echo -e "\nStep 11 - Combine the metrics across all samples into the metrics table"
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobArray=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId=$(echo | qsub  -terse << _EOF_
+    combineSampleMetricsJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N job.combineMetrics
 #$ -cwd
 #$ -j y
@@ -883,7 +883,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     collectSampleMetricsJobArray=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId=$(echo | qsub << _EOF_
+    combineSampleMetricsJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
     #PBS -N job.combineMetrics
     #PBS -d $(pwd)
     #PBS -j oe

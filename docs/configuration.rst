@@ -408,3 +408,25 @@ Note: the name of this parameter was PEname in releases prior to 0.4.0.
 **Example**::
 
     GridEngine_PEname="mpi"
+
+
+GridEngine_QsubExtraParams
+--------------------------
+Specifies extra options passed to qsub when running the SNP Pipeline on the Grid Engine job scheduler.
+
+**Default**: None
+
+**Example**::
+
+    GridEngine_QsubExtraParams="-q bigmem.q"
+
+
+Torque_QsubExtraParams
+--------------------------
+Specifies extra options passed to qsub when running the SNP Pipeline on the Torque job scheduler.
+
+**Default**: None
+
+**Example**::
+
+    Torque_QsubExtraParams="-l pmem=16gb"
