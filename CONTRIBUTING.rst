@@ -89,7 +89,7 @@ Ready to contribute? Here's how to set up `snp-pipeline` for local development.
     $ python setup.py test
     $ tox
     - or - 
-    $ ./run_tests.sh  # test other python versions without using tox
+    $ . run_tests.sh -c # source this script to test other python versions without using tox
 
    To get tox, just pip install it into your virtualenv. 
 
