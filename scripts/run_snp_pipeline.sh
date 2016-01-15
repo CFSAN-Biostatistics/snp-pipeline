@@ -566,7 +566,6 @@ if [[ "$platform" == "grid" ]]; then
 #$ -j y
 #$ -cwd
 #$ -o $logDir/prepReference.log
-#$ -v Bowtie2Build_ExtraParams,SamtoolsFaidx_ExtraParams
     prepReference.sh $forceFlag "$referenceFilePath" 
 _EOF_
 )
@@ -576,7 +575,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -j oe
     #PBS -d $(pwd)
     #PBS -o $logDir/prepReference.log
-    #PBS -v Bowtie2Build_ExtraParams,SamtoolsFaidx_ExtraParams
+    #PBS -V
     prepReference.sh $forceFlag "$referenceFilePath"
 _EOF_
 )
@@ -616,7 +615,6 @@ if [[ "$platform" == "grid" ]]; then
 #$   -pe $GridEngine_PEname $numAlignThreads
 #$   -hold_jid $prepReferenceJobId
 #$   -o $logDir/alignSamples.log-\$TASK_ID
-#$   -v SnpPipeline_Aligner,Bowtie2Align_ExtraParams,SmaltAlign_ExtraParams
     alignSampleToReference.sh $forceFlag "$referenceFilePath" \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
 _EOF_
 )
@@ -628,7 +626,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -l nodes=1:ppn=$numAlignThreads
     #PBS -W depend=afterok:$prepReferenceJobId
     #PBS -o $logDir/alignSamples.log
-    #PBS -v SnpPipeline_Aligner,Bowtie2Align_ExtraParams,SmaltAlign_ExtraParams
+    #PBS -V
     samplesToAlign=\$(cat "$workDir/sampleFullPathNames.txt" | head -n \$PBS_ARRAYID | tail -n 1)
     alignSampleToReference.sh $forceFlag "$referenceFilePath" \$samplesToAlign
 _EOF_
@@ -649,7 +647,6 @@ if [[ "$platform" == "grid" ]]; then
 #$   -hold_jid $alignSamplesJobArray
 #$   -l h_rt=05:00:00
 #$   -o $logDir/prepSamples.log-\$TASK_ID
-#$   -v SamtoolsSamFilter_ExtraParams,SamtoolsSort_ExtraParams,SamtoolsMpileup_ExtraParams,VarscanMpileup2snp_ExtraParams,VarscanJvm_ExtraParams
     prepSamples.sh $forceFlag "$referenceFilePath" "\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)"
 _EOF_
 )
@@ -663,7 +660,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterokarray:$alignSamplesJobArray
     #PBS -l walltime=05:00:00
     #PBS -o $logDir/prepSamples.log
-    #PBS -v SamtoolsSamFilter_ExtraParams,SamtoolsSort_ExtraParams,SamtoolsMpileup_ExtraParams,VarscanMpileup2snp_ExtraParams,VarscanJvm_ExtraParams
+    #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
     prepSamples.sh $forceFlag "$referenceFilePath" "\$sampleDir"
 _EOF_
@@ -687,7 +684,6 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -hold_jid $prepSamplesJobArray
 #$ -o $logDir/snpList.log
-#$ -v CreateSnpList_ExtraParams
     create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" 
 _EOF_
 )
@@ -699,7 +695,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -j oe
     #PBS -W depend=afterokarray:$prepSamplesJobArray
     #PBS -o $logDir/snpList.log
-    #PBS -v CreateSnpList_ExtraParams
+    #PBS -V
     create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" 
 _EOF_
 )
@@ -716,7 +712,6 @@ if [[ "$platform" == "grid" ]]; then
 #$ -j y
 #$ -hold_jid $snpListJobId
 #$ -o $logDir/callConsensus.log-\$TASK_ID
-#$ -v CallConsensus_ExtraParams
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
     call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
@@ -728,7 +723,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -j oe
     #PBS -W depend=afterok:$snpListJobId
     #PBS -o $logDir/callConsensus.log
-    #PBS -v CallConsensus_ExtraParams
+    #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
     call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
 _EOF_
@@ -753,7 +748,6 @@ if [[ "$platform" == "grid" ]]; then
 #$ -hold_jid $callConsensusJobArray
 #$ -l h_rt=05:00:00
 #$ -o $logDir/snpMatrix.log
-#$ -v CreateSnpMatrix_ExtraParams
     create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
 _EOF_
 )
@@ -766,7 +760,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -l walltime=05:00:00
     #PBS -o $logDir/snpMatrix.log
-    #PBS -v CreateSnpMatrix_ExtraParams
+    #PBS -V
     create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
 _EOF_
 )
@@ -783,7 +777,6 @@ if [[ "$platform" == "grid" ]]; then
 #$ -j y 
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/snpReference.log
-#$ -v CreateSnpReferenceSeq_ExtraParams
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
 _EOF_
 )
@@ -794,7 +787,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -j oe 
     #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -o $logDir/snpReference.log
-    #PBS -v CreateSnpReferenceSeq_ExtraParams
+    #PBS -V
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
 _EOF_
 )
@@ -823,6 +816,7 @@ _EOF_
         #PBS -j oe
         #PBS -W depend=afterokarray:$callConsensusJobArray
         #PBS -o $logDir/mergeVcf.log
+        #PBS -V
         mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile"
 _EOF_
 )
@@ -841,7 +835,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -j y
 #$ -hold_jid $snpMatrixJobId
-#$   -l h_rt=02:00:00
+#$ -l h_rt=02:00:00
 #$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
     collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"  "$referenceFilePath"
@@ -852,9 +846,10 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -N collectMetrics
     #PBS -d $(pwd)
     #PBS -j oe
-    #PBS -W depend=afterany:$snpMatrixJobId
+    #PBS -W depend=afterok:$snpMatrixJobId
     #PBS -l walltime=02:00:00
     #PBS -o $logDir/collectSampleMetrics.log
+    #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
     collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"  "$referenceFilePath"
 _EOF_
@@ -889,6 +884,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -j oe
     #PBS -W depend=afterokarray:$collectSampleMetricsJobArray
     #PBS -o $logDir/combineSampleMetrics.log
+    #PBS -V
     combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" "$sampleDirsFile"
 _EOF_
 )

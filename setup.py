@@ -46,7 +46,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='0.4.2a7',
+    version='0.5.0a1',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
