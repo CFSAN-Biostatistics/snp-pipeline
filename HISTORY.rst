@@ -22,6 +22,7 @@ History
   configuration file to pass options to qsub when running the SNP Pipeline on an HPC computing cluster.  
   Among other things, you can control which queue the snp-pipeline will use when executing on an HPC 
   with multiple queues.  See :ref:`configuration-label`.
+* Removed the "job." prefix to shorten job names when running on an HPC.
 * Changed the vcf file generator to emit reference bases in uppercase.  Added the ``vcfPreserveRefCase``
   flag to the call_consensus.py script to cause the vcf file generator to emit each reference base in
   uppercase/lowercase as it appears in the original reference sequence file.  If not specified, the

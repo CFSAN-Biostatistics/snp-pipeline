@@ -561,7 +561,7 @@ rm "$tmpFile"
 echo -e "\nStep 2 - Prep the reference"
 if [[ "$platform" == "grid" ]]; then
     prepReferenceJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N job.prepReference
+#$ -N prepReference
 #$ -V
 #$ -j y
 #$ -cwd
@@ -572,7 +572,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     prepReferenceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N job.prepReference
+    #PBS -N prepReference
     #PBS -j oe
     #PBS -d $(pwd)
     #PBS -o $logDir/prepReference.log
@@ -609,7 +609,7 @@ fi
 
 if [[ "$platform" == "grid" ]]; then
     alignSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
-#$   -N job.alignSamples
+#$   -N alignSamples
 #$   -cwd
 #$   -V
 #$   -j y
@@ -622,7 +622,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     alignSamplesJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
-    #PBS -N job.alignSamples
+    #PBS -N alignSamples
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -l nodes=1:ppn=$numAlignThreads
@@ -642,7 +642,7 @@ if [[ "$platform" == "grid" ]]; then
     sleep $((1 + sampleCount / 150)) # workaround potential bug when submitting two large consecutive array jobs
     alignSamplesJobArray=$(stripGridEngineJobArraySuffix $alignSamplesJobId)
     prepSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
-#$   -N job.prepSamples
+#$   -N prepSamples
 #$   -cwd
 #$   -V
 #$   -j y
@@ -657,7 +657,7 @@ elif [[ "$platform" == "torque" ]]; then
     sleep $((1 + sampleCount / 150)) # workaround torque bug when submitting two large consecutive array jobs
     alignSamplesJobArray=$(stripTorqueJobArraySuffix $alignSamplesJobId)
     prepSamplesJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
-    #PBS -N job.prepSamples
+    #PBS -N prepSamples
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterokarray:$alignSamplesJobArray
@@ -681,7 +681,7 @@ echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP li
 if [[ "$platform" == "grid" ]]; then
     prepSamplesJobArray=$(stripGridEngineJobArraySuffix $prepSamplesJobId)
     snpListJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N job.snpList
+#$ -N snpList
 #$ -cwd
 #$ -j y
 #$ -V
@@ -694,7 +694,7 @@ _EOF_
 elif [[ "$platform" == "torque" ]]; then
     prepSamplesJobArray=$(stripTorqueJobArraySuffix $prepSamplesJobId)
     snpListJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N job.snpList
+    #PBS -N snpList
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterokarray:$prepSamplesJobArray
@@ -710,7 +710,7 @@ fi
 echo -e "\nStep 6 - Call the consensus SNPs for each sample"
 if [[ "$platform" == "grid" ]]; then
     callConsensusJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
-#$ -N job.callConsensus
+#$ -N callConsensus
 #$ -cwd
 #$ -V
 #$ -j y
@@ -723,7 +723,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     callConsensusJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
-    #PBS -N job.callConsensus
+    #PBS -N callConsensus
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterok:$snpListJobId
@@ -746,7 +746,7 @@ echo -e "\nStep 7 - Create the SNP matrix"
 if [[ "$platform" == "grid" ]]; then
     callConsensusJobArray=$(stripGridEngineJobArraySuffix $callConsensusJobId)
     snpMatrixJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N job.snpMatrix
+#$ -N snpMatrix
 #$ -cwd
 #$ -V
 #$ -j y
@@ -760,7 +760,7 @@ _EOF_
 elif [[ "$platform" == "torque" ]]; then
     callConsensusJobArray=$(stripTorqueJobArraySuffix $callConsensusJobId)
     snpMatrixJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N job.snpMatrix
+    #PBS -N snpMatrix
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterokarray:$callConsensusJobArray
@@ -778,7 +778,7 @@ echo -e "\nStep 8 - Create the reference base sequence"
 if [[ "$platform" == "grid" ]]; then
     snpReferenceJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -V
-#$ -N job.snpReference 
+#$ -N snpReference 
 #$ -cwd
 #$ -j y 
 #$ -hold_jid $callConsensusJobArray
@@ -789,7 +789,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     snpReferenceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N job.snpReference 
+    #PBS -N snpReference 
     #PBS -d $(pwd)
     #PBS -j oe 
     #PBS -W depend=afterokarray:$callConsensusJobArray
@@ -807,7 +807,7 @@ echo -e "\nStep 9 - Create the Multi-VCF file"
 if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
     if [[ "$platform" == "grid" ]]; then
         mergeVcfJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N job.mergeVcf
+#$ -N mergeVcf
 #$ -cwd
 #$ -j y
 #$ -V
@@ -818,7 +818,7 @@ _EOF_
 )
     elif [[ "$platform" == "torque" ]]; then
         mergeVcfJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-        #PBS -N job.mergeVcf
+        #PBS -N mergeVcf
         #PBS -d $(pwd)
         #PBS -j oe
         #PBS -W depend=afterokarray:$callConsensusJobArray
@@ -836,7 +836,7 @@ fi
 echo -e "\nStep 10 - Collect metrics for each sample"
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
-#$ -N job.collectMetrics
+#$ -N collectMetrics
 #$ -cwd
 #$ -V
 #$ -j y
@@ -849,7 +849,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     collectSampleMetricsJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
-    #PBS -N job.collectMetrics
+    #PBS -N collectMetrics
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterany:$snpMatrixJobId
@@ -872,7 +872,7 @@ echo -e "\nStep 11 - Combine the metrics across all samples into the metrics tab
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobArray=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
     combineSampleMetricsJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N job.combineMetrics
+#$ -N combineMetrics
 #$ -cwd
 #$ -j y
 #$ -V
@@ -884,7 +884,7 @@ _EOF_
 elif [[ "$platform" == "torque" ]]; then
     collectSampleMetricsJobArray=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
     combineSampleMetricsJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N job.combineMetrics
+    #PBS -N combineMetrics
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterokarray:$collectSampleMetricsJobArray
