@@ -3,7 +3,7 @@
 History
 -------
 
-0.5.0 (2016-01-??)
+0.5.0 (2016-01-19)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -26,9 +26,8 @@ History
 * Changed the vcf file generator to emit reference bases in uppercase.  Added the ``vcfPreserveRefCase``
   flag to the call_consensus.py script to cause the vcf file generator to emit each reference base in
   uppercase/lowercase as it appears in the original reference sequence file.  If not specified, the
-  reference bases are emitted in uppercase.  Prior to v0.4.2, the behavior was to always preserve the
+  reference bases are emitted in uppercase.  Prior to this release, the behavior was to always preserve the
   original case.
-* Removed setuptools from the list of required installation dependencies.
 * Added support for Python 3.3, 3.4, 3.5.
 * Implemented a regression test suite for the bash shell scripts, using the shUnit2 package.
 

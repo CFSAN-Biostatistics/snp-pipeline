@@ -21,6 +21,7 @@ else:
 # depending on the python version
 install_requires = [
     'PyVCF',
+    'setuptools', # needed during execution to load pkg_resources
     'psutil',
     'Biopython',
 ]
@@ -46,7 +47,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='0.5.0a1',
+    version='0.5.0',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
