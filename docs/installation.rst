@@ -45,7 +45,7 @@ the following (or something similiar) to your .bashrc file::
 
 Step 4 - Python
 ---------------
-The SNP pipeline requires python version 2.6 or 2.7.  The pipeline has not been tested on other python versions.
+The SNP pipeline requires python version 2.6, 2.7, 3.3, 3.4, or 3.5.  The pipeline has not been tested on other python versions.
 If you do not already have python installed, you should install version 2.7.  You can either build from source
 or install a precompiled version with your Linux package manager.
     
