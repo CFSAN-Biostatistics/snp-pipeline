@@ -933,13 +933,32 @@ By default, the SNP Pipeline is configured to stop when execution errors occur. 
 possible some errors may affect only individual samples and other samples can still be
 processed.  If you want the pipeline to continue processing after an error affecting only 
 a single sample has occurred, you can try disabling the ``SnpPipeline_StopOnSampleError`` 
-configuration parameter (not recommended).  When ``SnpPipeline_StopOnSampleError`` is ``false``
+configuration parameter (not recommended).  See :ref:`configuration-label`.
+When ``SnpPipeline_StopOnSampleError`` is ``false`` 
 the pipeline will attempt to continue subsequent processing steps when an error does not
 affect all samples.  Errors are logged in the ``error.log`` file regardless of how the
 ``SnpPipeline_StopOnSampleError`` parameter is configured.  You should review the ``error.log``
 after running the pipeline to see a summary of any errors detected during execution.
 
+
 Note: currently, when using the Torque job queue manager, the pipeline will always stop on
 errors regardless of the ``SnpPipeline_StopOnSampleError`` parameter setting.
 
-See also: :ref:`configuration-label`.
+When errors stop the execution of the pipeline on Grid Engine or Torque, other non-failing jobs 
+in progress will continue until complete.  However, subsequent job steps will not execute and
+instead will remain in the queue.  On Grid Engine ``qstat`` will show output like the following::
+
+    3038927 0.55167 alignSampl app_sdavis   Eqw   01/15/2016 16:50:03
+    3038928 0.00000 prepSample app_sdavis   hqw   01/15/2016 16:50:04
+    3038929 0.00000 snpList    app_sdavis   hqw   01/15/2016 16:50:04
+    3038930 0.00000 callConsen app_sdavis   hqw   01/15/2016 16:50:04
+    3038931 0.00000 snpMatrix  app_sdavis   hqw   01/15/2016 16:50:04
+    3038932 0.00000 snpReferen app_sdavis   hqw   01/15/2016 16:50:04
+    3038933 0.00000 mergeVcf   app_sdavis   hqw   01/15/2016 16:50:05
+    3038934 0.00000 collectMet app_sdavis   hqw   01/15/2016 16:50:05
+    3038935 0.00000 combineMet app_sdavis   hqw   01/15/2016 16:50:05
+
+To clear the jobs from the queue on Grid Engine::
+
+    seq 3038927 3038935 | xargs -I @ qdel @
+
