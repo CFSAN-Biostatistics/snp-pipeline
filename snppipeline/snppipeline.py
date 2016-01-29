@@ -279,8 +279,9 @@ def call_consensus(options_dict):
                     'consensusFile':'consensus.fasta',
                     'minBaseQual':15,
                     'minConsFreq':0.6,
-                    'minConsStrdDpth':4
-                    'minConsStrdBias':0.10
+                    'minConsStrdDpth':4,
+                    'minConsStrdBias':0.10,
+                    'vcfFailedSnpGt':'.'
                    }
     call_consensus(options_dict)
     """
@@ -344,7 +345,7 @@ def call_consensus(options_dict):
                 position_consensus_base_dict[(chrom, pos)] = consensus_base
 
         if vcf_file_name:
-            writer.write_from_pileup(pileup_record, fail_reasons)
+            writer.write_from_pileup(pileup_record, fail_reasons, options_dict['vcfFailedSnpGt'])
     if vcf_file_name:
         writer.close()
 

@@ -3,6 +3,15 @@
 History
 -------
 
+0.5.1 (2016-02-??)
+~~~~~~~~~~~~~~~~~~
+
+* Added the ``vcfFailedSnpGt`` option to the call_consensus.py script to control how the VCF file GT data 
+  element is emitted when the snp is failed because of depth, allele frequency, or some other filter.  If 
+  not specified, the GT element will contain a dot.  Prior to this release, the behavior was to emit the 
+  ALT allele index.  The old behavior can be retained by setting ``--vcfFailedSnpGt 1``
+
+
 0.5.0 (2016-01-19)
 ~~~~~~~~~~~~~~~~~~
 

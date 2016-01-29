@@ -49,6 +49,11 @@ if __name__ == '__main__':
                                 enabling this flag will greatly increase execution time."""
     help['vcfPreserveRefCase'] = """Flag to cause the VCF file generator to emit each reference base in uppercase/lowercase as it appears in the reference
                                     sequence file.  If not specified, the reference base is emitted in uppercase."""
+    help['vcfFailedSnpGt'] = """Controls the VCF file GT data element when a snp fails filters.  Possible values:
+                                .) The GT element will be a dot, indicating unable to make a call.
+                                0) The GT element will be 0, indicating the reference base.
+                                1) The GT element will be the ALT index of the most commonly occuring base, usually 1."""
+
     help['verbose']        = """Verbose message level (0=no info, 5=lots)"""
 
     parser.add_argument(                              dest='allPileupFile',      type=str,                                                        help=help['allPileupFile'])
@@ -63,6 +68,7 @@ if __name__ == '__main__':
     parser.add_argument(      '--vcfRefName',         dest='vcfRefName',         type=str,            default='Unknown reference',metavar='NAME', help=help['vcfRefName'])
     parser.add_argument(      '--vcfAllPos',          dest='vcfAllPos',          action='store_true',                                             help=help['vcfAllPos'])
     parser.add_argument(      '--vcfPreserveRefCase', dest='vcfPreserveRefCase', action='store_true',                                             help=help['vcfPreserveRefCase'])
+    parser.add_argument(      '--vcfFailedSnpGt',     dest='vcfFailedSnpGt',     type=str,            default=".",                choices=['.','0','1'], help=help['vcfFailedSnpGt'], )
     parser.add_argument('-v', '--verbose',            dest='verbose',            type=int,            default=1,                  metavar='0..5', help=help['verbose'])
     parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
     args_dict = vars(parser.parse_args())

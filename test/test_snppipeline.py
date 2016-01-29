@@ -188,6 +188,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             'vcfRefName' : 'lambda_virus.fasta',
             'vcfAllPos' : False,
             'vcfPreserveRefCase' : True,
+            'vcfFailedSnpGt' : '1',
             }
 
         ignore_lines = ["##fileDate", "##source"]

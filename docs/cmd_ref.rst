@@ -250,7 +250,8 @@ call_consensus.py
   usage: call_consensus.py [-h] [-f] [-l FILE] [-o FILE] [-q INT] [-c FREQ]
                            [-d INT] [-b FREQ] [--vcfFileName NAME]
                            [--vcfRefName NAME] [--vcfAllPos]
-                           [--vcfPreserveRefCase] [-v 0..5] [--version]
+                           [--vcfPreserveRefCase] [--vcfFailedSnpGt {.,0,1}]
+                           [-v 0..5] [--version]
                            allPileupFile
   
   Call the consensus base for a sample at the specified positions where SNPs
@@ -312,6 +313,13 @@ call_consensus.py
                           the reference sequence file. If not specified, the
                           reference base is emitted in uppercase. (default:
                           False)
+    --vcfFailedSnpGt {.,0,1}
+                          Controls the VCF file GT data element when a snp fails
+                          filters. Possible values: .) The GT element will be a
+                          dot, indicating unable to make a call. 0) The GT
+                          element will be 0, indicating the reference base. 1)
+                          The GT element will be the ALT index of the most
+                          commonly occuring base, usually 1. (default: .)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
@@ -400,7 +408,7 @@ collectSampleMetrics.sh
     -m FILE          : Relative or absolute path to the SNP matrix file
                        (default: snpma.fasta)
     -o FILE          : Output file. Relative or absolute path to the metrics file
-                       (Default: stdout)
+                       (default: stdout)
 
 combineSampleMetrics.sh
 ---------------------------
@@ -423,9 +431,9 @@ combineSampleMetrics.sh
   Options:
     -h               : Show this help message and exit
     -n NAME          : File name of the metrics files which must exist in each of
-                       the sample directories. Default: metrics)
+                       the sample directories. (default: metrics)
     -o FILE          : Output file. Relative or absolute path to the combined metrics
-                       file. Default: stdout)
+                       file. (default: stdout)
 
 mergeVcf.sh
 ---------------------------
@@ -448,6 +456,6 @@ mergeVcf.sh
     -f               : Force processing even when result files already exist and 
                        are newer than inputs
     -n NAME          : File name of the vcf files which must exist in each of
-                       the sample directories. Default: consensus.vcf)
+                       the sample directories. (default: consensus.vcf)
     -o FILE          : Output file. Relative or absolute path to the merged
-                       multi-vcf file. Default: snpma.vcf)
+                       multi-vcf file. (default: snpma.vcf)
