@@ -20,7 +20,7 @@ else:
 # Control which 3rd party packages should be installed 
 # depending on the python version
 install_requires = [
-    'PyVCF',
+    'PyVCF>=0.6.7',
     'setuptools', # needed during execution to load pkg_resources
     'psutil',
     'Biopython',

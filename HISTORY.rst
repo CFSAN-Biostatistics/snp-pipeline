@@ -10,6 +10,7 @@ History
   element is emitted when the snp is failed because of depth, allele frequency, or some other filter.  If 
   not specified, the GT element will contain a dot.  Prior to this release, the behavior was to emit the 
   ALT allele index.  The old behavior can be retained by setting ``--vcfFailedSnpGt 1``
+* Changed the setup to require PyVCF version 0.6.7 or higher.  It will automatically upgrade if necessary.
 
 
 0.5.0 (2016-01-19)
