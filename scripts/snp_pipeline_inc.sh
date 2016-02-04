@@ -193,6 +193,37 @@ sampleWarning()
 }
 
 
+# Generate a sample error if a specified file is missing or empty.
+# $1 = file
+# $2 = process that should have created the file
+sampleErrorOnMissingFile()
+{
+    local file
+    local process
+    file=$1
+    process=$2
+    if [[ ! -e "$file" ]]; then sampleError "Error: $file does not exist after running $process." false; fi
+    if [[ ! -s "$file" ]]; then sampleError "Error: $file is empty after running $process." false; fi
+}
+
+
+# Generate a sample error if a specified file contains a specified string
+# $1 = file
+# $2 = string
+# $3 = process that created the file
+sampleErrorOnFileContains()
+{
+    local file
+    local target
+    local process
+    file=$1
+    target=$2
+    process=$3
+    grep -i "$target" "$file" &> /dev/null
+    if [[ $? == 0 ]]; then sampleError "Error: $file contains unexpected text: '$target' after running $process." false; fi
+}
+
+
 # This function is automatically called by bash when error traps are setup.
 # It Logs the error and returns error code 100 to cause Sun Grid Engine to
 # also detect the error.

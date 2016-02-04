@@ -173,6 +173,7 @@ else
     echo "# "$(date +"%Y-%m-%d %T") samtools view -S -b $SamtoolsSamFilter_Params -o "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sam"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
     samtools view -S -b $SamtoolsSamFilter_Params -o "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sam"
+    sampleErrorOnMissingFile "$sampleDir/reads.unsorted.bam" "samtools view"
     echo
 fi
 
@@ -186,6 +187,7 @@ else
     echo "# "$(date +"%Y-%m-%d %T") samtools sort $SamtoolsSort_ExtraParams "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
     samtools sort $SamtoolsSort_ExtraParams "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
+    sampleErrorOnMissingFile "$sampleDir/reads.sorted.bam" "samtools sort"
     echo
 fi
 
@@ -197,6 +199,7 @@ else
     echo "# "$(date +"%Y-%m-%d %T") samtools mpileup $SamtoolsMpileup_ExtraParams -f "$referenceFilePath" "$sampleDir/reads.sorted.bam"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
     samtools mpileup $SamtoolsMpileup_ExtraParams -f "$referenceFilePath" "$sampleDir/reads.sorted.bam" > "$sampleDir/reads.all.pileup"
+    sampleErrorOnMissingFile "$sampleDir/reads.all.pileup" "samtools mpileup"
     echo
 fi
 
@@ -209,8 +212,9 @@ else
         echo "# "$(date +"%Y-%m-%d %T") java $VarscanJvm_ExtraParams net.sf.varscan.VarScan mpileup2snp "$sampleDir/reads.all.pileup"  --output-vcf 1 $VarscanMpileup2snp_ExtraParams
         echo "# "$(java net.sf.varscan.VarScan 2>&1 > /dev/null | head -n 1)
         java $VarscanJvm_ExtraParams net.sf.varscan.VarScan mpileup2snp "$sampleDir/reads.all.pileup" --output-vcf 1 $VarscanMpileup2snp_ExtraParams > "$sampleDir/var.flt.vcf"
-        if [[ ! -e "$sampleDir/var.flt.vcf" ]]; then sampleError "Error: $sampleDir/var.flt.vcf does not exist after running VarScan." false; fi
-        if [[ ! -s "$sampleDir/var.flt.vcf" ]]; then sampleError "Error: $sampleDir/var.flt.vcf is empty after running VarScan." false; fi
+        sampleErrorOnMissingFile "$sampleDir/var.flt.vcf" "VarScan"
+        sampleErrorOnFileContains "$sampleDir/var.flt.vcf" "OutOfMemoryError" "VarScan"
+        sampleErrorOnFileContains "$sampleDir/var.flt.vcf" "Insufficient" "VarScan"
         echo
     else
         globalError "Error: cannot execute VarScan. Define the path to VarScan in the CLASSPATH environment variable."
