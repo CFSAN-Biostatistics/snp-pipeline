@@ -64,16 +64,11 @@ sets of interest.
 Citing SNP Pipeline
 -------------------
 
-To cite SNP Pipeline, please reference the SNP Pipeline GitHub repository:
+Please cite the publication below:
 
-    https://github.com/CFSAN-Biostatistics/snp-pipeline
-
-and cite the associated paper:
-
-    `Pettengill JB, Luo Y, Davis S, Chen Y, Gonzalez-Escalona N, Ottesen A, Rand H, Allard MW, Strain​ E
-    An evaluation of alternative methods for constructing phylogenies from whole genome sequence data: A case study with Salmonella. 
-    <https://peerj.com/articles/620/>`_
-
+    `Davis S, Pettengill JB, Luo Y, Payne J, Shpuntoff A, Rand H, Strain E. (2015)
+    CFSAN SNP Pipeline: an automated method for constructing SNP matrices from next-generation sequence data.
+    PeerJ Computer Science 1:e20   https://doi.org/10.7717/peerj-cs.20 <https://doi.org/10.7717/peerj-cs.20>`_
 
 License
 -------
