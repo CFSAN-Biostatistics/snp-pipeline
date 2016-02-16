@@ -6,6 +6,12 @@ History
 0.5.1 (2016-02-??)
 ~~~~~~~~~~~~~~~~~~
 
+**Bug fixes:**
+
+* Do not attempt to merge VCF files when there are fewer than two VCF files to merge.
+
+**Other Changes:**
+
 * Added the ``vcfFailedSnpGt`` option to the call_consensus.py script to control how the VCF file GT data 
   element is emitted when the snp is failed because of depth, allele frequency, or some other filter.  If 
   not specified, the GT element will contain a dot.  Prior to this release, the behavior was to emit the 

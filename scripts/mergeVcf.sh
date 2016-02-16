@@ -135,6 +135,7 @@ if [[ ! -f "$sampleDirsFile" ]]; then globalError "Sample directories file $samp
 if [[ ! -s "$sampleDirsFile" ]]; then globalError "Sample directories file $sampleDirsFile is empty."; fi
 
 # Validate the single sample VCF files
+(( numGoodVcfFiles = 0 )) || true
 (( needRebuild = 0 )) || true
 while IFS='' read -r dir || [[ -n "$dir" ]]
 do
@@ -142,6 +143,9 @@ do
   if   [[ ! -e "$inFilePath" ]]; then sampleError "Sample vcf file $inFilePath does not exist." true;
   elif [[ ! -f "$inFilePath" ]]; then sampleError "Sample vcf file $inFilePath is not a file." true;
   elif [[ ! -s "$inFilePath" ]]; then sampleError "Sample vcf file $inFilePath is empty." true;
+  else
+    (( numGoodVcfFiles++ )) || true;
+    lastGoodVcfFile="$inFilePath"
   fi
   # Check if rebuild is needed
   if [[ "$opt_f_set" == "1" || ! -s "$outFilePath" || "$inFilePath" -nt "$outFilePath" ]]; then
@@ -149,8 +153,19 @@ do
   fi
 done < "$sampleDirsFile"
 
+if [ $numGoodVcfFiles = 0 ]; then
+  globalError "There are no vcf files to merge."
+fi
+
 if [ $needRebuild -eq 0 ]; then
   echo "# Multi-VCF file is already freshly created.  Use the -f option to force a rebuild."
+  echo "# "$(date +"%Y-%m-%d %T") mergeVcf.sh finished
+  exit 0
+fi
+
+# If there is only one good sample, just copy the consensus VCF file to the snpma.vcf file
+if [ $numGoodVcfFiles = 1 ]; then
+  cp "$lastGoodVcfFile" "$outFilePath"
   echo "# "$(date +"%Y-%m-%d %T") mergeVcf.sh finished
   exit 0
 fi

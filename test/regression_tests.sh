@@ -70,6 +70,7 @@ assertIdenticalFiles()
 #################################################
 
 
+
 # Verify the scripts were properly installed on the path.
 testScriptsOnPath()
 {
@@ -2017,6 +2018,58 @@ testMergeVcfMissingVcfRaiseSampleErrorStopUnset()
 }
 
 
+# Verify the mergeVcf script detects failure.
+tryMergeVcfZeroGoodSamplesRaiseGlobalError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run mergeVcf.sh with no consensus vcf files
+    echo   "$tempDir/samples/sample1" > "$tempDir/sampleDirectories.txt"
+    echo   "$tempDir/samples/sample2" >> "$tempDir/sampleDirectories.txt"
+    mergeVcf.sh -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
+    errorCode=$?
+
+    # Verify mergeVcf error handling behavior
+    assertEquals "mergeVcf.sh returned incorrect error code when no good VCF files." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "mergeVcf.sh failed."
+    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh failed."
+    assertFileContains "$tempDir/error.log" "There are no vcf files to merge."
+    assertFileContains "$logDir/mergeVcf.log" "There are no vcf files to merge."
+    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the mergeVcf script detects failure.
+#testMergeVcfZeroGoodSamplesRaiseGlobalErrorStop()
+#{
+#    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path
+#}
+
+# Verify the mergeVcf script detects failure.
+testMergeVcfZeroGoodSamplesRaiseGlobalErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryMergeVcfZeroGoodSamplesRaiseGlobalError 100
+}
+
+# Verify the mergeVcf script detects failure.
+#testMergeVcfZeroGoodSamplesRaiseGlobalErrorStopUnset()
+#{
+#    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path
+#}
+
+
 # Verify the create_snp_matrix.py script traps attempts to write to unwritable file
 tryCreateSnpMatrixPermissionTrap()
 {
@@ -3752,6 +3805,63 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/collectSampleMetrics.log-4" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/collectSampleMetrics.log-3" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+}
+
+
+# Verify run_snp_pipeline runs to completion with a single sample
+testRunSnpPipelineLambdaSingleSample()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+
+    # Delete all but one sample
+    rm -rf "$tempDir"/originalInputs/samples/sample2
+    rm -rf "$tempDir"/originalInputs/samples/sample3
+    rm -rf "$tempDir"/originalInputs/samples/sample4
+
+    # Simulate left-over errors from a prior run
+    echo "Old errors from prior run" > "$tempDir/error.log"
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+    assertFileNotContains "$tempDir/run_snp_pipeline.log" "There were errors processing some samples"
+
+    # Verify no weird freshness skips
+    assertFileNotContains "$tempDir/run_snp_pipeline.log" "Use the -f option to force a rebuild"
+
+    # Verify correct mirroring
+    assertIdenticalFiles "$tempDir/originalInputs/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_1.fastq"
+    assertIdenticalFiles "$tempDir/originalInputs/reference/lambda_virus.fasta"    "$tempDir/reference/lambda_virus.fasta"
+
+    # Verify output results exist
+    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    verifyNonEmptyReadableFile "$tempDir/snplist.txt"
+    verifyNonEmptyReadableFile "$tempDir/snpma.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
+
+    # Verify log files
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
+    assertFileContains "$logDir/prepReference.log" "prepReference.sh finished"
+    assertFileContains "$logDir/alignSamples.log-1" "alignSampleToReference.sh finished"
+    assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
+    assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
+    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+
+    # Verify correct results
+    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    assertIdenticalFiles "$tempDir/snpma.vcf"                     "$tempDir/samples/sample1/consensus.vcf"  # Just copy the sample VCF to the snpma.vcf
 }
 
 
