@@ -1770,6 +1770,65 @@ testCallConsensusMissingSnpListRaiseGlobalErrorStopUnset()
 }
 
 
+# Verify the call_consensus script does not fail merely because the snplist file is empty.
+tryCallConsensusEmptySnpList()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run prep work
+    prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
+    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
+
+    # Run call_consensus.py with empty snplist
+    touch "$tempDir/snplist.txt"
+    call_consensus.py -l "$tempDir/snplist.txt" -o "$tempDir/samples/sample1/consensus.fasta"  --vcfFileName "$tempDir/samples/sample1/consensus.vcf" "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    errorCode=$?
+
+    # Verify call_consensus error handling behavior
+    assertEquals "call_consensus.py returned incorrect error code when snplist was empty." $expectErrorCode $errorCode
+    verifyNonExistingFile "$tempDir/error.log"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/consensus.fasta"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/consensus.vcf"
+    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py failed."
+    assertFileNotContains "$logDir/call_consensus.log" "cannot call consensus without the snplist file"
+    assertFileNotContains "$logDir/call_consensus.log" "Snplist file $tempDir/snplist.txt is empty"
+    assertFileContains "$logDir/call_consensus.log" "call_consensus.py finished"
+    assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the call_consensus script does not fail merely because the snplist file is empty.
+testCallConsensusEmptySnpListStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryCallConsensusEmptySnpList 0
+}
+
+# Verify the call_consensus script does not fail merely because the snplist file is empty.
+testCallConsensusEmptySnpListNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryCallConsensusEmptySnpList 0
+}
+
+# Verify the call_consensus script does not fail merely because the snplist file is empty.
+testCallConsensusEmptySnpListStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryCallConsensusEmptySnpList 0
+}
+
+
 # Verify the call_consensus script detects failure.
 tryCallConsensusMissingPileupRaiseSampleError()
 {

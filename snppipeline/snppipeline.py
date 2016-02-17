@@ -299,7 +299,7 @@ def call_consensus(options_dict):
     vcf_file_name = options_dict['vcfFileName']
     vcf_file_path = os.path.join(consensus_file_dir, vcf_file_name) if vcf_file_name else None
 
-    bad_file_count = utils.verify_non_empty_input_files("Snplist file", [snp_list_file_path])
+    bad_file_count = utils.verify_existing_input_files("Snplist file", [snp_list_file_path])
     if bad_file_count > 0:
         utils.global_error("Error: cannot call consensus without the snplist file.")
 

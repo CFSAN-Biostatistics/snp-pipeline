@@ -217,6 +217,30 @@ def report_error(message):
         print(message, file=sys.stderr)
 
 
+def verify_existing_input_files(error_prefix, file_list):
+    """Verify each file in a list of files exists.  It does
+    not matter whether the file is empty.
+    Missing files are reported in the verbose log.
+
+    Args:
+        error_prefix : first part of error message to be logged
+        file_list : list of relative or absolute paths to files
+
+    Returns:
+        int number of missing files
+    """
+    bad_count = 0
+    for file_path in file_list:
+
+        if not os.path.isfile(file_path):
+            bad_count += 1
+            err_message = "%s %s does not exist." % (error_prefix, file_path)
+            report_error(err_message)
+            continue
+
+    return bad_count
+
+
 def verify_non_empty_input_files(error_prefix, file_list):
     """Verify each file in a list of files exists and is non-empty.
     Missing or empty files are reported in the verbose log.

@@ -8,6 +8,7 @@ History
 
 **Bug fixes:**
 
+* Do not shutdown the pipeline when the generated snplist is empty when there are no snps.
 * Do not attempt to merge VCF files when there are fewer than two VCF files to merge.
 
 **Other Changes:**
