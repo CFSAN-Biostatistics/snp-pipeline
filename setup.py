@@ -12,7 +12,7 @@ for a in sys.argv:
         install_unit_tests = True
 
 if install_unit_tests:
-    packages_to_install = ['snppipeline','test']
+    packages_to_install = ['snppipeline', 'test']
 else:
     packages_to_install = ['snppipeline']
 
@@ -40,9 +40,9 @@ if sys.version_info < (2,7,):
     test_requires.append('unittest2')
 
 if sys.version_info < (2,7,):
-    test_suite='unittest2.collector'
+    test_suite = 'unittest2.collector'
 else:
-    test_suite='test'
+    test_suite = 'test'
 
 
 setup(
@@ -59,17 +59,6 @@ setup(
     organisms sequenced from samples of interest to food safety.
     """,
 
-    # download_url should be used if the distribution is not hosted on PyPI.
-    # GitHub can host the downloadable distribution if the repo is tagged
-    #download_url='',#TODO    #TODO set this up properly
-
-    #TODO figure out how to next bit up
-#        exclude_package_data = {
-#            #Exclude any ARCHIVE directories
-#            '': ['ARCHIVE'],
-#            #Exclude miscellaneous development notes
-#            '': ['README_developmentNotes'],
-#        }
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',

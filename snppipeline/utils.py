@@ -2,10 +2,8 @@ from __future__ import print_function
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-import operator
 import os
 import pprint
-import re
 import sys
 import time
 import traceback
