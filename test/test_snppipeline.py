@@ -39,7 +39,7 @@ def grep_not_matching(in_path, out_path, not_match_list):
                     if s in line:
                         found = True
                         break
-                if not found:            
+                if not found:
                     out_file.write(line)
 
 
@@ -133,7 +133,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
     @staticmethod
     def tearDownAll():
         """
-        Delete all the temporary directories and files created during this 
+        Delete all the temporary directories and files created during this
         testing session.
         """
         TempDirectory.cleanup_all()
@@ -222,7 +222,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
             'snpRefFile' : os.path.join(self.__class__.directory_run_result, 'referenceSNP.fasta'),
             'forceFlag' : True,
-            } 
+            }
         self.run_function_test(snppipeline.create_snp_reference_seq, args_dict, 'referenceSNP.fasta')
 
 
@@ -233,7 +233,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 
 
 
-#TODO uncomment the agona test, and maybe make it optional depending on 
+#TODO uncomment the agona test, and maybe make it optional depending on
 #       the availability of the data for running the test?
 #
 #class SnpPipelineAgonaTest(SnpPipelineTest):
@@ -249,32 +249,32 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 #        """
 #
 #        args_dict = {
-#            'maxThread':8,      
+#            'maxThread':8,
 #            'mainPath': test_agona_directory,
-#            'Reference':'NC_011149.fasta',     
-#            'pathFileName':'sampleDirectoryNames.txt',   
-#            'snplistFileName':'snplist.txt', 
+#            'Reference':'NC_011149.fasta',
+#            'pathFileName':'sampleDirectoryNames.txt',
+#            'snplistFileName':'snplist.txt',
 #            'snpmaFileName':'snpma.fasta',
 #            'bamFileName':'reads.bam',
 #            'pileupFileName':'reads.pileup',
 #            'verbose':False,
 #            'includeReference':True,
 #            'useOldPileups':False,
-#        } 
+#        }
 #
 #        #TODO Add test to insure data for test is in directory specified in args_dict['mainPath'],
 #        #       if not then tell user what script to run to create such a directory
 #
 #        snppipeline.run_snp_pipeline(args_dict)
-#        
+#
 #        #Compare the files in the two directories whose names are given.
 #        #Returns three lists of file names: match, mismatch, errors.
 #        self.directory_correct = compare_agona_virus_directory
 #        self.directory_run_result = test_agona_directory
 #        files_to_compare = ['snplist.txt',
 #                            'snpma.fasta',
-#                            'samples/CFSAN000448/reads.pileup',  
-#                            'samples/CFSAN000449/reads.pileup', 
+#                            'samples/CFSAN000448/reads.pileup',
+#                            'samples/CFSAN000449/reads.pileup',
 #                            'samples/CFSAN000450/reads.pileup',
 #                            'samples/ERR178930/reads.pileup',
 #                            'samples/ERR178931/reads.pileup',
@@ -286,14 +286,14 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 #        print('  Mismatch: ',mismatch)
 #        print('  Errors: ',errors)
 #        print('Match, Mismatch, Errors: '+str(len(match))+', '+str(len(mismatch))+', '+str(len(errors)))
-#        
+#
 #        self.assertEqual(True,len(match)    == len(files_to_compare) and
 #                              len(mismatch) == 0 and
 #                              len(errors)   == 0)
-#        
+#
 #        #TODO make this optional?
 #        for file_name in files_to_compare:
-#            os.remove(os.path.join(self.directory_run_result,file_name)) 
+#            os.remove(os.path.join(self.directory_run_result,file_name))
 
 if __name__ == "__main__":
     unittest.main()

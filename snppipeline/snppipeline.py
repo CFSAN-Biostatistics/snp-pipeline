@@ -71,8 +71,8 @@ def create_snp_list(options_dict):
 
     Description:
     Create the SNP list -- the list of positions where variants were found
-    and the corresponding list of samples having a variant at each position. 
-    This function expects, or creates '(*)', the following files arranged 
+    and the corresponding list of samples having a variant at each position.
+    This function expects, or creates '(*)', the following files arranged
     in the following way:
             sampleDirectories.txt
             samples
@@ -81,24 +81,24 @@ def create_snp_list(options_dict):
             snplist.txt (*)
 
     The files are used as follows:
-        1. The sampleDirectories.txt input file contains a list of the paths to 
+        1. The sampleDirectories.txt input file contains a list of the paths to
            the sample directories.
-        2. The var.flt.vcf variant input files are used to construct the 
+        2. The var.flt.vcf variant input files are used to construct the
            SNP position list.
-        3. The snplist.txt output file contains the union of the SNP positions 
+        3. The snplist.txt output file contains the union of the SNP positions
            and sample names extracted from all the var.flt.vcf files.
 
-    The sampleDirectories.txt and var.flt.vcf files are created outside of 
-    this function. The package documentation provides an example of creating 
-    these files based on the lambda_virus sequence that is used as one test 
+    The sampleDirectories.txt and var.flt.vcf files are created outside of
+    this function. The package documentation provides an example of creating
+    these files based on the lambda_virus sequence that is used as one test
     for this package.
 
     Args:
-        sampleDirsFile: File path (not just file name) of file containing paths 
+        sampleDirsFile: File path (not just file name) of file containing paths
             to directories containing var.flt.vcf file for each sequence.
         vcfFileName: File name of the VCF files which must exist in each of the
             sample directories
-        snpListFile: File path (not just file name) of text format list 
+        snpListFile: File path (not just file name) of text format list
             of SNP positions
 
     Raises:
@@ -155,9 +155,9 @@ def create_snp_pileup(options_dict):
     """Create the SNP pileup file for a sample.
 
     Description:
-    Create the SNP pileup file for a sample -- the pileup file restricted to 
+    Create the SNP pileup file for a sample -- the pileup file restricted to
     only positions where variants were found in any sample.
-    This function expects, or creates '(*)', the following files arranged 
+    This function expects, or creates '(*)', the following files arranged
     in the following way:
             snplist.txt
             samples
@@ -166,21 +166,21 @@ def create_snp_pileup(options_dict):
                 ...
 
     The files are used as follows:
-        1. The snplist.txt input file contains the list of SNP positions 
+        1. The snplist.txt input file contains the list of SNP positions
            extracted from the var.flt.vcf file.
-        2. The reads.all.pileup input file is the genome-wide pileup file 
+        2. The reads.all.pileup input file is the genome-wide pileup file
            for this sample.
         3. The reads.snp.pileup output file is the pileup file for this sample,
-           restricted to only positions where variants were found in any 
+           restricted to only positions where variants were found in any
            sample.
 
-    The snplist.txt and reads.all.pileup files are created outside of this 
+    The snplist.txt and reads.all.pileup files are created outside of this
     function. The package documentation provides an example of creating these
-    files based on the lambda_virus sequence that is used as one test for 
+    files based on the lambda_virus sequence that is used as one test for
     this package.
 
     Args:
-        snpListFile: File path (not just file name) of text format list 
+        snpListFile: File path (not just file name) of text format list
             of SNP positions across all samples
         allPileupFile: File path (not just file name) of the whole-genome
             pileup file fot this sample
@@ -229,26 +229,26 @@ def call_consensus(options_dict):
                 sample_name_one/consensus.fasta (*)
 
     The files are used as follows:
-        1. The snplist.txt input file contains the list of SNP positions 
+        1. The snplist.txt input file contains the list of SNP positions
            extracted from all the var.flt.vcf files combined.
         2. The reads.all.pileup input file is a pileups at all positions
            used to determine the nucleotide base at each SNP position.
-        3. The consensus.fasta output file contains the SNP calls for each 
+        3. The consensus.fasta output file contains the SNP calls for each
            sequence, arranged as a fasta file with one sequence per sample.
 
     The snplist.txt, and reads.snp.pileup are created outside of this function.
-       The package documentation provides an example 
-        of creating these files based on the lambda_virus sequence that is used 
+       The package documentation provides an example
+        of creating these files based on the lambda_virus sequence that is used
         as one test for this package.
 
     Args:
-        forceFlag : boolean 
+        forceFlag : boolean
             flag to force processing even when result file already exists and
             is newer than inputs
         snpListFile : str
             File path (not just file name) of text format list of SNP positions
         allPileupFile : str
-            Relative or absolute path to the genome-wide pileup file for this 
+            Relative or absolute path to the genome-wide pileup file for this
             sample
         consensusFile : str
             Output file. Relative or absolute path to the consensus fasta file
@@ -260,12 +260,12 @@ def call_consensus(options_dict):
             Consensus frequency. Mimimum fraction of high-quality reads
             supporting the consensus to make a call.
         minConsStrdDpth : int
-            Consensus strand depth. Minimum number of high-quality reads 
+            Consensus strand depth. Minimum number of high-quality reads
             supporting the consensus which must be present on both the
             forward and reverse strands to make a call.
         minConsStrdBias : float
-            Strand bias. Minimum fraction of the high-quality 
-            consensus-supporting reads which must be present on both the 
+            Strand bias. Minimum fraction of the high-quality
+            consensus-supporting reads which must be present on both the
             forward and reverse strands to make a call. The numerator of this
             fraction is the number of high-quality consensus-supporting reads
             on one strand.  The denominator is the total number of high-quality
@@ -322,13 +322,13 @@ def call_consensus(options_dict):
     # Call consensus. Write results to file.
     position_consensus_base_dict = dict()
 
-    caller = pileup.ConsensusCaller(options_dict['minConsFreq'], 
-                                    options_dict['minConsStrdDpth'], 
+    caller = pileup.ConsensusCaller(options_dict['minConsFreq'],
+                                    options_dict['minConsStrdDpth'],
                                     options_dict['minConsStrdBias'])
     snp_positions = set(snp_list)
     parse_positions = None if options_dict['vcfAllPos'] else snp_positions
-    pileup_reader = pileup.Reader(all_pileup_file_path, 
-                                  options_dict['minBaseQual'], 
+    pileup_reader = pileup.Reader(all_pileup_file_path,
+                                  options_dict['minBaseQual'],
                                   parse_positions)
     if vcf_file_name:
         writer = vcf_writer.SingleSampleWriter(vcf_file_path, options_dict['vcfPreserveRefCase'])
@@ -367,9 +367,9 @@ def create_snp_matrix(options_dict):
     """Create SNP matrix
 
     Description:
-    Create the SNP matrix containing the consensus base for each of the samples 
-    at the positions where SNPs were found in any of the samples.  The matrix 
-    contains one row per sample and one column per SNP position.  Non-SNP 
+    Create the SNP matrix containing the consensus base for each of the samples
+    at the positions where SNPs were found in any of the samples.  The matrix
+    contains one row per sample and one column per SNP position.  Non-SNP
     positions are not included in the matrix.
     This function expects, or creates '(*)', the following
         files arranged in the following way:
@@ -380,22 +380,22 @@ def create_snp_matrix(options_dict):
             snpma.fasta (*)
 
     The files are used as follows:
-        1. The sampleDirectories.txt input file contains a list of the paths to 
+        1. The sampleDirectories.txt input file contains a list of the paths to
            the sample directories.
         2. The consensus.fasta input files are previously called consensus
            for each sample to construct the SNP matrix fasta file.
-        3. The snpma.fasta output file contains the SNP calls for each 
-           sequence, arranged as a multi-fasta file with one sequence per 
+        3. The snpma.fasta output file contains the SNP calls for each
+           sequence, arranged as a multi-fasta file with one sequence per
            sample.
 
     The sampleDirectories.txt, and consensus.fasta are created outside of this
-        function. The package documentation provides an example of creating 
-        these files based on the lambda_virus sequence that is used as one 
+        function. The package documentation provides an example of creating
+        these files based on the lambda_virus sequence that is used as one
         test for this package.
 
     Args:
         sampleDirsFile : str
-            File path (not just file name) of file containing paths 
+            File path (not just file name) of file containing paths
             to directories containing consensus.fasta file for each sequence.
         snpListFile : str
             File path (not just file name) of text format list of SNP positions
@@ -404,7 +404,7 @@ def create_snp_matrix(options_dict):
             exist in each of the sample directories
         snpmaFile : str
             File path (not just file name) of the output snp matrix, formatted
-            as a fasta file, with each sequence (all of identical length) 
+            as a fasta file, with each sequence (all of identical length)
             corresponding to the SNPs in the correspondingly named sequence.
 
     Raises:
@@ -425,7 +425,7 @@ def create_snp_matrix(options_dict):
     #==========================================================================
     # Prep work
     #==========================================================================
-    sample_directories_list_filename = options_dict['sampleDirsFile']   
+    sample_directories_list_filename = options_dict['sampleDirsFile']
     bad_file_count = utils.verify_non_empty_input_files("File of sample directories", [sample_directories_list_filename])
     if bad_file_count > 0:
         utils.global_error(None)
@@ -482,30 +482,30 @@ def create_snp_reference_seq(options_dict):
     """Write reference sequence bases at SNP locations to a fasta file.
 
     Description:
-    Write reference sequence bases at SNP locations to a fasta file. 
+    Write reference sequence bases at SNP locations to a fasta file.
     This function expects, or creates '(*)', the following files:
             reference.fasta
             snplist.txt
             referenceSNP.fasta (*)
 
     The files are used as follows:
-        1. The reference.fasta input file contains the whole-genome reference 
+        1. The reference.fasta input file contains the whole-genome reference
            bases.
         2. The snplist.txt input file contains the list of SNP positions across
            all the samples.
-        2. The referenceSNP.fasta output file contains the reference bases at 
+        2. The referenceSNP.fasta output file contains the reference bases at
            the identified SNP locations.
 
-    The snplist.txt file is created outside of this function.  The package 
+    The snplist.txt file is created outside of this function.  The package
         documentation provides an example of creating this file based on the
         lambda_virus sequence that is used as one test for this package.
 
     Args:
-        referenceFile: File path (not just file name) for reference sequence 
+        referenceFile: File path (not just file name) for reference sequence
             (in fasta format
         snpListFile: File path (not just file name) of text format list of SNP
             positions
-        snpRefFile: File path (not just file name) for the SNP reference 
+        snpRefFile: File path (not just file name) for the SNP reference
             sequence file.
 
     Raises:

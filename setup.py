@@ -17,7 +17,7 @@ else:
     packages_to_install = ['snppipeline']
 
 
-# Control which 3rd party packages should be installed 
+# Control which 3rd party packages should be installed
 # depending on the python version
 install_requires = [
     'PyVCF>=0.6.7',

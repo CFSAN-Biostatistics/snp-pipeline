@@ -54,7 +54,7 @@ def command_line_long():
 
 
 def global_error(message):
-    """ 
+    """
     Log a fatal error to the error summary file and exit with error code 100
     to cause Sun Grid Engine to also detect the error.
 
@@ -84,7 +84,7 @@ def global_error(message):
 
 
 def sample_error(message, continue_possible=False):
-    """ 
+    """
     Log a fatal error to the error summary file and exit with error code 100
     to cause Sun Grid Engine to also detect the error.
 
@@ -93,7 +93,7 @@ def sample_error(message, continue_possible=False):
             Error message
         continue_possible : boolean
             Indicates if it is possible to continue execution.  Setting this
-            flag true may allow the code to continue withou exiting if 
+            flag true may allow the code to continue withou exiting if
             configured to do so.
     """
     stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
@@ -122,10 +122,10 @@ def sample_error(message, continue_possible=False):
         # run_snp_pipeline.sh will know this error has already been reported
         sys.exit(100)
     else:
-        # run_snp_pipeline.sh will know this error has already been reported, 
+        # run_snp_pipeline.sh will know this error has already been reported,
         # but it should not stop execution
         if not continue_possible:
-            sys.exit(98) 
+            sys.exit(98)
 
 
 def handle_global_exception(exc_type, exc_value, exc_traceback):
@@ -197,9 +197,9 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
         # run_snp_pipeline.sh will know this error has already been reported
         sys.exit(100)
     else:
-        # run_snp_pipeline.sh will know this error has already been reported, 
+        # run_snp_pipeline.sh will know this error has already been reported,
         # but it should not stop execution
-        sys.exit(98) 
+        sys.exit(98)
 
 
 def report_error(message):

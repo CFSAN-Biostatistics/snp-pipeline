@@ -11,11 +11,11 @@ from snppipeline import utils
 #==============================================================================
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description="""Create the SNP matrix containing the consensus base for each of the samples 
-                                                    at the positions where SNPs were called in any of the samples.  The matrix 
-                                                    contains one row per sample and one column per SNP position.  Non-SNP 
+    parser = argparse.ArgumentParser(description="""Create the SNP matrix containing the consensus base for each of the samples
+                                                    at the positions where SNPs were called in any of the samples.  The matrix
+                                                    contains one row per sample and one column per SNP position.  Non-SNP
                                                     positions are not included in the matrix.  The matrix is formatted as a fasta
-                                                    file, with each sequence (all of identical length) corresponding to the SNPs 
+                                                    file, with each sequence (all of identical length) corresponding to the SNPs
                                                     in the correspondingly named sequence.""",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 

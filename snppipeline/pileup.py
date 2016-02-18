@@ -52,7 +52,7 @@ class Record(object):
             If str, a line of text from a pileup file.
             If list, a split line of text from a pileup file.
         min_base_quality : int
-            Minimum base quality phred score for a base to be counted as valid 
+            Minimum base quality phred score for a base to be counted as valid
             read depth.
 
         Attributes
@@ -62,7 +62,7 @@ class Record(object):
         position : int
             One-based position of this record.
         reference_base : str
-            The reference base for the chromosome at this position.  
+            The reference base for the chromosome at this position.
             The upper/lower case of the base in the pileup file is preserved.
         most_common_base : str or None
             The most commonly occurring base after discarding low-quality bases.
@@ -79,8 +79,8 @@ class Record(object):
             The total depth of all reads on the reverse strand where the base
             quality meets or exceeds the min_base_quality.
         base_good_depth : Counter
-            Count of depth per base (A,C,G,T,N,-) on both forward and reverse 
-            strands combined where the base quality meets or exceeds the 
+            Count of depth per base (A,C,G,T,N,-) on both forward and reverse
+            strands combined where the base quality meets or exceeds the
             min_base_quality.
         forward_base_good_depth : Counter
             Count of depth per base (A,C,G,T,N,-) on forward strand only where the
@@ -168,7 +168,7 @@ class Record(object):
 
     def _init_from_line(self, line, min_base_quality):
         """
-        Method for internal use to parse and analyze a line of text from a 
+        Method for internal use to parse and analyze a line of text from a
         pileup file.
 
         Parameters
@@ -176,7 +176,7 @@ class Record(object):
         line : str
             A line of text from a pileup file.
         min_base_quality : int
-            Minimum base quality phred score for a base to be counted as valid 
+            Minimum base quality phred score for a base to be counted as valid
             read depth.
         """
         split_line = line.rstrip().split()
@@ -184,7 +184,7 @@ class Record(object):
 
     def _init_from_split_line(self, split_line, min_base_quality):
         """
-        Method for internal use to parse and analyze a previously split line 
+        Method for internal use to parse and analyze a previously split line
         from a pileup file.
 
         Parameters
@@ -192,7 +192,7 @@ class Record(object):
         split_line : list
             Split line of text from a pileup file.
         min_base_quality : int
-            Minimum base quality phred score for a base to be counted as valid 
+            Minimum base quality phred score for a base to be counted as valid
             read depth.
         """
         self.chrom = split_line[0]
@@ -305,7 +305,7 @@ class Record(object):
 class Reader(object):
     def __init__(self, file_path, min_base_quality, chrom_position_set=None):
         """
-        Contruct a reader object with the capability to read and parse lines 
+        Contruct a reader object with the capability to read and parse lines
         from a pileup file.
 
         Parameters
@@ -313,7 +313,7 @@ class Reader(object):
         file_path : str
             Path to the pileup file to be parsed.
         min_base_quality : int
-            Minimum base quality phred score for a base to be counted as valid 
+            Minimum base quality phred score for a base to be counted as valid
             read depth.
         chrom_position_set : set of (str, int), optional
             Tuples of (chromosome name, position) identifying the positions to
@@ -408,8 +408,8 @@ class ConsensusCaller(object):
 
     def call_consensus(self, record):
         """
-        Call the consensus base with a list of failed filters for a given 
-        pileup record using the filters previously configured in the 
+        Call the consensus base with a list of failed filters for a given
+        pileup record using the filters previously configured in the
         constructor.  Calling code should always check the list of
         failed filters before emitting the consensus base.
 
@@ -494,4 +494,4 @@ class ConsensusCaller(object):
 
         return (consensus_base, failed_filters)
 
- 
+

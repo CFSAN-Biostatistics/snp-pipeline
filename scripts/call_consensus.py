@@ -23,8 +23,8 @@ if __name__ == '__main__':
             raise argparse.ArgumentTypeError("Minimum consensus strand bias must be >= 0.0 and <= 0.5")
         return fvalue
 
-    parser = argparse.ArgumentParser(description="""Call the consensus base for a sample at the specified positions 
-                                                    where SNPs were previously called in any of the samples.  Generates 
+    parser = argparse.ArgumentParser(description="""Call the consensus base for a sample at the specified positions
+                                                    where SNPs were previously called in any of the samples.  Generates
                                                     a single-sequence fasta file with one base per specified position.""",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -39,7 +39,7 @@ if __name__ == '__main__':
                                 forward and reverse strands to make a call."""
     help['minConsStrdBias']= """Strand bias. Minimum fraction of the high-quality consensus-supporting reads which must be present on both the
                                 forward and reverse strands to make a call. The numerator of this fraction is the number of high-quality
-                                consensus-supporting reads on one strand.  The denominator is the total number of high-quality consensus-supporting 
+                                consensus-supporting reads on one strand.  The denominator is the total number of high-quality consensus-supporting
                                 reads on both strands combined."""
     help['vcfFileName']    = """VCF Output file name. If specified, a VCF file with this file name will be created in the same directory as the
                                 consensus fasta file for this sample."""

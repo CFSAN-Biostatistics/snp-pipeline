@@ -68,7 +68,7 @@ class SingleSampleWriter(object):
             Path to output vcf file.
         preserve_ref_case : boolean, optional
             If true, emit the reference base in the same uppercase/lowercase as
-            the original reference fasta sequence.  If not specified, the 
+            the original reference fasta sequence.  If not specified, the
             reference base is emitted in uppercase.
         """
         self.file_path = file_path
@@ -93,7 +93,7 @@ class SingleSampleWriter(object):
         sample_id : str
             Sample ID which will be written to the header line.
         filters : list of tuple(str, str)
-            List of names and descriptions of filters which will be combined 
+            List of names and descriptions of filters which will be combined
             and written to the header filter lines.
         reference : str
             Reference name which will be written to the header reference line.
@@ -130,7 +130,7 @@ class SingleSampleWriter(object):
 
     def _make_vcf_record_from_pileup(self, pileup_record, failed_filters, failed_snp_gt):
         """
-        Create a PyVCF model record for a single sample from a single pileup 
+        Create a PyVCF model record for a single sample from a single pileup
         record.
 
         Parameters
@@ -239,7 +239,7 @@ class SingleSampleWriter(object):
         ##FORMAT=<ID=ADR,Number=1,Type=Integer,Description="Depth of variant-supporting bases on reverse strand (reads2minus)">
         ##FORMAT=<ID=FT,Number=1,Type=String,Description="Genotype filters using the same codes as the FILTER data element">
 
-        if alt is None:  # no good depth 
+        if alt is None:  # no good depth
             gt = '.'
             alt = '.'
             ad = 0
@@ -285,8 +285,8 @@ class SingleSampleWriter(object):
         # https://pyvcf.readthedocs.org/en/latest/API.html#vcf-model-record
         # vcf.model._Record(CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT, sample_indexes, samples=None)
         vcf_record = vcf.model._Record(
-            pileup_record.chrom, 
-            pileup_record.position, 
+            pileup_record.chrom,
+            pileup_record.position,
             None,  # Id
             ref,
             alt or '.',
@@ -302,7 +302,7 @@ class SingleSampleWriter(object):
 
     def write_from_pileup(self, pileup_record, failed_filters, failed_snp_gt):
         """
-        Write a single VCF record for a single sample from a single pileup 
+        Write a single VCF record for a single sample from a single pileup
         record.
 
         Parameters

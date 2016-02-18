@@ -12,7 +12,7 @@ from snppipeline import utils
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="""Combine the SNP positions across all samples into a single unified SNP
-                                                    list file identifing the postions and sample names where SNPs were called.""", 
+                                                    list file identifing the postions and sample names where SNPs were called.""",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument(                   dest='sampleDirsFile', type=str,                        help='Relative or absolute path to file containing a list of directories -- one per sample')
