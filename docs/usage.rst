@@ -89,38 +89,45 @@ By default, the SNP Pipeline generates the following output files.  If you
 need more control over the output, you can run the pipeline one step at a time.  
 See :ref:`step-by-step-workflows`.
 
-* snplist.txt : contains a combined list of the SNP positions across all 
-  samples in a single unified SNP list file identifing the positions and sample 
-  names where SNPs were called.
+* ``snplist.txt`` : contains a list of the high-confidence SNP positions
+  identified by the phase 1 SNP caller (VarScan) in at least one of the
+  samples. These are the only positions where the consensus caller
+  subsequently looks for SNPs in all samples. The consensus caller often
+  finds SNPs at the same  positions in other samples, and those additional
+  SNPs are not listed in the snplist.txt file. While the snplist.txt file
+  has an accurate list of SNP positions, it does not contain the final
+  list of samples having SNPs at those positions. If you need the final
+  set of SNPs per sample, you should not use the snplist.txt file.
+  Instead, refer to the snpma.fasta file or the snpma.vcf file.
 
-* consensus.fasta : for each sample, the consensus base call at the positions 
-  where SNPs were previously detected in any of the samples.
+* ``consensus.fasta`` : for each sample, the consensus base calls at the
+  high-confidence positions where SNPs were detected in any of the samples.
 
-* consensus.vcf : for each sample, the VCF file of snps called, as well as 
-  failed snps at the positions where SNPs were previously detected in any of 
-  the samples.
+* ``consensus.vcf`` : for each sample, the VCF file of SNPs called, as well as
+  failed SNPs at the high-confidence positions where SNPs were detected in any
+  of the samples.
 
-* snpma.fasta : the SNP matrix containing the consensus base for each of 
-  the samples at the positions where SNPs were called in any of the samples.  
-  The matrix contains one row per sample and one column per SNP position.  
-  Non-SNP positions are not included in the matrix.  The matrix is formatted 
-  as a fasta file, with each sequence (all of identical length) corresponding 
-  to the SNPs in the correspondingly named sequence.
+* ``snpma.fasta`` : the SNP matrix containing the consensus base for each of 
+  the samples at the high-confidence positions where SNPs were identified
+  in any of the samples. The matrix contains one row per sample and one column
+  per SNP position. Non-SNP positions are not included in the matrix. The 
+  matrix is formatted as a fasta file, with each sequence (all of identical
+  length) corresponding to the SNPs in the correspondingly named sequence.
 
-* snpma.vcf : contains the merged multi-sample VCF file identifying the positions
+* ``snpma.vcf`` : contains the merged multi-sample VCF file identifying the positions
   and snps for all samples.
 
-* referenceSNP.fasta : a fasta file containing the reference sequence bases at
+* ``referenceSNP.fasta`` : a fasta file containing the reference sequence bases at
   all the SNP locations.
 
-* metrics : for each sample, contains the size of the sample, number of reads, 
+* ``metrics`` : for each sample, contains the size of the sample, number of reads, 
   alignment rate, pileup depth, and number of SNPs found.
 
-* metrics.tsv : a tab-separated table of metrics for all samples containing 
+* ``metrics.tsv`` : a tab-separated table of metrics for all samples containing 
   the size of the samples, number of reads, alignment rate, pileup depth, and 
   number of SNPs found.
 
-* error.log : a summary of errors detected during SNP Pipeline execution
+* ``error.log`` : a summary of errors detected during SNP Pipeline execution
 
 .. _all-in-one-script-label:
 
