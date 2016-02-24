@@ -393,7 +393,7 @@ collectSampleMetrics.sh
 
 ::
 
-  usage: collectSampleMetrics.sh [-h] [-f] [-m FILE] [-o FILE] sampleDir referenceFile
+  usage: collectSampleMetrics.sh [-h] [-f] [-m FILE] [-o FILE] [-v FILE] sampleDir referenceFile
   
   Collect alignment, coverage, and variant metrics for a single specified sample.
   
@@ -409,6 +409,8 @@ collectSampleMetrics.sh
                        (default: snpma.fasta)
     -o FILE          : Output file. Relative or absolute path to the metrics file
                        (default: stdout)
+    -v FILE          : Relative or absolute path to the consensus vcf file
+                       (default: consensus.vcf in the sampleDir)
 
 combineSampleMetrics.sh
 ---------------------------

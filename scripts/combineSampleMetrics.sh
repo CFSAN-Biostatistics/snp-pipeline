@@ -142,7 +142,7 @@ if [[ ! -s "$sampleDirsFile" ]]; then globalError "Sample directories file $samp
 # Parse the metrics files and print the tabular results
 #-------------------------------------------------------
 
-printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Percent of Reads Mapped" "Average Pileup Depth" "Number of SNPs" "Missing SNP Matrix Positions" "Warnings and Errors" >&3
+printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Percent of Reads Mapped" "Average Pileup Depth" "Phase1 SNPs" "Phase2 SNPs" "Missing SNP Matrix Positions" "Warnings and Errors" >&3
 
 cat "$sampleDirsFile" | while IFS='' read -r dir || [[ -n "$dir" ]]
 do
@@ -159,7 +159,7 @@ do
       declare "$param"="$value"
     fi
   done  < "$metricsFilePath" # This syntax without piping is needed to retain the values of variables declared in the loop
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "$sample" "$fastqFileList" "$fastqFileSize" "$machine" "$flowcell" "$numberReads" "$percentReadsMapped" "$avePileupDepth" "$snps" "$missingPos" "$errorList" >&3
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "$sample" "$fastqFileList" "$fastqFileSize" "$machine" "$flowcell" "$numberReads" "$percentReadsMapped" "$avePileupDepth" "$phase1Snps" "$snps" "$missingPos" "$errorList" >&3
 done
 
 echo "# "$(date +"%Y-%m-%d %T") combineSampleMetrics.sh finished 1>&2

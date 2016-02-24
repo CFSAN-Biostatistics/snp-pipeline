@@ -30,7 +30,7 @@
 
 usage()
 {
-  echo usage: $0 [-h] [-f] [-m FILE] [-o FILE] sampleDir referenceFile
+  echo usage: $0 [-h] [-f] [-m FILE] [-o FILE] [-v FILE] sampleDir referenceFile
   echo
   echo 'Collect alignment, coverage, and variant metrics for a single specified sample.'
   echo
@@ -46,6 +46,8 @@ usage()
   echo '                     (default: snpma.fasta)'
   echo '  -o FILE          : Output file. Relative or absolute path to the metrics file'
   echo '                     (default: stdout)'
+  echo '  -v FILE          : Relative or absolute path to the consensus vcf file'
+  echo '                     (default: consensus.vcf in the sampleDir)'
 }
 
 # --------------------------------------------------------
@@ -69,7 +71,7 @@ logSysEnvironment()
 # Options
 #--------
 
-while getopts ":hfm:o:" option; do
+while getopts ":hfm:o:v:" option; do
   if [ "$option" = "h" ]; then
     usage
     exit 0
@@ -253,13 +255,49 @@ else
 fi
 
 #-------------------------
-echo "# "$(date +"%Y-%m-%d %T") Count number of SNPs from vcf file 1>&2
+echo "# "$(date +"%Y-%m-%d %T") Count number of high confidence SNP positions from phase 1 vcf file 1>&2
 #-------------------------
 vcfFile=${sampleDir}/var.flt.vcf
 if [ -s "$vcfFile" ]; then
-  snps=$(grep -c -v '^#' "$vcfFile") || true
+  phase1Snps=$(grep -c -v '^#' "$vcfFile") || true
 else
-  error="VCF file was not found."
+  error="VCF file $vcfFile was not found."
+  echo "$error" 1>&2
+  errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+fi
+
+#-------------------------
+echo "# "$(date +"%Y-%m-%d %T") Count number of consensus snps from consensus vcf file 1>&2
+#-------------------------
+# Get the consensus VCF file
+if [ "$opt_v_set" = "1" ]; then
+  consensusVcfFile="$opt_v_arg"
+else
+  consensusVcfFile=${sampleDir}/consensus.vcf
+fi
+if [ -s "$consensusVcfFile" ]; then
+  phase2Snps=$(python << END
+from __future__ import print_function
+import vcf
+num_snps = 0
+with open("$consensusVcfFile") as inp:
+    reader = vcf.VCFReader(inp)
+    for record in reader:
+        if not record.is_snp: # is ALT not in [A,C,G,T,N,*] ?
+            continue
+        if record.ALT == record.REF:
+            continue
+        for sample in record.samples:
+            if not sample.is_variant: # is GT == REF ?
+                continue
+            if sample.data.FT != "PASS":
+                continue
+            num_snps += 1
+print(num_snps)
+END
+)
+else
+  error="Consensus VCF file $consensusVcfFile was not found."
   echo "$error" 1>&2
   errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
 fi
@@ -293,10 +331,9 @@ echo "flowcell=$flowcell" >&3
 echo "numberReads=$nreads" >&3
 echo "percentReadsMapped=$perc_mapped" >&3
 echo "avePileupDepth=$depth" >&3
-echo "snps=$snps" >&3
+echo "phase1Snps=$phase1Snps" >&3
+echo "snps=$phase2Snps" >&3
 echo "missingPos=$missingPos" >&3
 echo "errorList=\"$errorList"\" >&3
-
-#printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "$sampleDirBasename" "$fastqFileList" "$file_size" "$machine" "$flowcell" "$nreads" "$perc_mapped" "$depth" "$snps" "$errorList"
 
 echo "# "$(date +"%Y-%m-%d %T") collectSampleMetrics.sh finished 1>&2
