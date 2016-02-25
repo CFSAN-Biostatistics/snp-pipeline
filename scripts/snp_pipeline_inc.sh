@@ -105,6 +105,24 @@ getSampleId()
     fi
 }
 
+# Read a single parameter from a file containing parameters of the form name=value.
+# The parameter becomes a READ-ONLY global bash variable.
+readParameter()
+{
+  parameterFile=$1
+  parameterName=$2
+  while IFS='' read -r line || [[ -n "$line" ]]
+  do
+    if [[ "$line" =~ "=" ]]; then
+      param=${line%%=*}  # strip everything after =
+      if [[ $param == $parameterName ]]; then
+        value=${line##*=}  # strip everything before =
+        readonly "$param"="$value"
+      fi
+    fi
+  done  < "$parameterFile" # This syntax without piping is needed to retain the values of variables declared in the loop
+}
+
 
 # Write an error message to the error log if enabled.
 logError()

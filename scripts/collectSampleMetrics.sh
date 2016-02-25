@@ -16,6 +16,9 @@
 #   20150324-scd: Modified to work as an integrated step within the CFSAN SNP Pipeline.
 #   20150413-scd: Calculate average depth using all reference positions, including those with zero coverage.
 #   20151229-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
+#   20160224-scd: Capture separate metrics counting phase1 and phase2 snps.
+#   20160224-scd: Reuse previously computed sam file and pileup metrics when re-running the pipeline.
+#   20160225-scd: Default output to the metrics file, not stdout.
 #Notes:
 #
 #Bugs:
@@ -45,7 +48,7 @@ usage()
   echo '  -m FILE          : Relative or absolute path to the SNP matrix file'
   echo '                     (default: snpma.fasta)'
   echo '  -o FILE          : Output file. Relative or absolute path to the metrics file'
-  echo '                     (default: stdout)'
+  echo '                     (default: metrics in the sampleDir)'
   echo '  -v FILE          : Relative or absolute path to the consensus vcf file'
   echo '                     (default: consensus.vcf in the sampleDir)'
 }
@@ -150,26 +153,15 @@ fi
 errorList=""
 sampleDirBasename=${sampleDir##*/}
 
-#------------------------------------
-# Metrics already freshly collected?
-#------------------------------------
-if [[ "$opt_f_set" != "1" && "$opt_o_set" = "1" && -s "$opt_o_arg" && "$opt_o_arg" -nt "$snpmaFile" ]]; then
-    echo "Metrics are already freshly created for $sampleDirBasename.  Use the -f option to force a rebuild." 1>&2
-    exit 0
-fi
-
 
 #-----------------
 # Redirect output
 #-----------------
 
-# Create file descriptor 3 for output
 if [ "$opt_o_set" = "1" ]; then
-  # 3 points to a file
-  exec 3>"$opt_o_arg"
+  outfile="$opt_o_arg"
 else
-  # 3 points to stdout
-  exec 3>&1
+  outfile=${sampleDir}/metrics
 fi
 
 
@@ -226,28 +218,54 @@ else
 fi
 
 #-------------------------
-echo "# "$(date +"%Y-%m-%d %T") Calculate number of reads and %mapped from sam file 1>&2
+# Calculate number of reads and %mapped from sam file
 #-------------------------
 samFile=$sampleDir/reads.sam
 if [ -s "$samFile" ]; then
-  nreads=$(samtools view -S -c ${sampleDir}/reads.sam)
-  mapped=$(samtools view -S -c -F 4 ${sampleDir}/reads.sam)
-  perc_mapped=$(bc <<< "scale=4; ($mapped/$nreads)*100")
-  perc_mapped=$(printf '%.2f' $perc_mapped)
+  # Metrics already freshly collected?
+  unset nreads
+  unset perc_mapped
+  if [[ "$opt_f_set" != "1" && -s "$outfile" && "$outfile" -nt "$samFile" ]]; then
+    readParameter "$outfile" "numberReads" # reuse already fresh metrics
+    readParameter "$outfile" "percentReadsMapped" # reuse already fresh metrics
+    nreads=$numberReads
+    perc_mapped=$percentReadsMapped
+  fi
+  if [[ -n $nreads && -n $perc_mapped ]]; then
+    echo "# "$(date +"%Y-%m-%d %T") Reusing previously calculated number of reads and %mapped 1>&2
+  else
+    echo "# "$(date +"%Y-%m-%d %T") Calculate number of reads and %mapped from sam file 1>&2
+    nreads=$(samtools view -S -c ${sampleDir}/reads.sam)
+    mapped=$(samtools view -S -c -F 4 ${sampleDir}/reads.sam)
+    perc_mapped=$(bc <<< "scale=4; ($mapped/$nreads)*100")
+    perc_mapped=$(printf '%.2f' $perc_mapped)
+  fi
 else
   error="SAM file was not found."
   echo "$error" 1>&2
   errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
 fi
 
+
 #-------------------------
-echo "# "$(date +"%Y-%m-%d %T") Calculate mean depth from pileup file 1>&2
+# Calculate mean depth from pileup file
 #-------------------------
 pileupFile=${sampleDir}/reads.all.pileup
 if [ -s "$pileupFile" ]; then
-  sumDepth=$(awk '{sum+=$4}END{print sum}' "$pileupFile")
-  refLength=$(grep -v '>' "$referenceFile" | wc -m)
-  depth=$(printf %.2f $(echo "$sumDepth / $refLength" | bc -l))
+  # Metrics already freshly collected?
+  unset depth
+  if [[ "$opt_f_set" != "1" && -s "$outfile" && "$outfile" -nt "$pileupFile" ]]; then
+    readParameter "$outfile" "avePileupDepth" # reuse already fresh metrics
+    depth=$avePileupDepth
+  fi
+  if [[ -n $depth ]]; then
+    echo "# "$(date +"%Y-%m-%d %T") Reusing previously calculated mean pileup depth 1>&2
+  else
+    echo "# "$(date +"%Y-%m-%d %T") Calculate mean depth from pileup file 1>&2
+    sumDepth=$(awk '{sum+=$4}END{print sum}' "$pileupFile")
+    refLength=$(grep -v '>' "$referenceFile" | wc -m)
+    depth=$(printf %.2f $(echo "$sumDepth / $refLength" | bc -l))
+  fi
 else
   error="Pileup file was not found."
   echo "$error" 1>&2
@@ -323,17 +341,17 @@ END
 #-------------------------
 echo "# "$(date +"%Y-%m-%d %T") Print Results 1>&2
 #-------------------------
-echo "sample=\"$sampleDirBasename\"" >&3
-echo "fastqFileList=\"$fastqFileList\"" >&3
-echo "fastqFileSize=$file_size" >&3
-echo "machine=$machine" >&3
-echo "flowcell=$flowcell" >&3
-echo "numberReads=$nreads" >&3
-echo "percentReadsMapped=$perc_mapped" >&3
-echo "avePileupDepth=$depth" >&3
-echo "phase1Snps=$phase1Snps" >&3
-echo "snps=$phase2Snps" >&3
-echo "missingPos=$missingPos" >&3
-echo "errorList=\"$errorList"\" >&3
+echo "sample=\"$sampleDirBasename\"" > "$outfile"
+echo "fastqFileList=\"$fastqFileList\"" >> "$outfile"
+echo "fastqFileSize=$file_size" >> "$outfile"
+echo "machine=$machine" >> "$outfile"
+echo "flowcell=$flowcell" >> "$outfile"
+echo "numberReads=$nreads" >> "$outfile"
+echo "percentReadsMapped=$perc_mapped" >> "$outfile"
+echo "avePileupDepth=$depth" >> "$outfile"
+echo "phase1Snps=$phase1Snps" >> "$outfile"
+echo "snps=$phase2Snps" >> "$outfile"
+echo "missingPos=$missingPos" >> "$outfile"
+echo "errorList=\"$errorList"\" >> "$outfile"
 
 echo "# "$(date +"%Y-%m-%d %T") collectSampleMetrics.sh finished 1>&2

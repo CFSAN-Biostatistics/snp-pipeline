@@ -70,7 +70,6 @@ assertIdenticalFiles()
 #################################################
 
 
-
 # Verify the scripts were properly installed on the path.
 testScriptsOnPath()
 {
@@ -3947,6 +3946,14 @@ testAlreadyFreshOutputs()
     sleep 1
     run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> /dev/null
 
+    # Test special collectSampleMetrics result persistence
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.54"
+    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.89"
+    echo numberReads=AAAAA > "$tempDir/samples/sample1/metrics"
+    echo percentReadsMapped=BBBBB >> "$tempDir/samples/sample1/metrics"
+    echo avePileupDepth=CCCCC >> "$tempDir/samples/sample1/metrics"
+
     # Remove unwanted log files
     rm -rf $tempDir/logs*
 
@@ -4016,10 +4023,19 @@ testAlreadyFreshOutputs()
 
     assertFileContains "$logDir/mergeVcf.log" "Multi-VCF file is already freshly created.  Use the -f option to force a rebuild."
 
-    assertFileContains "$logDir/collectSampleMetrics.log-1" "Metrics are already freshly created for sample1.  Use the -f option to force a rebuild."
-    assertFileContains "$logDir/collectSampleMetrics.log-2" "Metrics are already freshly created for sample2.  Use the -f option to force a rebuild."
-    assertFileContains "$logDir/collectSampleMetrics.log-3" "Metrics are already freshly created for sample4.  Use the -f option to force a rebuild."
-    assertFileContains "$logDir/collectSampleMetrics.log-4" "Metrics are already freshly created for sample3.  Use the -f option to force a rebuild."
+    assertFileNotContains "$logDir/collectSampleMetrics.log-1" "already freshly created"
+    assertFileNotContains "$logDir/collectSampleMetrics.log-2" "already freshly created"
+    assertFileNotContains "$logDir/collectSampleMetrics.log-3" "already freshly created"
+    assertFileNotContains "$logDir/collectSampleMetrics.log-4" "already freshly created"
+
+    # Special collectSampleMetrics re-use last metrics
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.54"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.89"
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=AAAAA"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=BBBBB"
+    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=CCCCC"
+    assertFileContains "$tempDir/metrics.tsv" "sample1.*AAAAA.*BBBBB.*CCCCC"
 }
 
 

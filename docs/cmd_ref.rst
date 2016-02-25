@@ -408,7 +408,7 @@ collectSampleMetrics.sh
     -m FILE          : Relative or absolute path to the SNP matrix file
                        (default: snpma.fasta)
     -o FILE          : Output file. Relative or absolute path to the metrics file
-                       (default: stdout)
+                       (default: metrics in the sampleDir)
     -v FILE          : Relative or absolute path to the consensus vcf file
                        (default: consensus.vcf in the sampleDir)
 
