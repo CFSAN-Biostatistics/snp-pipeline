@@ -4043,6 +4043,44 @@ testAlreadyFreshOutputs()
 }
 
 
+# Verify underscores in metrics.tsv column headers can be controlled with configuration file
+testRunSnpPipelineMetricsColumnHeadingsUnderscores()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+
+    # Verify no weird freshness skips
+    assertFileNotContains "$tempDir/run_snp_pipeline.log" "Use the -f option to force a rebuild"
+
+    # Verify output metrics
+    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    assertIdenticalFiles "$tempDir/metrics.tsv" "$tempDir/expectedResults/metrics.tsv"
+    head -n 1 "$tempDir/metrics.tsv" | grep "_" > /dev/null
+    assertTrue "No underscores were found in the metrics column headings"  $?
+
+    # Delete the metrics file and re-run with the option to use spaces
+    rm "$tempDir/metrics.tsv"
+    copy_snppipeline_data.py configurationFile $tempDir
+    echo 'CombineSampleMetrics_ExtraParams="-s"' >> "$tempDir/snppipeline.conf"
+    run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+
+    # Verify output metrics have no underscores
+    head -n 1 "$tempDir/metrics.tsv" | grep "_" > /dev/null
+    assertFalse "Underscores should not be found in the metrics column headings when using -s combineSampleMetrics option"  $?
+}
+
+
 # Verify run_snp_pipeline generates correct results for the Salmonella Agona data set
 testRunSnpPipelineAgona()
 {

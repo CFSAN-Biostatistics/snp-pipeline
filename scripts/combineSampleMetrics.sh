@@ -16,6 +16,7 @@
 #   20150413-scd: Fix the sun grid engine "undefined" task id.
 #   20151230-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
 #   20160226-scd: Add the average insert size metric
+#   20160301-scd: Emit column headings with underscores.
 #Notes:
 #
 #Bugs:
@@ -50,6 +51,7 @@ usage()
   echo '                     the sample directories. (default: metrics)'
   echo '  -o FILE          : Output file. Relative or absolute path to the combined metrics'
   echo '                     file. (default: stdout)'
+  echo '  -s               : Emit column headings with spaces instead of underscores'
 }
 
 # --------------------------------------------------------
@@ -73,7 +75,7 @@ logSysEnvironment()
 # Options
 #--------
 
-while getopts ":hn:o:" option; do
+while getopts ":hn:o:s" option; do
   if [ "$option" = "h" ]; then
     usage
     exit 0
@@ -143,7 +145,11 @@ if [[ ! -s "$sampleDirsFile" ]]; then globalError "Sample directories file $samp
 # Parse the metrics files and print the tabular results
 #-------------------------------------------------------
 
-printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Percent of Reads Mapped" "Average Insert Size" "Average Pileup Depth" "Phase1 SNPs" "Phase2 SNPs" "Missing SNP Matrix Positions" "Warnings and Errors" >&3
+if [ "$opt_s_set" = "1" ]; then
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Percent of Reads Mapped" "Average Insert Size" "Average Pileup Depth" "Phase1 SNPs" "Phase2 SNPs" "Missing SNP Matrix Positions" "Warnings and Errors" >&3
+else
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq_Files" "Fastq_File_Size" "Machine" "Flowcell" "Number_of_Reads" "Percent_of_Reads_Mapped" "Average_Insert_Size" "Average_Pileup_Depth" "Phase1_SNPs" "Phase2_SNPs" "Missing_SNP_Matrix_Positions" "Warnings_and_Errors" >&3
+fi
 
 cat "$sampleDirsFile" | while IFS='' read -r dir || [[ -n "$dir" ]]
 do

@@ -46,6 +46,7 @@
 #   20150928-scd: Merge the per-sample VCF files into a multi-vcf file.
 #   20151013-scd: Added a configuration parameter to control stripping the array jobid suffix.
 #   20151210-scd: Trap errors and shutdown the pipeline if configured to do so.
+#   20160301-scd: Allow configurable extra paremeters for collectSampleMetrics and combineSampleMetrics.
 #Notes:
 #
 #Bugs:
@@ -838,7 +839,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -l h_rt=02:00:00
 #$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"  "$referenceFilePath"
+    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -851,7 +852,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/collectSampleMetrics.log
     #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics"  "\$sampleDir"  "$referenceFilePath"
+    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 else
@@ -860,7 +861,7 @@ else
     else
         numCollectSampleMetricsCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
 echo -e "\nStep 11 - Combine the metrics across all samples into the metrics table"
@@ -873,7 +874,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -hold_jid $collectSampleMetricsJobArray
 #$ -o $logDir/combineSampleMetrics.log
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" "$sampleDirsFile"
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -885,11 +886,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterokarray:$collectSampleMetricsJobArray
     #PBS -o $logDir/combineSampleMetrics.log
     #PBS -V
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" "$sampleDirsFile"
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
 _EOF_
 )
 else
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
 fi
 
 

@@ -436,6 +436,7 @@ combineSampleMetrics.sh
                        the sample directories. (default: metrics)
     -o FILE          : Output file. Relative or absolute path to the combined metrics
                        file. (default: stdout)
+    -s               : Emit column headings with spaces instead of underscores
 
 mergeVcf.sh
 ---------------------------

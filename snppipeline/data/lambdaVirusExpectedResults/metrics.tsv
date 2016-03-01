@@ -1,4 +1,4 @@
-Sample	Fastq Files	Fastq File Size	Machine	Flowcell	Number of Reads	Percent of Reads Mapped	Average Insert Size	Average Pileup Depth	Phase1 SNPs	Phase2 SNPs	Missing SNP Matrix Positions	Warnings and Errors
+Sample	Fastq_Files	Fastq_File_Size	Machine	Flowcell	Number_of_Reads	Percent_of_Reads_Mapped	Average_Insert_Size	Average_Pileup_Depth	Phase1_SNPs	Phase2_SNPs	Missing_SNP_Matrix_Positions	Warnings_and_Errors
 "sample1"	"sample1_1.fastq, sample1_2.fastq"	4818902			20000	94.54	286.84	22.89	46	46	0	"No compressed fastq.gz or fq.gz files were found."
 "sample2"	"sample2_1.fastq, sample2_2.fastq"	4813480			20000	94.78	285.90	22.90	44	44	0	"No compressed fastq.gz or fq.gz files were found."
 "sample4"	"sample4_1.fastq, sample4_2.fastq"	4783620			20000	94.44	285.44	22.28	37	37	0	"No compressed fastq.gz or fq.gz files were found."

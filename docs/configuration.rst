@@ -376,6 +376,33 @@ Specifies options passed to mergeVcf.sh
     MergeVcf_ExtraParams="-n sample.vcf"
 
 
+CollectSampleMetrics_ExtraParams
+--------------------------------
+Specifies options passed to collectSampleMetrics.sh
+
+**Default**: none
+
+**Example**::
+
+    CollectSampleMetrics_ExtraParams="-v consensus.vcf"
+
+
+CombineSampleMetrics_ExtraParams
+--------------------------------
+Specifies options passed to combineSampleMetrics.sh
+
+**Default**: none
+
+**Parameter Notes**:
+
+| ``-s``  : Emit column headings with spaces instead of underscores
+|
+
+**Example**::
+
+    CombineSampleMetrics_ExtraParams="-s"
+
+
 Torque_StripJobArraySuffix
 --------------------------
 Controls stripping the suffix from the job id when specifying Torque job array dependencies.
