@@ -19,6 +19,7 @@
 #   20160224-scd: Capture separate metrics counting phase1 and phase2 snps.
 #   20160224-scd: Reuse previously computed sam file and pileup metrics when re-running the pipeline.
 #   20160225-scd: Default output to the metrics file, not stdout.
+#   20160226-scd: Add the average insert size metric
 #Notes:
 #
 #Bugs:
@@ -235,13 +236,50 @@ if [ -s "$samFile" ]; then
     echo "# "$(date +"%Y-%m-%d %T") Reusing previously calculated number of reads and %mapped 1>&2
   else
     echo "# "$(date +"%Y-%m-%d %T") Calculate number of reads and %mapped from sam file 1>&2
-    nreads=$(samtools view -S -c ${sampleDir}/reads.sam)
-    mapped=$(samtools view -S -c -F 4 ${sampleDir}/reads.sam)
+    nreads=$(samtools view -S -c $samFile)
+    mapped=$(samtools view -S -c -F 4 $samFile)
     perc_mapped=$(bc <<< "scale=4; ($mapped/$nreads)*100")
     perc_mapped=$(printf '%.2f' $perc_mapped)
   fi
 else
   error="SAM file was not found."
+  echo "$error" 1>&2
+  errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+fi
+
+
+#-------------------------
+# Calculate mean insert size
+#-------------------------
+bamFile=${sampleDir}/reads.sorted.bam
+if [ -s "$bamFile" ]; then
+  # Metrics already freshly collected?
+  unset insertSize
+  if [[ "$opt_f_set" != "1" && -s "$outfile" && "$outfile" -nt "$bamFile" ]]; then
+    readParameter "$outfile" "aveInsertSize" # reuse already fresh metrics
+    insertSize=$aveInsertSize
+  fi
+  if [[ -n $insertSize ]]; then
+    echo "# "$(date +"%Y-%m-%d %T") Reusing previously calculated mean insert size 1>&2
+  else
+    echo "# "$(date +"%Y-%m-%d %T") Calculate mean insert size from bam file 1>&2
+    # Extract inferred insert sizes (TLEN, column 9 of BAM file) for reads "mapped in proper pair" (2) and "first in pair" (64) = 66
+    tmpFile=$(mktemp -p "$sampleDir" tmp.inserts.XXXXXXXX)
+    samtools view -f 66 "$bamFile" | cut -f 9 | sed 's/^-//' > $tmpFile
+    insertSum=$(awk '{s+=$1} END {print s}' $tmpFile)
+    insertCnt=$(wc -l $tmpFile | cut -d ' ' -f 1)
+    rm $tmpFile
+    if [[ -z $insertSum || -z $insertCnt || $insertCnt == 0 ]]; then
+      insertSize=""
+      error="Cannot calculate mean insert size."
+      echo "$error" 1>&2
+      errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+    else
+      insertSize=$(printf %.2f $(echo "$insertSum / $insertCnt" | bc -l))
+    fi
+  fi
+else
+  error="$bamFile file was not found."
   echo "$error" 1>&2
   errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
 fi
@@ -348,6 +386,7 @@ echo "machine=$machine" >> "$outfile"
 echo "flowcell=$flowcell" >> "$outfile"
 echo "numberReads=$nreads" >> "$outfile"
 echo "percentReadsMapped=$perc_mapped" >> "$outfile"
+echo "aveInsertSize=$insertSize" >> "$outfile"
 echo "avePileupDepth=$depth" >> "$outfile"
 echo "phase1Snps=$phase1Snps" >> "$outfile"
 echo "snps=$phase2Snps" >> "$outfile"

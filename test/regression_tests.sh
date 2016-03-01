@@ -3950,9 +3950,11 @@ testAlreadyFreshOutputs()
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.54"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.89"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
     echo numberReads=AAAAA > "$tempDir/samples/sample1/metrics"
     echo percentReadsMapped=BBBBB >> "$tempDir/samples/sample1/metrics"
     echo avePileupDepth=CCCCC >> "$tempDir/samples/sample1/metrics"
+    echo aveInsertSize=DDDDD >> "$tempDir/samples/sample1/metrics"
 
     # Remove unwanted log files
     rm -rf $tempDir/logs*
@@ -4032,10 +4034,12 @@ testAlreadyFreshOutputs()
     assertFileNotContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.54"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.89"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=AAAAA"
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=BBBBB"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=CCCCC"
-    assertFileContains "$tempDir/metrics.tsv" "sample1.*AAAAA.*BBBBB.*CCCCC"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=DDDDD"
+    assertFileContains "$tempDir/metrics.tsv" "sample1.*AAAAA.*BBBBB.*DDDDD.*CCCCC"
 }
 
 

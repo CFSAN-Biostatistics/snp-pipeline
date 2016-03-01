@@ -15,6 +15,7 @@
 #   20150324-scd: Integrated into the snp pipeline.
 #   20150413-scd: Fix the sun grid engine "undefined" task id.
 #   20151230-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
+#   20160226-scd: Add the average insert size metric
 #Notes:
 #
 #Bugs:
@@ -142,7 +143,7 @@ if [[ ! -s "$sampleDirsFile" ]]; then globalError "Sample directories file $samp
 # Parse the metrics files and print the tabular results
 #-------------------------------------------------------
 
-printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Percent of Reads Mapped" "Average Pileup Depth" "Phase1 SNPs" "Phase2 SNPs" "Missing SNP Matrix Positions" "Warnings and Errors" >&3
+printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Percent of Reads Mapped" "Average Insert Size" "Average Pileup Depth" "Phase1 SNPs" "Phase2 SNPs" "Missing SNP Matrix Positions" "Warnings and Errors" >&3
 
 cat "$sampleDirsFile" | while IFS='' read -r dir || [[ -n "$dir" ]]
 do
@@ -159,7 +160,7 @@ do
       declare "$param"="$value"
     fi
   done  < "$metricsFilePath" # This syntax without piping is needed to retain the values of variables declared in the loop
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "$sample" "$fastqFileList" "$fastqFileSize" "$machine" "$flowcell" "$numberReads" "$percentReadsMapped" "$avePileupDepth" "$phase1Snps" "$snps" "$missingPos" "$errorList" >&3
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "$sample" "$fastqFileList" "$fastqFileSize" "$machine" "$flowcell" "$numberReads" "$percentReadsMapped" "$aveInsertSize" "$avePileupDepth" "$phase1Snps" "$snps" "$missingPos" "$errorList" >&3
 done
 
 echo "# "$(date +"%Y-%m-%d %T") combineSampleMetrics.sh finished 1>&2

@@ -904,6 +904,10 @@ The metrics are:
 +-------------------------+------------------------------------------------------------------+
 | Percent of Reads Mapped | | The percentage of reference-aligned reads in the SAM file.     |
 +-------------------------+------------------------------------------------------------------+
+| Average Insert Size     | | The average observed template length of mapped paired reads as |
+|                         | | captured by SAMtools view TLEN value. This metric is not       |
+|                         | | calculated for unpaired reads.                                 |
++-------------------------+------------------------------------------------------------------+
 | Average Pileup Depth    | | The average depth of coverage in the sample pileup file.  This |
 |                         | | is calculated as the sum of the depth of the pileup across all |
 |                         | | pileup positions divided by the number of positions in the     |

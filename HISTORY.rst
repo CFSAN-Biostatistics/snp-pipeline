@@ -3,7 +3,7 @@
 History
 -------
 
-0.5.2 (2016-02-??)
+0.5.2 (2016-03-??)
 ~~~~~~~~~~~~~~~~~~
 
 * Capture separate metrics counting phase 1 snps (varscan) and phase 2 snps (consensus). Previously, the
@@ -11,8 +11,9 @@ History
   files. The metrics file now contains a new tag ``phase1Snps``.  The old tag ``snps`` now correctly counts 
   the total number of snps. The metrics.tsv file now has separate column headers for phase 1 snps and 
   phase 2 snps.  Any code that parses those files may need modifications to work properly with v0.5.2.
-* Improve the speed of metrics calculation when rerunning the pipeline.  Reuse the previously computed sam file
-  and pileup metrics.
+* Added the Average Insert Size metric.
+* Improve the speed of metrics calculation when rerunning the pipeline.  Reuse the previously computed metrics
+  when recalculation would be slow.
 
 0.5.1 (2016-02-19)
 ~~~~~~~~~~~~~~~~~~
