@@ -9,7 +9,9 @@ History
 **Bug fixes:**
 
 * An empty snplist.txt file should not cause errors when creating the referenceSNP.fasta.
-* An empty snplist.txt file should not preclude re-running subsequent steps of the pipeline. 
+* An empty snplist.txt file should not preclude re-running subsequent steps of the pipeline.
+* When configured to ignore single-sample errors, a missing var.flt.vcf file should not
+  preclude rebuilding the snplist.txt file during a pipeline re-run.
 * The metrics file did not properly capture the total number of snps per sample. See below for the details.
 
 **Other Changes:**

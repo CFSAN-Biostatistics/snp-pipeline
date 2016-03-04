@@ -71,6 +71,14 @@ assertIdenticalFiles()
     assertTrue "$1 does not exactly match $2" $?
 }
 
+# Assert file $1 is newer than file $2.
+assertNewerFile()
+{
+    [ "$1" -nt "$2" ]
+    errorCode=$?
+    assertTrue "The file $1 should be newer than $2." $errorCode
+}
+
 
 #################################################
 # Tests
@@ -3930,7 +3938,7 @@ testRunSnpPipelineLambdaSingleSample()
 }
 
 
-# Verify run_snp_pipeline runs to completion with no snps
+# Verify run_snp_pipeline runs to completion with no snps and works properly when re-run
 testRunSnpPipelineZeroSnps()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -3988,6 +3996,69 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
+    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+}
+
+
+# Verify run_snp_pipeline rebuilds the snplist when at least one var.flt.vcf is missing and 
+# at least one var.flt.vcf is newer
+testRunSnpPipelineRerunMissingVCF()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+    assertFileNotContains "$tempDir/run_snp_pipeline.log" "There were errors processing some samples"
+
+    # Verify no weird freshness skips
+    assertFileNotContains "$tempDir/run_snp_pipeline.log" "Use the -f option to force a rebuild"
+
+    # Clear old logs
+    rm -rf $tempDir/logs*
+
+    # Delete a VCF and re-run the pipeline
+    touch -d '-10 day' $tempDir/reference/*.fasta
+    touch -d  '-9 day' $tempDir/reference/*.bt2
+    touch -d  '-8 day' $tempDir/samples/*/*.fastq
+    touch -d  '-7 day' $tempDir/samples/*/reads.sam
+    touch -d  '-6 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-4 day' $tempDir/samples/*/reads.all.pileup
+    touch $tempDir/samples/*/var.flt.vcf
+    rm -rf "$tempDir/samples/sample1"
+    sleep 1
+
+    copy_snppipeline_data.py configurationFile $tempDir
+    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+
+    run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -S "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
+
+    # Verify output results
+    verifyNonEmptyReadableFile "$tempDir/snplist.txt"
+    assertNewerFile "$tempDir/snplist.txt" "$tempDir/samples/sample2/var.flt.vcf"
+    assertFileNotContains "$tempDir/snplist.txt" "sample1"
+
+    # Verify output results exist, and no snps were found
+    verifyNonEmptyReadableFile "$tempDir/snpma.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
+
+    # Verify log files
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
+    assertFileContains "$logDir/prepSamples.log-2" "prepSamples.sh finished"
+    assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/callConsensus.log-2" "call_consensus.py finished"
+    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-2" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
 }
 
