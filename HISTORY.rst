@@ -6,6 +6,14 @@ History
 0.5.2 (2016-03-??)
 ~~~~~~~~~~~~~~~~~~
 
+**Bug fixes:**
+
+* An empty snplist.txt file should not cause errors when creating the referenceSNP.fasta.
+* An empty snplist.txt file should not preclude re-running subsequent steps of the pipeline. 
+* The metrics file did not properly capture the total number of snps per sample. See below for the details.
+
+**Other Changes:**
+
 * Capture separate metrics counting phase 1 snps (varscan) and phase 2 snps (consensus). Previously, the
   metrics only included phase 1 snps.  This changes the contents of both the ``metrics`` and ``metrics.tsv``
   files. The metrics file now contains a new tag ``phase1Snps``.  The old tag ``snps`` now correctly counts 

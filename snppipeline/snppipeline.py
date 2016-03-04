@@ -532,7 +532,7 @@ def create_snp_reference_seq(options_dict):
     #==========================================================================
     # Verify input files exist
     #==========================================================================
-    bad_file_count = utils.verify_non_empty_input_files("Snplist file", [snp_list_file_path])
+    bad_file_count = utils.verify_existing_input_files("Snplist file", [snp_list_file_path])
     if bad_file_count > 0:
         utils.global_error("Error: cannot create the snp reference sequence without the snplist file.")
 

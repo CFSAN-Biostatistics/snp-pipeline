@@ -285,10 +285,9 @@ def target_needs_rebuild(source_files, target_file):
     target_timestamp = os.stat(target_file).st_mtime
 
     for source_file in source_files:
-        # Non existing or empty source file should not force a rebuild
+        # Non existing source file should not force a rebuild.
+        # An empty source file should force a rebuild if it is newer than the target.
         if not os.path.isfile(source_file):
-            return False
-        if os.path.getsize(source_file) == 0:
             return False
 
         source_timestamp = os.stat(source_file).st_mtime

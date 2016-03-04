@@ -23,6 +23,13 @@
 # Helper Functions
 #################################################
 
+# Fail the current test with an error message if a file is missing or not empty
+verifyEmptyFile()
+{
+    if [[ ! -f "$1" ]]; then fail "The file $1 does not exist."; return $SHUNIT_FALSE; fi
+    if [[ -s "$1" ]]; then fail "The file $1 is not empty.";  return $SHUNIT_FALSE; fi
+}
+
 # Fail the current test with an error message if a file is missing, empty, or not readable.
 verifyNonEmptyReadableFile()
 {
@@ -3920,6 +3927,68 @@ testRunSnpPipelineLambdaSingleSample()
     # Verify correct results
     copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
     assertIdenticalFiles "$tempDir/snpma.vcf"                     "$tempDir/samples/sample1/consensus.vcf"  # Just copy the sample VCF to the snpma.vcf
+}
+
+
+# Verify run_snp_pipeline runs to completion with no snps
+testRunSnpPipelineZeroSnps()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+    assertFileNotContains "$tempDir/run_snp_pipeline.log" "There were errors processing some samples"
+
+    # Verify no weird freshness skips
+    assertFileNotContains "$tempDir/run_snp_pipeline.log" "Use the -f option to force a rebuild"
+
+    # Clear old logs
+    rm -rf $tempDir/logs*
+
+    # Create an empty snp list and re-run the pipeline
+    touch -d '-10 day' $tempDir/reference/*.fasta
+    touch -d  '-9 day' $tempDir/reference/*.bt2
+    touch -d  '-8 day' $tempDir/samples/*/*.fastq
+    touch -d  '-7 day' $tempDir/samples/*/reads.sam
+    touch -d  '-6 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-4 day' $tempDir/samples/*/reads.all.pileup
+    sed -i '/PASS/d' $tempDir/samples/*/var.flt.vcf
+    run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
+
+    # Verify output results
+    verifyEmptyFile "$tempDir/snplist.txt"
+    verifyNonExistingFile "$tempDir/error.log"
+    assertFileNotContains "$tempDir/run_snp_pipeline.log" "There were errors processing some samples"
+
+    # Verify output results exist, and no snps were found
+    verifyNonEmptyReadableFile "$tempDir/snpma.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
+    lineCount=$(grep -v ">" "$tempDir/snpma.fasta" | wc -l)
+    assertEquals "$tempDir/snpma.fasta should not contain any strings of bases." 0 $lineCount
+    lineCount=$(grep -v ">" "$tempDir/referenceSNP.fasta" | wc -l)
+    assertEquals "$tempDir/referenceSNP.fasta should not contain any strings of bases." 0 $lineCount
+
+    # Verify log files
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
+    assertFileContains "$logDir/prepReference.log" "prepReference.sh finished"
+    assertFileContains "$logDir/alignSamples.log-1" "alignSampleToReference.sh finished"
+    assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
+    assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
+    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
 }
 
 
