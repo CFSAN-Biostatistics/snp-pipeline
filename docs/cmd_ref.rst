@@ -405,8 +405,8 @@ collectSampleMetrics.sh
     -h               : Show this help message and exit
     -f               : Force processing even when result files already exist and
                        are newer than inputs
-    -m FILE          : Relative or absolute path to the SNP matrix file
-                       (default: snpma.fasta)
+    -c FILE          : Relative or absolute path to the consensus fasta file
+                       (default: consensus.fasta in the sampleDir)
     -o FILE          : Output file. Relative or absolute path to the metrics file
                        (default: metrics in the sampleDir)
     -v FILE          : Relative or absolute path to the consensus vcf file

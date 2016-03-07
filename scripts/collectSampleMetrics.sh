@@ -20,6 +20,7 @@
 #   20160224-scd: Reuse previously computed sam file and pileup metrics when re-running the pipeline.
 #   20160225-scd: Default output to the metrics file, not stdout.
 #   20160226-scd: Add the average insert size metric
+#   20160304-scd: Count missing positions in the consensus.fasta file instead of the snp matrix.
 #Notes:
 #
 #Bugs:
@@ -46,8 +47,8 @@ usage()
   echo '  -h               : Show this help message and exit'
   echo '  -f               : Force processing even when result files already exist and'
   echo '                     are newer than inputs'
-  echo '  -m FILE          : Relative or absolute path to the SNP matrix file'
-  echo '                     (default: snpma.fasta)'
+  echo '  -c FILE          : Relative or absolute path to the consensus fasta file'
+  echo '                     (default: consensus.fasta in the sampleDir)'
   echo '  -o FILE          : Output file. Relative or absolute path to the metrics file'
   echo '                     (default: metrics in the sampleDir)'
   echo '  -v FILE          : Relative or absolute path to the consensus vcf file'
@@ -75,7 +76,7 @@ logSysEnvironment()
 # Options
 #--------
 
-while getopts ":hfm:o:v:" option; do
+while getopts ":hfc:o:v:" option; do
   if [ "$option" = "h" ]; then
     usage
     exit 0
@@ -97,17 +98,6 @@ done
 
 logSysEnvironment $@
 setupSampleErrorHandler
-
-
-# SNP Matrix file
-if [ "$opt_m_set" = "1" ]; then
-  snpmaFile="$opt_m_arg"
-else
-  snpmaFile="snpma.fasta"
-fi
-if [[ ! -e "$snpmaFile" ]]; then globalError "SNP matrix file $snpmaFile does not exist."; fi
-if [[ ! -f "$snpmaFile" ]]; then globalError "SNP matrix file $snpmaFile is not a file."; fi
-if [[ ! -s "$snpmaFile" ]]; then globalError "SNP matrix file $snpmaFile is empty."; fi
 
 
 #----------
@@ -362,10 +352,17 @@ fi
 echo "# "$(date +"%Y-%m-%d %T") Count missing positions in the snp matrix 1>&2
 #------------------------------------------
 
-missingPos=$(python << END
+# Get the consensus fasta file
+if [ "$opt_c_set" = "1" ]; then
+  consensusFastaFile="$opt_c_arg"
+else
+  consensusFastaFile=${sampleDir}/consensus.fasta
+fi
+if [ -s "$consensusFastaFile" ]; then
+  missingPos=$(python << END
 from __future__ import print_function
 from Bio import SeqIO
-handle = open("$snpmaFile", "rU")
+handle = open("$consensusFastaFile", "rU")
 for record in SeqIO.parse(handle, "fasta"):
     if record.id == "$sampleDirBasename":
         missing = record.seq.count('-')
@@ -374,6 +371,11 @@ for record in SeqIO.parse(handle, "fasta"):
 handle.close()
 END
 )
+else
+  error="Consensus fasta file $consensusFastaFile was not found."
+  echo "$error" 1>&2
+  errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+fi
 
 
 #-------------------------

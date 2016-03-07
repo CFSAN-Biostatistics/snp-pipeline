@@ -2587,61 +2587,6 @@ testCreateSnpReferenceSeqMissingReferenceRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the collectSampleMetrics.sh script detects a missing snp matrix file
-tryCollectSampleMetricsMissingSnpMatrixRaiseGlobalError()
-{
-    expectErrorCode=$1
-    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-
-    # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
-
-    # Setup directories and env variables used to trigger error handling.
-    # This simulates what run_snp_pipeline does before running other scripts
-    export logDir="$tempDir/logs"
-    mkdir -p "$logDir"
-    export errorOutputFile="$tempDir/error.log"
-
-    # Deliberately try metrics collection with missing file
-    rm snpma.fasta &> /dev/null
-
-    # Try to collect metrics
-    collectSampleMetrics.sh -m snpma.fasta "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
-    errorCode=$?
-
-    # Verify collectSampleMetrics.sh error handling behavior
-    assertEquals "collectSampleMetrics.sh returned incorrect error code when the snp matrix file was missing." $expectErrorCode $errorCode
-    verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "collectSampleMetrics.sh failed"
-    assertFileNotContains "$logDir/collectSampleMetrics.log" "collectSampleMetrics.sh failed"
-    assertFileContains "$tempDir/error.log" "SNP matrix file snpma.fasta does not exist"
-    assertFileContains "$logDir/collectSampleMetrics.log" "SNP matrix file snpma.fasta does not exist"
-    assertFileNotContains "$logDir/collectSampleMetrics.log" "collectSampleMetrics.sh finished"
-    assertFileNotContains "$logDir/collectSampleMetrics.log" "Use the -f option to force a rebuild"
-}
-
-# Verify the collectSampleMetrics.sh script detects a missing snp matrix file
-testCollectSampleMetricsMissingSnpMatrixRaiseGlobalErrorStop()
-{
-    export SnpPipeline_StopOnSampleError=true
-    tryCollectSampleMetricsMissingSnpMatrixRaiseGlobalError 100
-}
-
-# Verify the collectSampleMetrics.sh script detects a missing snp matrix file
-testCollectSampleMetricsMissingSnpMatrixRaiseGlobalErrorNoStop()
-{
-    export SnpPipeline_StopOnSampleError=false
-    tryCollectSampleMetricsMissingSnpMatrixRaiseGlobalError 100
-}
-
-# Verify the collectSampleMetrics.sh script detects a missing snp matrix file
-testCollectSampleMetricsMissingSnpMatrixRaiseGlobalErrorStopUnset()
-{
-    unset SnpPipeline_StopOnSampleError
-    tryCollectSampleMetricsMissingSnpMatrixRaiseGlobalError 100
-}
-
-
 # Verify the collectSampleMetrics.sh script detects a missing sample directory
 tryCollectSampleMetricsMissingSampleDirRaiseSampleError()
 {
@@ -2661,8 +2606,8 @@ tryCollectSampleMetricsMissingSampleDirRaiseSampleError()
     rm -rf "$tempDir/samples/sample1"
 
     # Try to collect metrics
-    echo "Dummy snpma.fasta content" > "$tempDir/snpma.fasta"
-    collectSampleMetrics.sh -m "$tempDir/snpma.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
+    echo "Dummy consensus.fasta content" > "$tempDir/consensus.fasta"
+    collectSampleMetrics.sh -c "$tempDir/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
     errorCode=$?
 
     # Verify collectSampleMetrics.sh error handling behavior
@@ -2717,8 +2662,8 @@ tryCollectSampleMetricsMissingReferenceRaiseGlobalError()
     rm "$tempDir/reference/lambda_virus.fasta"
 
     # Try to collect metrics
-    echo "Dummy snpma.fasta content" > "$tempDir/snpma.fasta"
-    collectSampleMetrics.sh -m "$tempDir/snpma.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
+    echo "Dummy consensus.fasta content" > "$tempDir/samples/sample1/consensus.fasta"
+    collectSampleMetrics.sh -c "$tempDir/samples/sample1/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
     errorCode=$?
 
     # Verify collectSampleMetrics.sh error handling behavior
@@ -2773,8 +2718,8 @@ tryCollectSampleMetricsSamtoolsViewTrap()
     echo "Garbage" > "$tempDir/samples/sample1/reads.sam"
 
     # Try to collect metrics
-    echo "Dummy snpma.fasta content" > "$tempDir/snpma.fasta"
-    collectSampleMetrics.sh -m "$tempDir/snpma.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
+    echo "Dummy consensus.fasta content" > "$tempDir/samples/sample1/consensus.fasta"
+    collectSampleMetrics.sh -c "$tempDir/samples/sample1/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
     errorCode=$?
 
     # Verify collectSampleMetrics.sh error handling behavior

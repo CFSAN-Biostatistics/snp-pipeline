@@ -47,6 +47,7 @@
 #   20151013-scd: Added a configuration parameter to control stripping the array jobid suffix.
 #   20151210-scd: Trap errors and shutdown the pipeline if configured to do so.
 #   20160301-scd: Allow configurable extra paremeters for collectSampleMetrics and combineSampleMetrics.
+#   20160304-scd: CollectSampleMetrics : Count missing positions in the consensus.fasta file instead of the snp matrix.
 #Notes:
 #
 #Bugs:
@@ -835,11 +836,11 @@ if [[ "$platform" == "grid" ]]; then
 #$ -cwd
 #$ -V
 #$ -j y
-#$ -hold_jid $snpMatrixJobId
+#$ -hold_jid $callConsensusJobArray
 #$ -l h_rt=02:00:00
 #$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -847,12 +848,12 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -N collectMetrics
     #PBS -d $(pwd)
     #PBS -j oe
-    #PBS -W depend=afterok:$snpMatrixJobId
+    #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -l walltime=02:00:00
     #PBS -o $logDir/collectSampleMetrics.log
     #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 else
@@ -861,7 +862,7 @@ else
     else
         numCollectSampleMetricsCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -m "$workDir/snpma.fasta" -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
 echo -e "\nStep 11 - Combine the metrics across all samples into the metrics table"
