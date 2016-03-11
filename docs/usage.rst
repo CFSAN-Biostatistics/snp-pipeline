@@ -876,7 +876,7 @@ the size of the SNP matrix.  The SNP Pipeline has the capability to exclude samp
 samples have too many SNPs. This function excludes entire samples, not just regions within a sample. The samples
 with excessive SNPs exceeding a user-specified limit are excluded from the snp list, snp matrix, and snpma.vcf files.
 
-There is also an indicator in the metrics file to identify the samples that have too many SNPs. A new column in the 
+There is also an indicator in the metrics file to identify the samples that have too many SNPs. A column in the 
 metrics.tsv file, ``Excluded_Sample``, indicates when a sample has been excluded from the snp matrix.  This column 
 is normally blank.  See :ref:`metrics-usage-label`.
 
