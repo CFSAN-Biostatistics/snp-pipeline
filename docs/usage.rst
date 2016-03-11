@@ -421,7 +421,7 @@ Step 2 - Run the SNP Pipeline::
       
 Step 3 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 3624 entries.  The SNP Matrix 
+Upon successful completion of the pipeline, the snplist.txt file should have 3623 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     # Verify the result files were created
@@ -510,7 +510,7 @@ Launch the pipeline::
 
 Step 3 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 11,787
+Upon successful completion of the pipeline, the snplist.txt file should have 11,813
 entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference
 bases are in the referenceSNP.fasta file::
 
@@ -747,7 +747,7 @@ Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
 
 Step 13 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 3624 entries.  The SNP Matrix 
+Upon successful completion of the pipeline, the snplist.txt file should have 3623 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     # Verify the result files were created
