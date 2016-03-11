@@ -3,6 +3,17 @@
 History
 -------
 
+0.6.0 (2016-03-??)
+~~~~~~~~~~~~~~~~~~
+
+* A new configuration parameter, ``SnpPipeline_MaxSnps``, controls the maximum number of snps
+  allowed for each sample.  Samples with excessive snps exceeding this limit are excluded
+  from the snp list and snp matrix.
+  See :ref:`excessive-snps-label`.
+* A new column in the metrics.tsv file, ``Excluded_Sample``, indicates when a sample has been 
+  excluded from the snp matrix.  This column is normally blank.
+
+
 0.5.2 (2016-03-07)
 ~~~~~~~~~~~~~~~~~~
 

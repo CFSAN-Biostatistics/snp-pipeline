@@ -867,6 +867,36 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     xdg-open metrics.tsv
 
 
+.. _excessive-snps-label:
+
+Excessive SNPs
+--------------
+Samples having many SNPs relative to the reference can slow the performance of the SNP Pipeline and greatly increase 
+the size of the SNP matrix.  The SNP Pipeline has the capability to exclude samples from processing when those 
+samples have too many SNPs. This function excludes entire samples, not just regions within a sample. The samples
+with excessive SNPs exceeding a user-specified limit are excluded from the snp list, snp matrix, and snpma.vcf files.
+
+There is also an indicator in the metrics file to identify the samples that have too many SNPs. A new column in the 
+metrics.tsv file, ``Excluded_Sample``, indicates when a sample has been excluded from the snp matrix.  This column 
+is normally blank.  See :ref:`metrics-usage-label`.
+
+To exclude samples with excessive SNPs:
+
+Grab the default configuration file::
+
+    copy_snppipeline_data.py configurationFile
+
+Edit ``snppipeline.conf``, and change this setting::
+
+    SnpPipeline_MaxSnps=1000  # substitute your threshold value here, or -1 to disable this function
+
+Then run the pipeline with the -c command line option::    
+    
+    run_snp_pipeline.sh -c snppipeline.conf -s mySamplesDir myReference.fasta
+    
+See also :ref:`configuration-label`.
+
+
 .. _metrics-usage-label:
 
 Metrics
@@ -929,6 +959,10 @@ The metrics are:
 |                         | | position.  The minimum fraction of reads that must agree at a  |
 |                         | | position to make a consensus call is controlled by the         |
 |                         | | ``minConsFreq`` parameter.                                     |
++-------------------------+------------------------------------------------------------------+
+| Excluded Sample         | | When a sample has an excessive number of snps exceeding the    |
+|                         | | ``SnpPipeline_MaxSnps`` parameter value, this metric will have |
+|                         | | the value ``Excluded``.  Otherwise, this metric is blank.      |
 +-------------------------+------------------------------------------------------------------+
 | Warnings and Errors     | | A list of warnings or errors encountered while collecting the  |
 |                         | | metrics.                                                       |

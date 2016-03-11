@@ -4022,14 +4022,18 @@ testAlreadyFreshOutputs()
     # Verify no errors
     verifyNonExistingFile "$tempDir/error.log"
 
-    # Run the pipeline multiple times to force timestamps to change so outputs are newer than inputs.
+    # Force timestamps to change so outputs are newer than inputs.
     # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
-    sleep 1
-    run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> /dev/null
-    sleep 1
-    run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> /dev/null
-    sleep 1
-    run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> /dev/null
+    touch -d '-10 day' $tempDir/reference/*.fasta
+    touch -d  '-9 day' $tempDir/reference/*.bt2
+    touch -d  '-8 day' $tempDir/samples/*/*.fastq
+    touch -d  '-7 day' $tempDir/samples/*/reads.sam
+    touch -d  '-6 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-4 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-3 day' $tempDir/samples/*/var.flt.vcf
+    touch -d  '-2 day' $tempDir/snplist.txt
+    touch -d  '-1 day' $tempDir/samples/*/consensus.vcf
 
     # Test special collectSampleMetrics result persistence
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
@@ -4044,8 +4048,7 @@ testAlreadyFreshOutputs()
     # Remove unwanted log files
     rm -rf $tempDir/logs*
 
-    # One more time.
-    sleep 1
+    # Re-run the pipeline
     run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> /dev/null
 
     # Verify log files
@@ -4163,6 +4166,51 @@ testRunSnpPipelineMetricsColumnHeadingsUnderscores()
     # Verify output metrics have no underscores
     head -n 1 "$tempDir/metrics.tsv" | grep "_" > /dev/null
     assertFalse "Underscores should not be found in the metrics column headings when using -s combineSampleMetrics option"  $?
+}
+
+
+# Verify samples with excessive snps are excluded from the snplist, snp matrix, and snpma.vcf.
+testRunSnpPipelineExcessiveSnps()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Create a config file with a low enough maxsnps setting to block a sample
+    copy_snppipeline_data.py configurationFile $tempDir
+    sed -i s:SnpPipeline_MaxSnps=-1:SnpPipeline_MaxSnps=45: "$tempDir/snppipeline.conf"
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+
+    # Verify no weird freshness skips
+    assertFileNotContains "$tempDir/run_snp_pipeline.log" "Use the -f option to force a rebuild"
+
+    # Verify output
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=Excluded$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "excludedSample=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snps=$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "snps=44$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "errorList=.*Excluded: exceeded 45 maxsnps."
+    assertFileContains "$tempDir/samples/sample2/metrics" "errorList=\"No compressed fastq.gz or fq.gz files were found.\"$"
+    assertFileContains "$tempDir/metrics.tsv"             "sample1.*Excluded.*Excluded: exceeded 45 maxsnps."
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "Consensus.*not found"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "Consensus.*not found"
+    assertFileNotContains "$tempDir/metrics.tsv"             "sample1.*Consensus.*not found"
+    assertFileNotContains "$tempDir/snplist.txt" "sample1"
+    assertFileNotContains "$tempDir/snpma.fasta" "sample1"
+    assertFileNotContains "$tempDir/snpma.vcf"   "sample1"
+
+    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    grep -v sample1 "$tempDir/expectedResults/metrics.tsv" > "$tempDir/expectedResults/metrics.withoutSample1.tsv"
+    grep -v sample1 "$tempDir/metrics.tsv" > "$tempDir/metrics.withoutSample1.tsv"
+    assertIdenticalFiles "$tempDir/metrics.withoutSample1.tsv" "$tempDir/expectedResults/metrics.withoutSample1.tsv"
 }
 
 

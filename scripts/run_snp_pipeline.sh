@@ -48,6 +48,7 @@
 #   20151210-scd: Trap errors and shutdown the pipeline if configured to do so.
 #   20160301-scd: Allow configurable extra paremeters for collectSampleMetrics and combineSampleMetrics.
 #   20160304-scd: CollectSampleMetrics : Count missing positions in the consensus.fasta file instead of the snp matrix.
+#   20160308-scd: Exclude samples with excessive number of snps from the snp matrix and snpma.vcf.
 #Notes:
 #
 #Bugs:
@@ -397,6 +398,8 @@ export CreateSnpList_ExtraParams
 export CallConsensus_ExtraParams
 export CreateSnpMatrix_ExtraParams
 export CreateSnpReferenceSeq_ExtraParams
+export CollectSampleMetrics_ExtraParams
+export CombineSampleMetrics_ExtraParams
 export GridEngine_PEname
 
 
@@ -705,6 +708,12 @@ else
     create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/snpList.log
 fi
 
+# The create_snp_list process creates the filtered list of sample directories.  It is the list of samples having removed the samples with excessive snps.
+# When running on a workstation, the file exists at this point during the script execution, but on grid or torque, it has not yet been created. However,
+# we know the path to the file regardless of whether it exists yet.
+filteredSampleDirsFile="${sampleDirsFile}.filtered"
+
+
 echo -e "\nStep 6 - Call the consensus SNPs for each sample"
 if [[ "$platform" == "grid" ]]; then
     callConsensusJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
@@ -750,7 +759,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -hold_jid $callConsensusJobArray
 #$ -l h_rt=05:00:00
 #$ -o $logDir/snpMatrix.log
-    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
+    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -763,11 +772,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -l walltime=05:00:00
     #PBS -o $logDir/snpMatrix.log
     #PBS -V
-    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile"
+    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
 else
-    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
+    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
 fi    
 
 echo -e "\nStep 8 - Create the reference base sequence"
@@ -808,7 +817,7 @@ if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
 #$ -V
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/mergeVcf.log
-        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile"
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
     elif [[ "$platform" == "torque" ]]; then
@@ -819,11 +828,11 @@ _EOF_
         #PBS -W depend=afterokarray:$callConsensusJobArray
         #PBS -o $logDir/mergeVcf.log
         #PBS -V
-        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile"
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
     else
-        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
+        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
     fi
 else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"

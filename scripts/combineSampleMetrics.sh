@@ -17,6 +17,7 @@
 #   20151230-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
 #   20160226-scd: Add the average insert size metric
 #   20160301-scd: Emit column headings with underscores.
+#   20160309-scd: Add the Excluded Sample metric.
 #Notes:
 #
 #Bugs:
@@ -146,9 +147,9 @@ if [[ ! -s "$sampleDirsFile" ]]; then globalError "Sample directories file $samp
 #-------------------------------------------------------
 
 if [ "$opt_s_set" = "1" ]; then
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Percent of Reads Mapped" "Average Insert Size" "Average Pileup Depth" "Phase1 SNPs" "Phase2 SNPs" "Missing SNP Matrix Positions" "Warnings and Errors" >&3
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Percent of Reads Mapped" "Average Insert Size" "Average Pileup Depth" "Phase1 SNPs" "Phase2 SNPs" "Missing SNP Matrix Positions" "Excluded Sample" "Warnings and Errors" >&3
 else
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq_Files" "Fastq_File_Size" "Machine" "Flowcell" "Number_of_Reads" "Percent_of_Reads_Mapped" "Average_Insert_Size" "Average_Pileup_Depth" "Phase1_SNPs" "Phase2_SNPs" "Missing_SNP_Matrix_Positions" "Warnings_and_Errors" >&3
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq_Files" "Fastq_File_Size" "Machine" "Flowcell" "Number_of_Reads" "Percent_of_Reads_Mapped" "Average_Insert_Size" "Average_Pileup_Depth" "Phase1_SNPs" "Phase2_SNPs" "Missing_SNP_Matrix_Positions" "Excluded_Sample" "Warnings_and_Errors" >&3
 fi
 
 cat "$sampleDirsFile" | while IFS='' read -r dir || [[ -n "$dir" ]]
@@ -166,7 +167,7 @@ do
       declare "$param"="$value"
     fi
   done  < "$metricsFilePath" # This syntax without piping is needed to retain the values of variables declared in the loop
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "$sample" "$fastqFileList" "$fastqFileSize" "$machine" "$flowcell" "$numberReads" "$percentReadsMapped" "$aveInsertSize" "$avePileupDepth" "$phase1Snps" "$snps" "$missingPos" "$errorList" >&3
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "$sample" "$fastqFileList" "$fastqFileSize" "$machine" "$flowcell" "$numberReads" "$percentReadsMapped" "$aveInsertSize" "$avePileupDepth" "$phase1Snps" "$snps" "$missingPos" "$excludedSample" "$errorList" >&3
 done
 
 echo "# "$(date +"%Y-%m-%d %T") combineSampleMetrics.sh finished 1>&2

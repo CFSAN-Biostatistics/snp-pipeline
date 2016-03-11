@@ -21,6 +21,7 @@
 #   20160225-scd: Default output to the metrics file, not stdout.
 #   20160226-scd: Add the average insert size metric
 #   20160304-scd: Count missing positions in the consensus.fasta file instead of the snp matrix.
+#   20160309-scd: Add the -m option to specify the maximum allowable snp threshold.  Add the excludedSample flag.
 #Notes:
 #
 #Bugs:
@@ -35,7 +36,7 @@
 
 usage()
 {
-  echo usage: $0 [-h] [-f] [-m FILE] [-o FILE] [-v FILE] sampleDir referenceFile
+  echo usage: $0 [-h] [-f] [-c FILE] [-m INT ] [-o FILE] [-v FILE] sampleDir referenceFile
   echo
   echo 'Collect alignment, coverage, and variant metrics for a single specified sample.'
   echo
@@ -49,6 +50,7 @@ usage()
   echo '                     are newer than inputs'
   echo '  -c FILE          : Relative or absolute path to the consensus fasta file'
   echo '                     (default: consensus.fasta in the sampleDir)'
+  echo '  -m INT           : Maximum allowed number of SNPs per sample. (default: -1)'
   echo '  -o FILE          : Output file. Relative or absolute path to the metrics file'
   echo '                     (default: metrics in the sampleDir)'
   echo '  -v FILE          : Relative or absolute path to the consensus vcf file'
@@ -76,7 +78,7 @@ logSysEnvironment()
 # Options
 #--------
 
-while getopts ":hfc:o:v:" option; do
+while getopts ":hfc:m:o:v:" option; do
   if [ "$option" = "h" ]; then
     usage
     exit 0
@@ -95,6 +97,17 @@ while getopts ":hfc:o:v:" option; do
     fi
   fi
 done
+
+let maxSnps=-1
+if [ "$opt_m_set" = 1 ]; then
+  if [[ "$opt_m_arg" =~ ^-?[0-9]+$ ]]; then
+    let maxSnps=$opt_m_arg
+  else
+    echo "Invalid argument for option -m, expected an integer"
+    usage
+    exit 3
+  fi
+fi
 
 logSysEnvironment $@
 setupSampleErrorHandler
@@ -303,9 +316,17 @@ fi
 #-------------------------
 echo "# "$(date +"%Y-%m-%d %T") Count number of high confidence SNP positions from phase 1 vcf file 1>&2
 #-------------------------
+excludedSample=""
 vcfFile=${sampleDir}/var.flt.vcf
 if [ -s "$vcfFile" ]; then
   phase1Snps=$(grep -c -v '^#' "$vcfFile") || true
+  # Flag excessive snps
+  if [[ $maxSnps -ge 0 && $phase1Snps -gt $maxSnps ]]; then
+    excludedSample="Excluded"
+    error="Excluded: exceeded $maxSnps maxsnps."
+    echo "$error" 1>&2
+    errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+  fi
 else
   error="VCF file $vcfFile was not found."
   echo "$error" 1>&2
@@ -321,7 +342,9 @@ if [ "$opt_v_set" = "1" ]; then
 else
   consensusVcfFile=${sampleDir}/consensus.vcf
 fi
-if [ -s "$consensusVcfFile" ]; then
+if [ "$excludedSample" = "Excluded" ]; then
+  phase2Snps="" # Omit the phase2 snp count. It will be meaningless since this sample's phase1 snps are excluded from the snplist.
+elif [ -s "$consensusVcfFile" ]; then
   phase2Snps=$(python << END
 from __future__ import print_function
 import vcf
@@ -358,7 +381,9 @@ if [ "$opt_c_set" = "1" ]; then
 else
   consensusFastaFile=${sampleDir}/consensus.fasta
 fi
-if [ -s "$consensusFastaFile" ]; then
+if [ "$excludedSample" = "Excluded" ]; then
+  missingPos="" # Omit the gap count. It will be meaningless since this sample's phase1 snps are excluded from the snplist.
+elif [ -s "$consensusFastaFile" ]; then
   missingPos=$(python << END
 from __future__ import print_function
 from Bio import SeqIO
@@ -393,6 +418,7 @@ echo "avePileupDepth=$depth" >> "$outfile"
 echo "phase1Snps=$phase1Snps" >> "$outfile"
 echo "snps=$phase2Snps" >> "$outfile"
 echo "missingPos=$missingPos" >> "$outfile"
+echo "excludedSample=$excludedSample" >> "$outfile"
 echo "errorList=\"$errorList"\" >> "$outfile"
 
 echo "# "$(date +"%Y-%m-%d %T") collectSampleMetrics.sh finished 1>&2

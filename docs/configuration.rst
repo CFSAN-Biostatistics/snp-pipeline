@@ -102,6 +102,23 @@ This parameter is used by run_snp_pipeline.sh only.
     MaxConcurrentCollectSampleMetrics=4
 
 
+SnpPipeline_MaxSnps
+-------------------
+Controls the maximum number of snps allowed for each sample. Any sample with excessive snps exceeding
+this limit will be excluded from the snp list, snp matrix, and snpma.vcf file. When set to -1, this 
+parameter is disabled.
+
+**Default**: 
+
+    Do not leave this parameter unset.  To disable the excessive snp filtering and include all samples
+    regardless of the number of snps, set the parameter to -1
+
+**Example**::
+
+    SnpPipeline_MaxSnps=1000
+
+
+
 SnpPipeline_Aligner
 -------------------
 Controls which reference-based aligner is used to map reads to the reference genome.

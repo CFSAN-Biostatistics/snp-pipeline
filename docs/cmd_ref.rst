@@ -188,7 +188,8 @@ create_snp_list.py
 
 ::
 
-  usage: create_snp_list.py [-h] [-f] [-n NAME] [-o FILE] [-v 0..5] [--version]
+  usage: create_snp_list.py [-h] [-f] [-n NAME] [--maxsnps INT] [-o FILE]
+                            [-v 0..5] [--version]
                             sampleDirsFile
   
   Combine the SNP positions across all samples into a single unified SNP list
@@ -205,6 +206,9 @@ create_snp_list.py
     -n NAME, --vcfname NAME
                           File name of the VCF files which must exist in each of
                           the sample directories (default: var.flt.vcf)
+    --maxsnps INT         Exclude samples having more than this maximum allowed
+                          number of SNPs. Set to -1 to disable this function.
+                          (default: -1)
     -o FILE, --output FILE
                           Output file. Relative or absolute path to the SNP list
                           file (default: snplist.txt)
@@ -393,7 +397,7 @@ collectSampleMetrics.sh
 
 ::
 
-  usage: collectSampleMetrics.sh [-h] [-f] [-m FILE] [-o FILE] [-v FILE] sampleDir referenceFile
+  usage: collectSampleMetrics.sh [-h] [-f] [-c FILE] [-m INT ] [-o FILE] [-v FILE] sampleDir referenceFile
   
   Collect alignment, coverage, and variant metrics for a single specified sample.
   
@@ -407,6 +411,7 @@ collectSampleMetrics.sh
                        are newer than inputs
     -c FILE          : Relative or absolute path to the consensus fasta file
                        (default: consensus.fasta in the sampleDir)
+    -m INT           : Maximum allowed number of SNPs per sample. (default: -1)
     -o FILE          : Output file. Relative or absolute path to the metrics file
                        (default: metrics in the sampleDir)
     -v FILE          : Relative or absolute path to the consensus vcf file

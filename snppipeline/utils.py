@@ -328,7 +328,7 @@ def write_list_of_snps(file_path, snp_dict):
 
     Args:
         file_path : path to snplist file to be written
-        snp_dict  : dictionary with key = tuple(CHROM, POS) -> value = list[count, sampleName1, sampleName2, ..., sampleNameN]
+        snp_dict  : dictionary with key = tuple(CHROM, POS) -> value = list[sampleName1, sampleName2, ..., sampleNameN]
 
     Returns:
         Nothing
@@ -336,11 +336,8 @@ def write_list_of_snps(file_path, snp_dict):
 
     with open(file_path, "w") as snp_list_file_object:
         for key in sorted(snp_dict.keys()):
-            snp_list_file_object.write(key[0] + "\t" + str(key[1]))
-            values = snp_dict[key]
-            for value in values:
-                snp_list_file_object.write("\t" + str(value))
-            snp_list_file_object.write("\n")
+            sample_list = snp_dict[key]
+            snp_list_file_object.write("%s\t%d\t%d\t%s\n" % (key[0], key[1], len(sample_list), "\t".join(sample_list)))
 
 
 def read_snp_position_list(snp_list_file_path):
@@ -383,43 +380,26 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
             SeqIO.write([record], snp_reference_file_object, "fasta")
 
 
-def convert_vcf_files_to_snp_dict(sample_vcf_file_list):
-    """convert list of vcf files to a single dict of quality SNPs.
+def convert_vcf_file_to_snp_set(vcf_file_path):
+    """convert vcf files to a set of SNPs.
 
     Args:
-        sample_vcf_file_list : list of relative or absolute paths to the sample VCF files
+        vcf_file_path : relative or absolute path to the sample VCF file
 
     Returns:
-        snp_dict  : dictionary with key = (CHROM, POS) -> value = [count, sampleName1, sampleName2, ..., sampleNameN]
+        snp_set  : set of (CHROM, POS) tuples
 
     """
 
-    snp_dict = dict()
+    snp_set = set()
 
-    for vcf_file_path in sample_vcf_file_list:
+    with open(vcf_file_path, 'r') as vcf_file_object:
+        vcf_reader = vcf.Reader(vcf_file_object)
+        for vcf_data_line in vcf_reader:
+            key = (vcf_data_line.CHROM, vcf_data_line.POS)
+            snp_set.add(key)
 
-        if not os.path.isfile(vcf_file_path):
-            verbose_print("Error: Missing VCF file %s" % vcf_file_path)
-            continue
-        if os.path.getsize(vcf_file_path) == 0:
-            verbose_print("Error: Empty VCF file %s" % vcf_file_path)
-            continue
+    return snp_set
 
-        verbose_print("Processing VCF file %s" % vcf_file_path)
 
-        sample_name = os.path.basename(os.path.dirname(vcf_file_path))
-
-        with open(vcf_file_path, 'r') as vcf_file_object:
-            vcf_reader = vcf.Reader(vcf_file_object)
-            for vcf_data_line in vcf_reader:
-                key = (vcf_data_line.CHROM, vcf_data_line.POS)
-                if key not in snp_dict:
-                    record = [1]
-                    snp_dict[key] = record
-                else:
-                    record = snp_dict[key]
-                    record[0] += 1
-                record.append(sample_name)
-
-    return snp_dict
 
