@@ -649,7 +649,7 @@ if [[ "$platform" == "grid" ]]; then
 #$   -cwd
 #$   -V
 #$   -j y
-#$   -hold_jid $alignSamplesJobArray
+#$   -hold_jid_ad $alignSamplesJobArray
 #$   -l h_rt=05:00:00
 #$   -o $logDir/prepSamples.log-\$TASK_ID
     prepSamples.sh $forceFlag "$referenceFilePath" "\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)"
@@ -845,7 +845,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -cwd
 #$ -V
 #$ -j y
-#$ -hold_jid $callConsensusJobArray
+#$ -hold_jid_ad $callConsensusJobArray
 #$ -l h_rt=02:00:00
 #$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)

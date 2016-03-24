@@ -12,6 +12,8 @@ History
   See :ref:`excessive-snps-label`.
 * A new column in the metrics.tsv file, ``Excluded_Sample``, indicates when a sample has been 
   excluded from the snp matrix.  This column is normally blank.
+* Changed Sun Grid Engine execution to use array-slot dependency where possible, resulting
+  in less idle time waiting for job steps to complete.
 
 
 0.5.2 (2016-03-07)
