@@ -160,14 +160,14 @@ class SingleSampleWriter(object):
         >>> r = pileup.Record(['ID', 42, 'G', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None, '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
-        ('ID', 42, None, 'G', 'A', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        ('ID', 42, None, 'G', [A], None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='1', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='PASS'))
         >>>
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None, '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
-        ('ID', 42, None, 'G', 'A', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        ('ID', 42, None, 'G', [A], None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='1', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='PASS'))
         >>>
@@ -175,7 +175,7 @@ class SingleSampleWriter(object):
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, ["Fail"], '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
-        ('ID', 42, None, 'G', 'A', None, ['Fail'], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        ('ID', 42, None, 'G', [A], None, ['Fail'], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='.', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='Fail'))
         >>>
@@ -183,7 +183,7 @@ class SingleSampleWriter(object):
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, ["Fail"], '0')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
-        ('ID', 42, None, 'G', 'A', None, ['Fail'], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        ('ID', 42, None, 'G', [A], None, ['Fail'], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='0', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='Fail'))
         >>>
@@ -191,21 +191,21 @@ class SingleSampleWriter(object):
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, ["Fail"], '1')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
-        ('ID', 42, None, 'G', 'A', None, ['Fail'], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        ('ID', 42, None, 'G', [A], None, ['Fail'], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='1', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='Fail'))
         >>>
         >>> r = pileup.Record(['ID', 42, 'G', 14, 'gaaaGGGG...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None, '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
-        ('ID', 42, None, 'G', '.', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        ('ID', 42, None, 'G', [None], None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='0', SDP=14, RD=11, AD=3, RDF=7, RDR=4, ADF=0, ADR=3, FT='PASS'))
         >>>
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'ggggGGGG...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None, '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
-        ('ID', 42, None, 'G', '.', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        ('ID', 42, None, 'G', [None], None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='0', SDP=14, RD=14, AD=0, RDF=7, RDR=7, ADF=0, ADR=0, FT='PASS'))
         >>>
@@ -217,7 +217,7 @@ class SingleSampleWriter(object):
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'ggggGGGG...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None, '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
-        ('ID', 42, None, 'g', '.', None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
+        ('ID', 42, None, 'g', [None], None, [], {'NS': 1}, 'GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT')
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='0', SDP=14, RD=14, AD=0, RDF=7, RDR=7, ADF=0, ADR=0, FT='PASS'))
         >>>
@@ -241,19 +241,17 @@ class SingleSampleWriter(object):
 
         if alt is None:  # no good depth
             gt = '.'
-            alt = '.'
             ad = 0
             adf = 0
             adr = 0
         elif alt == upper_ref:
             # When we do not call an alt, the alt depths are counted as anything not matching the reference
             gt = '0'
-            alt = '.'
+            alt = None # This prevents including the ref base in the ALT column
             ad = pileup_record.good_depth - pileup_record.base_good_depth[upper_ref]
             adf = pileup_record.forward_good_depth - pileup_record.forward_base_good_depth[upper_ref]
             adr = pileup_record.reverse_good_depth - pileup_record.reverse_base_good_depth[upper_ref]
         else:
-            # When we call an alt, the alt depths are only the specific alt base called
             if failed_filters == None:
                 gt = '1' # alt allele
             elif failed_snp_gt == '.':
@@ -262,6 +260,7 @@ class SingleSampleWriter(object):
                 gt = '0' # reference
             else:
                 gt = '1' # alt allele
+            # When we call an alt, the alt depths are only the specific alt base called
             ad = pileup_record.base_good_depth[alt]
             adf = pileup_record.forward_base_good_depth[alt]
             adr = pileup_record.reverse_base_good_depth[alt]
@@ -282,6 +281,12 @@ class SingleSampleWriter(object):
         # this sample has a pileup record at this position, so NS=1
         info_dict = {'NS' : 1}
 
+        # Make the list of _AltRecord objects needed for the _Record initializer
+        if alt is None:
+            alt = [None] # must be an iterable object
+        else:
+            alt = [vcf.model._Substitution(alt)]
+
         # https://pyvcf.readthedocs.org/en/latest/API.html#vcf-model-record
         # vcf.model._Record(CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT, sample_indexes, samples=None)
         vcf_record = vcf.model._Record(
@@ -289,7 +294,7 @@ class SingleSampleWriter(object):
             pileup_record.position,
             None,  # Id
             ref,
-            alt or '.',
+            alt, # Cannot be None, because the _Record initializer will try to iterate over this list
             None, # Qual
             failed_filters or [],
             info_dict,

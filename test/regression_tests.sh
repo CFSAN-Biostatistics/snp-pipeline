@@ -4257,6 +4257,7 @@ testRunSnpPipelineAgona()
     copy_snppipeline_data.py agonaExpectedResults $tempDir/expectedResults
     assertIdenticalFiles "$tempDir/snplist.txt"        "$tempDir/expectedResults/snplist.txt"
     assertIdenticalFiles "$tempDir/snpma.fasta"        "$tempDir/expectedResults/snpma.fasta"
+    assertIdenticalFiles "$tempDir/snpma.vcf"          "$tempDir/expectedResults/snpma.vcf" "--ignore-matching-lines=##fileDate" "--ignore-matching-lines=##source" "--ignore-matching-lines=##bcftools"
     assertIdenticalFiles "$tempDir/referenceSNP.fasta" "$tempDir/expectedResults/referenceSNP.fasta"
     assertIdenticalFiles "$tempDir/metrics.tsv"        "$tempDir/expectedResults/metrics.tsv"
 }

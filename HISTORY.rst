@@ -6,6 +6,12 @@ History
 0.6.0 (2016-03-??)
 ~~~~~~~~~~~~~~~~~~
 
+**Bug fixes:**
+
+* Fixed compatibility with the newly released PyVCF 0.6.8 package.
+
+**Other Changes:**
+
 * A new configuration parameter, ``SnpPipeline_MaxSnps``, controls the maximum number of snps
   allowed for each sample.  Samples with excessive snps exceeding this limit are excluded
   from the snp list and snp matrix.
