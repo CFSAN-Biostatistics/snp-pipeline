@@ -181,6 +181,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         """
         args_dict = {
             'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
+            'excludeFile' : None,
             'forceFlag' : True,
             'minBaseQual' : 0,
             'minConsFreq' : 0.6,

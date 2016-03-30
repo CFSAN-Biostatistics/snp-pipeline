@@ -84,6 +84,21 @@ assertNewerFile()
 # Tests
 #################################################
 
+test1()
+{
+testCallConsensusMissingExcludeRaiseSampleErrorStop
+}
+
+test2()
+{
+testCallConsensusMissingExcludeRaiseSampleErrorNoStop
+}
+
+test3()
+{
+testCallConsensusMissingExcludeRaiseSampleErrorStopUnset
+}
+
 
 # Verify the scripts were properly installed on the path.
 testScriptsOnPath()
@@ -1843,7 +1858,7 @@ testCallConsensusEmptySnpListStopUnset()
 }
 
 
-# Verify the call_consensus script detects failure.
+# Verify the call_consensus script detects missing pileup file.
 tryCallConsensusMissingPileupRaiseSampleError()
 {
     expectErrorCode=$1
@@ -1879,25 +1894,85 @@ tryCallConsensusMissingPileupRaiseSampleError()
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the call_consensus script detects failure.
+# Verify the call_consensus script detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusMissingPileupRaiseSampleError 100
 }
 
-# Verify the call_consensus script detects failure.
+# Verify the call_consensus script detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusMissingPileupRaiseSampleError 98
 }
 
-# Verify the call_consensus script detects failure.
+# Verify the call_consensus script detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
     tryCallConsensusMissingPileupRaiseSampleError 100
+}
+
+
+# Verify the call_consensus script detects missing exclude file.
+tryCallConsensusMissingExcludeRaiseSampleError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run prep work
+    echo "fake snplist" > $tempDir/snplist.txt
+    mkdir -p "$tempDir/samples/sample1"
+    echo "fake pileup" > "$tempDir/samples/sample1/reads.all.pileup"
+
+    # Run call_consensus.py -- fail because of missing pileup
+    printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
+    call_consensus.py -e "$tempDir/samples/sample1/excludeFile.vcf" -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    errorCode=$?
+
+    # Verify call_consensus error handling behavior
+    assertEquals "call_consensus.py returned incorrect error code when exclude file was missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "call_consensus.py failed."
+    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py failed."
+    assertFileContains "$tempDir/error.log" "cannot call consensus without the file of excluded positions"
+    assertFileContains "$logDir/call_consensus.log" "cannot call consensus without the file of excluded positions"
+    assertFileContains "$tempDir/error.log" "Exclude file $tempDir/samples/sample1/excludeFile.vcf does not exist"
+    assertFileContains "$logDir/call_consensus.log" "Exclude file $tempDir/samples/sample1/excludeFile.vcf does not exist"
+    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py finished"
+    assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the call_consensus script detects missing exclude file.
+testCallConsensusMissingExcludeRaiseSampleErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryCallConsensusMissingExcludeRaiseSampleError 100
+}
+
+# Verify the call_consensus script detects missing exclude file.
+testCallConsensusMissingExcludeRaiseSampleErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryCallConsensusMissingExcludeRaiseSampleError 98
+}
+
+# Verify the call_consensus script detects missing exclude file.
+testCallConsensusMissingExcludeRaiseSampleErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryCallConsensusMissingExcludeRaiseSampleError 100
 }
 
 

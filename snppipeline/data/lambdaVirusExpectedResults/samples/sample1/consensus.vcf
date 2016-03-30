@@ -1,6 +1,6 @@
 ##fileformat=VCFv4.1
-##fileDate=20151021
-##source=CFSAN SNP-Pipeline 0.4.0
+##fileDate=20160329
+##source=CFSAN SNP-Pipeline 0.6.0
 ##reference=lambda_virus.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -17,6 +17,7 @@
 ##FILTER=<ID=VarFreq60,Description="Variant base frequency below 0.60">
 ##FILTER=<ID=StrDpth0,Description="Less than 0 variant-supporing reads on at least one strand">
 ##FILTER=<ID=StrBias0,Description="Fraction of variant supporting reads below 0.00 on one strand">
+##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample1
 gi|9626243|ref|NC_001416.1|	403	.	G	A	.	PASS	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:27:0:27:0:0:13:14:PASS
 gi|9626243|ref|NC_001416.1|	550	.	G	.	.	PASS	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:22:21:1:13:8:0:1:PASS

@@ -251,8 +251,8 @@ call_consensus.py
 
 ::
 
-  usage: call_consensus.py [-h] [-f] [-l FILE] [-o FILE] [-q INT] [-c FREQ]
-                           [-d INT] [-b FREQ] [--vcfFileName NAME]
+  usage: call_consensus.py [-h] [-f] [-l FILE] [-e FILE] [-o FILE] [-q INT]
+                           [-c FREQ] [-d INT] [-b FREQ] [--vcfFileName NAME]
                            [--vcfRefName NAME] [--vcfAllPos]
                            [--vcfPreserveRefCase] [--vcfFailedSnpGt {.,0,1}]
                            [-v 0..5] [--version]
@@ -273,6 +273,8 @@ call_consensus.py
     -l FILE, --snpListFile FILE
                           Relative or absolute path to the SNP list file across
                           all samples. (default: snplist.txt)
+    -e FILE, --excludeFile FILE
+                          VCF file of positions to exclude. (default: None)
     -o FILE, --output FILE
                           Output file. Relative or absolute path to the
                           consensus fasta file for this sample. (default:

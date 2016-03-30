@@ -287,6 +287,8 @@ def call_consensus(options_dict):
             is newer than inputs
         snpListFile : str
             File path (not just file name) of text format list of SNP positions
+        excludeFile : str
+            File path of VCF file of positions to exclude from the snp matrix.
         allPileupFile : str
             Relative or absolute path to the genome-wide pileup file for this
             sample
@@ -347,8 +349,19 @@ def call_consensus(options_dict):
     if bad_file_count > 0:
         utils.sample_error("Error: cannot call consensus without the pileup file.", continue_possible=False)
 
-    # Check if the result is already fresh
     source_files = [snp_list_file_path, all_pileup_file_path]
+
+    exclude_file_path = options_dict['excludeFile']
+    if exclude_file_path:
+        bad_file_count = utils.verify_existing_input_files("Exclude file", [exclude_file_path])
+        if bad_file_count > 0:
+            utils.sample_error("Error: cannot call consensus without the file of excluded positions.", continue_possible=False)
+        excluded_positions = utils.convert_vcf_file_to_snp_set(exclude_file_path)
+        source_files.append(exclude_file_path)
+    else:
+        excluded_positions = set()
+
+    # Check if the result is already fresh
     if not options_dict['forceFlag'] and not utils.target_needs_rebuild(source_files, consensus_file_path):
         verbose_print("Consensus call file %s has already been freshly built.  Use the -f option to force a rebuild." % consensus_file_path)
         verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
@@ -358,6 +371,8 @@ def call_consensus(options_dict):
     snp_list = utils.read_snp_position_list(snp_list_file_path)
     snplist_length = len(snp_list)
     verbose_print("snp position list length = %d" % snplist_length)
+    verbose_print("excluded snps list length = %d" % len(excluded_positions))
+    verbose_print("total snp position list length = %d" % (snplist_length + len(excluded_positions)))
 
     # Call consensus. Write results to file.
     position_consensus_base_dict = dict()
@@ -365,19 +380,29 @@ def call_consensus(options_dict):
     caller = pileup.ConsensusCaller(options_dict['minConsFreq'],
                                     options_dict['minConsStrdDpth'],
                                     options_dict['minConsStrdBias'])
+
     snp_positions = set(snp_list)
-    parse_positions = None if options_dict['vcfAllPos'] else snp_positions
+    if options_dict['vcfAllPos']:
+        parse_positions = None
+    else:
+        parse_positions = snp_positions.union(excluded_positions)
     pileup_reader = pileup.Reader(all_pileup_file_path,
                                   options_dict['minBaseQual'],
                                   parse_positions)
     if vcf_file_name:
         writer = vcf_writer.SingleSampleWriter(vcf_file_path, options_dict['vcfPreserveRefCase'])
         filters = caller.get_filter_descriptions()
+        # TODO: it would be better if the exclude file contained filter headers we could read and re-use here instead of hard-coding this
+        filters.append(("Region", "Position is in dense region of snps or near the end of the contig."))
         writer.write_header(sample_name, filters, options_dict['vcfRefName'])
     for pileup_record in pileup_reader:
         chrom = pileup_record.chrom
         pos = pileup_record.position
         consensus_base, fail_reasons = caller.call_consensus(pileup_record)
+        if (chrom, pos) in excluded_positions:
+            # TODO: it would be better if the exclude file contained filter reasons we could re-use here instead of hard coding this
+            fail_reasons = fail_reasons or []
+            fail_reasons.append("Region")
         if (chrom, pos) in snp_positions:
             if fail_reasons:
                 position_consensus_base_dict[(chrom, pos)] = '-'
