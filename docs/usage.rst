@@ -40,6 +40,8 @@ of shell scripts and python scripts.
 +-----------------------------+--------------------------------------------------------------------+
 | create_snp_matrix.py        | | Creates a matrix of SNPs across all samples                      |
 +-----------------------------+--------------------------------------------------------------------+
+| calculate_snp_distances.py  | | Computes the SNP distances between all pairs of samples          |
++-----------------------------+--------------------------------------------------------------------+
 | create_snp_reference_seq.py | | Writes the reference sequence bases at SNP locations to          |
 |                             | | a fasta file                                                     |
 +-----------------------------+--------------------------------------------------------------------+
@@ -113,6 +115,14 @@ See :ref:`step-by-step-workflows`.
   per SNP position. Non-SNP positions are not included in the matrix. The 
   matrix is formatted as a fasta file, with each sequence (all of identical
   length) corresponding to the SNPs in the correspondingly named sequence.
+
+* ``snp_distance_pairwise.tsv`` : contains the pairwise SNP distance between all
+  pairs of samples. The file is tab-separated, with a header row and three columns
+  identifing the two sequences and their distance.
+
+* ``snp_distance_matrix.tsv`` : contains a matrix of the SNP distances between all
+  pairs of samples. The file is tab-separated, with a header row and rows and columns
+  for all samples.  
 
 * ``snpma.vcf`` : contains the merged multi-sample VCF file identifying the positions
   and snps for all samples.
@@ -356,12 +366,14 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snpma.fasta
     ls -l snpma.vcf
     ls -l referenceSNP.fasta
+    ls -l snp_distance_matrix.tsv
 
     # Verify correct results
     copy_snppipeline_data.py lambdaVirusExpectedResults expectedResults
-    diff -q -s snplist.txt         expectedResults/snplist.txt
-    diff -q -s snpma.fasta         expectedResults/snpma.fasta
-    diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
+    diff -q -s snplist.txt             expectedResults/snplist.txt
+    diff -q -s snpma.fasta             expectedResults/snpma.fasta
+    diff -q -s referenceSNP.fasta      expectedResults/referenceSNP.fasta
+    diff -q -s snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
 
     # View the per-sample metrics
     xdg-open metrics.tsv
@@ -429,12 +441,14 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l outputDirectory/snpma.fasta
     ls -l outputDirectory/snpma.vcf
     ls -l outputDirectory/referenceSNP.fasta
+    ls -l outputDirectory/snp_distance_matrix.tsv
 
     # Verify correct results
     copy_snppipeline_data.py agonaExpectedResults expectedResults
-    diff -q -s outputDirectory/snplist.txt         expectedResults/snplist.txt
-    diff -q -s outputDirectory/snpma.fasta         expectedResults/snpma.fasta
-    diff -q -s outputDirectory/referenceSNP.fasta  expectedResults/referenceSNP.fasta
+    diff -q -s outputDirectory/snplist.txt             expectedResults/snplist.txt
+    diff -q -s outputDirectory/snpma.fasta             expectedResults/snpma.fasta
+    diff -q -s outputDirectory/referenceSNP.fasta      expectedResults/referenceSNP.fasta
+    diff -q -s outputDirectory/snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
 
     # View the per-sample metrics
     xdg-open outputDirectory/metrics.tsv
@@ -519,12 +533,14 @@ bases are in the referenceSNP.fasta file::
     ls -l outputDirectory/snpma.fasta
     ls -l outputDirectory/snpma.vcf
     ls -l outputDirectory/referenceSNP.fasta
+    ls -l outputDirectory/snp_distance_matrix.tsv
 
     # Verify correct results
     copy_snppipeline_data.py listeriaExpectedResults expectedResults
-    diff -q -s outputDirectory/snplist.txt         expectedResults/snplist.txt
-    diff -q -s outputDirectory/snpma.fasta         expectedResults/snpma.fasta
-    diff -q -s outputDirectory/referenceSNP.fasta  expectedResults/referenceSNP.fasta
+    diff -q -s outputDirectory/snplist.txt             expectedResults/snplist.txt
+    diff -q -s outputDirectory/snpma.fasta             expectedResults/snpma.fasta
+    diff -q -s outputDirectory/referenceSNP.fasta      expectedResults/referenceSNP.fasta
+    diff -q -s outputDirectory/snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
 
     # View the per-sample metrics
     xdg-open outputDirectory/metrics.tsv
@@ -628,7 +644,11 @@ Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
 
     mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
 
-Step 13 - View and verify the results:
+Step 13 - Compute the SNP distances between samples::
+
+    calculate_snp_distances.py -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
+
+Step 14 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -638,12 +658,14 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snpma.fasta
     ls -l snpma.vcf
     ls -l referenceSNP.fasta
+    ls -l snp_distance_matrix.tsv
 
     # Verify correct results
     copy_snppipeline_data.py lambdaVirusExpectedResults expectedResults
-    diff -q -s snplist.txt         expectedResults/snplist.txt
-    diff -q -s snpma.fasta         expectedResults/snpma.fasta
-    diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
+    diff -q -s snplist.txt             expectedResults/snplist.txt
+    diff -q -s snpma.fasta             expectedResults/snpma.fasta
+    diff -q -s referenceSNP.fasta      expectedResults/referenceSNP.fasta
+    diff -q -s snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
 
     # View the per-sample metrics
     xdg-open metrics.tsv
@@ -745,7 +767,11 @@ Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
 
     mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
 
-Step 13 - View and verify the results:
+Step 13 - Compute the SNP distances between samples::
+
+    calculate_snp_distances.py -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
+
+Step 14 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 3623 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -755,12 +781,14 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snpma.fasta
     ls -l snpma.vcf
     ls -l referenceSNP.fasta
+    ls -l snp_distance_matrix.tsv
 
     # Verify correct results
     copy_snppipeline_data.py agonaExpectedResults expectedResults
-    diff -q -s snplist.txt         expectedResults/snplist.txt
-    diff -q -s snpma.fasta         expectedResults/snpma.fasta
-    diff -q -s referenceSNP.fasta  expectedResults/referenceSNP.fasta
+    diff -q -s snplist.txt             expectedResults/snplist.txt
+    diff -q -s snpma.fasta             expectedResults/snpma.fasta
+    diff -q -s referenceSNP.fasta      expectedResults/referenceSNP.fasta
+    diff -q -s snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
 
     # View the per-sample metrics
     xdg-open metrics.tsv
@@ -853,15 +881,20 @@ Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
 
     mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
 
-Step 13 - View the results:
+Step 13 - Compute the SNP distances between samples::
 
-Upon successful completion of the pipeline, the snplist.txt identifies the SNPs in all samples.  The SNP Matrix 
+    calculate_snp_distances.py -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
+
+Step 14 - View the results:
+
+Upon successful completion of the pipeline, the snplist.txt identifies the SNP positions in all samples.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     ls -l snplist.txt
     ls -l snpma.fasta
     ls -l snpma.vcf
     ls -l referenceSNP.fasta
+    ls -l snp_distance_matrix.tsv
 
     # View the per-sample metrics
     xdg-open metrics.tsv

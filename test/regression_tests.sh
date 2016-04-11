@@ -100,6 +100,7 @@ testScriptsOnPath()
     assertNotNull "create_snp_reference_seq.py is not on the path"  "$(which create_snp_reference_seq.py)"
     assertNotNull "collectSampleMetrics.sh is not on the path"      "$(which collectSampleMetrics.sh)"
     assertNotNull "combineSampleMetrics.sh is not on the path"      "$(which combineSampleMetrics.sh)"
+    assertNotNull "calculate_snp_distances.py is not on the path"   "$(which calculate_snp_distances.py)"
 }
 
 # Verify copy_snppipeline_data.py emits lambda test data
@@ -189,6 +190,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "create_snp_reference_seq.py"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "collectSampleMetrics.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "combineSampleMetrics.sh"
+    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "calculate_snp_distances.py"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "$aligner"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "samtools"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "java"
@@ -207,6 +209,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "create_snp_reference_seq.py"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "collectSampleMetrics.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "combineSampleMetrics.sh"
+    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "calculate_snp_distances.py"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "$aligner"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "samtools"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "java"
@@ -2920,6 +2923,165 @@ testCombineSampleMetricsPermissionTrapStopUnset()
 }
 
 
+# Verify the calculate_snp_distances.py script detects missing input file
+tryCalculateSnpDistancesMissingInputRaiseGlobalError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run calculateSnpDistances.py with missing snpma.fasta
+    calculate_snp_distances.py -p pp -m mm "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
+    errorCode=$?
+
+    # Verify error handling behavior
+    assertEquals "calculate_snp_distances.py returned incorrect error code when input snp matrix file was missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "calculate_snp_distances.py failed."
+    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py failed"
+    assertFileContains "$tempDir/error.log" "Error: cannot calculate sequence distances without the snp matrix file"
+    assertFileContains "$logDir/calcSnpDistances.log" "Error: cannot calculate sequence distances without the snp matrix file"
+    assertFileContains "$tempDir/error.log" "SNP matrix file $tempDir/snpma.fasta does not exist"
+    assertFileContains "$logDir/calcSnpDistances.log" "SNP matrix file $tempDir/snpma.fasta does not exist"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the calculateSnpDistances.py script detects missing input file
+testCalculateSnpDistancesMissingInputRaiseGlobalErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryCalculateSnpDistancesMissingInputRaiseGlobalError 100
+}
+
+# Verify the calculateSnpDistances.py script detects missing input file
+testCalculateSnpDistancesMissingInputRaiseGlobalErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryCalculateSnpDistancesMissingInputRaiseGlobalError 100
+}
+
+# Verify the calculateSnpDistances.py script detects missing input file
+testCalculateSnpDistancesMissingInputRaiseGlobalErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryCalculateSnpDistancesMissingInputRaiseGlobalError 100
+}
+
+
+# Verify the calculate_snp_distances.py script detects no output file options
+tryCalculateSnpDistancesMissingOutputOptionsRaiseGlobalError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Create dummpy input file
+    touch "$tempDir/snpma.fasta"
+
+    # Run calculateSnpDistances.py with no output options
+    calculate_snp_distances.py "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
+    errorCode=$?
+
+    # Verify error handling behavior
+    assertEquals "calculate_snp_distances.py returned incorrect error code when both output options were missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "calculate_snp_distances.py failed."
+    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py failed"
+    assertFileContains "$tempDir/error.log" "Error: no output file specified"
+    assertFileContains "$logDir/calcSnpDistances.log" "Error: no output file specified"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the calculate_snp_distances.py script detects no output file options
+testCalculateSnpDistancesMissingOutputOptionsRaiseGlobalErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryCalculateSnpDistancesMissingOutputOptionsRaiseGlobalError 100
+}
+
+# Verify the calculate_snp_distances.py script detects no output file options
+testCalculateSnpDistancesMissingOutputOptionsRaiseGlobalErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryCalculateSnpDistancesMissingOutputOptionsRaiseGlobalError 100
+}
+
+# Verify the calculate_snp_distances.py script detects no output file options
+testCalculateSnpDistancesMissingOutputOptionsRaiseGlobalErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryCalculateSnpDistancesMissingOutputOptionsRaiseGlobalError 100
+}
+
+
+# Verify the calculate_snp_distances.py script traps attempts to write to unwritable file
+tryCalculateSnpDistancesPermissionTrap()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Make the output file unwritable
+    touch "$tempDir/pairwise"
+    chmod -w "$tempDir/pairwise"
+
+    # Try to create snp distances
+    echo "> Sequence" > "$tempDir/snpma.fasta"
+    echo "ACGT" >> "$tempDir/snpma.fasta"
+    calculate_snp_distances.py -p "$tempDir/pairwise" "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
+    errorCode=$?
+
+    # Verify create_snp_list.py error handling behavior
+    assertEquals "calculate_snp_distances.py returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "Error detected while running calculate_snp_distances.py"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "Error detected while running calculate_snp_distances.py"
+    assertFileContains "$tempDir/error.log" "IOError"
+    assertFileContains "$logDir/calcSnpDistances.log" "IOError"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "Use the -f option to force a rebuild"
+    rm -f "$tempDir/pairwise"
+}
+
+# Verify the calculate_snp_distances.py script traps attempts to write to unwritable file
+testCalculateSnpDistancesPermissionTrapStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryCalculateSnpDistancesPermissionTrap 100
+}
+
+# Verify the calculate_snp_distances.py script traps attempts to write to unwritable file
+testCalculateSnpDistancesPermissionTrapNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryCalculateSnpDistancesPermissionTrap 100
+}
+
+# Verify the calculate_snp_distances.py script traps attempts to write to unwritable file
+testCalculateSnpDistancesPermissionTrapStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryCalculateSnpDistancesPermissionTrap 100
+}
+
+
 # Verify the run_snp_pipeline.sh script detects missing reference
 tryRunSnpPipelineMissingReferenceRaiseFatalError()
 {
@@ -3228,6 +3390,8 @@ testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorNoStop()
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
     verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
     verifyNonEmptyReadableFile "$tempDir/metrics.tsv"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_pairwise.tsv"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_matrix.tsv"
 
     assertFileContains "$tempDir/snpma.fasta" "sample4"
     assertFileContains "$tempDir/snpma.fasta" "sample5"
@@ -3668,6 +3832,8 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopSomeFail()
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
     verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
     verifyNonEmptyReadableFile "$tempDir/metrics.tsv"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_pairwise.tsv"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_matrix.tsv"
 
     assertFileContains "$tempDir/snpma.fasta" "sample2"
     assertFileContains "$tempDir/snpma.fasta" "sample3"
@@ -3727,6 +3893,8 @@ testRunSnpPipelineLambda()
     assertIdenticalFiles "$tempDir/snpma.vcf"                     "$tempDir/expectedResults/snpma.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source --ignore-matching-lines=##bcftools
     assertIdenticalFiles "$tempDir/referenceSNP.fasta"            "$tempDir/expectedResults/referenceSNP.fasta"
     assertIdenticalFiles "$tempDir/metrics.tsv"                   "$tempDir/expectedResults/metrics.tsv"
+    assertIdenticalFiles "$tempDir/snp_distance_pairwise.tsv"     "$tempDir/expectedResults/snp_distance_pairwise.tsv"
+    assertIdenticalFiles "$tempDir/snp_distance_matrix.tsv"       "$tempDir/expectedResults/snp_distance_matrix.tsv"
     assertIdenticalFiles "$tempDir/samples/sample1/consensus.vcf" "$tempDir/expectedResults/samples/sample1/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample2/consensus.vcf" "$tempDir/expectedResults/samples/sample2/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample3/consensus.vcf" "$tempDir/expectedResults/samples/sample3/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
@@ -3757,6 +3925,7 @@ testRunSnpPipelineLambda()
     verifyNonEmptyReadableFile "$logDir/collectSampleMetrics.log-4"
     verifyNonEmptyReadableFile "$logDir/collectSampleMetrics.log-3"
     verifyNonEmptyReadableFile "$logDir/combineSampleMetrics.log"
+    verifyNonEmptyReadableFile "$logDir/calcSnpDistances.log"
 }
 
 
@@ -3823,6 +3992,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/collectSampleMetrics.log-4" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/collectSampleMetrics.log-3" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 }
 
 
@@ -3862,6 +4032,8 @@ testRunSnpPipelineLambdaSingleSample()
     verifyNonEmptyReadableFile "$tempDir/snpma.fasta"
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
     verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
+    assertFileContains "$tempDir/snp_distance_pairwise.tsv" "^sample1.*sample1.*0$"
+    assertFileContains "$tempDir/snp_distance_matrix.tsv" "^sample1.*0$"
 
     # Verify log files
     logDir=$(echo $(ls -d $tempDir/logs*))
@@ -3876,6 +4048,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     # Verify correct results
     copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
@@ -3942,6 +4115,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 }
 
 
@@ -4005,6 +4179,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-2" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 }
 
 
@@ -4118,6 +4293,8 @@ testAlreadyFreshOutputs()
     assertFileNotContains "$logDir/collectSampleMetrics.log-3" "already freshly created"
     assertFileNotContains "$logDir/collectSampleMetrics.log-4" "already freshly created"
 
+    assertFileContains "$logDir/calcSnpDistances.log" "have already been freshly built.  Use the -f option to force a rebuild"
+
     # Special collectSampleMetrics re-use last metrics
     assertFileNotContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.54"
@@ -4190,6 +4367,20 @@ testRunSnpPipelineExcessiveSnps()
     # Verify no weird freshness skips
     assertFileNotContains "$tempDir/run_snp_pipeline.log" "Use the -f option to force a rebuild"
 
+	# Verify each pipeline stage runs to completion
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    assertFileContains "$logDir/prepReference.log" "prepReference.sh finished"
+    assertFileContains "$logDir/alignSamples.log-1" "alignSampleToReference.sh finished"
+    assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
+    assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
+    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+
     # Verify output
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=Excluded$"
     assertFileContains "$tempDir/samples/sample2/metrics" "excludedSample=$"
@@ -4206,6 +4397,8 @@ testRunSnpPipelineExcessiveSnps()
     assertFileNotContains "$tempDir/snplist.txt" "sample1"
     assertFileNotContains "$tempDir/snpma.fasta" "sample1"
     assertFileNotContains "$tempDir/snpma.vcf"   "sample1"
+    assertFileNotContains "$tempDir/snp_distance_pairwise.tsv" "sample1"
+    assertFileNotContains "$tempDir/snp_distance_matrix.tsv" "sample1"
 
     copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
     grep -v sample1 "$tempDir/expectedResults/metrics.tsv" > "$tempDir/expectedResults/metrics.withoutSample1.tsv"
@@ -4260,6 +4453,8 @@ testRunSnpPipelineAgona()
     assertIdenticalFiles "$tempDir/snpma.vcf"          "$tempDir/expectedResults/snpma.vcf" "--ignore-matching-lines=##fileDate" "--ignore-matching-lines=##source" "--ignore-matching-lines=##bcftools"
     assertIdenticalFiles "$tempDir/referenceSNP.fasta" "$tempDir/expectedResults/referenceSNP.fasta"
     assertIdenticalFiles "$tempDir/metrics.tsv"        "$tempDir/expectedResults/metrics.tsv"
+    assertIdenticalFiles "$tempDir/snp_distance_pairwise.tsv" "$tempDir/expectedResults/snp_distance_pairwise.tsv"
+    assertIdenticalFiles "$tempDir/snp_distance_matrix.tsv"   "$tempDir/expectedResults/snp_distance_matrix.tsv"
 }
 
 

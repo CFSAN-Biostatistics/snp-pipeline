@@ -17,6 +17,7 @@ import vcf
 verbose_print  = lambda *a, **k: None
 verbose_pprint = lambda *a, **k: None
 
+
 def set_logging_verbosity(options_dict):
     """Enable or disable logging.
 
@@ -29,7 +30,6 @@ def set_logging_verbosity(options_dict):
     verbose_pprint = pprint.pprint if options_dict['verbose'] > 0 else lambda *a, **k: None
 
 
-
 #==============================================================================
 #Define functions
 #==============================================================================
@@ -38,13 +38,16 @@ def timestamp():
     """Return a timestamp string."""
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
 
+
 def program_name():
     """Return the basename of the python script being executed."""
     return os.path.basename(sys.argv[0])
 
+
 def command_line_short():
     """Return the command line string without the full path to the program."""
     return "%s %s" % (program_name(), " ".join(sys.argv[1:]))
+
 
 def command_line_long():
     """Return the command line string with the full path to the program."""
@@ -95,7 +98,7 @@ def sample_error(message, continue_possible=False):
             configured to do so.
     """
     stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
-    stop_on_error = stop_on_error_env == None or stop_on_error_env == "true"
+    stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
 
     # Log the event to the error log
     error_output_file = os.environ.get("errorOutputFile")
@@ -190,7 +193,7 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
     # 1. Sun Grid Engine will stop execution of dependent jobs
     # 2. run_snp_pipeline.sh will know this error has already been reported
     stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
-    stop_on_error = stop_on_error_env == None or stop_on_error_env == "true"
+    stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
     if stop_on_error:
         # run_snp_pipeline.sh will know this error has already been reported
         sys.exit(100)
@@ -267,7 +270,6 @@ def verify_non_empty_input_files(error_prefix, file_list):
     return bad_count
 
 
-
 def target_needs_rebuild(source_files, target_file):
     """Determine if a target file needs a fresh rebuild, i.e. the target does
     not exist or its modification time is older than any of its source files.
@@ -288,7 +290,7 @@ def target_needs_rebuild(source_files, target_file):
         # A non-existing source file should neither force a rebuild, nor prevent a rebuild.
         # You should error-check the existence of the source files before calling this function.
         #
-        # An empty source file should force a rebuild if it is newer than the target, just like 
+        # An empty source file should force a rebuild if it is newer than the target, just like
         # a regular non-empty source file.
         if not os.path.isfile(source_file):
             continue
@@ -319,8 +321,6 @@ def create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, snp_set):
                 key = (seq_id, int(pos))
                 if key in snp_set:
                     snp_pileup_file_object.write(pileup_line)
-
-
 
 
 def write_list_of_snps(file_path, snp_dict):
@@ -368,7 +368,7 @@ def write_reference_snp_file(reference_file_path, snp_list_file_path,
 
     with open(snp_list_file_path, "r") as snp_list_file:
         position_list = [line.split()[0:2] for line in snp_list_file]
-    match_dict    = SeqIO.to_dict(SeqIO.parse(reference_file_path, "fasta"))
+    match_dict = SeqIO.to_dict(SeqIO.parse(reference_file_path, "fasta"))
 
     with open(snp_reference_file_path, "w") as snp_reference_file_object:
         for ordered_id in sorted(match_dict.keys()):
@@ -402,4 +402,34 @@ def convert_vcf_file_to_snp_set(vcf_file_path):
     return snp_set
 
 
+def calculate_sequence_distance(seq1, seq2, case_insensitive=True):
+    """Calulate the number of nucleotide differences between two sequences.
 
+    The sequences must be the same length.
+
+    Args:
+        seq1 : DNA string 1
+        seq2 : DNA string 2
+        case_insensitive : optional flag for case insensitive compare, defaults to True
+
+    Returns:
+        int number of differences
+    """
+    if case_insensitive:
+        allowed_bases = frozenset(['A', 'C', 'G', 'T'])
+        seq1 = seq1.upper()
+        seq2 = seq2.upper()
+    else:
+        allowed_bases = frozenset(['A', 'C', 'G', 'T', 'a', 'c', 'g', 't'])
+
+    mismatches = 0
+    for pos in range(len(seq1)):
+        base1 = seq1[pos]
+        base2 = seq2[pos]
+        if base1 not in allowed_bases:
+            continue
+        if base2 not in allowed_bases:
+            continue
+        if base1 != base2:
+            mismatches += 1
+    return mismatches

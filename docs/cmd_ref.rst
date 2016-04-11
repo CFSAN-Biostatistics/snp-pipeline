@@ -328,6 +328,31 @@ call_consensus.py
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
+
+mergeVcf.sh
+---------------------------
+
+::
+
+  usage: mergeVcf.sh [-h] [-f] [-n NAME] [-o FILE] sampleDirsFile
+  
+  Merge the vcf files from all samples into a single multi-vcf file for all samples.
+  
+  Before running this command, the vcf file for each sample must be created by the
+  call_consensus.py script.
+  
+  Positional arguments:
+    sampleDirsFile   : Relative or absolute path to file containing a list of
+                       directories -- one per sample
+  
+  Options:
+    -h               : Show this help message and exit
+    -f               : Force processing even when result files already exist and 
+                       are newer than inputs
+    -n NAME          : File name of the vcf files which must exist in each of
+                       the sample directories. (default: consensus.vcf)
+    -o FILE          : Output file. Relative or absolute path to the merged
+                       multi-vcf file. (default: snpma.vcf)
 create_snp_matrix.py
 ------------------------
 
@@ -363,6 +388,36 @@ create_snp_matrix.py
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
+
+calculate_snp_distances.py
+---------------------------
+
+::
+
+  usage: calculate_snp_distances.py [-h] [-f] [-p FILE] [-m FILE] [-v 0..5]
+                                    [--version]
+                                    snpMatrixFile
+  
+  Calculate pairwise SNP distances from the multi-fasta SNP matrix. Generates a
+  file of pairwise distances and a file containing a matrix of distances.
+  
+  positional arguments:
+    snpMatrixFile         Relative or absolute path to the input multi-fasta SNP
+                          matrix file.
+  
+  optional arguments:
+    -h, --help            show this help message and exit
+    -f, --force           Force processing even when result file already exists
+                          and is newer than inputs (default: False)
+    -p FILE, --pairs FILE
+                          Relative or absolute path to the pairwise distance
+                          output file. (default: None)
+    -m FILE, --matrix FILE
+                          Relative or absolute path to the distance matrix
+                          output file. (default: None)
+    -v 0..5, --verbose 0..5
+                          Verbose message level (0=no info, 5=lots) (default: 1)
+    --version             show program's version number and exit
 create_snp_reference_seq.py
 ---------------------------
 
@@ -442,28 +497,3 @@ combineSampleMetrics.sh
     -o FILE          : Output file. Relative or absolute path to the combined metrics
                        file. (default: stdout)
     -s               : Emit column headings with spaces instead of underscores
-
-mergeVcf.sh
----------------------------
-
-::
-
-  usage: mergeVcf.sh [-h] [-f] [-n NAME] [-o FILE] sampleDirsFile
-  
-  Merge the vcf files from all samples into a single multi-vcf file for all samples.
-  
-  Before running this command, the vcf file for each sample must be created by the
-  call_consensus.py script.
-  
-  Positional arguments:
-    sampleDirsFile   : Relative or absolute path to file containing a list of
-                       directories -- one per sample
-  
-  Options:
-    -h               : Show this help message and exit
-    -f               : Force processing even when result files already exist and 
-                       are newer than inputs
-    -n NAME          : File name of the vcf files which must exist in each of
-                       the sample directories. (default: consensus.vcf)
-    -o FILE          : Output file. Relative or absolute path to the merged
-                       multi-vcf file. (default: snpma.vcf)

@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import itertools
 import os
 import pprint
 import sys
@@ -17,6 +18,7 @@ from snppipeline import vcf_writer
 
 verbose_print  = lambda *a, **k: None
 verbose_pprint = lambda *a, **k: None
+
 
 def set_logging_verbosity(options_dict):
     """Enable or disable logging.
@@ -163,7 +165,7 @@ def create_snp_list(options_dict):
                 verbose_print("Excluding sample %s having %d snps." % (sample_name, len(snp_set)))
                 excluded_sample_directories.add(sample_dir)
                 continue
-    
+
             for key in snp_set:
                 if key not in snp_dict:
                     sample_list = [sample_name]
@@ -483,7 +485,7 @@ def create_snp_matrix(options_dict):
         consensus_file_path = os.path.join(sample_directory, options_dict['consFileName'])
         bad_count = utils.verify_non_empty_input_files("Consensus fasta file", [consensus_file_path])
         if bad_count == 1:
-            bad_file_count += 1;
+            bad_file_count += 1
         else:
             consensus_files.append(consensus_file_path)  # keep the list of good files
 
@@ -515,7 +517,6 @@ def create_snp_matrix(options_dict):
 
     verbose_print("")
     verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
-
 
 
 def create_snp_reference_seq(options_dict):
@@ -593,3 +594,109 @@ def create_snp_reference_seq(options_dict):
     verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
+def calculate_snp_distances(options_dict):
+    """Calculate pairwise sample SNP distances.
+
+    Description:
+    Calculate pairwise SNP distances from the multi-fasta SNP matrix.
+    Generate a file of pairwise distances and a file containing a matrix
+    of distances.
+    This function expects, or creates '(*)', the following files:
+            snpma.fasta
+            snp_distance_pairwise.tsv*
+            snp_distance_matrix.tsv*
+
+    The files are used as follows:
+        1. The snpma.fasta input file contains the snp matrix for all samples
+        2. The snp_distance_pairwise.tsv output file contains a three column
+            tab-separated table of distances between all pairs of samples
+        2. The snp_distance_matrix.tsv output file contains a matrix of
+           distances between all samples.
+
+    Args:
+        inputFile: File path (not just file name) for the snp matrix in fasta format
+        pairwiseFile: File path (not just file name) of the output pairwise distance file
+        matrixFile: File path (not just file name) for the output distance matrix file
+
+    Raises:
+
+    Examples:
+    options_dict = {'inputFile':'snpma.fasta',
+                    'pairwiseFile':'snp_distance_pairwise.tsv',
+                    'matrixFile':'snp_distance_matrix.tsv'
+                   }
+    calculate_snp_distances(options_dict)
+    """
+    print_log_header()
+    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
+    verbose_print("# %s version %s" % (utils.program_name(), __version__))
+    print_arguments(options_dict)
+
+    #==========================================================================
+    # Validate arguments
+    #==========================================================================
+    input_file = options_dict['inputFile']
+    pairwise_file = options_dict['pairwiseFile']
+    matrix_file = options_dict['matrixFile']
+    force_flag = options_dict['forceFlag']
+
+    bad_file_count = utils.verify_existing_input_files("SNP matrix file", [input_file])
+    if bad_file_count > 0:
+        utils.global_error("Error: cannot calculate sequence distances without the snp matrix file.")
+
+    if not pairwise_file and not matrix_file:
+        utils.global_error("Error: no output file specified.")
+
+    #==========================================================================
+    # Check freshness
+    #==========================================================================
+    rebuild_pairwise_file = pairwise_file and utils.target_needs_rebuild([input_file], pairwise_file)
+    rebuild_matrix_file = matrix_file and utils.target_needs_rebuild([input_file], matrix_file)
+    if force_flag or rebuild_pairwise_file or rebuild_matrix_file:
+
+        #------------------------------
+        # Read in snp matrix file
+        #------------------------------
+        seqs = {}
+        with open(input_file) as ifile:
+            for line in ifile:
+                line = line.rstrip('\n')
+                if line.startswith('>'):
+                    curr_sample = line.lstrip('>')
+                    seqs[curr_sample] = ''
+                else:
+                    seqs[curr_sample] += str(line)
+
+        #------------------------------
+        # Count mismatches
+        #------------------------------
+        ids = sorted(seqs.keys())
+        pairwise_mismatches = dict() # tuple (seq1 id, seq2 id) -> int
+
+        for id1, id2 in itertools.combinations(ids, 2):
+            mismatches = utils.calculate_sequence_distance(seqs[id1], seqs[id2])
+            pairwise_mismatches[(id1, id2)] = mismatches
+            pairwise_mismatches[(id2, id1)] = mismatches
+
+        #------------------------------
+        # Print distance files
+        #------------------------------
+        if pairwise_file:
+            with open(pairwise_file, 'w') as p_out:
+                p_out.write('%s\n' % '\t'.join(['Seq1', 'Seq2', 'Distance']))
+                for id1, id2 in itertools.product(ids, ids):
+                    mismatches = pairwise_mismatches.get((id1, id2), 0) # zero when id1=id2
+                    p_out.write("%s\t%s\t%i\n" % (id1, id2, mismatches))
+
+        if matrix_file:
+            with open(matrix_file, 'w') as m_out:
+                m_out.write('\t%s\n' % '\t'.join(ids)) # matrix header
+                # write table of mismatches
+                for id1 in ids:
+                    mismatches = [pairwise_mismatches.get((id1, id2), 0) for id2 in ids]
+                    mismatch_strs = map(str, mismatches)
+                    m_out.write("%s\t%s\n" % (id1, '\t'.join(mismatch_strs)))
+
+    else:
+        verbose_print("Distance files have already been freshly built.  Use the -f option to force a rebuild.")
+    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
