@@ -78,11 +78,23 @@ echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 call_consensus.py      -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
+echo >> x.txt
+echo mergeVcf.sh >> x.txt
+echo --------------------------- >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+mergeVcf.sh -h | sed 's/^/  /' >> x.txt
+
 echo create_snp_matrix.py     >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 create_snp_matrix.py      -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
+
+echo >> x.txt
+echo calculate_snp_distances.py >> x.txt
+echo --------------------------- >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+calculate_snp_distances.py -h | sed 's/^/  /' >> x.txt
 
 echo create_snp_reference_seq.py >> x.txt
 echo --------------------------- >> x.txt
@@ -101,13 +113,9 @@ echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 combineSampleMetrics.sh -h | sed 's/^/  /' >> x.txt
 
-echo >> x.txt
-echo mergeVcf.sh >> x.txt
-echo --------------------------- >> x.txt
-echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-mergeVcf.sh -h | sed 's/^/  /' >> x.txt
-
-cat x.txt | sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-2.7/bin/~~' |  \
+cat x.txt | 
+sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-2.7/bin/~~' | \
+sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-3.5/bin/~~' | \
 grep -v "# Command           :" | \
 grep -v "# Working Directory :" | \
 grep -v "# Hostname          :" | \

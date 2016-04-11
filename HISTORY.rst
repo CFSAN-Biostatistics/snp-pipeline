@@ -3,7 +3,7 @@
 History
 -------
 
-0.6.0 (2016-03-??)
+0.6.0 (2016-04-11)
 ~~~~~~~~~~~~~~~~~~
 
 **Bug fixes:**
@@ -18,6 +18,9 @@ History
   See :ref:`excessive-snps-label`.
 * A new column in the metrics.tsv file, ``Excluded_Sample``, indicates when a sample has been 
   excluded from the snp matrix.  This column is normally blank.
+* Added a new script to the pipeline: ``calculate_snp_distances.py`` computes the SNP distances between 
+  all pairs of samples. The SNP distances are written to the output files ``snp_distance_pairwise.tsv``
+  and ``snp_distance_matrix.tsv``.
 * Changed Sun Grid Engine execution to use array-slot dependency where possible, resulting
   in less idle time waiting for job steps to complete.
 

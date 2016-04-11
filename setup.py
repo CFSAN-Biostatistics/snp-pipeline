@@ -47,7 +47,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='0.6.0a4',
+    version='0.6.0',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -84,6 +84,7 @@ setup(
         'scripts/combineSampleMetrics.sh',
         'scripts/snp_pipeline_inc.sh',
         'scripts/mergeVcf.sh',
+        'scripts/calculate_snp_distances.py',
     ],
 
     # Include the test data files listed below in the distribution.

@@ -217,7 +217,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 
 
     def test_4_create_snp_reference_seq(self):
-        """Run create_snp_reference_seq and verify referenceSNP.fasta contains expected contents for each sample.
+        """Run create_snp_reference_seq and verify referenceSNP.fasta contains expected contents.
         """
         args_dict = {
             'referenceFile' : os.path.join(self.__class__.directory_run_result, 'reference/lambda_virus.fasta'),
@@ -226,6 +226,31 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             'forceFlag' : True,
             }
         self.run_function_test(snppipeline.create_snp_reference_seq, args_dict, 'referenceSNP.fasta')
+
+
+    def test_5a_calculate_snp_distances(self):
+        """Run calculate_snp_distances and verify snp_distance_pairwise.tsv contains expected contents.
+        """
+        args_dict = {
+            'inputFile' : os.path.join(self.__class__.directory_run_result, 'snpma.fasta'),
+            'pairwiseFile' : os.path.join(self.__class__.directory_run_result, 'snp_distance_pairwise.tsv'),
+            'matrixFile' : None,
+            'forceFlag' : True,
+            }
+        self.run_function_test(snppipeline.calculate_snp_distances, args_dict, 'snp_distance_pairwise.tsv')
+
+
+    def test_5b_calculate_snp_distances(self):
+        """Run calculate_snp_distances and verify snp_distance_matrix.tsv contains expected contents.
+        """
+        args_dict = {
+            'inputFile' : os.path.join(self.__class__.directory_run_result, 'snpma.fasta'),
+            'pairwiseFile' : None,
+            'matrixFile' : os.path.join(self.__class__.directory_run_result, 'snp_distance_matrix.tsv'),
+            'forceFlag' : True,
+            }
+        self.run_function_test(snppipeline.calculate_snp_distances, args_dict, 'snp_distance_matrix.tsv')
+
 
 
     def test_999(self):

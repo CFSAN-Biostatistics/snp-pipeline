@@ -49,6 +49,7 @@
 #   20160301-scd: Allow configurable extra paremeters for collectSampleMetrics and combineSampleMetrics.
 #   20160304-scd: CollectSampleMetrics : Count missing positions in the consensus.fasta file instead of the snp matrix.
 #   20160308-scd: Exclude samples with excessive number of snps from the snp matrix and snpma.vcf.
+#   20160405-scd: Add the calculate_snp_distances.py pipeline stage.
 #Notes:
 #
 #Bugs:
@@ -414,6 +415,7 @@ onPath=$(verifyOnPath "create_snp_matrix.py"); if [[ $onPath != true ]]; then ((
 onPath=$(verifyOnPath "create_snp_reference_seq.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "collectSampleMetrics.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "combineSampleMetrics.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "calculate_snp_distances.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "$SnpPipeline_Aligner"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "samtools"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "java"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
@@ -904,7 +906,35 @@ else
 fi
 
 
-# Step 12 - Notify user of any non-fatal errors accumulated during processing
+echo -e "\nStep 12 - Calculate SNP distance matrix"
+if [[ "$platform" == "grid" ]]; then
+    calcSnpDistanceJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N snpDistance
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $snpMatrixJobId
+#$ -o $logDir/calcSnpDistances.log
+    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    calcSnpDistanceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+    #PBS -N snpDistance
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterok:$snpMatrixJobId
+    #PBS -o $logDir/calcSnpDistances.log
+    #PBS -V
+    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+_EOF_
+)
+else
+    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta" 2>&1 | tee $logDir/calcSnpDistances.log
+fi
+
+
+# Step 13 - Notify user of any non-fatal errors accumulated during processing
 if [[ -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true ]]; then
     echo "" 1>&2
     echo "There were errors processing some samples." 1>&2
