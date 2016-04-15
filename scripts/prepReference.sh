@@ -31,6 +31,7 @@
 #   20150109-scd: Log the Grid Engine job ID.
 #   20150630-scd: Add support for Smalt.
 #   20151207-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
+#   20160415-scd: Support SAMtools 1.3.
 #Notes:
 #
 #Bugs:
@@ -170,6 +171,7 @@ else
     echo "# "$(date +"%Y-%m-%d %T") samtools faidx $SamtoolsFaidx_ExtraParams "$referenceFilePath"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
     samtools faidx $SamtoolsFaidx_ExtraParams "$referenceFilePath"
+    globalErrorOnMissingFile "$referenceFilePath.fai" "samtools faidx"
     echo
 fi
 

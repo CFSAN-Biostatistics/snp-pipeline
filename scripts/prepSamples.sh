@@ -41,6 +41,7 @@
 #   20141030-scd: Fix Python 2.6 compatibility issue when logging RAM size.
 #   20150109-scd: Log the Grid Engine job ID.
 #   20151214-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
+#   20160414-scd: Support SAMtools 1.3.
 #Notes:
 #
 #Bugs:
@@ -184,9 +185,18 @@ if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sorted.bam" && "$sampleDir/rea
 else
     #Convert to a sorted bam
     echo "# Convert bam to sorted bam file."
-    echo "# "$(date +"%Y-%m-%d %T") samtools sort $SamtoolsSort_ExtraParams "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
-    echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-    samtools sort $SamtoolsSort_ExtraParams "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
+    # Inspect the samtools version to determine how to execute samtools
+    # Use the -o FILE command line option with SAMtools 1.3 and higher
+    samtoolsVersion=$(samtools 2>&1 > /dev/null | grep Version | cut -d " " -f 2)
+    if [[ $samtoolsVersion < '1.3' ]]; then
+        echo "# "$(date +"%Y-%m-%d %T") samtools sort $SamtoolsSort_ExtraParams "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
+        echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
+        samtools sort $SamtoolsSort_ExtraParams "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sorted"
+    else
+        echo "# "$(date +"%Y-%m-%d %T") samtools sort $SamtoolsSort_ExtraParams -o "$sampleDir/reads.sorted.bam" "$sampleDir/reads.unsorted.bam"
+        echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
+        samtools sort $SamtoolsSort_ExtraParams -o "$sampleDir/reads.sorted.bam" "$sampleDir/reads.unsorted.bam"
+    fi
     sampleErrorOnMissingFile "$sampleDir/reads.sorted.bam" "samtools sort"
     echo
 fi

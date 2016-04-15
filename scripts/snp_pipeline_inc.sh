@@ -211,6 +211,20 @@ sampleWarning()
 }
 
 
+# Generate a global error if a specified file is missing or empty.
+# $1 = file
+# $2 = process that should have created the file
+globalErrorOnMissingFile()
+{
+    local file
+    local process
+    file=$1
+    process=$2
+    if [[ ! -e "$file" ]]; then globalError "Error: $file does not exist after running $process." false; fi
+    if [[ ! -s "$file" ]]; then globalError "Error: $file is empty after running $process." false; fi
+}
+
+
 # Generate a sample error if a specified file is missing or empty.
 # $1 = file
 # $2 = process that should have created the file

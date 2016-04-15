@@ -523,13 +523,45 @@ tryPrepReferenceSamtoolsFaidxTrap()
 
     # Run prepReference
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
+    errorCode=$?
 
     # Verify error handling behavior
-    assertEquals "prepReference.sh / samtools returned incorrect error code when the input fasta was corrupt." $expectErrorCode $errorCode
+    #
+    # The results are different depending on which version of SAMtools is installed because SAMtools 1.3 
+    # does not fail with an error code that can be trapped.  The verification tests below check for the
+    # common results in v0.1.19 and v1.3.
+    
+    # SAMtools 0.1.19 error.log
+    # -------------------------
+    # Error detected while running prepReference.sh.
+    #
+    # The command line was:
+    #     prepReference.sh /tmp/shunit.dlWnpz/tmp/tmp.KW30guVt3J/reference/lambda_virus.fasta
+    #
+    # The command at line 173 returned error code 139:
+    #    samtools faidx $SamtoolsFaidx_ExtraParams "$referenceFilePath"
+
+    # SAMtools 1.3 error.log
+    # ----------------------
+    # prepReference.sh failed.
+    # Error: /tmp/shunit.VB9zhq/tmp/tmp.qQsT4ORbSy/reference/lambda_virus.fasta.fai does not exist after running samtools faidx.
+
+    # SAMtools 0.1.19 prepReference.log
+    # ---------------------------------
+    # [fai_build_core] different line length in sequence 'gi|9626243|ref|NC_001416.1|'.
+    # /home/steven.davis/.virtualenvs/snp-pipeline-2.7/bin/prepReference.sh: line 176: 30719 Segmentation fault      (core dumped) samtools faidx $SamtoolsFaidx_ExtraParams "$referenceFilePath"
+
+    # SAMtools 1.3 prepReference.log
+    # --------------------------
+    # [fai_build_core] different line length in sequence 'gi|9626243|ref|NC_001416.1|'.
+    # Error: /tmp/shunit.VB9zhq/tmp/tmp.qQsT4ORbSy/reference/lambda_virus.fasta.fai does not exist after running samtools faidx.
+
+    assertEquals "prepReference.sh returned incorrect error code when the input fasta was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running prepReference.sh."
-    assertFileNotContains "$logDir/prepReference.log" "Error detected while running prepReference.sh."
+    assertFileContains "$tempDir/error.log" "Error"
+    assertFileContains "$tempDir/error.log" "prepReference.sh"
     assertFileContains "$tempDir/error.log" "samtools faidx"
+    assertFileNotContains "$logDir/prepReference.log" "Error detected while running prepReference.sh."
     assertFileNotContains "$logDir/prepReference.log" "prepReference.sh finished"
     assertFileNotContains "$logDir/prepReference.log" "Use the -f option to force a rebuild"
 }
@@ -3895,6 +3927,27 @@ testRunSnpPipelineLambda()
     assertIdenticalFiles "$tempDir/metrics.tsv"                   "$tempDir/expectedResults/metrics.tsv"
     assertIdenticalFiles "$tempDir/snp_distance_pairwise.tsv"     "$tempDir/expectedResults/snp_distance_pairwise.tsv"
     assertIdenticalFiles "$tempDir/snp_distance_matrix.tsv"       "$tempDir/expectedResults/snp_distance_matrix.tsv"
+
+    assertIdenticalFiles "$tempDir/samples/sample1/reads.sam"     "$tempDir/expectedResults/samples/sample1/reads.sam" --ignore-matching-lines=bowtie
+    assertIdenticalFiles "$tempDir/samples/sample2/reads.sam"     "$tempDir/expectedResults/samples/sample2/reads.sam" --ignore-matching-lines=bowtie
+    assertIdenticalFiles "$tempDir/samples/sample3/reads.sam"     "$tempDir/expectedResults/samples/sample3/reads.sam" --ignore-matching-lines=bowtie
+    assertIdenticalFiles "$tempDir/samples/sample4/reads.sam"     "$tempDir/expectedResults/samples/sample4/reads.sam" --ignore-matching-lines=bowtie
+
+    assertIdenticalFiles "$tempDir/samples/sample1/var.flt.vcf"   "$tempDir/expectedResults/samples/sample1/var.flt.vcf"
+    assertIdenticalFiles "$tempDir/samples/sample2/var.flt.vcf"   "$tempDir/expectedResults/samples/sample2/var.flt.vcf"
+    assertIdenticalFiles "$tempDir/samples/sample3/var.flt.vcf"   "$tempDir/expectedResults/samples/sample3/var.flt.vcf"
+    assertIdenticalFiles "$tempDir/samples/sample4/var.flt.vcf"   "$tempDir/expectedResults/samples/sample4/var.flt.vcf"
+
+    assertIdenticalFiles "$tempDir/samples/sample1/consensus.fasta" "$tempDir/expectedResults/samples/sample1/consensus.fasta"
+    assertIdenticalFiles "$tempDir/samples/sample2/consensus.fasta" "$tempDir/expectedResults/samples/sample2/consensus.fasta"
+    assertIdenticalFiles "$tempDir/samples/sample3/consensus.fasta" "$tempDir/expectedResults/samples/sample3/consensus.fasta"
+    assertIdenticalFiles "$tempDir/samples/sample4/consensus.fasta" "$tempDir/expectedResults/samples/sample4/consensus.fasta"
+
+    assertIdenticalFiles "$tempDir/samples/sample1/reads.all.pileup" "$tempDir/expectedResults/samples/sample1/reads.all.pileup"
+    assertIdenticalFiles "$tempDir/samples/sample2/reads.all.pileup" "$tempDir/expectedResults/samples/sample2/reads.all.pileup"
+    assertIdenticalFiles "$tempDir/samples/sample3/reads.all.pileup" "$tempDir/expectedResults/samples/sample3/reads.all.pileup"
+    assertIdenticalFiles "$tempDir/samples/sample4/reads.all.pileup" "$tempDir/expectedResults/samples/sample4/reads.all.pileup"
+
     assertIdenticalFiles "$tempDir/samples/sample1/consensus.vcf" "$tempDir/expectedResults/samples/sample1/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample2/consensus.vcf" "$tempDir/expectedResults/samples/sample2/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample3/consensus.vcf" "$tempDir/expectedResults/samples/sample3/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
