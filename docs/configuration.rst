@@ -270,6 +270,7 @@ Any of the SAMtools mpileup options can be specified.
 
 | ``-q``    : minimum mapping quality for an alignment to be used
 | ``-Q``    : minimum base quality for a base to be considered 
+| ``-x``    : disable read-pair overlap detection 
 |
 
 **Example**::

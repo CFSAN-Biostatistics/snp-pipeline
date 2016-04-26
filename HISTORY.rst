@@ -7,7 +7,13 @@ History
 ~~~~~~~~~~~~~~~~~~
 
 * Fixed compatibility with SAMtools 1.3.
-
+* Changed the expected results data sets to match the results obtained using SAMtools
+  version 1.3.1.  Starting with SAMtools version 1.0, the samtools mpileup command implemented
+  a feature to avoid double counting the read depth when the two ends of a paired-end read
+  overlap.  If you use this feature of SAMtools, the pileup depth will be noticably reduced.
+  You can still count the overlapping read sections twice by using SAMtools v0.1.19 or by using
+  a configuration file specifying the ``-x`` option in ``SamtoolsMpileup_ExtraParams``.
+* Removed the obsolete ``reads.snp.pileup`` files from the included results data sets.
 
 0.6.0 (2016-04-11)
 ~~~~~~~~~~~~~~~~~~

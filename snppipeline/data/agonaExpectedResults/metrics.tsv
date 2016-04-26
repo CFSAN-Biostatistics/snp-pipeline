@@ -1,6 +1,6 @@
 Sample	Fastq_Files	Fastq_File_Size	Machine	Flowcell	Number_of_Reads	Percent_of_Reads_Mapped	Average_Insert_Size	Average_Pileup_Depth	Phase1_SNPs	Phase2_SNPs	Missing_SNP_Matrix_Positions	Excluded_Sample	Warnings_and_Errors
-"ERR178930"	"ERR178930_1.fastq, ERR178930_2.fastq"	8376141060			22510938	84.61	199.94	308.66	3248	3281	62		"No compressed fastq.gz or fq.gz files were found."
-"ERR178928"	"ERR178928_1.fastq, ERR178928_2.fastq"	1376864792			5746042	92.13	297.83	72.44	389	454	245		"No compressed fastq.gz or fq.gz files were found."
-"ERR178926"	"ERR178926_1.fastq, ERR178926_2.fastq"	1326140816			5535944	90.80	223.20	58.48	78	78	2		"No compressed fastq.gz or fq.gz files were found."
-"ERR178929"	"ERR178929_1.fastq, ERR178929_2.fastq"	1252212500			5227518	93.83	299.67	68.19	2952	3172	168		"No compressed fastq.gz or fq.gz files were found."
-"ERR178927"	"ERR178927_1.fastq, ERR178927_2.fastq"	606666360			2542606	93.43	217.13	30.76	77	84	20		"No compressed fastq.gz or fq.gz files were found."
+"ERR178930"	"ERR178930_1.fastq, ERR178930_2.fastq"	8376141060			22510938	84.61	199.94	261.42	3150	3234	59		"No compressed fastq.gz or fq.gz files were found."
+"ERR178928"	"ERR178928_1.fastq, ERR178928_2.fastq"	1376864792			5746042	92.13	297.83	71.70	383	445	224		"No compressed fastq.gz or fq.gz files were found."
+"ERR178926"	"ERR178926_1.fastq, ERR178926_2.fastq"	1326140816			5535944	90.80	223.20	58.02	77	77	2		"No compressed fastq.gz or fq.gz files were found."
+"ERR178929"	"ERR178929_1.fastq, ERR178929_2.fastq"	1252212500			5227518	93.83	299.67	67.70	2941	3139	152		"No compressed fastq.gz or fq.gz files were found."
+"ERR178927"	"ERR178927_1.fastq, ERR178927_2.fastq"	606666360			2542606	93.43	217.13	30.30	77	84	20		"No compressed fastq.gz or fq.gz files were found."

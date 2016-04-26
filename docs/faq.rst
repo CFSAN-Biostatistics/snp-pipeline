@@ -59,7 +59,7 @@ install Biopython.  See the :ref:`installation-label` section of this documentat
 
 **Q: How can I verify the pipeline is installed and working properly?**
 
-A: The SNP Pipeline includes two small sets of test data with result files.  You can run the pipeline against the 
+A: The SNP Pipeline includes sets of test data with result files.  You can run the pipeline against the 
 test data to verify correct results.  Follow the lambda virus workflow steps here: :ref:`all-in-one-workflow-lambda`.
 
 Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
@@ -99,7 +99,7 @@ A: Different versions of the executable tools can generate different results.  T
 these versions:
 	
 	* bowtie2 2.2.2
-	* samtools 0.1.19
+	* samtools 1.3.1
 	* varscan 2.3.9
 
 **Q: How can I run the SNP Pipeline with a mix of paired and unpaired samples?**
