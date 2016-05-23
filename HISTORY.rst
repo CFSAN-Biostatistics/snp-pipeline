@@ -3,7 +3,7 @@
 History
 -------
 
-0.6.1 (2016-04-??)
+0.6.1 (2016-05-23)
 ~~~~~~~~~~~~~~~~~~
 
 * Fixed compatibility with SAMtools 1.3.
