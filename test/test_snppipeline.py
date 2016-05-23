@@ -163,19 +163,6 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         self.run_function_test(snppipeline.create_snp_list, args_dict, 'snplist.txt')
 
 
-    def test_2a_create_snp_pileup(self):
-        """Run create_snp_pileup and verify reads.snp.pileup contains expected contents for each sample.
-        """
-        args_dict = {
-            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
-            'forceFlag' : True,
-            }
-        for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
-            args_dict['allPileupFile'] = os.path.join(self.__class__.directory_run_result, dir, 'reads.all.pileup')
-            args_dict['snpPileupFile'] = os.path.join(self.__class__.directory_run_result, dir, 'reads.snp.pileup')
-            self.run_function_test(snppipeline.create_snp_pileup, args_dict, os.path.join(dir, 'reads.snp.pileup'))
-
-
     def test_2b_call_consensus(self):
         """Run call_consensus and verify consensus.fasta and consensus.vcf contain expected contents for each sample.
         """
