@@ -16,6 +16,7 @@ if __name__ == '__main__':
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument(                   dest='sampleDirsFile', type=str,                        help='Relative or absolute path to file containing a list of directories -- one per sample')
+    parser.add_argument(                   dest='filteredSampleDirsFile', type=str,                help='Relative or absolute path to file containing the filtered list of sample directories -- one per sample')
     parser.add_argument('-f', '--force',   dest='forceFlag',      action='store_true',             help='Force processing even when result file already exists and is newer than inputs')
     parser.add_argument('-n', '--vcfname', dest='vcfFileName',    type=str, default='var.flt.vcf', metavar='NAME', help='File name of the VCF files which must exist in each of the sample directories')
     parser.add_argument(      '--maxsnps', dest='maxSnps',        type=int, default=-1,            metavar='INT',  help='Exclude samples having more than this maximum allowed number of SNPs. Set to -1 to disable this function.')
