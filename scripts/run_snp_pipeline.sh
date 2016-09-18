@@ -395,6 +395,7 @@ export SamtoolsSort_ExtraParams
 export SamtoolsMpileup_ExtraParams
 export VarscanMpileup2snp_ExtraParams
 export VarscanJvm_ExtraParams
+export RemoveAbnormalSnp_ExtraParams
 export CreateSnpList_ExtraParams
 export CallConsensus_ExtraParams
 export CreateSnpMatrix_ExtraParams
@@ -681,42 +682,79 @@ else
     nl "$sampleDirsFile" | xargs -n 2 -P $numPrepSamplesCores bash -c 'set -o pipefail; prepSamples.sh $forceFlag "$referenceFilePath" $1 2>&1 | tee $logDir/prepSamples.log-$0'
 fi
 
-echo -e "\nStep 5 - Combine the SNP positions across all samples into the SNP list file"
+#Filter abnormal SNPs if needed
+echo -e "\nStep 5 - Remove abnormal SNPs"
+echo -e "\n         Run snp_filter command"
 if [[ "$platform" == "grid" ]]; then
-    prepSamplesJobArray=$(stripGridEngineJobArraySuffix $prepSamplesJobId)
+	prepSamplesJobArray=$(stripGridEngineJobArraySuffix $prepSamplesJobId)
+	filterAbnSNPJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N snpFiltering
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $prepSamplesJobArray
+#$ -o $logDir/filterAbnormalSNP.log
+snp_filter.py -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+	prepSamplesJobArray=$(stripTorqueJobArraySuffix $prepSamplesJobId)
+	filterAbnSNPJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+	#PBS -N snpFiltering
+	#PBS -d $(pwd)
+	#PBS -j oe
+	#PBS -W depend=afterokarray:$prepSamplesJobArray
+	#PBS -o $logDir/filterAbnormalSNP.log
+	#PBS -V
+	snp_filter.py -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
+_EOF_
+)
+else
+	snp_filter.py -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
+fi
+
+#Starting from here, there are 2 threads:
+#Thread X.1: the thread processing the original VCF files and corresponding downstream results
+#Thread X.2: the thread processing the preserved VCF files and corresponding downstream results
+
+
+echo -e "\nStep 6.1 - Combine the SNP positions across all samples into the SNP list file"
+echo -e "\n         - process original VCF files"
+# The create_snp_list process creates the filtered list of sample directories.  It is the list of samples having removed the samples with excessive snps.
+# When running on a workstation, the file exists at this point during the script execution, but on grid or torque, it has not yet been created. However,
+# we know the path to the file regardless of whether it exists yet.
+filteredSampleDirsFile="${sampleDirsFile}.OrigVCF.filtered"
+touch $filteredSampleDirsFile
+
+if [[ "$platform" == "grid" ]]; then
+    #prepSamplesJobArray=$(stripGridEngineJobArraySuffix $prepSamplesJobId)
     snpListJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N snpList
 #$ -cwd
 #$ -j y
 #$ -V
-#$ -hold_jid $prepSamplesJobArray
+#$ -hold_jid $filterAbnSNPJobId
 #$ -o $logDir/snpList.log
-    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" 
+create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    prepSamplesJobArray=$(stripTorqueJobArraySuffix $prepSamplesJobId)
+    #prepSamplesJobArray=$(stripTorqueJobArraySuffix $prepSamplesJobId)
     snpListJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
     #PBS -N snpList
     #PBS -d $(pwd)
     #PBS -j oe
-    #PBS -W depend=afterokarray:$prepSamplesJobArray
+    #PBS -W depend=afterok:$filterAbnSNPJobId
     #PBS -o $logDir/snpList.log
     #PBS -V
-    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" 
+    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile"
 _EOF_
 )
 else
-    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/snpList.log
+    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpList.log
 fi
 
-# The create_snp_list process creates the filtered list of sample directories.  It is the list of samples having removed the samples with excessive snps.
-# When running on a workstation, the file exists at this point during the script execution, but on grid or torque, it has not yet been created. However,
-# we know the path to the file regardless of whether it exists yet.
-filteredSampleDirsFile="${sampleDirsFile}.filtered"
-
-
-echo -e "\nStep 6 - Call the consensus SNPs for each sample"
+echo -e "\nStep 7.1 - Call the consensus SNPs for each sample"
 if [[ "$platform" == "grid" ]]; then
     callConsensusJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
 #$ -N callConsensus
@@ -726,7 +764,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -hold_jid $snpListJobId
 #$ -o $logDir/callConsensus.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -738,7 +776,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/callConsensus.log
     #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "\$sampleDir/reads.all.pileup"
+    call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 else
@@ -747,10 +785,10 @@ else
     else
         numCallConsensusCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; my_call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
 fi
 
-echo -e "\nStep 7 - Create the SNP matrix"
+echo -e "\nStep 8.1 - Create the SNP matrix"
 if [[ "$platform" == "grid" ]]; then
     callConsensusJobArray=$(stripGridEngineJobArraySuffix $callConsensusJobId)
     snpMatrixJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
@@ -781,7 +819,7 @@ else
     create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
 fi    
 
-echo -e "\nStep 8 - Create the reference base sequence"
+echo -e "\nStep 9.1 - Create the reference base sequence"
 if [[ "$platform" == "grid" ]]; then
     snpReferenceJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -V
@@ -809,7 +847,7 @@ else
 fi
 
 
-echo -e "\nStep 9 - Create the Multi-VCF file"
+echo -e "\nStep 10.1 - Create the Multi-VCF file"
 if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
     if [[ "$platform" == "grid" ]]; then
         mergeVcfJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
@@ -840,7 +878,7 @@ else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
 fi
 
-echo -e "\nStep 10 - Collect metrics for each sample"
+echo -e "\nStep 11.1 - Collect metrics for each sample"
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
 #$ -N collectMetrics
@@ -876,7 +914,7 @@ else
     nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
-echo -e "\nStep 11 - Combine the metrics across all samples into the metrics table"
+echo -e "\nStep 12.1 - Combine the metrics across all samples into the metrics table"
 if [[ "$platform" == "grid" ]]; then
     collectSampleMetricsJobArray=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
     combineSampleMetricsJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
@@ -906,35 +944,238 @@ else
 fi
 
 
-echo -e "\nStep 12 - Calculate SNP distance matrix"
+# Step 13.1 - Notify user of any non-fatal errors accumulated during processing
+if [[ -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true ]]; then
+    echo "" 1>&2
+    echo "There were errors processing some samples." 1>&2
+    echo "See the log file $errorOutputFile for a summary of errors." 1>&2
+fi
+
+#Starting now are codes processing preserved SNPs after SNP filtering.
+echo -e "\nStep 6.2 - Combine the SNP positions across all samples into the SNP list file"
+echo -e "\n         - process filtered VCF files"
+###Create another copy of sample directories file, for the thread processing preserved snp files.
+filteredSampleDirsFile2="${sampleDirsFile}.PresVCF.filtered"
+touch $filteredSampleDirsFile2
+
+#cp $sampleDirsFile $sampleDirsFile_Preserved
 if [[ "$platform" == "grid" ]]; then
-    calcSnpDistanceJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N snpDistance
+    snpListJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N snpList_preserved
 #$ -cwd
 #$ -j y
 #$ -V
-#$ -hold_jid $snpMatrixJobId
-#$ -o $logDir/calcSnpDistances.log
-    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+#$ -hold_jid $filterAbnSNPJobId
+#$ -o $logDir/snpList_preserved.log
+    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2" 
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
-    calcSnpDistanceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpDistance
+    snpListJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+    #PBS -N snpList_preserved
     #PBS -d $(pwd)
     #PBS -j oe
-    #PBS -W depend=afterok:$snpMatrixJobId
-    #PBS -o $logDir/calcSnpDistances.log
+    #PBS -W depend=afterok:$filterAbnSNPJobId
+    #PBS -o $logDir/snpList_preserved.log
     #PBS -V
-    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2" 
 _EOF_
 )
 else
-    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta" 2>&1 | tee $logDir/calcSnpDistances.log
+    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpList.log
 fi
 
 
-# Step 13 - Notify user of any non-fatal errors accumulated during processing
+echo -e "\nStep 7.2 - Call the consensus SNPs for each sample"
+if [[ "$platform" == "grid" ]]; then
+    callConsensusJobId2=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
+#$ -N callConsensus_preserved
+#$ -cwd
+#$ -V
+#$ -j y
+#$ -hold_jid $snpListJobId2
+#$ -o $logDir/callConsensus_preserved.log-\$TASK_ID
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
+    call_consensus.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "\$sampleDir/consensus_preserved.fasta" -e "\$sampleDir/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "\$sampleDir/reads.all.pileup"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    callConsensusJobId2=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
+    #PBS -N callConsensus_preserved
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterok:$snpListJobId2
+    #PBS -o $logDir/callConsensus_preserved.log
+    #PBS -V
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
+    call_consensus.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "\$sampleDir/consensus_preserved.fasta" -e "\$sampleDir/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "\$sampleDir/reads.all.pileup"
+_EOF_
+)
+else
+    if [[ "$MaxConcurrentCallConsensus" != "" ]]; then
+        numCallConsensusCores=$MaxConcurrentCallConsensus
+    else
+        numCallConsensusCores=$numCores
+    fi
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; call_consensus.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$1/consensus_preserved.fasta" -e "$1/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
+fi
+
+echo -e "\nStep 8.2 - Create the SNP matrix"
+if [[ "$platform" == "grid" ]]; then
+    callConsensusJobArray2=$(stripGridEngineJobArraySuffix $callConsensusJobId2)
+    snpMatrixJobId2=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N snpMatrix_preserved
+#$ -cwd
+#$ -V
+#$ -j y
+#$ -hold_jid $callConsensusJobArray2
+#$ -l h_rt=05:00:00
+#$ -o $logDir/snpMatrix_preserved.log
+    create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    callConsensusJobArray2=$(stripTorqueJobArraySuffix $callConsensusJobId2)
+    snpMatrixJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+    #PBS -N snpMatrix_preserved
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterokarray:$callConsensusJobArray2
+    #PBS -l walltime=05:00:00
+    #PBS -o $logDir/snpMatrix_preserved.log
+    #PBS -V
+    create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
+_EOF_
+)
+else
+    create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpMatrix.log
+fi    
+
+echo -e "\nStep 9.2 - Create the reference base sequence"
+if [[ "$platform" == "grid" ]]; then
+    snpReferenceJobId2=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -V
+#$ -N snpReference_preserved
+#$ -cwd
+#$ -j y 
+#$ -hold_jid $callConsensusJobArray2
+#$ -o $logDir/snpReference_preserved.log
+    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    snpReferenceJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+    #PBS -N snpReference_preserved 
+    #PBS -d $(pwd)
+    #PBS -j oe 
+    #PBS -W depend=afterokarray:$callConsensusJobArray2
+    #PBS -o $logDir/snpReference_preserved.log
+    #PBS -V
+    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+_EOF_
+)
+else
+    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
+fi
+
+
+echo -e "\nStep 10.2 - Create the Multi-VCF file"
+if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
+    if [[ "$platform" == "grid" ]]; then
+        mergeVcfJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N mergeVcf_preserved
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $callConsensusJobArray2
+#$ -o $logDir/mergeVcf_preserved.log
+        mergeVcf.sh $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+        mergeVcfJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+        #PBS -N mergeVcf_preserved
+        #PBS -d $(pwd)
+        #PBS -j oe
+        #PBS -W depend=afterokarray:$callConsensusJobArray2
+        #PBS -o $logDir/mergeVcf_preserved.log
+        #PBS -V
+        mergeVcf.sh $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
+_EOF_
+)
+    else
+        mergeVcf.sh $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/mergeVcf.log
+    fi
+else
+    echo -e "Skipped per CallConsensus_ExtraParams configuration"
+fi
+
+echo -e "\nStep 11.2 - Collect metrics for each sample"
+if [[ "$platform" == "grid" ]]; then
+    collectSampleMetricsJobId2=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
+#$ -N collectMetrics_preserved
+#$ -cwd
+#$ -V
+#$ -j y
+#$ -hold_jid_ad $callConsensusJobArray2
+#$ -l h_rt=02:00:00
+#$ -o $logDir/collectSampleMetrics_preserved.log-\$TASK_ID
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
+    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    collectSampleMetricsJobId2=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
+    #PBS -N collectMetrics_preserved
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterokarray:$callConsensusJobArray2
+    #PBS -l walltime=02:00:00
+    #PBS -o $logDir/collectSampleMetrics_preserved.log
+    #PBS -V
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
+    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+_EOF_
+)
+else
+    if [[ "$MaxConcurrentCollectSampleMetrics" != "" ]]; then
+        numCollectSampleMetricsCores=$MaxConcurrentCollectSampleMetrics
+    else
+        numCollectSampleMetricsCores=$numCores
+    fi
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics_preserved" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+fi
+
+echo -e "\nStep 12.2 - Combine the metrics across all samples into the metrics table"
+if [[ "$platform" == "grid" ]]; then
+    collectSampleMetricsJobArray2=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
+    combineSampleMetricsJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N combineMetrics_preserved
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $collectSampleMetricsJobArray2
+#$ -o $logDir/combineSampleMetrics_preserved.log
+    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    collectSampleMetricsJobArray2=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
+    combineSampleMetricsJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+    #PBS -N combineMetrics_preserved
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterokarray:$collectSampleMetricsJobArray2
+    #PBS -o $logDir/combineSampleMetrics_preserved.log
+    #PBS -V
+    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+else
+    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
+fi
+
+# Step 13.2 - Notify user of any non-fatal errors accumulated during processing
 if [[ -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true ]]; then
     echo "" 1>&2
     echo "There were errors processing some samples." 1>&2
