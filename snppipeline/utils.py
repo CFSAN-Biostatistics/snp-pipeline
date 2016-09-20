@@ -59,6 +59,9 @@ def global_error(message):
     Log a fatal error to the error summary file and exit with error code 100
     to cause Sun Grid Engine to also detect the error.
 
+    This method always stops pipeline execution, it does not care about the
+    SnpPipeline_StopOnSampleError flag.
+
     Args:
         message : str
             Error message
@@ -86,15 +89,24 @@ def global_error(message):
 
 def sample_error(message, continue_possible=False):
     """
-    Log a fatal error to the error summary file and exit with error code 100
-    to cause Sun Grid Engine to also detect the error.
+    Log an error to the error summary file and conditionally exit with error
+    code 100 to cause Sun Grid Engine to also detect the error.
+
+    The SnpPipeline_StopOnSampleError and continue_possible flags control the
+    pipeline exit / continuation behavior.  Possible behaviors are:
+    - Stop this step and all subsequent steps of the pipeline if 
+      SnpPipeline_StopOnSampleError is true or unset
+    - Stop execution of this step, but continue subsequent steps if
+      SnpPipeline_StopOnSampleError is false and continue_possible is false
+    - Allow this step to continue if 
+      SnpPipeline_StopOnSampleError is false and continue_possible is true
 
     Args:
         message : str
             Error message
         continue_possible : boolean
             Indicates if it is possible to continue execution.  Setting this
-            flag true may allow the code to continue withou exiting if
+            flag true may allow the code to continue without exiting if
             configured to do so.
     """
     stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
@@ -479,7 +491,7 @@ def calculate_sequence_distance(seq1, seq2, case_insensitive=True):
 
 #Both sortCoord and concensus are to combine bad regions
 #as a lexical parsing problem.
-def sortCoord(data):
+def sort_coord(data):
     coords = []
         #add each start/end position into a new array as a tuple where the
         #first element represents whether it is a start or end

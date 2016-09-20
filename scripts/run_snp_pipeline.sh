@@ -684,7 +684,6 @@ fi
 
 #Filter abnormal SNPs if needed
 echo -e "\nStep 5 - Remove abnormal SNPs"
-echo -e "\n         Run snp_filter command"
 if [[ "$platform" == "grid" ]]; then
 	prepSamplesJobArray=$(stripGridEngineJobArraySuffix $prepSamplesJobId)
 	filterAbnSNPJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
@@ -785,7 +784,7 @@ else
     else
         numCallConsensusCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; my_call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; call_consensus.py $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
 fi
 
 echo -e "\nStep 8.1 - Create the SNP matrix"
@@ -953,7 +952,6 @@ fi
 
 #Starting now are codes processing preserved SNPs after SNP filtering.
 echo -e "\nStep 6.2 - Combine the SNP positions across all samples into the SNP list file"
-echo -e "\n         - process filtered VCF files"
 ###Create another copy of sample directories file, for the thread processing preserved snp files.
 filteredSampleDirsFile2="${sampleDirsFile}.PresVCF.filtered"
 touch $filteredSampleDirsFile2
