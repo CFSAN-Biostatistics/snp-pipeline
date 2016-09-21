@@ -119,10 +119,10 @@ def remove_bad_snp(options_dict):
     remove_bad_snp(options_dict)
     """
     
-    snppipeline.print_log_header()
-    snppipeline.verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
-    snppipeline.verbose_print("# %s version %s" % (utils.program_name(), __version__))
-    snppipeline.print_arguments(options_dict)
+    print_log_header()
+    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
+    verbose_print("# %s version %s" % (utils.program_name(), __version__))
+    print_arguments(options_dict)
     
     #==========================================================================
     # Validate some parameters
@@ -155,7 +155,7 @@ def remove_bad_snp(options_dict):
                 unsorted_list_of_outgroup_samples = [line.rstrip() for line in out_group_list_file]
             sorted_list_of_outgroup_samples = sorted(unsorted_list_of_outgroup_samples)
     except:
-        utils.sample_error("Error: Cannot open the file containing the list of ourgroup samples!", continue_possible=True)
+        utils.sample_error("Error: Cannot open the file containing the list of outgroup samples!", continue_possible=True)
         
     #==========================================================================
     # Validate inputs
@@ -273,8 +273,8 @@ def remove_bad_snp(options_dict):
      
     #Combine all bad regions for each contig
     for contig, regions in bad_regions_dict.items(): 
-        sorted_regions=sortCoord(regions)
-        combined_regions=consensus(sorted_regions) 
+        sorted_regions = utils.sort_coord(regions)
+        combined_regions = utils.consensus(sorted_regions) 
         bad_regions_dict[contig]=combined_regions
                   
         
@@ -317,7 +317,7 @@ def remove_bad_snp(options_dict):
                 #Create a dict to store all SNPs in this sample
                 #get contig length from contig name.The CHROM should be a contig name in the format of Velvet/SPAdes output.
                 contig = vcf_data_line.CHROM
-                if (in_region(vcf_data_line.POS, bad_regions_dict[contig])):
+                if (utils.in_region(vcf_data_line.POS, bad_regions_dict[contig])):
                     #Remove this SNP
                     vcf_writer_removed.write_record(vcf_data_line)
                 else:
