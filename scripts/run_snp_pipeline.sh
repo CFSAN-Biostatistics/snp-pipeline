@@ -942,8 +942,34 @@ else
     combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
 fi
 
+echo -e "\nStep 13.1 - Calculate SNP distance matrix"
+if [[ "$platform" == "grid" ]]; then
+    calcSnpDistanceJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N snpDistance
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $snpMatrixJobId
+#$ -o $logDir/calcSnpDistances.log
+    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    calcSnpDistanceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+    #PBS -N snpDistance
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterok:$snpMatrixJobId
+    #PBS -o $logDir/calcSnpDistances.log
+    #PBS -V
+    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+_EOF_
+)
+else
+    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta" 2>&1 | tee $logDir/calcSnpDistances.log
+fi
 
-# Step 13.1 - Notify user of any non-fatal errors accumulated during processing
+# Step 14.1 - Notify user of any non-fatal errors accumulated during processing
 if [[ -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true ]]; then
     echo "" 1>&2
     echo "There were errors processing some samples." 1>&2
@@ -980,7 +1006,7 @@ elif [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpList.log
+    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpList_preserved.log
 fi
 
 
@@ -1015,7 +1041,7 @@ else
     else
         numCallConsensusCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; call_consensus.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$1/consensus_preserved.fasta" -e "$1/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; call_consensus.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$1/consensus_preserved.fasta" -e "$1/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus_preserved.log-$0'
 fi
 
 echo -e "\nStep 8.2 - Create the SNP matrix"
@@ -1046,7 +1072,7 @@ elif [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpMatrix.log
+    create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpMatrix_preserved.log
 fi    
 
 echo -e "\nStep 9.2 - Create the reference base sequence"
@@ -1073,7 +1099,7 @@ elif [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
+    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference_preserved.log
 fi
 
 
@@ -1102,7 +1128,7 @@ elif [[ "$platform" == "torque" ]]; then
 _EOF_
 )
     else
-        mergeVcf.sh $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/mergeVcf.log
+        mergeVcf.sh $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/mergeVcf_preserved.log
     fi
 else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
@@ -1141,7 +1167,7 @@ else
     else
         numCollectSampleMetricsCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics_preserved" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics_preserved" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics_preserved.log-$0'
 fi
 
 echo -e "\nStep 12.2 - Combine the metrics across all samples into the metrics table"
@@ -1170,10 +1196,37 @@ elif [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
+    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics_preserved.log
 fi
 
-# Step 13.2 - Notify user of any non-fatal errors accumulated during processing
+echo -e "\nStep 13.2 - Calculate SNP distance matrix"
+if [[ "$platform" == "grid" ]]; then
+    calcSnpDistanceJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N snpDistance
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $snpMatrixJobId2
+#$ -o $logDir/calcSnpDistances_preserved.log
+    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    calcSnpDistanceJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+    #PBS -N snpDistance
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterok:$snpMatrixJobId2
+    #PBS -o $logDir/calcSnpDistances_preserved.log
+    #PBS -V
+    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
+_EOF_
+)
+else
+    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta" 2>&1 | tee $logDir/calcSnpDistances_preserved.log
+fi
+
+# Step 14.2 - Notify user of any non-fatal errors accumulated during processing
 if [[ -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true ]]; then
     echo "" 1>&2
     echo "There were errors processing some samples." 1>&2
