@@ -94,7 +94,7 @@ def sample_error(message, continue_possible=False):
             Error message
         continue_possible : boolean
             Indicates if it is possible to continue execution.  Setting this
-            flag true may allow the code to continue withou exiting if
+            flag true may allow the code to continue without exiting if
             configured to do so.
     """
     stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")

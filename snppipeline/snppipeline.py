@@ -179,7 +179,7 @@ def remove_bad_snp(options_dict):
             #build contig_length_dict
             contig_length_dict[record.id]=len(record.seq)
     except:
-        utils.sample_error("Error: Cannot get contigs' lengths from the reference fasta file!", continue_possible=False)
+        utils.global_error("Error: cannot open the reference fastq file, or fail to read the contigs in the reference fastq file.")
     else:
         if handle:       
             handle.close()   
@@ -192,8 +192,8 @@ def remove_bad_snp(options_dict):
         try:
             vcf_reader=vcf.Reader(open(vcf_file_path, 'r'))
         except:
-            utils.sample_error("Error: Cannot open the input vcf file: %d." % vcf_file_path, continue_possible=False)
-            return
+            utils.sample_error("Error: Cannot open the input vcf file: %s." % vcf_file_path, continue_possible=True)
+            continue
         
         #Get sample ID
         ss=vcf_file_path.split('/')
@@ -211,12 +211,12 @@ def remove_bad_snp(options_dict):
             try:
                 vcf_writer_removed=vcf.Writer(open(removed_vcf_file_path, 'w'), vcf_reader)
             except:
-                utils.sample_error("Error: Cannot create the file for reserved SNPs: %d." % removed_vcf_file_path, continue_possible=False)
+                utils.sample_error("Error: Cannot create the file for removed SNPs: %s." % removed_vcf_file_path, continue_possible=True)
                 #print "Cannot create the file for removed SNPs: %d." % removed_vcf_file_path
                 #close vcf_writer_reserved and remove the file reserved_vcf_file_path
                 vcf_writer_removed.close()
                 os.remove(removed_vcf_file_path)
-                return
+                continue
             
             vcf_writer_removed.close()
             shutil.copyfile(vcf_file_path, preserved_vcf_file_path)
@@ -288,8 +288,8 @@ def remove_bad_snp(options_dict):
             try:
                 vcf_reader=vcf.Reader(open(vcf_file_path, 'r'))
             except:
-                utils.sample_error("Error: Cannot open the input vcf file: %d." % vcf_file_path, continue_possible=False)
-                return
+                utils.sample_error("Error: Cannot open the input vcf file: %s." % vcf_file_path, continue_possible=True)
+                continue
             
             #SNP list, saved as (Contig_Name, [(SNP_Position, SNP_Record),]), where SNP_Record is a line in VCF.
             
@@ -299,19 +299,19 @@ def remove_bad_snp(options_dict):
             try:
                 vcf_writer_preserved=vcf.Writer(open(preserved_vcf_file_path, 'w'), vcf_reader)
             except:
-                utils.sample_error("Error: Cannot create the file for reserved SNPs: %d." % preserved_vcf_file_path, continue_possible=False)
+                utils.sample_error("Error: Cannot create the file for preserved SNPs: %s." % preserved_vcf_file_path, continue_possible=True)
                 vcf_writer_preserved.close()
                 os.remove(preserved_vcf_file_path)
-                return
+                continue
             
             try:
                 vcf_writer_removed=vcf.Writer(open(removed_vcf_file_path, 'w'), vcf_reader)
             except:
-                utils.sample_error("Error: Cannot create the file for reserved SNPs: %d." % removed_vcf_file_path, continue_possible=False)
+                utils.sample_error("Error: Cannot create the file for removed SNPs: %s." % removed_vcf_file_path, continue_possible=True)
                 #close vcf_writer_reserved and remove the file reserved_vcf_file_path
                 vcf_writer_removed.close()
                 os.remove(removed_vcf_file_path)
-                return
+                continue
                     
             for vcf_data_line in vcf_reader:
                 #Create a dict to store all SNPs in this sample
