@@ -155,6 +155,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         """
         args_dict = {
             'sampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt'),
+            'filteredSampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'filteredSampleDirectories.txt'),
             'vcfFileName' : 'var.flt.vcf',
             'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
             'maxSnps' : -1,
