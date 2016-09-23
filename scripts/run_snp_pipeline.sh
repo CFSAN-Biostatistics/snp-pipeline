@@ -1202,7 +1202,7 @@ fi
 echo -e "\nStep 13.2 - Calculate SNP distance matrix"
 if [[ "$platform" == "grid" ]]; then
     calcSnpDistanceJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N snpDistance
+#$ -N snpDistance_preserved
 #$ -cwd
 #$ -j y
 #$ -V
@@ -1213,7 +1213,7 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     calcSnpDistanceJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpDistance
+    #PBS -N snpDistance_preserved
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterok:$snpMatrixJobId2

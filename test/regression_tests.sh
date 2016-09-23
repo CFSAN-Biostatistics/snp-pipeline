@@ -84,21 +84,6 @@ assertNewerFile()
 # Tests
 #################################################
 
-test1()
-{
-testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorStop
-}
-
-test2()
-{
-testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorNoStop
-}
-
-test3()
-{
-testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorStopUnset
-}
-
 
 # Verify the scripts were properly installed on the path.
 testScriptsOnPath()
@@ -3438,9 +3423,6 @@ testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorNoStop()
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -S "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" 2> "$tempDir/run_snp_pipeline.stderr.log" > "$tempDir/run_snp_pipeline.stdout.log"
     errorCode=$?
 
-less "$tempDir/run_snp_pipeline.stderr.log"
-less "$tempDir/run_snp_pipeline.stdout.log"
-
     # Verify error handling behavior
     assertEquals "run_snp_pipeline.sh returned incorrect error code when the file of sample directories failed validation." 0 $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
@@ -3822,7 +3804,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample3/reads.sam"
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample4/reads.sam"
 
-    assertFileContains "$tempDir/error.log" "create_snp_list.py failed"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed\|create_snp_list.py failed"  # either/or
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
