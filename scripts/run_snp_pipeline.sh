@@ -888,7 +888,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -l h_rt=02:00:00
 #$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    collectSampleMetrics.sh -o "\$sampleDir/metrics" -v "\$sampleDir/consensus.vcf" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -901,7 +901,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/collectSampleMetrics.log
     #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    collectSampleMetrics.sh -o "\$sampleDir/metrics" -v "\$sampleDir/consensus.vcf" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 else
@@ -910,7 +910,7 @@ else
     else
         numCollectSampleMetricsCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics" -v "$1/consensus.vcf" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
 echo -e "\nStep 12.1 - Combine the metrics across all samples into the metrics table"
@@ -1145,7 +1145,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -l h_rt=02:00:00
 #$ -o $logDir/collectSampleMetrics_preserved.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" -v "\$sampleDir/consensus_preserved.vcf" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -1158,7 +1158,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/collectSampleMetrics_preserved.log
     #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" -v "\$sampleDir/consensus_preserved.vcf" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 else
@@ -1167,7 +1167,7 @@ else
     else
         numCollectSampleMetricsCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics_preserved" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics_preserved.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics_preserved" -v "$1/consensus_preserved.vcf" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics_preserved.log-$0'
 fi
 
 echo -e "\nStep 12.2 - Combine the metrics across all samples into the metrics table"

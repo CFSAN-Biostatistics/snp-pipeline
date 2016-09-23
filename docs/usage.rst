@@ -26,6 +26,8 @@ of shell scripts and python scripts.
 +-----------------------------+--------------------------------------------------------------------+
 | prepSamples.sh              | | Finds variants in each sample                                    |
 +-----------------------------+--------------------------------------------------------------------+
+| snp_filter.py               | | Remove SNPs in abnormal regions.                                 |
++-----------------------------+--------------------------------------------------------------------+
 | create_snp_list.py          | | Combines the SNP positions across all samples into a single      |
 |                             | | unified SNP list file                                            |
 +-----------------------------+--------------------------------------------------------------------+
@@ -136,6 +138,11 @@ See :ref:`step-by-step-workflows`.
 * ``metrics.tsv`` : a tab-separated table of metrics for all samples containing 
   the size of the samples, number of reads, alignment rate, pileup depth, and 
   number of SNPs found.
+  
+* Besides the output files above, which are the downstream results of the original VCF
+  files, the SNP pipeline removes abnormal SNPs from the original VCF files, and generates
+  corresponding output files. These output files have the similar names as above, except 
+  "_preserved" is present.
 
 * ``error.log`` : a summary of errors detected during SNP Pipeline execution
 
