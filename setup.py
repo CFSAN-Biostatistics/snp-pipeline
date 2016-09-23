@@ -74,6 +74,7 @@ setup(
         'scripts/prepReference.sh',
         'scripts/alignSampleToReference.sh',
         'scripts/prepSamples.sh',
+        'scripts/snp_filter.py',
         'scripts/create_snp_list.py',
         'scripts/create_snp_pileup.py',
         'scripts/call_consensus.py',

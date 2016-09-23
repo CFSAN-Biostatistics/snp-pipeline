@@ -527,10 +527,10 @@ tryPrepReferenceSamtoolsFaidxTrap()
 
     # Verify error handling behavior
     #
-    # The results are different depending on which version of SAMtools is installed because SAMtools 1.3 
+    # The results are different depending on which version of SAMtools is installed because SAMtools 1.3
     # does not fail with an error code that can be trapped.  The verification tests below check for the
     # common results in v0.1.19 and v1.3.
-    
+
     # SAMtools 0.1.19 error.log
     # -------------------------
     # Error detected while running prepReference.sh.
@@ -1162,7 +1162,7 @@ tryPrepSamplesSamtoolsSortTrap()
     # Extract test data to temp dir
     copy_snppipeline_data.py lambdaVirusInputs $tempDir
 
-    # Setup directories and env variables used to trigger error handling.  
+    # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
@@ -1460,7 +1460,7 @@ tryCreateSnpListPermissionTrap()
     echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_list.log"
+    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
     # Verify create_snp_list.py error handling behavior
@@ -1513,7 +1513,7 @@ tryCreateSnpListMissingSampleDirRaiseGlobalError()
     export errorOutputFile="$tempDir/error.log"
 
     # Run create_snp_list.py with missing sampleDirectories.txt
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_list.log"
+    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
     # Verify create_snp_list error handling behavior
@@ -1566,7 +1566,7 @@ tryCreateSnpListMissingVcfRaiseGlobalError()
 
     # Run create_snp_list.py -- fail because of missing all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" &> "$logDir/create_snp_list.log"
+    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
     # Verify create_snp_list error handling behavior
@@ -1632,7 +1632,7 @@ tryCreateSnpListMissingVcfRaiseSampleError()
 
     # Run create_snp_list.py -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" &> "$logDir/create_snp_list.log"
+    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
     # Verify create_snp_list error handling behavior
@@ -1681,7 +1681,7 @@ testCreateSnpListMissingVcfRaiseSampleErrorNoStop()
 
     # Run create_snp_list.py -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" &> "$logDir/create_snp_list.log"
+    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
     # Verify create_snp_list error handling behavior
@@ -1878,7 +1878,7 @@ testCallConsensusEmptySnpListStopUnset()
 }
 
 
-# Verify the call_consensus script detects failure.
+# Verify the call_consensus script detects missing pileup file.
 tryCallConsensusMissingPileupRaiseSampleError()
 {
     expectErrorCode=$1
@@ -1914,25 +1914,85 @@ tryCallConsensusMissingPileupRaiseSampleError()
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the call_consensus script detects failure.
+# Verify the call_consensus script detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusMissingPileupRaiseSampleError 100
 }
 
-# Verify the call_consensus script detects failure.
+# Verify the call_consensus script detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusMissingPileupRaiseSampleError 98
 }
 
-# Verify the call_consensus script detects failure.
+# Verify the call_consensus script detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
     tryCallConsensusMissingPileupRaiseSampleError 100
+}
+
+
+# Verify the call_consensus script detects missing exclude file.
+tryCallConsensusMissingExcludeRaiseSampleError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run prep work
+    echo "fake snplist" > $tempDir/snplist.txt
+    mkdir -p "$tempDir/samples/sample1"
+    echo "fake pileup" > "$tempDir/samples/sample1/reads.all.pileup"
+
+    # Run call_consensus.py -- fail because of missing pileup
+    printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
+    call_consensus.py -e "$tempDir/samples/sample1/excludeFile.vcf" -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    errorCode=$?
+
+    # Verify call_consensus error handling behavior
+    assertEquals "call_consensus.py returned incorrect error code when exclude file was missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "call_consensus.py failed."
+    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py failed."
+    assertFileContains "$tempDir/error.log" "cannot call consensus without the file of excluded positions"
+    assertFileContains "$logDir/call_consensus.log" "cannot call consensus without the file of excluded positions"
+    assertFileContains "$tempDir/error.log" "Exclude file $tempDir/samples/sample1/excludeFile.vcf does not exist"
+    assertFileContains "$logDir/call_consensus.log" "Exclude file $tempDir/samples/sample1/excludeFile.vcf does not exist"
+    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py finished"
+    assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the call_consensus script detects missing exclude file.
+testCallConsensusMissingExcludeRaiseSampleErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryCallConsensusMissingExcludeRaiseSampleError 100
+}
+
+# Verify the call_consensus script detects missing exclude file.
+testCallConsensusMissingExcludeRaiseSampleErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryCallConsensusMissingExcludeRaiseSampleError 98
+}
+
+# Verify the call_consensus script detects missing exclude file.
+testCallConsensusMissingExcludeRaiseSampleErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryCallConsensusMissingExcludeRaiseSampleError 100
 }
 
 
@@ -2206,7 +2266,7 @@ tryCreateSnpMatrixPermissionTrap()
     create_snp_matrix.py -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
     errorCode=$?
 
-    # Verify create_snp_list.py error handling behavior
+    # Verify create_snp_matrix.py error handling behavior
     assertEquals "create_snp_matrix.py returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running create_snp_matrix.py"
@@ -2479,7 +2539,7 @@ tryCreateSnpReferenceSeqPermissionTrap()
     create_snp_reference_seq.py -l "$tempDir/snplist.txt" -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
     errorCode=$?
 
-    # Verify create_snp_list.py error handling behavior
+    # Verify create_snp_reference_seq.py error handling behavior
     assertEquals "create_snp_reference_seq.py returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running create_snp_reference_seq.py"
@@ -2805,7 +2865,7 @@ tryCombineSampleMetricsMissingSampleDirRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run create_snp_list.py with missing sampleDirectories.txt
+    # Run combineSampleMetrics with missing sampleDirectories.txt
     combineSampleMetrics.sh "$tempDir/sampleDirectories.txt" &> "$logDir/combineSampleMetrics.log"
     errorCode=$?
 
@@ -2816,7 +2876,7 @@ tryCombineSampleMetricsMissingSampleDirRaiseGlobalError()
     assertFileNotContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh failed."
     assertFileContains "$tempDir/error.log" "Sample directories file $tempDir/sampleDirectories.txt does not exist"
     assertFileContains "$logDir/combineSampleMetrics.log" "Sample directories file $tempDir/sampleDirectories.txt does not exist"
-    assertFileNotContains "$logDir/combineSampleMetrics.log" "create_snp_list.py finished"
+    assertFileNotContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
     assertFileNotContains "$logDir/combineSampleMetrics.log" "Use the -f option to force a rebuild"
 }
 
@@ -3080,7 +3140,7 @@ tryCalculateSnpDistancesPermissionTrap()
     calculate_snp_distances.py -p "$tempDir/pairwise" "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
     errorCode=$?
 
-    # Verify create_snp_list.py error handling behavior
+    # Verify calculate_snp_distances.py error handling behavior
     assertEquals "calculate_snp_distances.py returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running calculate_snp_distances.py"
@@ -3776,7 +3836,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample3/reads.sam"
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample4/reads.sam"
 
-    assertFileContains "$tempDir/error.log" "create_snp_list.py failed"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed\|create_snp_list.py failed"  # either/or
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
@@ -4172,7 +4232,7 @@ testRunSnpPipelineZeroSnps()
 }
 
 
-# Verify run_snp_pipeline rebuilds the snplist when at least one var.flt.vcf is missing and 
+# Verify run_snp_pipeline rebuilds the snplist when at least one var.flt.vcf is missing and
 # at least one var.flt.vcf is newer
 testRunSnpPipelineRerunMissingVCF()
 {

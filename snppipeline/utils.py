@@ -59,6 +59,9 @@ def global_error(message):
     Log a fatal error to the error summary file and exit with error code 100
     to cause Sun Grid Engine to also detect the error.
 
+    This method always stops pipeline execution, it does not care about the
+    SnpPipeline_StopOnSampleError flag.
+
     Args:
         message : str
             Error message
@@ -86,15 +89,24 @@ def global_error(message):
 
 def sample_error(message, continue_possible=False):
     """
-    Log a fatal error to the error summary file and exit with error code 100
-    to cause Sun Grid Engine to also detect the error.
+    Log an error to the error summary file and conditionally exit with error
+    code 100 to cause Sun Grid Engine to also detect the error.
+
+    The SnpPipeline_StopOnSampleError and continue_possible flags control the
+    pipeline exit / continuation behavior.  Possible behaviors are:
+    - Stop this step and all subsequent steps of the pipeline if 
+      SnpPipeline_StopOnSampleError is true or unset
+    - Stop execution of this step, but continue subsequent steps if
+      SnpPipeline_StopOnSampleError is false and continue_possible is false
+    - Allow this step to continue if 
+      SnpPipeline_StopOnSampleError is false and continue_possible is true
 
     Args:
         message : str
             Error message
         continue_possible : boolean
             Indicates if it is possible to continue execution.  Setting this
-            flag true may allow the code to continue withou exiting if
+            flag true may allow the code to continue without exiting if
             configured to do so.
     """
     stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
@@ -290,7 +302,7 @@ def target_needs_rebuild(source_files, target_file):
         # A non-existing source file should neither force a rebuild, nor prevent a rebuild.
         # You should error-check the existence of the source files before calling this function.
         #
-        # An empty source file should force a rebuild if it is newer than the target, just like
+        # An empty source file should force a rebuild if it is newer than the target, just like 
         # a regular non-empty source file.
         if not os.path.isfile(source_file):
             continue
@@ -301,6 +313,50 @@ def target_needs_rebuild(source_files, target_file):
 
     return False
 
+
+def targets_needs_rebuild(source_files, target_files):
+    """Determine if target files need a fresh rebuild, i.e. any one of target files does
+    not exist or its modification time is older than any of its source files.
+
+    Args:
+        source_files : relative or absolute path to a list of files
+        target_files : relative or absolute path to a list of file
+    """
+    
+    if (len(target_files) == 0):
+        return True
+    else:
+        if not os.path.isfile(target_files[0]):
+            return True
+        
+        oldest_timestamp=os.stat(target_files[0]).st_mtime
+        
+        if os.path.getsize(target_file) == 0:
+            return True
+        
+        for target_file in target_files:
+            if (not os.path.isfile(target_file)) or (os.path.getsize(target_file) == 0):
+                return True
+    
+            target_timestamp = os.stat(target_file).st_mtime
+            if oldest_timestamp > target_timestamp:
+                oldest_timestamp = target_timestamp
+            
+    
+        for source_file in source_files:
+            # A non-existing source file should neither force a rebuild, nor prevent a rebuild.
+            # You should error-check the existence of the source files before calling this function.
+            #
+            # An empty source file should force a rebuild if it is newer than the target, just like 
+            # a regular non-empty source file.
+            if not os.path.isfile(source_file):
+                continue
+    
+            source_timestamp = os.stat(source_file).st_mtime
+            if source_timestamp > oldest_timestamp:
+                return True
+
+    return False  
 
 def create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, snp_set):
     """Create a subset pileup with SNP locations only.
@@ -433,3 +489,78 @@ def calculate_sequence_distance(seq1, seq2, case_insensitive=True):
         if base1 != base2:
             mismatches += 1
     return mismatches
+
+#Both sortCoord and concensus are to combine bad regions
+#as a lexical parsing problem.
+def sort_coord(data):
+    coords = []
+        #add each start/end position into a new array as a tuple where the
+        #first element represents whether it is a start or end
+    for coord in data:
+        coords.append(('s',coord[0]))
+        coords.append(('e',coord[1]))
+
+    #sort by start and end first. In case of event where
+    #a start and end coordinate are the same, we want the start
+    #coordinate to come first.
+    coords.sort(key = lambda x : x[0], reverse = True)
+
+    #sort by coordinate
+    coords.sort(key = lambda x : x[1])
+
+    return coords
+
+#looks for the outer-most SE's
+def consensus(coords):
+    
+    count = 0
+    posA = 0
+    out = []
+    for pos in coords:
+        if count == 0:
+            posA = pos[1]
+        if pos[0] == 's':
+            count += 1
+        if pos[0] == 'e':
+            count -=1
+
+        if count == 0:
+            out.append((posA, pos[1]))
+
+    return out
+
+#a simple lexical tokenizer to find overlap
+def overlap(coords):
+    
+    count = 0
+    posA = 0
+
+    #this will tell you how many 'levels' there are
+    #to the current overlap. Essentially how many
+    #features makes up the overlap.
+    level = 1
+    out = []
+    for pos in coords:
+        if pos[0] == 's':
+            count = 1
+            level += 1
+            posA = pos[1]
+        if pos[0] == 'e':
+            level -=1
+            count -=1
+
+        if count == 0:
+                        #only output overlap if there are more than 1 feature
+                        #making up the overlap
+            if level > 1:
+                out.append((posA, pos[1], level))
+
+    return out    
+
+#To find whether a position is included in a bad region
+def in_region(pos, regions):
+    for region in regions:
+        if ((pos >= region[0]) and (pos <= region[1])):
+            return True
+        
+    return False
