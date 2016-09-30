@@ -1,0 +1,5 @@
+	sample1	sample2	sample3	sample4
+sample1	0	73	67	60
+sample2	73	0	76	69
+sample3	67	76	0	63
+sample4	60	69	63	0

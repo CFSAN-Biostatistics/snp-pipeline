@@ -209,18 +209,17 @@ snp_filter.py
                           each of the sample directories (default: var.flt.vcf)
     -l EDGE_LENGTH, --edge_length EDGE_LENGTH
                           The length of the edge regions in a contig, in which
-                          all SNPs will be removed. Default is 500. (default:
-                          500)
+                          all SNPs will be removed. (default: 500)
     -w WINDOW_SIZE, --window_size WINDOW_SIZE
                           the length of the window in which the number of SNPs
-                          should be no more than max_num_snp. Default is 1000.
-                          (default: 1000)
+                          should be no more than max_num_snp. (default: 1000)
     -m MAX_NUM_SNPs, --max_snp MAX_NUM_SNPs
                           The maximum number of SNPs allowed in a window.
-                          Default is 3. (default: 3)
+                          (default: 3)
     -g OUT_GROUP, --out_group OUT_GROUP
                           Relative or absolute path to the file indicating
-                          outgroup samples, one sample ID per line. (default: )
+                          outgroup samples, one sample ID per line. (default:
+                          None)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit

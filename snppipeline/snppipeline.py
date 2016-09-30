@@ -88,7 +88,7 @@ def remove_bad_snp(options_dict):
         1. The sampleDirectories.txt input file contains a list of the paths to
            the sample directories.
         2. The var.flt.vcf variant input files (i.e., the original vcf file).
-        3. The var.flt_removed.vcf and var.flt_preserved.vcf output files contain the removed SNPs and 
+        3. The var.flt_removed.vcf and var.flt_preserved.vcf output files contain the removed SNPs and
            preserved SNPs.
 
     The sampleDirectories.txt and var.flt.vcf files are created outside of
@@ -118,20 +118,19 @@ def remove_bad_snp(options_dict):
                    }
     remove_bad_snp(options_dict)
     """
-    
     print_log_header()
     verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
     verbose_print("# %s version %s" % (utils.program_name(), __version__))
     print_arguments(options_dict)
-    
+
     #==========================================================================
     # Validate some parameters
     #==========================================================================
     edge_length=options_dict["edgeLength"]
     window_size=options_dict["windowSize"]
     max_num_snp=options_dict["maxSNP"]
-    
-    
+
+
     #==========================================================================
     # Prep work
     #==========================================================================
@@ -144,19 +143,19 @@ def remove_bad_snp(options_dict):
         unsorted_list_of_sample_directories = [line.rstrip() for line in sample_directories_list_file]
     unsorted_list_of_sample_directories = [d for d in unsorted_list_of_sample_directories if d]
     sorted_list_of_sample_directories = sorted(unsorted_list_of_sample_directories)
-    
+
     out_group_list_path =  options_dict['outGroupFile']
     out_goup_list = list()
     sorted_list_of_outgroup_samples = list()
     try:
-        if (out_group_list_path != ""):
+        if (out_group_list_path is not None):
             #There are outgroup samples
             with open(out_group_list_path, "r") as out_group_list_file:
                 unsorted_list_of_outgroup_samples = [line.rstrip() for line in out_group_list_file]
             sorted_list_of_outgroup_samples = sorted(unsorted_list_of_outgroup_samples)
     except:
         utils.sample_error("Error: Cannot open the file containing the list of outgroup samples!", continue_possible=True)
-        
+
     #==========================================================================
     # Validate inputs
     #==========================================================================
@@ -168,12 +167,12 @@ def remove_bad_snp(options_dict):
         utils.global_error("Error: all %d VCF files were missing or empty." % bad_file_count)
     elif bad_file_count > 0:
         utils.sample_error("Error: %d VCF files were missing or empty." % bad_file_count, continue_possible=True)
-    
+
     #==========================================================================
     # Get contigs' length from the reference fasta file
     #==========================================================================
     try:
-        handle = open(options_dict['refFastaFile'], "rU")
+        handle = open(options_dict['refFastaFile'], "r")
         contig_length_dict=dict()
         for record in SeqIO.parse(handle, "fasta"):
             #build contig_length_dict
@@ -181,9 +180,9 @@ def remove_bad_snp(options_dict):
     except:
         utils.global_error("Error: cannot open the reference fastq file, or fail to read the contigs in the reference fastq file.")
     else:
-        if handle:       
-            handle.close()   
-            
+        if handle:
+            handle.close()
+
     #==========================================================================
     # Find all bad regions.
     #==========================================================================
@@ -194,20 +193,20 @@ def remove_bad_snp(options_dict):
         except:
             utils.sample_error("Error: Cannot open the input vcf file: %s." % vcf_file_path, continue_possible=True)
             continue
-        
+
         #Get sample ID
         ss=vcf_file_path.split('/')
         sample_ID=ss[len(ss)-2]
-        
+
         if (sample_ID in sorted_list_of_outgroup_samples):
             #Copy original vcf file to _preserved.vcf, and created an empty _removed.vcf
-            
+
             #SNP list, saved as (Contig_Name, [(SNP_Position, SNP_Record),]), where SNP_Record is a line in VCF.
-            
+
             preserved_vcf_file_path=vcf_file_path[:-4]+"_preserved.vcf"
             removed_vcf_file_path=vcf_file_path[:-4]+"_removed.vcf"
-            
-            
+
+
             try:
                 vcf_writer_removed=vcf.Writer(open(removed_vcf_file_path, 'w'), vcf_reader)
             except:
@@ -217,12 +216,12 @@ def remove_bad_snp(options_dict):
                 vcf_writer_removed.close()
                 os.remove(removed_vcf_file_path)
                 continue
-            
+
             vcf_writer_removed.close()
             shutil.copyfile(vcf_file_path, preserved_vcf_file_path)
-        else:       
-            #SNP list, saved as (Contig_Name, [(SNP_Position, SNP_Record),]), where SNP_Record is a line in VCF.            
-            snp_dict=dict()        
+        else:
+            #SNP list, saved as (Contig_Name, [(SNP_Position, SNP_Record),]), where SNP_Record is a line in VCF.
+            snp_dict=dict()
             for vcf_data_line in vcf_reader:
                 #Create a dict to store all SNPs in this sample
                 #get contig length from contig name.The CHROM should be a contig name in the format of Velvet/SPAdes output.
@@ -234,16 +233,16 @@ def remove_bad_snp(options_dict):
                     temp_record=(vcf_data_line.POS, vcf_data_line)
                     record.append(temp_record)
                 snp_dict[key] = record
-            
+
             #Find bad regions and add them into bad_region
             for contig, snp_list in snp_dict.items():
-                       
+
                 #sort all SNPs in this contig by position
                 sorted_list=sorted(snp_list, key=lambda SNPs: SNPs[0])
-                
+
                 #total number of SNPs
                 num_of_snp=len(sorted_list)
-                
+
                 if contig not in bad_regions_dict:
                     #New contig
                     try:
@@ -251,13 +250,13 @@ def remove_bad_snp(options_dict):
                     except:
                         #cannot find contig length. Use the sys.maxsize.
                         contig_length=sys.maxsize
-                    
+
                     if (contig_length <= (edge_length * 2)):
                         bad_regions_dict[contig]=[(0, contig_length)]
-                    else:        
+                    else:
                         region=[(0, edge_length), (contig_length-edge_length, contig_length)]
                         bad_regions_dict[contig]=region
-                
+
                 #Process SNPs
                 for idx, snp in enumerate(sorted_list):
                     if ((idx + max_num_snp) < num_of_snp):
@@ -269,33 +268,33 @@ def remove_bad_snp(options_dict):
                             temp_region=(pos_start, pos_end)
                             regions.append(temp_region)
                             bad_regions_dict[contig]=regions
-                
-     
+
+
     #Combine all bad regions for each contig
-    for contig, regions in bad_regions_dict.items(): 
+    for contig, regions in bad_regions_dict.items():
         sorted_regions = utils.sort_coord(regions)
-        combined_regions = utils.consensus(sorted_regions) 
+        combined_regions = utils.consensus(sorted_regions)
         bad_regions_dict[contig]=combined_regions
-                  
-        
+
+
     #Scan vcf files to remove SNPs
     for vcf_file_path in list_of_vcf_files:
         #Get sample ID
         ss=vcf_file_path.split('/')
         sample_ID=ss[len(ss)-2]
-        
+
         if (sample_ID not in sorted_list_of_outgroup_samples):
             try:
                 vcf_reader=vcf.Reader(open(vcf_file_path, 'r'))
             except:
                 utils.sample_error("Error: Cannot open the input vcf file: %s." % vcf_file_path, continue_possible=True)
                 continue
-            
+
             #SNP list, saved as (Contig_Name, [(SNP_Position, SNP_Record),]), where SNP_Record is a line in VCF.
-            
+
             preserved_vcf_file_path=vcf_file_path[:-4]+"_preserved.vcf"
             removed_vcf_file_path=vcf_file_path[:-4]+"_removed.vcf"
-            
+
             try:
                 vcf_writer_preserved=vcf.Writer(open(preserved_vcf_file_path, 'w'), vcf_reader)
             except:
@@ -303,7 +302,7 @@ def remove_bad_snp(options_dict):
                 vcf_writer_preserved.close()
                 os.remove(preserved_vcf_file_path)
                 continue
-            
+
             try:
                 vcf_writer_removed=vcf.Writer(open(removed_vcf_file_path, 'w'), vcf_reader)
             except:
@@ -312,7 +311,7 @@ def remove_bad_snp(options_dict):
                 vcf_writer_removed.close()
                 os.remove(removed_vcf_file_path)
                 continue
-                    
+
             for vcf_data_line in vcf_reader:
                 #Create a dict to store all SNPs in this sample
                 #get contig length from contig name.The CHROM should be a contig name in the format of Velvet/SPAdes output.
@@ -323,10 +322,12 @@ def remove_bad_snp(options_dict):
                 else:
                     #Preserve this SNP
                     vcf_writer_preserved.write_record(vcf_data_line)
-                     
-               
+
+
             vcf_writer_preserved.close()
-            vcf_writer_removed.close()  
+            vcf_writer_removed.close()
+
+    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def create_snp_list(options_dict):
