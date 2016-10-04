@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from collections import defaultdict
 import itertools
 import os
 import pprint
@@ -186,7 +187,7 @@ def remove_bad_snp(options_dict):
     #==========================================================================
     # Find all bad regions.
     #==========================================================================
-    bad_regions_dict=dict() #Key is the contig ID, and the value is a list of bad regions.
+    bad_regions_dict = dict() #Key is the contig ID, and the value is a list of bad regions.
     for vcf_file_path in list_of_vcf_files:
         try:
             vcf_reader=vcf.Reader(open(vcf_file_path, 'r'))
@@ -221,18 +222,12 @@ def remove_bad_snp(options_dict):
             shutil.copyfile(vcf_file_path, preserved_vcf_file_path)
         else:
             #SNP list, saved as (Contig_Name, [(SNP_Position, SNP_Record),]), where SNP_Record is a line in VCF.
-            snp_dict=dict()
+            snp_dict = defaultdict(list)
             for vcf_data_line in vcf_reader:
                 #Create a dict to store all SNPs in this sample
                 #get contig length from contig name.The CHROM should be a contig name in the format of Velvet/SPAdes output.
-                key = vcf_data_line.CHROM
-                if key not in snp_dict:
-                    record = [(vcf_data_line.POS, vcf_data_line)]
-                else:
-                    record = snp_dict[key]
-                    temp_record=(vcf_data_line.POS, vcf_data_line)
-                    record.append(temp_record)
-                snp_dict[key] = record
+                record = (vcf_data_line.POS, vcf_data_line)
+                snp_dict[vcf_data_line.CHROM].append(record)
 
             #Find bad regions and add them into bad_region
             for contig, snp_list in snp_dict.items():
