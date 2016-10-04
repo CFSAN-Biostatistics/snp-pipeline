@@ -4725,6 +4725,9 @@ testRunSnpPipelineAgona()
     assertIdenticalFiles "$tempDir/metrics.tsv"        "$tempDir/expectedResults/metrics.tsv"
     assertIdenticalFiles "$tempDir/snp_distance_pairwise.tsv" "$tempDir/expectedResults/snp_distance_pairwise.tsv"
     assertIdenticalFiles "$tempDir/snp_distance_matrix.tsv"   "$tempDir/expectedResults/snp_distance_matrix.tsv"
+
+    assertIdenticalFiles "$tempDir/snpma_preserved.fasta"     "$tempDir/expectedResults/snpma_preserved.fasta"
+    assertIdenticalFiles "$tempDir/snpma_preserved.vcf"       "$tempDir/expectedResults/snpma_preserved.vcf" "--ignore-matching-lines=##fileDate" "--ignore-matching-lines=##source" "--ignore-matching-lines=##bcftools"
 }
 
 
