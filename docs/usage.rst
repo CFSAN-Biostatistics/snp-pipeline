@@ -85,6 +85,12 @@ named the way the pipeline expects.  Follow these guidelines:
   patterns: (\*.fastq, \*.fq, \*.fastq.gz, \*.fq.gz).  It's okay if different
   samples are named differently, but the two mate files of paired-end samples
   must be named with the same extension.
+ 
+* If there is an outgroup among samples, a file containing the relative or absolute
+  paths of the directories of the samples in outgroup must be created in advance, and 
+  the relative or absolute path of this file should be specified in the parameter
+  "RemoveAbnormalSnp_ExtraParams" in the configuration file "snppipeline.conf" (see
+  the description of the parameter "RemoveAbnormalSnp_ExtraParams").
 
 Outputs
 -------
@@ -175,10 +181,13 @@ directory might look like this after two runs::
     drwx------ 2 me group 4096 Oct 17 16:38 logs-20141017.163848/
     drwx------ 2 me group 4096 Oct 17 16:37 reference/
     -rw------- 1 me group  194 Oct 17 16:38 referenceSNP.fasta
+    -rw------- 1 me group  182 Oct 17 16:38 referenceSNP_preserved.fasta
     -rw------- 1 me group  104 Oct 17 16:38 sampleDirectories.txt
     drwx------ 6 me group 4096 Oct 17 16:37 samples/
     -rw------- 1 me group 7216 Oct 17 16:38 snplist.txt
+    -rw------- 1 me group 6824 Oct 17 16:38 snplist_preserved.txt
     -rw------- 1 me group  708 Oct 17 16:38 snpma.fasta
+    -rw------- 1 me group  682 Oct 17 16:38 snpma_preserved.fasta
 
 A log file is created for each step of the pipeline for each sample.  For 
 performamnce reasons, the samples are sorted by size and processed largest
@@ -193,11 +202,14 @@ are named with a suffix indicating the sample number::
     -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-2
     -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-3
     -rw------- 1 me group   983 Oct 17 16:37 snpList.log
+    -rw------- 1 me group   983 Oct 17 16:37 snpList_preserved.log
     -rw------- 1 me group  1039 Oct 17 16:37 snpMatrix.log
+    -rw------- 1 me group  1039 Oct 17 16:37 snpMatrix_preserved.log
     -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-1
     -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-2
     -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-3
     -rw------- 1 me group   806 Oct 17 16:37 snpReference.log
+    -rw------- 1 me group   806 Oct 17 16:37 snpReference_preserved.log
 
 To determine which samples correspond to which log files, you can either grep the
 log files for the sample name or inspect the sorted sampleDirectories.txt file to determine
@@ -243,7 +255,7 @@ Keep in mind the following limitations when mirroring the inputs.
 
 High Performance Computing
 --------------------------
-The SNP Pipeline can be executed on a High Performamce Computing cluster.  The
+The SNP Pipeline can be executed on a High Performance Computing cluster.  The
 Torque and Grid Engine job queue managers are supported.
 
 Torque
@@ -365,8 +377,10 @@ Step 2 - Run the SNP Pipeline::
 
 Step 3 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
-can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
+Upon successful completion of the pipeline, the snplist.txt file should have 165 entries, and
+the snplist_preserved.txt should have 136 entries. The SNP Matrix can be found in snpma.fasta
+and snpma_preserved.fasta.  The corresponding reference bases are in the referenceSNP.fasta 
+and referenceSNP_preserved.fasta::
 
     # Verify the result files were created
     ls -l snplist.txt
@@ -374,6 +388,11 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snpma.vcf
     ls -l referenceSNP.fasta
     ls -l snp_distance_matrix.tsv
+    ls -l snplist_preserved.txt
+    ls -l snpma_preserved.fasta
+    ls -l snpma_preserved.vcf
+    ls -l referenceSNP_preserved.fasta
+    ls -l snp_distance_matrix_preserved.tsv
 
     # Verify correct results
     copy_snppipeline_data.py lambdaVirusExpectedResults expectedResults
@@ -381,9 +400,14 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s snpma.fasta             expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta      expectedResults/referenceSNP.fasta
     diff -q -s snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
+    diff -q -s snplist_preserved.txt             expectedResults/snplist_preserved.txt
+    diff -q -s snpma_preserved.fasta             expectedResults/snpma_preserved.fasta
+    diff -q -s referenceSNP_preserved.fasta      expectedResults/referenceSNP_preserved.fasta
+    diff -q -s snp_distance_matrix_preserved.tsv expectedResults/snp_distance_matrix_preserved.tsv
 
     # View the per-sample metrics
     xdg-open metrics.tsv
+    xdg-open metrics_preserved.tsv
 
 .. _all-in-one-workflow-agona:
 
@@ -440,8 +464,9 @@ Step 2 - Run the SNP Pipeline::
       
 Step 3 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 3623 entries.  The SNP Matrix 
-can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
+Upon successful completion of the pipeline, the snplist.txt file should have 3571 entries, and the snplist_preserved.txt
+should have 206 entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference bases are in the files
+referenceSNP.fasta and referenceSNP_preserved.fasta::
 
     # Verify the result files were created
     ls -l outputDirectory/snplist.txt
@@ -449,6 +474,11 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l outputDirectory/snpma.vcf
     ls -l outputDirectory/referenceSNP.fasta
     ls -l outputDirectory/snp_distance_matrix.tsv
+    ls -l outputDirectory/snplist_preserved.txt
+    ls -l outputDirectory/snpma_preserved.fasta
+    ls -l outputDirectory/snpma_preserved.vcf
+    ls -l outputDirectory/referenceSNP_preserved.fasta
+    ls -l outputDirectory/snp_distance_matrix_preserved.tsv
 
     # Verify correct results
     copy_snppipeline_data.py agonaExpectedResults expectedResults
@@ -456,9 +486,14 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s outputDirectory/snpma.fasta             expectedResults/snpma.fasta
     diff -q -s outputDirectory/referenceSNP.fasta      expectedResults/referenceSNP.fasta
     diff -q -s outputDirectory/snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
+    diff -q -s outputDirectory/snplist_preserved.txt             expectedResults/snplist_preserved.txt
+    diff -q -s outputDirectory/snpma_preserved.fasta             expectedResults/snpma_preserved.fasta
+    diff -q -s outputDirectory/referenceSNP_preserved.fasta      expectedResults/referenceSNP_preserved.fasta
+    diff -q -s outputDirectory/snp_distance_matrix_preserved.tsv expectedResults/snp_distance_matrix_preserved.tsv
 
     # View the per-sample metrics
     xdg-open outputDirectory/metrics.tsv
+    xdg-open outputDirectory/metrics_preserved.tsv
 
 .. _all-in-one-workflow-listeria:
 
@@ -531,9 +566,10 @@ Launch the pipeline::
 
 Step 3 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 11,813
-entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference
-bases are in the referenceSNP.fasta file::
+Upon successful completion of the pipeline, the snplist.txt file should have 11,502
+entries, and the snplist_preserved.txt file should have 1,109 entries. The SNP Matrix
+can be found in snpma.fasta and snpma_preserved.fasta.  The corresponding reference
+bases are in the referenceSNP.fasta and referenceSNP_preserved.fasta::
 
     # Verify the result files were created
     ls -l outputDirectory/snplist.txt
@@ -541,6 +577,11 @@ bases are in the referenceSNP.fasta file::
     ls -l outputDirectory/snpma.vcf
     ls -l outputDirectory/referenceSNP.fasta
     ls -l outputDirectory/snp_distance_matrix.tsv
+    ls -l outputDirectory/snplist_preserved.txt
+    ls -l outputDirectory/snpma_preserved.fasta
+    ls -l outputDirectory/snpma_preserved.vcf
+    ls -l outputDirectory/referenceSNP_preserved.fasta
+    ls -l outputDirectory/snp_distance_matrix_preserved.tsv
 
     # Verify correct results
     copy_snppipeline_data.py listeriaExpectedResults expectedResults
@@ -548,9 +589,14 @@ bases are in the referenceSNP.fasta file::
     diff -q -s outputDirectory/snpma.fasta             expectedResults/snpma.fasta
     diff -q -s outputDirectory/referenceSNP.fasta      expectedResults/referenceSNP.fasta
     diff -q -s outputDirectory/snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
+    diff -q -s outputDirectory/snplist_preserved.txt             expectedResults/snplist_preserved.txt
+    diff -q -s outputDirectory/snpma_preserved.fasta             expectedResults/snpma_preserved.fasta
+    diff -q -s outputDirectory/referenceSNP_preserved.fasta      expectedResults/referenceSNP_preserved.fasta
+    diff -q -s outputDirectory/snp_distance_matrix_preserved.tsv expectedResults/snp_distance_matrix_preserved.tsv
 
     # View the per-sample metrics
     xdg-open outputDirectory/metrics.tsv
+    xdg-open outputDirectory/metrics_preserved.tsv
 
 .. _step-by-step-workflows:
 
@@ -744,6 +790,12 @@ Step 5 - Prep the samples::
     # Process the samples in parallel using all CPU cores
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/NC_011149.fasta
+    
+Step 6 - Remove abnormal SNPs
+
+	# Find regions with abnormal number of SNPs and remove SNPs in these regions.
+	# Also remove SNPs located in the beginning and end regions of contigs.
+	snp_filter.py 
 
 Step 6 - Combine the SNP positions across all samples into the SNP list file::
 
