@@ -145,23 +145,26 @@ def remove_bad_snp(options_dict):
     unsorted_list_of_sample_directories = [d for d in unsorted_list_of_sample_directories if d]
     sorted_list_of_sample_directories = sorted(unsorted_list_of_sample_directories)
 
+    input_file_list = list()
     out_group_list_path =  options_dict['outGroupFile']
     out_goup_list = list()
     sorted_list_of_outgroup_samples = list()
     try:
         if (out_group_list_path is not None):
             #There are outgroup samples
+            input_file_list.append(out_group_list_path)
             with open(out_group_list_path, "r") as out_group_list_file:
                 unsorted_list_of_outgroup_samples = [line.rstrip() for line in out_group_list_file]
             sorted_list_of_outgroup_samples = sorted(unsorted_list_of_outgroup_samples)
     except:
-        utils.sample_error("Error: Cannot open the file containing the list of outgroup samples!", continue_possible=True)
+        utils.global_error("Error: Cannot open the file containing the list of outgroup samples!")
 
     #==========================================================================
     # Validate inputs
     #==========================================================================
     vcf_file_name = options_dict['vcfFileName']
     list_of_vcf_files = [os.path.join(dir, vcf_file_name) for dir in sorted_list_of_sample_directories]
+    input_file_list.extend(list_of_vcf_files)
 
     bad_file_count = utils.verify_non_empty_input_files("VCF file", list_of_vcf_files)
     if bad_file_count == len(list_of_vcf_files):
@@ -178,11 +181,33 @@ def remove_bad_snp(options_dict):
         for record in SeqIO.parse(handle, "fasta"):
             #build contig_length_dict
             contig_length_dict[record.id]=len(record.seq)
+        input_file_list.append(options_dict['refFastaFile'])
     except:
         utils.global_error("Error: cannot open the reference fastq file, or fail to read the contigs in the reference fastq file.")
     else:
         if handle:
             handle.close()
+
+    #==========================================================================
+    # Which samples need rebuild?
+    #
+    # Any changed or new input file will trigger rebuild for all samples because
+    # the bad regions are combined across all samples.  However, a missing
+    # output file will only cause rebuild of the missing file.
+    #==========================================================================
+    need_rebuild_dict = dict()
+    for vcf_file_path in list_of_vcf_files:
+        preserved_vcf_file_path = vcf_file_path[:-4]+"_preserved.vcf"
+        removed_vcf_file_path = vcf_file_path[:-4]+"_removed.vcf"
+        preserved_needs_rebuild = utils.target_needs_rebuild(input_file_list, preserved_vcf_file_path)
+        removed_needs_rebuild = utils.target_needs_rebuild(input_file_list, removed_vcf_file_path)
+        need_rebuild_dict[vcf_file_path] = options_dict['forceFlag'] or preserved_needs_rebuild or removed_needs_rebuild
+
+    if not any(need_rebuild_dict.values()):
+        verbose_print("All preserved and removed vcf files are already freshly built.  Use the -f option to force a rebuild.")
+        verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+        return
+
 
     #==========================================================================
     # Find all bad regions.
@@ -200,6 +225,8 @@ def remove_bad_snp(options_dict):
         sample_ID=ss[len(ss)-2]
 
         if (sample_ID in sorted_list_of_outgroup_samples):
+            if not need_rebuild_dict[vcf_file_path]:
+                continue
             #Copy original vcf file to _preserved.vcf, and created an empty _removed.vcf
 
             #SNP list, saved as (Contig_Name, [(SNP_Position, SNP_Record),]), where SNP_Record is a line in VCF.
@@ -274,6 +301,8 @@ def remove_bad_snp(options_dict):
 
     #Scan vcf files to remove SNPs
     for vcf_file_path in list_of_vcf_files:
+        if not need_rebuild_dict[vcf_file_path]:
+            continue
         #Get sample ID
         ss=vcf_file_path.split('/')
         sample_ID=ss[len(ss)-2]

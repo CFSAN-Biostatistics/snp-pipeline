@@ -190,7 +190,7 @@ snp_filter.py
 
 ::
 
-  usage: snp_filter.py [-h] [-n NAME] [-l EDGE_LENGTH] [-w WINDOW_SIZE]
+  usage: snp_filter.py [-h] [-f] [-n NAME] [-l EDGE_LENGTH] [-w WINDOW_SIZE]
                        [-m MAX_NUM_SNPs] [-g OUT_GROUP] [-v 0..5] [--version]
                        sampleDirsFile refFastaFile
   
@@ -204,6 +204,8 @@ snp_filter.py
   
   optional arguments:
     -h, --help            show this help message and exit
+    -f, --force           Force processing even when result files already exist
+                          and are newer than inputs (default: False)
     -n NAME, --vcfname NAME
                           File name of the input VCF files which must exist in
                           each of the sample directories (default: var.flt.vcf)

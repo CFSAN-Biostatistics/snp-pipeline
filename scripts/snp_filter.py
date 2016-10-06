@@ -18,6 +18,7 @@ if __name__ == "__main__":
 
     parser.add_argument(                   dest='sampleDirsFile', type=str,                        help='Relative or absolute path to file containing a list of directories -- one per sample')
     parser.add_argument(                   dest='refFastaFile', type=str,                        help='Relative or absolute path to the reference fasta file')
+    parser.add_argument('-f', '--force',   dest='forceFlag',      action='store_true',             help='Force processing even when result files already exist and are newer than inputs')
     parser.add_argument('-n', '--vcfname', dest='vcfFileName',    type=str, default='var.flt.vcf', metavar='NAME', help='File name of the input VCF files which must exist in each of the sample directories')
     parser.add_argument('-l', '--edge_length',  dest='edgeLength',    type=int, default=500, metavar='EDGE_LENGTH', help='The length of the edge regions in a contig, in which all SNPs will be removed.')
     parser.add_argument('-w', '--window_size',  dest='windowSize',  type=int, default=1000, metavar='WINDOW_SIZE', help='the length of the window in which the number of SNPs should be no more than max_num_snp.')

@@ -1415,6 +1415,62 @@ testPrepSamplesVarscanClasspathRaiseGlobalErrorStopUnset()
 }
 
 
+# Verify the snp_filter script uses all the input vcf files to produce the outputs
+# even when some of the samples are already fresh.
+testSnpFilterPartialRebuild()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+
+    # Force timestamps to change so outputs are newer than inputs.
+    # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
+    touch -d '-11 day' $tempDir/reference/*.fasta
+    touch -d '-10 day' $tempDir/reference/*.bt2
+    touch -d  '-9 day' $tempDir/samples/*/*.fastq
+    touch -d  '-8 day' $tempDir/samples/*/reads.sam
+    touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-4 day' $tempDir/samples/*/var.flt.vcf
+    touch -d  '-3 day' $tempDir/samples/*/var.flt_preserved.vcf
+    touch -d  '-3 day' $tempDir/samples/*/var.flt_removed.vcf
+
+    # Remove unwanted log files
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    rm -rf $logDir
+    mkdir -p $logDir
+
+    # Remove the results for one of the samples
+    rm $tempDir/samples/sample1/var.flt_preserved.vcf
+
+    # Re-run snp_filter.py -- this should only rebuild results for sample1, but it should use the var.flt.vcf input file for all samples
+    snp_filter.py "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterAbnormalSNP.log"
+
+    # Verify log files
+    verifyNonEmptyReadableFile "$logDir/filterAbnormalSNP.log"
+    assertFileNotContains "$logDir/filterAbnormalSNP.log" "already freshly built"
+
+    # Verify correct results
+    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    assertIdenticalFiles "$tempDir/samples/sample1/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample1/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample2/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample2/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample3/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample3/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample4/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample4/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample1/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample1/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample2/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample2/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample3/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample3/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample4/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample4/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+}
+
+
 # Verify the create_snp_list.py script traps attempts to write to unwritable file
 tryCreateSnpListPermissionTrap()
 {
@@ -4423,17 +4479,19 @@ testAlreadyFreshOutputs()
 
     # Force timestamps to change so outputs are newer than inputs.
     # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
-    touch -d '-10 day' $tempDir/reference/*.fasta
-    touch -d  '-9 day' $tempDir/reference/*.bt2
-    touch -d  '-8 day' $tempDir/samples/*/*.fastq
-    touch -d  '-7 day' $tempDir/samples/*/reads.sam
-    touch -d  '-6 day' $tempDir/samples/*/reads.unsorted.bam
-    touch -d  '-5 day' $tempDir/samples/*/reads.sorted.bam
-    touch -d  '-4 day' $tempDir/samples/*/reads.all.pileup
-    touch -d  '-3 day' $tempDir/samples/*/var.flt.vcf
+    touch -d '-11 day' $tempDir/reference/*.fasta
+    touch -d '-10 day' $tempDir/reference/*.bt2
+    touch -d  '-9 day' $tempDir/samples/*/*.fastq
+    touch -d  '-8 day' $tempDir/samples/*/reads.sam
+    touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-4 day' $tempDir/samples/*/var.flt.vcf
+    touch -d  '-3 day' $tempDir/samples/*/var.flt_preserved.vcf
+    touch -d  '-3 day' $tempDir/samples/*/var.flt_removed.vcf
     touch -d  '-2 day' $tempDir/snplist.txt
     touch -d  '-2 day' $tempDir/snplist_preserved.txt
-    touch -d  '-1 day' $tempDir/samples/*/consensus.vcf
+    touch -d  '-1 day' $tempDir/samples/*/consensus*.vcf
 
     # Test special collectSampleMetrics result persistence
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
@@ -4521,6 +4579,8 @@ testAlreadyFreshOutputs()
     assertFileContains "$logDir/calcSnpDistances.log" "have already been freshly built.  Use the -f option to force a rebuild"
 
     # =======
+    assertFileContains "$logDir/filterAbnormalSNP.log" "All preserved and removed vcf files are already freshly built.  Use the -f option to force a rebuild."
+
     assertFileContains "$logDir/snpList_preserved.log" "snplist_preserved.txt has already been freshly built.  Use the -f option to force a rebuild."
 
     assertFileContains "$logDir/callConsensus_preserved.log-1" "sample1/consensus_preserved.fasta has already been freshly built.  Use the -f option to force a rebuild."
