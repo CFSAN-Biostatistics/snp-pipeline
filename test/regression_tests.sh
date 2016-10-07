@@ -1415,6 +1415,155 @@ testPrepSamplesVarscanClasspathRaiseGlobalErrorStopUnset()
 }
 
 
+# Verify the snp_filter.py script traps attempts to write to unwritable file
+trySnpFilterPermissionTrap()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Setup input files
+    printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
+    echo "Dummy vcf content" > "$tempDir/samples/sample1/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
+
+    # 1) var.flt_preserved.vcf =========
+    # Make the output file var.flt_preserved.vcf unwritable
+    mkdir -p "$tempDir/samples/sample1"
+    touch "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    chmod -w "$tempDir/samples/sample1/var.flt_preserved.vcf"
+
+    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_preserved.vcf
+    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter.py error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when var.flt_preserved.vcf was unwritable." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Cannot create the file for preserved SNPs"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    rm -f "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    rm "$tempDir/error.log"
+
+    # 2) var.flt_removed.vcf =========
+    # Make the output file var.flt_removed.vcf unwritable
+    mkdir -p "$tempDir/samples/sample1"
+    touch "$tempDir/samples/sample1/var.flt_removed.vcf"
+    chmod -w "$tempDir/samples/sample1/var.flt_removed.vcf"
+
+    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_removed.vcf
+    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter.py error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when var.flt_removed.vcf was unwritable." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Cannot create the file for removed SNPs"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    rm -f "$tempDir/samples/sample1/var.flt_removed.vcf"
+    rm "$tempDir/error.log"
+}
+
+# Verify the snp_filter.py script traps attempts to write to unwritable file
+testSnpFilterPermissionTrapStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    trySnpFilterPermissionTrap 100
+}
+
+# Verify the snp_filter.py script traps attempts to write to unwritable file
+testSnpFilterPermissionTrapNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+
+    expectErrorCode=0
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Setup input files
+    printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
+    echo "Dummy vcf content" > "$tempDir/samples/sample1/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
+
+    # 1) var.flt_preserved.vcf =========
+    # Make the output file var.flt_preserved.vcf unwritable
+    mkdir -p "$tempDir/samples/sample1"
+    touch "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    chmod -w "$tempDir/samples/sample1/var.flt_preserved.vcf"
+
+    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_preserved.vcf
+    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter.py error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when var.flt_preserved.vcf was unwritable." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py"
+    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Cannot create the file for preserved SNPs"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
+    assertFileContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    rm -f "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    rm "$tempDir/error.log"
+
+    # 2) var.flt_removed.vcf =========
+    # Make the output file var.flt_removed.vcf unwritable
+    mkdir -p "$tempDir/samples/sample1"
+    touch "$tempDir/samples/sample1/var.flt_removed.vcf"
+    chmod -w "$tempDir/samples/sample1/var.flt_removed.vcf"
+
+    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_removed.vcf
+    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter.py error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when var.flt_removed.vcf was unwritable." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py"
+    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Cannot create the file for removed SNPs"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
+    assertFileContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    rm -f "$tempDir/samples/sample1/var.flt_removed.vcf"
+    rm "$tempDir/error.log"
+}
+
+# Verify the snp_filter.py script traps attempts to write to unwritable file
+testSnpFilterPermissionTrapStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    trySnpFilterPermissionTrap 100
+}
+
+
 # Verify the snp_filter script uses all the input vcf files to produce the outputs
 # even when some of the samples are already fresh.
 testSnpFilterPartialRebuild()
