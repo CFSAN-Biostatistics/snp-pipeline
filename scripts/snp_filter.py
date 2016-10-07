@@ -39,14 +39,11 @@ if __name__ == "__main__":
     #==========================================================================
     if (args_dict["edgeLength"] <1):
         utils.global_error("Error: the length of the edge regions must be a positive integer, and the input is %d." % args_dict["edgeLength"])
-        sys.exit("Error: the length of the edge regions must be a positive integer, and the input is %d." % args_dict["edgeLength"])
 
     if (args_dict["windowSize"] <1):
         utils.global_error("Error: the length of the window must be a positive integer, and the input is %d." % args_dict["windowSize"])
-        sys.exit("Error: the length of the window must be a positive integer, and the input is %d." % args_dict["windowSize"])
 
     if (args_dict["maxSNP"] <1):
         utils.global_error("Error: the maximum number of SNPs allowed must be a positive integer, and the input is %d." % args_dict["maxSNP"])
-        sys.exit("Error: the maximum number of SNPs allowed must be a positive integer, and the input is %d." % args_dict["maxSNP"])
 
     snppipeline.remove_bad_snp(args_dict)
