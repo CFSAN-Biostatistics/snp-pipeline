@@ -215,7 +215,8 @@ def remove_bad_snp(options_dict):
     bad_regions_dict = dict() #Key is the contig ID, and the value is a list of bad regions.
     for vcf_file_path in list_of_vcf_files:
         try:
-            vcf_reader=vcf.Reader(open(vcf_file_path, 'r'))
+            vcf_reader_handle = open(vcf_file_path, 'r')
+            vcf_reader = vcf.Reader(vcf_reader_handle)
         except:
             utils.sample_error("Error: Cannot open the input vcf file: %s." % vcf_file_path, continue_possible=True)
             continue
@@ -226,6 +227,7 @@ def remove_bad_snp(options_dict):
 
         if (sample_ID in sorted_list_of_outgroup_samples):
             if not need_rebuild_dict[vcf_file_path]:
+                vcf_reader_handle.close()
                 continue
             #Copy original vcf file to _preserved.vcf, and created an empty _removed.vcf
 
@@ -236,16 +238,20 @@ def remove_bad_snp(options_dict):
 
 
             try:
+                vcf_writer_removed = None
                 vcf_writer_removed=vcf.Writer(open(removed_vcf_file_path, 'w'), vcf_reader)
             except:
-                utils.sample_error("Error: Cannot create the file for removed SNPs: %s." % removed_vcf_file_path, continue_possible=True)
                 #print "Cannot create the file for removed SNPs: %d." % removed_vcf_file_path
                 #close vcf_writer_reserved and remove the file reserved_vcf_file_path
-                vcf_writer_removed.close()
+                if vcf_writer_removed is not None:
+                    vcf_writer_removed.close()
                 os.remove(removed_vcf_file_path)
+                vcf_reader_handle.close()
+                utils.sample_error("Error: Cannot create the file for removed SNPs: %s." % removed_vcf_file_path, continue_possible=True)
                 continue
 
             vcf_writer_removed.close()
+            vcf_reader_handle.close()
             shutil.copyfile(vcf_file_path, preserved_vcf_file_path)
         else:
             #SNP list, saved as (Contig_Name, [(SNP_Position, SNP_Record),]), where SNP_Record is a line in VCF.
@@ -290,7 +296,7 @@ def remove_bad_snp(options_dict):
                             temp_region=(pos_start, pos_end)
                             regions.append(temp_region)
                             bad_regions_dict[contig]=regions
-
+        vcf_reader_handle.close()
 
     #Combine all bad regions for each contig
     for contig, regions in bad_regions_dict.items():
@@ -309,7 +315,8 @@ def remove_bad_snp(options_dict):
 
         if (sample_ID not in sorted_list_of_outgroup_samples):
             try:
-                vcf_reader=vcf.Reader(open(vcf_file_path, 'r'))
+                vcf_reader_handle = open(vcf_file_path, 'r')
+                vcf_reader = vcf.Reader(vcf_reader_handle)
             except:
                 utils.sample_error("Error: Cannot open the input vcf file: %s." % vcf_file_path, continue_possible=True)
                 continue
@@ -320,20 +327,27 @@ def remove_bad_snp(options_dict):
             removed_vcf_file_path=vcf_file_path[:-4]+"_removed.vcf"
 
             try:
+                vcf_writer_preserved = None
                 vcf_writer_preserved=vcf.Writer(open(preserved_vcf_file_path, 'w'), vcf_reader)
             except:
-                utils.sample_error("Error: Cannot create the file for preserved SNPs: %s." % preserved_vcf_file_path, continue_possible=True)
-                vcf_writer_preserved.close()
+                if vcf_writer_preserved is not None:
+                    vcf_writer_preserved.close()
                 os.remove(preserved_vcf_file_path)
+                vcf_reader_handle.close()
+                utils.sample_error("Error: Cannot create the file for preserved SNPs: %s." % preserved_vcf_file_path, continue_possible=True)
                 continue
 
             try:
+                vcf_writer_removed = None
                 vcf_writer_removed=vcf.Writer(open(removed_vcf_file_path, 'w'), vcf_reader)
             except:
-                utils.sample_error("Error: Cannot create the file for removed SNPs: %s." % removed_vcf_file_path, continue_possible=True)
                 #close vcf_writer_reserved and remove the file reserved_vcf_file_path
-                vcf_writer_removed.close()
+                if vcf_writer_removed is not None:
+                    vcf_writer_removed.close()
                 os.remove(removed_vcf_file_path)
+                vcf_writer_preserved.close()
+                vcf_reader_handle.close()
+                utils.sample_error("Error: Cannot create the file for removed SNPs: %s." % removed_vcf_file_path, continue_possible=True)
                 continue
 
             for vcf_data_line in vcf_reader:
@@ -350,6 +364,7 @@ def remove_bad_snp(options_dict):
 
             vcf_writer_preserved.close()
             vcf_writer_removed.close()
+            vcf_reader_handle.close()
 
     verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
