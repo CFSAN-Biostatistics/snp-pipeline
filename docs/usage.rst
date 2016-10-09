@@ -668,40 +668,52 @@ Step 5 - Prep the samples::
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/lambda_virus.fasta
 
-Step 6 - Combine the SNP positions across all samples into the SNP list file::
+Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
+
+    snp_filter.py -n var.flt.vcf sampleDirectories.txt reference/lambda_virus.fasta
+    
+Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
     create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
+    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt
 
-Step 7 - Call the consensus base at SNP positions for each sample::
+Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
     cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_Preserved.fasta XX/reads.all.pileup
 
-Step 8 - Create the SNP matrix::
+Step 9 - Create the SNP matrix::
 
     create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
+    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt
 
-Step 9 - Create the reference base sequence::
+Step 10 - Create the reference base sequence::
 
     create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/lambda_virus.fasta
+    create_snp_reference_seq.py -l snplist_preserved.txt -o referenceSNP_preserved.fasta reference/lambda_virus.fasta
 
-Step 10 - Collect metrics for each sample::
+Step 11 - Collect metrics for each sample::
 
     cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX reference/lambda_virus.fasta
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma_preserved.fasta -o XX/metrics_preserved XX reference/lambda_virus.fasta
 
-Step 11 - Tabulate the metrics for all samples::
+Step 12 - Tabulate the metrics for all samples::
 
     combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
+    combineSampleMetrics.sh -n metrics_preserved -o metrics_preserved.tsv sampleDirectories.txt
 
-Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
+Step 13 - Merge the VCF files for all samples into a multi-sample VCF file::
 
     mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
+    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt
 
-Step 13 - Compute the SNP distances between samples::
+Step 14 - Compute the SNP distances between samples::
 
     calculate_snp_distances.py -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
+    calculate_snp_distances.py -p snp_distance_pairwise_preserved.tsv -m snp_distance_matrix_preserved.tsv snpma_preserved.fasta
 
-Step 14 - View and verify the results:
+Step 15 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -712,6 +724,11 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snpma.vcf
     ls -l referenceSNP.fasta
     ls -l snp_distance_matrix.tsv
+    ls -l snplist_preserved.txt
+    ls -l snpma_preserved.fasta
+    ls -l snpma_preserved.vcf
+    ls -l referenceSNP_preserved.fasta
+    ls -l snp_distance_matrix_preserved.tsv
 
     # Verify correct results
     copy_snppipeline_data.py lambdaVirusExpectedResults expectedResults
@@ -719,9 +736,14 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s snpma.fasta             expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta      expectedResults/referenceSNP.fasta
     diff -q -s snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
+    diff -q -s snplist_preserved.txt             expectedResults/snplist_preserved.txt
+    diff -q -s snpma_preserved.fasta             expectedResults/snpma_preserved.fasta
+    diff -q -s referenceSNP_preserved.fasta      expectedResults/referenceSNP_preserved.fasta
+    diff -q -s snp_distance_matrix_preserved.tsv expectedResults/snp_distance_matrix_preserved.tsv
 
     # View the per-sample metrics
     xdg-open metrics.tsv
+    xdg-open metrics_preserved.tsv
 
 
 .. _step-by-step-workflow-agona:
@@ -791,46 +813,52 @@ Step 5 - Prep the samples::
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/NC_011149.fasta
     
-Step 6 - Remove abnormal SNPs
+Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-	# Find regions with abnormal number of SNPs and remove SNPs in these regions.
-	# Also remove SNPs located in the beginning and end regions of contigs.
-	snp_filter.py 
+    snp_filter.py -n var.flt.vcf sampleDirectories.txt reference/NC_011149.fasta
 
-Step 6 - Combine the SNP positions across all samples into the SNP list file::
+Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
     create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
+    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt
 
-Step 7 - Call the consensus base at SNP positions for each sample::
+Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
     cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta XX/reads.all.pileup
 
-Step 8 - Create the SNP matrix::
+Step 9 - Create the SNP matrix::
 
     create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
+    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt
 
-Step 9 - Create the reference base sequence::
+Step 10 - Create the reference base sequence::
 
     create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/NC_011149.fasta
+    create_snp_reference_seq.py -l snplist_preserved.txt -o referenceSNP_preserved.fasta reference/NC_011149.fasta
 
-Step 10 - Collect metrics for each sample::
+Step 11 - Collect metrics for each sample::
 
     cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX reference/NC_011149.fasta
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma_preserved.fasta -o XX/metrics_preserved XX reference/NC_011149.fasta
 
-Step 11 - Tabulate the metrics for all samples::
+Step 12 - Tabulate the metrics for all samples::
 
     combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
+    combineSampleMetrics.sh -n metrics_preserved -o metrics_preserved.tsv sampleDirectories.txt
 
-Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
+Step 13 - Merge the VCF files for all samples into a multi-sample VCF file::
 
     mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
+    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt
 
-Step 13 - Compute the SNP distances between samples::
+Step 14 - Compute the SNP distances between samples::
 
     calculate_snp_distances.py -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
+    calculate_snp_distances.py -p snp_distance_pairwise_preserved.tsv -m snp_distance_matrix_preserved.tsv snpma_preserved.fasta
 
-Step 14 - View and verify the results:
+Step 15 - View and verify the results:
 
 Upon successful completion of the pipeline, the snplist.txt file should have 3623 entries.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -841,6 +869,11 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snpma.vcf
     ls -l referenceSNP.fasta
     ls -l snp_distance_matrix.tsv
+    ls -l snplist_preserved.txt
+    ls -l snpma_preserved.fasta
+    ls -l snpma_preserved.vcf
+    ls -l referenceSNP_preserved.fasta
+    ls -l snp_distance_matrix_preserved.tsv
 
     # Verify correct results
     copy_snppipeline_data.py agonaExpectedResults expectedResults
@@ -848,9 +881,14 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     diff -q -s snpma.fasta             expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta      expectedResults/referenceSNP.fasta
     diff -q -s snp_distance_matrix.tsv expectedResults/snp_distance_matrix.tsv
+    diff -q -s snplist_preserved.txt             expectedResults/snplist_preserved.txt
+    diff -q -s snpma_preserved.fasta             expectedResults/snpma_preserved.fasta
+    diff -q -s referenceSNP_preserved.fasta      expectedResults/referenceSNP_preserved.fasta
+    diff -q -s snp_distance_matrix_preserved.tsv expectedResults/snp_distance_matrix_preserved.tsv
 
     # View the per-sample metrics
     xdg-open metrics.tsv
+    xdg-open metrics_preserved.tsv
 
 .. _step-by-step-workflow-general-case:
 
@@ -910,41 +948,53 @@ Step 5 - Prep the samples::
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/my_reference.fasta
 
-Step 6 - Combine the SNP positions across all samples into the SNP list file::
+Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
+
+    snp_filter.py -n var.flt.vcf sampleDirectories.txt reference/my_reference.fasta
+
+Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
     create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
+    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt
 
-Step 7 - Call the consensus base at SNP positions for each sample::
+Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
     cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta XX/reads.all.pileup
 
-Step 8 - Create the SNP matrix::
+Step 9 - Create the SNP matrix::
 
     create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
+    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt
 
-Step 9 - Create the reference base sequence::
+Step 10 - Create the reference base sequence::
 
     # Note the .fasta file extension
     create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/my_reference.fasta
+    create_snp_reference_seq.py -l snplist_preserved.txt -o referenceSNP_preserved.fasta reference/my_reference.fasta
 
-Step 10 - Collect metrics for each sample::
+Step 11 - Collect metrics for each sample::
 
     cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma.fasta -o XX/metrics XX reference/my_reference.fasta
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -m snpma_preserved.fasta -o XX/metrics_preserved XX reference/my_reference.fasta
 
-Step 11 - Tabulate the metrics for all samples::
+Step 12 - Tabulate the metrics for all samples::
 
     combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
+    combineSampleMetrics.sh -n metrics_preserved -o metrics_preserved.tsv sampleDirectories.txt
 
-Step 12 - Merge the VCF files for all samples into a multi-sample VCF file::
+Step 13 - Merge the VCF files for all samples into a multi-sample VCF file::
 
     mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
+    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt
 
-Step 13 - Compute the SNP distances between samples::
+Step 14 - Compute the SNP distances between samples::
 
     calculate_snp_distances.py -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
+    calculate_snp_distances.py -p snp_distance_pairwise_preserved.tsv -m snp_distance_matrix_preserved.tsv snpma.fasta
 
-Step 14 - View the results:
+Step 15 - View the results:
 
 Upon successful completion of the pipeline, the snplist.txt identifies the SNP positions in all samples.  The SNP Matrix 
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
@@ -954,9 +1004,15 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snpma.vcf
     ls -l referenceSNP.fasta
     ls -l snp_distance_matrix.tsv
+    ls -l snplist_preserved.txt
+    ls -l snpma_preserved.fasta
+    ls -l snpma_preserved.vcf
+    ls -l referenceSNP_preserved.fasta
+    ls -l snp_distance_matrix_preserved.tsv
 
     # View the per-sample metrics
     xdg-open metrics.tsv
+    xdg-open metrics_preserved.tsv
 
 
 .. _excessive-snps-label:
