@@ -149,15 +149,18 @@ def remove_bad_snp(options_dict):
     out_group_list_path =  options_dict['outGroupFile']
     out_goup_list = list()
     sorted_list_of_outgroup_samples = list()
-    try:
-        if (out_group_list_path is not None):
+    if out_group_list_path is not None:
+        bad_file_count = utils.verify_non_empty_input_files("File of outgroup samples", [out_group_list_path])
+        if bad_file_count > 0:
+            utils.global_error(None)
+        try:
             #There are outgroup samples
             input_file_list.append(out_group_list_path)
             with open(out_group_list_path, "r") as out_group_list_file:
                 unsorted_list_of_outgroup_samples = [line.rstrip() for line in out_group_list_file]
             sorted_list_of_outgroup_samples = sorted(unsorted_list_of_outgroup_samples)
-    except:
-        utils.global_error("Error: Cannot open the file containing the list of outgroup samples!")
+        except:
+            utils.global_error("Error: Cannot open the file containing the list of outgroup samples!")
 
     #==========================================================================
     # Validate inputs
@@ -171,6 +174,10 @@ def remove_bad_snp(options_dict):
         utils.global_error("Error: all %d VCF files were missing or empty." % bad_file_count)
     elif bad_file_count > 0:
         utils.sample_error("Error: %d VCF files were missing or empty." % bad_file_count, continue_possible=True)
+
+    bad_file_count = utils.verify_non_empty_input_files("Reference file", [options_dict['refFastaFile']])
+    if bad_file_count > 0:
+        utils.global_error(None)
 
     #==========================================================================
     # Get contigs' length from the reference fasta file
