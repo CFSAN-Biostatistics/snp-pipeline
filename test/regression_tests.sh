@@ -71,6 +71,15 @@ assertIdenticalFiles()
     assertTrue "$1 does not exactly match $2" $?
 }
 
+# Assert two files are different.
+# Options 3 and 4 are used to exclude some lines from the comparison with --ignore-matching-lines.
+assertDifferentFiles()
+{
+    if [[ ! -f "$2" ]]; then fail "The file $2 does not exist."; return $SHUNIT_FALSE; fi
+    diff -q $3 $4 $5 "$1" "$2" &> /dev/null
+    assertFalse "The file $1 should not match $2" $?
+}
+
 # Assert file $1 is newer than file $2.
 assertNewerFile()
 {
@@ -1944,6 +1953,68 @@ testSnpFilterPartialRebuild()
     assertIdenticalFiles "$tempDir/samples/sample2/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample2/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample3/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample3/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample4/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample4/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+}
+
+# Verify the snp_filter script produces different results when one of the samples is an outgroup.
+testSnpFilterOutgroup()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+
+    # Remember the output when there are no outgroups
+    for d in $tempDir/samples/*; do
+        verifyNonEmptyReadableFile $d/var.flt_preserved.vcf
+        mv $d/var.flt_preserved.vcf $d/var.flt_preserved.vcf.save
+    done
+
+    # Force timestamps to change so outputs are newer than inputs.
+    # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
+    touch -d '-11 day' $tempDir/reference/*.fasta
+    touch -d '-10 day' $tempDir/reference/*.bt2
+    touch -d  '-9 day' $tempDir/samples/*/*.fastq
+    touch -d  '-8 day' $tempDir/samples/*/reads.sam
+    touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-4 day' $tempDir/samples/*/var.flt.vcf
+
+    # Remove unwanted log files
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    rm -rf $logDir
+    mkdir -p $logDir
+
+    # One of the samples is an outgroup
+    outgroup="sample4" # this test only works when sample 4 is the outgroup
+    echo $outgroup > "$tempDir/outgroup.txt"
+
+    # Re-run snp_filter.py --
+    snp_filter.py --out_group "$tempDir/outgroup.txt" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterAbnormalSNP.log"
+
+    # Verify log files
+    verifyNonEmptyReadableFile "$logDir/filterAbnormalSNP.log"
+    assertFileNotContains "$logDir/filterAbnormalSNP.log" "already freshly built"
+    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+
+    # Verify all preserved vcf files are different when there is an outgroup
+    for d in $tempDir/samples/*; do
+        verifyNonEmptyReadableFile $d/var.flt_preserved.vcf
+        assertDifferentFiles $d/var.flt_preserved.vcf $d/var.flt_preserved.vcf.save --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    done
+
+    # Verify the outgroup sample preserved vcf matches the original varscan output
+    assertIdenticalFiles $tempDir/samples/$outgroup/var.flt_preserved.vcf $tempDir/samples/$outgroup/var.flt.vcf
+
+    # Verify the outgroup sample removed vcf contains only a header
+    grep -v "^#" $tempDir/samples/$outgroup/var.flt_removed.vcf > $tempDir/samples/$outgroup/var.flt_removed.noheader
+    verifyEmptyFile $tempDir/samples/$outgroup/var.flt_removed.noheader
 }
 
 

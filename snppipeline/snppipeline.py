@@ -11,6 +11,7 @@ import sys
 import platform
 import psutil
 import locale
+import shutil
 import vcf
 from snppipeline.__init__ import __version__
 from snppipeline import pileup
