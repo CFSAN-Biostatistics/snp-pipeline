@@ -213,7 +213,7 @@ snp_filter.py
                           The length of the edge regions in a contig, in which
                           all SNPs will be removed. (default: 500)
     -w WINDOW_SIZE, --window_size WINDOW_SIZE
-                          the length of the window in which the number of SNPs
+                          The length of the window in which the number of SNPs
                           should be no more than max_num_snp. (default: 1000)
     -m MAX_NUM_SNPs, --max_snp MAX_NUM_SNPs
                           The maximum number of SNPs allowed in a window.
