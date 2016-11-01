@@ -719,7 +719,6 @@ fi
 
 
 echo -e "\nStep 6.1 - Combine the SNP positions across all samples into the SNP list file"
-echo -e "\n         - process original VCF files"
 # The create_snp_list process creates the filtered list of sample directories.  It is the list of samples having removed the samples with excessive snps.
 # When running on a workstation, the file exists at this point during the script execution, but on grid or torque, it has not yet been created. However,
 # we know the path to the file regardless of whether it exists yet.
@@ -878,72 +877,7 @@ else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
 fi
 
-echo -e "\nStep 11.1 - Collect metrics for each sample"
-if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
-#$ -N collectMetrics
-#$ -cwd
-#$ -V
-#$ -j y
-#$ -hold_jid_ad $callConsensusJobArray
-#$ -l h_rt=02:00:00
-#$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
-    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics" -v "\$sampleDir/consensus.vcf" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
-_EOF_
-)
-elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
-    #PBS -N collectMetrics
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$callConsensusJobArray
-    #PBS -l walltime=02:00:00
-    #PBS -o $logDir/collectSampleMetrics.log
-    #PBS -V
-    sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics" -v "\$sampleDir/consensus.vcf" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
-_EOF_
-)
-else
-    if [[ "$MaxConcurrentCollectSampleMetrics" != "" ]]; then
-        numCollectSampleMetricsCores=$MaxConcurrentCollectSampleMetrics
-    else
-        numCollectSampleMetricsCores=$numCores
-    fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics" -v "$1/consensus.vcf" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
-fi
-
-echo -e "\nStep 12.1 - Combine the metrics across all samples into the metrics table"
-if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobArray=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N combineMetrics
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $collectSampleMetricsJobArray
-#$ -o $logDir/combineSampleMetrics.log
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
-_EOF_
-)
-elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobArray=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N combineMetrics
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$collectSampleMetricsJobArray
-    #PBS -o $logDir/combineSampleMetrics.log
-    #PBS -V
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
-_EOF_
-)
-else
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
-fi
-
-echo -e "\nStep 13.1 - Calculate SNP distance matrix"
+echo -e "\nStep 11.1 - Calculate SNP distance matrix"
 if [[ "$platform" == "grid" ]]; then
     calcSnpDistanceJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N snpDistance
@@ -1135,72 +1069,7 @@ else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
 fi
 
-echo -e "\nStep 11.2 - Collect metrics for each sample"
-if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobId2=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
-#$ -N collectMetrics_preserved
-#$ -cwd
-#$ -V
-#$ -j y
-#$ -hold_jid_ad $callConsensusJobArray2
-#$ -l h_rt=02:00:00
-#$ -o $logDir/collectSampleMetrics_preserved.log-\$TASK_ID
-    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" -v "\$sampleDir/consensus_preserved.vcf" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
-_EOF_
-)
-elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobId2=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
-    #PBS -N collectMetrics_preserved
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$callConsensusJobArray2
-    #PBS -l walltime=02:00:00
-    #PBS -o $logDir/collectSampleMetrics_preserved.log
-    #PBS -V
-    sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" -v "\$sampleDir/consensus_preserved.vcf" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
-_EOF_
-)
-else
-    if [[ "$MaxConcurrentCollectSampleMetrics" != "" ]]; then
-        numCollectSampleMetricsCores=$MaxConcurrentCollectSampleMetrics
-    else
-        numCollectSampleMetricsCores=$numCores
-    fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics_preserved" -v "$1/consensus_preserved.vcf" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics_preserved.log-$0'
-fi
-
-echo -e "\nStep 12.2 - Combine the metrics across all samples into the metrics table"
-if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobArray2=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N combineMetrics_preserved
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $collectSampleMetricsJobArray2
-#$ -o $logDir/combineSampleMetrics_preserved.log
-    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
-_EOF_
-)
-elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobArray2=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N combineMetrics_preserved
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$collectSampleMetricsJobArray2
-    #PBS -o $logDir/combineSampleMetrics_preserved.log
-    #PBS -V
-    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
-_EOF_
-)
-else
-    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics_preserved.log
-fi
-
-echo -e "\nStep 13.2 - Calculate SNP distance matrix"
+echo -e "\nStep 11.2 - Calculate SNP distance matrix"
 if [[ "$platform" == "grid" ]]; then
     calcSnpDistanceJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N snpDistance_preserved
@@ -1225,6 +1094,71 @@ _EOF_
 )
 else
     calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta" 2>&1 | tee $logDir/calcSnpDistances_preserved.log
+fi
+
+echo -e "\nStep 12 - Collect metrics for each sample"
+if [[ "$platform" == "grid" ]]; then
+    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
+#$ -N collectMetrics
+#$ -cwd
+#$ -V
+#$ -j y
+#$ -hold_jid_ad $callConsensusJobArray,$callConsensusJobArray2
+#$ -l h_rt=02:00:00
+#$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
+    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    collectSampleMetricsJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
+    #PBS -N collectMetrics
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterokarray:$callConsensusJobArray:$callConsensusJobArray2
+    #PBS -l walltime=02:00:00
+    #PBS -o $logDir/collectSampleMetrics.log
+    #PBS -V
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
+    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+_EOF_
+)
+else
+    if [[ "$MaxConcurrentCollectSampleMetrics" != "" ]]; then
+        numCollectSampleMetricsCores=$MaxConcurrentCollectSampleMetrics
+    else
+        numCollectSampleMetricsCores=$numCores
+    fi
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+fi
+
+echo -e "\nStep 13 - Combine the metrics across all samples into the metrics table"
+if [[ "$platform" == "grid" ]]; then
+    collectSampleMetricsJobArray=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
+    combineSampleMetricsJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N combineMetrics
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $collectSampleMetricsJobArray
+#$ -o $logDir/combineSampleMetrics.log
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    collectSampleMetricsJobArray=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
+    combineSampleMetricsJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+    #PBS -N combineMetrics_preserved
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterokarray:$collectSampleMetricsJobArray
+    #PBS -o $logDir/combineSampleMetrics.log
+    #PBS -V
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+else
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
 fi
 
 # Step 14.2 - Notify user of any non-fatal errors accumulated during processing

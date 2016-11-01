@@ -4758,11 +4758,6 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics_preserved.log-1" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/collectSampleMetrics_preserved.log-2" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/collectSampleMetrics_preserved.log-4" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/collectSampleMetrics_preserved.log-3" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics_preserved.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 
 }
@@ -4835,8 +4830,6 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics_preserved.log-1" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics_preserved.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 
     # Verify correct results
@@ -4922,8 +4915,6 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics_preserved.log-1" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics_preserved.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 }
 
@@ -5004,8 +4995,6 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics_preserved.log-2" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics_preserved.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 }
 
@@ -5141,11 +5130,6 @@ testAlreadyFreshOutputs()
 
     assertFileContains "$logDir/mergeVcf_preserved.log" "Multi-VCF file is already freshly created.  Use the -f option to force a rebuild."
 
-    assertFileNotContains "$logDir/collectSampleMetrics_preserved.log-1" "already freshly created"
-    assertFileNotContains "$logDir/collectSampleMetrics_preserved.log-2" "already freshly created"
-    assertFileNotContains "$logDir/collectSampleMetrics_preserved.log-3" "already freshly created"
-    assertFileNotContains "$logDir/collectSampleMetrics_preserved.log-4" "already freshly created"
-
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "have already been freshly built.  Use the -f option to force a rebuild"
 
     # Special collectSampleMetrics re-use last metrics
@@ -5240,17 +5224,22 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics_preserved.log-1" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics_preserved.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 
     # Verify output
+    # After removing the abnormal high-density snps, sample1 has fewer than 45 snps, so it is included in the analysis
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=Excluded$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSamplePreserved=$"
     assertFileContains "$tempDir/samples/sample2/metrics" "excludedSample=$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "excludedSamplePreserved=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "snps=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32$"
     assertFileContains "$tempDir/samples/sample2/metrics" "snps=44$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "snpsPreserved=41$"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
-    assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "missingPos=0$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "missingPosPreserved=0$"
     assertFileContains "$tempDir/samples/sample1/metrics" "errorList=.*Excluded: exceeded 45 maxsnps."
     assertFileContains "$tempDir/samples/sample2/metrics" "errorList=\"No compressed fastq.gz or fq.gz files were found.\"$"
     assertFileContains "$tempDir/metrics.tsv"             "sample1.*Excluded.*Excluded: exceeded 45 maxsnps."
@@ -5262,23 +5251,6 @@ testRunSnpPipelineExcessiveSnps()
     assertFileNotContains "$tempDir/snpma.vcf"   "sample1"
     assertFileNotContains "$tempDir/snp_distance_pairwise.tsv" "sample1"
     assertFileNotContains "$tempDir/snp_distance_matrix.tsv" "sample1"
-
-    # After removing the abnormal high-density snps, sample1 has fewer than 45 snps, so it is included in the analysis
-    assertFileContains "$tempDir/samples/sample1/metrics_preserved" "excludedSample=Excluded$"
-    assertFileContains "$tempDir/samples/sample2/metrics_preserved" "excludedSample=$"
-    assertFileContains "$tempDir/samples/sample1/metrics_preserved" "snps=$"
-    assertFileContains "$tempDir/samples/sample2/metrics_preserved" "snps=41$"
-    assertFileContains "$tempDir/samples/sample1/metrics_preserved" "missingPos=$"
-    assertFileContains "$tempDir/samples/sample1/metrics_preserved" "missingPos=$"
-    assertFileContains "$tempDir/samples/sample1/metrics_preserved" "errorList=.*Excluded: exceeded 45 maxsnps."
-    assertFileContains "$tempDir/samples/sample2/metrics_preserved" "errorList=\"No compressed fastq.gz or fq.gz files were found.\"$"
-    assertFileNotContains "$tempDir/samples/sample1/metrics_preserved" "Consensus.*not found"
-    assertFileNotContains "$tempDir/samples/sample1/metrics_preserved" "Consensus.*not found"
-    assertFileContains "$tempDir/snplist_preserved.txt" "sample1"
-    assertFileContains "$tempDir/snpma_preserved.fasta" "sample1"
-    assertFileContains "$tempDir/snpma_preserved.vcf"   "sample1"
-    assertFileContains "$tempDir/snp_distance_pairwise_preserved.tsv" "sample1"
-    assertFileContains "$tempDir/snp_distance_matrix_preserved.tsv" "sample1"
 
     copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
     grep -v sample1 "$tempDir/expectedResults/metrics.tsv" > "$tempDir/expectedResults/metrics.withoutSample1.tsv"

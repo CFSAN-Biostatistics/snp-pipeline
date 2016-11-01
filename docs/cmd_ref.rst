@@ -519,11 +519,15 @@ collectSampleMetrics.sh
                        are newer than inputs
     -c FILE          : Relative or absolute path to the consensus fasta file
                        (default: consensus.fasta in the sampleDir)
+    -C FILE          : Relative or absolute path to the consensus preserved fasta file
+                       (default: consensus_preserved.fasta in the sampleDir)
     -m INT           : Maximum allowed number of SNPs per sample. (default: -1)
     -o FILE          : Output file. Relative or absolute path to the metrics file
                        (default: metrics in the sampleDir)
     -v FILE          : Relative or absolute path to the consensus vcf file
                        (default: consensus.vcf in the sampleDir)
+    -V FILE          : Relative or absolute path to the consensus preserved vcf file
+                       (default: consensus_preserved.vcf in the sampleDir)
 
 combineSampleMetrics.sh
 ---------------------------
