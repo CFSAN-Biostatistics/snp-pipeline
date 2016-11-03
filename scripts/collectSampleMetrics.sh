@@ -22,6 +22,7 @@
 #   20160226-scd: Add the average insert size metric
 #   20160304-scd: Count missing positions in the consensus.fasta file instead of the snp matrix.
 #   20160309-scd: Add the -m option to specify the maximum allowable snp threshold.  Add the excludedSample flag.
+#   20161021-scd: Modify to work with snp_filter.py output files.
 #Notes:
 #
 #Bugs:
@@ -50,11 +51,15 @@ usage()
   echo '                     are newer than inputs'
   echo '  -c FILE          : Relative or absolute path to the consensus fasta file'
   echo '                     (default: consensus.fasta in the sampleDir)'
+  echo '  -C FILE          : Relative or absolute path to the consensus preserved fasta file'
+  echo '                     (default: consensus_preserved.fasta in the sampleDir)'
   echo '  -m INT           : Maximum allowed number of SNPs per sample. (default: -1)'
   echo '  -o FILE          : Output file. Relative or absolute path to the metrics file'
   echo '                     (default: metrics in the sampleDir)'
   echo '  -v FILE          : Relative or absolute path to the consensus vcf file'
   echo '                     (default: consensus.vcf in the sampleDir)'
+  echo '  -V FILE          : Relative or absolute path to the consensus preserved vcf file'
+  echo '                     (default: consensus_preserved.vcf in the sampleDir)'
 }
 
 # --------------------------------------------------------
@@ -63,7 +68,7 @@ usage()
 logSysEnvironment()
 {
   echo "# Command           : $0 $@" 1>&2
-  echo "# Working Directory : $(pwd)" 1>&2 
+  echo "# Working Directory : $(pwd)" 1>&2
   if [[ "$PBS_JOBID" != "" ]]; then
   echo "# Job ID            : $PBS_JOBID" 1>&2
   elif [[ "$JOB_ID" != "" ]]; then
@@ -334,6 +339,26 @@ else
 fi
 
 #-------------------------
+echo "# "$(date +"%Y-%m-%d %T") Count number of snp_filter preserved high confidence SNP positions from phase 1 vcf file 1>&2
+#-------------------------
+excludedSamplePreserved=""
+vcfFile=${sampleDir}/var.flt_preserved.vcf
+if [ -s "$vcfFile" ]; then
+  phase1SnpsPreserved=$(grep -c -v '^#' "$vcfFile") || true
+  # Flag excessive snps
+  if [[ $maxSnps -ge 0 && $phase1SnpsPreserved -gt $maxSnps ]]; then
+    excludedSamplePreserved="Excluded"
+    error="Excluded: preserved exceeded $maxSnps maxsnps."
+    echo "$error" 1>&2
+    errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+  fi
+else
+  error="VCF file $vcfFile was not found."
+  echo "$error" 1>&2
+  errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+fi
+
+#-------------------------
 echo "# "$(date +"%Y-%m-%d %T") Count number of consensus snps from consensus vcf file 1>&2
 #-------------------------
 # Get the consensus VCF file
@@ -346,6 +371,44 @@ if [ "$excludedSample" = "Excluded" ]; then
   phase2Snps="" # Omit the phase2 snp count. It will be meaningless since this sample's phase1 snps are excluded from the snplist.
 elif [ -s "$consensusVcfFile" ]; then
   phase2Snps=$(python << END
+from __future__ import print_function
+import vcf
+num_snps = 0
+with open("$consensusVcfFile") as inp:
+    reader = vcf.VCFReader(inp)
+    for record in reader:
+        if not record.is_snp: # is ALT not in [A,C,G,T,N,*] ?
+            continue
+        if record.ALT == record.REF:
+            continue
+        for sample in record.samples:
+            if not sample.is_variant: # is GT == REF ?
+                continue
+            if sample.data.FT != "PASS":
+                continue
+            num_snps += 1
+print(num_snps)
+END
+)
+else
+  error="Consensus VCF file $consensusVcfFile was not found."
+  echo "$error" 1>&2
+  errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+fi
+
+#-------------------------
+echo "# "$(date +"%Y-%m-%d %T") Count number of preserved consensus snps from consensus vcf file 1>&2
+#-------------------------
+# Get the consensus VCF file
+if [ "$opt_V_set" = "1" ]; then
+  consensusVcfFile="$opt_V_arg"
+else
+  consensusVcfFile=${sampleDir}/consensus_preserved.vcf
+fi
+if [ "$excludedSamplePreserved" = "Excluded" ]; then
+  phase2SnpsPreserved="" # Omit the phase2 snp count. It will be meaningless since this sample's phase1 snps are excluded from the snplist.
+elif [ -s "$consensusVcfFile" ]; then
+  phase2SnpsPreserved=$(python << END
 from __future__ import print_function
 import vcf
 num_snps = 0
@@ -403,6 +466,38 @@ else
 fi
 
 
+#------------------------------------------
+echo "# "$(date +"%Y-%m-%d %T") Count missing positions in the preserved snp matrix 1>&2
+#------------------------------------------
+
+# Get the consensus fasta file
+if [ "$opt_C_set" = "1" ]; then
+  consensusFastaFile="$opt_C_arg"
+else
+  consensusFastaFile=${sampleDir}/consensus_preserved.fasta
+fi
+if [ "$excludedSamplePreserved" = "Excluded" ]; then
+  missingPosPreserved="" # Omit the gap count. It will be meaningless since this sample's phase1 snps are excluded from the snplist.
+elif [ -s "$consensusFastaFile" ]; then
+  missingPosPreserved=$(python << END
+from __future__ import print_function
+from Bio import SeqIO
+handle = open("$consensusFastaFile", "rU")
+for record in SeqIO.parse(handle, "fasta"):
+    if record.id == "$sampleDirBasename":
+        missing = record.seq.count('-')
+        print(missing)
+        break
+handle.close()
+END
+)
+else
+  error="Consensus fasta file $consensusFastaFile was not found."
+  echo "$error" 1>&2
+  errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+fi
+
+
 #-------------------------
 echo "# "$(date +"%Y-%m-%d %T") Print Results 1>&2
 #-------------------------
@@ -416,9 +511,13 @@ echo "percentReadsMapped=$perc_mapped" >> "$outfile"
 echo "aveInsertSize=$insertSize" >> "$outfile"
 echo "avePileupDepth=$depth" >> "$outfile"
 echo "phase1Snps=$phase1Snps" >> "$outfile"
+echo "phase1SnpsPreserved=$phase1SnpsPreserved" >> "$outfile"
 echo "snps=$phase2Snps" >> "$outfile"
+echo "snpsPreserved=$phase2SnpsPreserved" >> "$outfile"
 echo "missingPos=$missingPos" >> "$outfile"
+echo "missingPosPreserved=$missingPosPreserved" >> "$outfile"
 echo "excludedSample=$excludedSample" >> "$outfile"
+echo "excludedSamplePreserved=$excludedSamplePreserved" >> "$outfile"
 echo "errorList=\"$errorList"\" >> "$outfile"
 
 echo "# "$(date +"%Y-%m-%d %T") collectSampleMetrics.sh finished 1>&2

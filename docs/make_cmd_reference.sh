@@ -58,6 +58,14 @@ echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 prepSamples.sh            -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
+echo '.. _cmd-ref-snp-filter:' >> x.txt
+echo >> x.txt
+echo snp_filter.py            >> x.txt
+echo ------------------------ >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+snp_filter.py             -h | sed 's/^/  /' >> x.txt
+echo >> x.txt
+
 echo create_snp_list.py          >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
@@ -84,6 +92,7 @@ echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 mergeVcf.sh -h | sed 's/^/  /' >> x.txt
 
+echo >> x.txt
 echo create_snp_matrix.py     >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
@@ -96,6 +105,7 @@ echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 calculate_snp_distances.py -h | sed 's/^/  /' >> x.txt
 
+echo >> x.txt
 echo create_snp_reference_seq.py >> x.txt
 echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt

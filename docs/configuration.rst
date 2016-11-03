@@ -313,6 +313,28 @@ Any of the JVM options can be specified.
     VarscanJvm_ExtraParams="-Xmx300m"
 
 
+RemoveAbnormalSnp_ExtraParams
+------------------------------
+Specifies options passed to the snp_filter.py script.
+
+**Default**: None
+
+**Parameter Notes**:
+
+``--edge_length``
+  The length of the edge regions in a contig, in which all SNPs will be removed.
+``--window_size``
+  The length of the window in which the number of SNPs should be no more than max_num_snp.
+``--max_snp``
+  The maximum number of SNPs allowed in a window.
+``--out_group``
+    Relative or absolute path to the file indicating outgroup samples, one sample ID per line.
+
+**Example**::
+
+    RemoveAbnormalSnp_ExtraParams="--edge_length 500 --window_size 1000 --max_snp 3 --out_group /path/to/outgroupSamples.txt"
+
+
 CreateSnpList_ExtraParams
 -------------------------
 Specifies options passed to create_snp_list.py.

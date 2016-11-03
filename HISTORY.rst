@@ -3,6 +3,15 @@
 History
 -------
 
+0.7.0b1 (2016-11-03)
+~~~~~~~~~~~~~~~~~~
+
+* Added a new script to the pipeline: ``snp_filter.py`` removes snps from the ends of contigs and
+  from regions where the snp density is abnormally high.  This is an important change to the
+  pipeline with additional processing and new output files.  See :ref:`snp-filtering-label`.
+* NOTE: You cannot re-use an old configuration file when running SNP Pipeline version 0.7.0.  You
+  must create a new configuration file.  See :ref:`configuration-label`.
+
 0.6.1 (2016-05-23)
 ~~~~~~~~~~~~~~~~~~
 

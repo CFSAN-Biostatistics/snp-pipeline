@@ -61,3 +61,6 @@ doc/html
 
 # Machine generated test files
 test/testLambdaVirus*
+
+# Eclipse settings
+.settings/*

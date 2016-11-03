@@ -71,6 +71,15 @@ assertIdenticalFiles()
     assertTrue "$1 does not exactly match $2" $?
 }
 
+# Assert two files are different.
+# Options 3 and 4 are used to exclude some lines from the comparison with --ignore-matching-lines.
+assertDifferentFiles()
+{
+    if [[ ! -f "$2" ]]; then fail "The file $2 does not exist."; return $SHUNIT_FALSE; fi
+    diff -q $3 $4 $5 "$1" "$2" &> /dev/null
+    assertFalse "The file $1 should not match $2" $?
+}
+
 # Assert file $1 is newer than file $2.
 assertNewerFile()
 {
@@ -93,9 +102,10 @@ testScriptsOnPath()
     assertNotNull "prepReference.sh is not on the path"             "$(which prepReference.sh)"
     assertNotNull "alignSampleToReference.sh is not on the path"    "$(which alignSampleToReference.sh)"
     assertNotNull "prepSamples.sh is not on the path"               "$(which prepSamples.sh)"
-    assertNotNull "call_consensus.py is not on the path"            "$(which call_consensus.py)"
+    assertNotNull "snp_filter.py is not on the path"                "$(which snp_filter.py)"
     assertNotNull "create_snp_list.py is not on the path"           "$(which create_snp_list.py)"
     assertNotNull "create_snp_pileup.py is not on the path"         "$(which create_snp_pileup.py)"
+    assertNotNull "call_consensus.py is not on the path"            "$(which call_consensus.py)"
     assertNotNull "create_snp_matrix.py is not on the path"         "$(which create_snp_matrix.py)"
     assertNotNull "create_snp_reference_seq.py is not on the path"  "$(which create_snp_reference_seq.py)"
     assertNotNull "collectSampleMetrics.sh is not on the path"      "$(which collectSampleMetrics.sh)"
@@ -124,6 +134,15 @@ testCopySnpPipelineLambdaData()
     verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
     verifyNonEmptyReadableFile "$tempDir/snpma.fasta"
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_pairwise.tsv"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_matrix.tsv"
+
+    verifyNonEmptyReadableFile "$tempDir/snplist_preserved.txt"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_pairwise_preserved.tsv"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_matrix_preserved.tsv"
 }
 
 # Verify copy_snppipeline_data.py emits configuration file
@@ -184,6 +203,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "prepReference.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "alignSampleToReference.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "prepSamples.sh"
+    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "snp_filter.py"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "create_snp_list.py"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "call_consensus.py"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "create_snp_matrix.py"
@@ -203,6 +223,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "prepReference.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "alignSampleToReference.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "prepSamples.sh"
+    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "snp_filter.py"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "create_snp_list.py"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "call_consensus.py"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "create_snp_matrix.py"
@@ -1432,6 +1453,600 @@ testPrepSamplesVarscanClasspathRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
     tryPrepSamplesVarscanClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
+}
+
+
+# Verify the snp_filter.py script traps attempts to write to unwritable file
+trySnpFilterPermissionTrap()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Setup input files
+    printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
+    echo "Dummy vcf content" > "$tempDir/samples/sample1/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
+
+    # 1) var.flt_preserved.vcf =========
+    # Make the output file var.flt_preserved.vcf unwritable
+    mkdir -p "$tempDir/samples/sample1"
+    touch "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    chmod -w "$tempDir/samples/sample1/var.flt_preserved.vcf"
+
+    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_preserved.vcf
+    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter.py error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when var.flt_preserved.vcf was unwritable." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Cannot create the file for preserved SNPs"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    rm -f "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    rm "$tempDir/error.log"
+
+    # 2) var.flt_removed.vcf =========
+    # Make the output file var.flt_removed.vcf unwritable
+    mkdir -p "$tempDir/samples/sample1"
+    touch "$tempDir/samples/sample1/var.flt_removed.vcf"
+    chmod -w "$tempDir/samples/sample1/var.flt_removed.vcf"
+
+    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_removed.vcf
+    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter.py error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when var.flt_removed.vcf was unwritable." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Cannot create the file for removed SNPs"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    rm -f "$tempDir/samples/sample1/var.flt_removed.vcf"
+    rm "$tempDir/error.log"
+}
+
+# Verify the snp_filter.py script traps attempts to write to unwritable file
+testSnpFilterPermissionTrapStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    trySnpFilterPermissionTrap 100
+}
+
+# Verify the snp_filter.py script traps attempts to write to unwritable file
+testSnpFilterPermissionTrapNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+
+    expectErrorCode=0
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Setup input files
+    printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
+    echo "Dummy vcf content" > "$tempDir/samples/sample1/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
+
+    # 1) var.flt_preserved.vcf =========
+    # Make the output file var.flt_preserved.vcf unwritable
+    mkdir -p "$tempDir/samples/sample1"
+    touch "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    chmod -w "$tempDir/samples/sample1/var.flt_preserved.vcf"
+
+    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_preserved.vcf
+    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter.py error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when var.flt_preserved.vcf was unwritable." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py"
+    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Cannot create the file for preserved SNPs"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
+    assertFileContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    rm -f "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    rm "$tempDir/error.log"
+
+    # 2) var.flt_removed.vcf =========
+    # Make the output file var.flt_removed.vcf unwritable
+    mkdir -p "$tempDir/samples/sample1"
+    touch "$tempDir/samples/sample1/var.flt_removed.vcf"
+    chmod -w "$tempDir/samples/sample1/var.flt_removed.vcf"
+
+    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_removed.vcf
+    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter.py error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when var.flt_removed.vcf was unwritable." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py"
+    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Cannot create the file for removed SNPs"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
+    assertFileContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    rm -f "$tempDir/samples/sample1/var.flt_removed.vcf"
+    rm "$tempDir/error.log"
+}
+
+# Verify the snp_filter.py script traps attempts to write to unwritable file
+testSnpFilterPermissionTrapStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    trySnpFilterPermissionTrap 100
+}
+
+
+# Verify the snp_filter.py script detects missing sample directories file
+trySnpFilterMissingSampleDirRaiseGlobalError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run snp_filter.py with missing sampleDirectories.txt
+    snp_filter.py "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
+    assertFileContains "$logDir/snp_filter.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the snp_filter.py script detects missing sample directories file
+testSnpFilterMissingSampleDirRaiseGlobalErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    trySnpFilterMissingSampleDirRaiseGlobalError 100
+}
+
+# Verify the snp_filter.py script detects missing sample directories file
+testSnpFilterMissingSampleDirRaiseGlobalErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    trySnpFilterMissingSampleDirRaiseGlobalError 100
+}
+
+# Verify the snp_filter.py script detects missing sample directories file
+testSnpFilterMissingSampleDirRaiseGlobalErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    trySnpFilterMissingSampleDirRaiseGlobalError 100
+}
+
+
+# Verify the snp_filter.py script detects missing reference file
+trySnpFilterMissingReferenceRaiseGlobalError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run snp_filter.py with missing reference
+    printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
+    echo "Dummy vcf content" > "$tempDir/samples/sample1/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
+    snp_filter.py "$tempDir/sampleDirectories.txt" "$tempDir/non-exist-reference" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when reference file was missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Reference file $tempDir/non-exist-reference does not exist"
+    assertFileContains "$logDir/snp_filter.log" "Reference file $tempDir/non-exist-reference does not exist"
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the snp_filter.py script detects missing reference file
+testSnpFilterMissingReferenceRaiseGlobalErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    trySnpFilterMissingReferenceRaiseGlobalError 100
+}
+
+# Verify the snp_filter.py script detects missing reference file
+testSnpFilterMissingReferenceRaiseGlobalErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    trySnpFilterMissingReferenceRaiseGlobalError 100
+}
+
+# Verify the snp_filter.py script detects missing reference file
+testSnpFilterMissingReferenceRaiseGlobalErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    trySnpFilterMissingReferenceRaiseGlobalError 100
+}
+
+
+# Verify the snp_filter.py script detects missing outgroup samples file
+trySnpFilterMissingOutgroupRaiseGlobalError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run snp_filter.py with missing outgroup samples file
+    printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
+    echo "Dummy vcf content" > "$tempDir/samples/sample1/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
+    echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
+    snp_filter.py -g "$tempDir/outgroup" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when file of outgroup samples file was missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "File of outgroup samples $tempDir/outgroup does not exist"
+    assertFileContains "$logDir/snp_filter.log" "File of outgroup samples $tempDir/outgroup does not exist"
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the snp_filter.py script detects missing outgroup samples file
+testSnpFilterMissingOutgroupRaiseGlobalErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    trySnpFilterMissingOutgroupRaiseGlobalError 100
+}
+
+# Verify the snp_filter.py script detects missing outgroup samples file
+testSnpFilterMissingOutgroupRaiseGlobalErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    trySnpFilterMissingOutgroupRaiseGlobalError 100
+}
+
+# Verify the snp_filter.py script detects missing outgroup samples file
+testSnpFilterMissingOutgroupRaiseGlobalErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    trySnpFilterMissingOutgroupRaiseGlobalError 100
+}
+
+
+# Verify the snp_filter.py script detects all vcf files missing
+trySnpFilterMissingVcfRaiseGlobalError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run snp_filter.py -- fail because of missing all VCF files
+    printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
+    snp_filter.py "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when all var.flt.vcf were missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Error: all 4 VCF files were missing or empty"
+    assertFileContains "$logDir/snp_filter.log" "Error: all 4 VCF files were missing or empty"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the snp_filter.py script detects all vcf files missing
+testSnpFilterMissingVcfRaiseGlobalErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    trySnpFilterMissingVcfRaiseGlobalError 100
+}
+
+# Verify the snp_filter.py script detects all vcf files missing
+testSnpFilterMissingVcfRaiseGlobalErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    trySnpFilterMissingVcfRaiseGlobalError 100
+}
+
+# Verify the snp_filter.py script detects all vcf files missing
+testSnpFilterMissingVcfRaiseGlobalErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    trySnpFilterMissingVcfRaiseGlobalError 100
+}
+
+
+# Verify the snp_filter script detects missing some VCF files, but not all
+trySnpFilterMissingVcfRaiseSampleError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run prep work
+    prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
+    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
+
+    # Run snp_filter.py -- fail because of missing some, but not all VCF files
+    printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
+    snp_filter.py "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when some var.flt.vcf were missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
+    assertFileContains "$logDir/snp_filter.log" "Error: 3 VCF files were missing or empty"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the snp_filter script detects missing some VCF files, but not all
+testSnpFilterMissingVcfRaiseSampleErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    trySnpFilterMissingVcfRaiseSampleError 100
+}
+
+# Verify the snp_filter script detects missing some VCF files, but not all
+testSnpFilterMissingVcfRaiseSampleErrorNoStop()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export SnpPipeline_StopOnSampleError=false
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run prep work
+    prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
+    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
+
+    # Run snp_filter.py -- fail because of missing some, but not all VCF files
+    printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
+    snp_filter.py "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    errorCode=$?
+
+    # Verify snp_filter error handling behavior
+    assertEquals "snp_filter.py returned incorrect error code when some var.flt.vcf were missing." 0 $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "snp_filter.py"
+    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
+    assertFileContains "$logDir/snp_filter.log" "Error: 3 VCF files were missing or empty"
+    assertFileContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the snp_filter script detects missing some VCF files, but not all
+testSnpFilterMissingVcfRaiseSampleErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    trySnpFilterMissingVcfRaiseSampleError 100
+}
+
+
+# Verify the snp_filter script uses all the input vcf files to produce the outputs
+# even when some of the samples are already fresh.
+testSnpFilterPartialRebuild()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+
+    # Force timestamps to change so outputs are newer than inputs.
+    # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
+    touch -d '-11 day' $tempDir/reference/*.fasta
+    touch -d '-10 day' $tempDir/reference/*.bt2
+    touch -d  '-9 day' $tempDir/samples/*/*.fastq
+    touch -d  '-8 day' $tempDir/samples/*/reads.sam
+    touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-4 day' $tempDir/samples/*/var.flt.vcf
+    touch -d  '-3 day' $tempDir/samples/*/var.flt_preserved.vcf
+    touch -d  '-3 day' $tempDir/samples/*/var.flt_removed.vcf
+
+    # Remove unwanted log files
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    rm -rf $logDir
+    mkdir -p $logDir
+
+    # Remove the results for one of the samples
+    rm $tempDir/samples/sample1/var.flt_preserved.vcf
+
+    # Re-run snp_filter.py -- this should only rebuild results for sample1, but it should use the var.flt.vcf input file for all samples
+    snp_filter.py "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterAbnormalSNP.log"
+
+    # Verify log files
+    verifyNonEmptyReadableFile "$logDir/filterAbnormalSNP.log"
+    assertFileNotContains "$logDir/filterAbnormalSNP.log" "already freshly built"
+
+    # Verify correct results
+    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    assertIdenticalFiles "$tempDir/samples/sample1/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample1/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample2/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample2/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample3/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample3/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample4/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample4/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample1/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample1/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample2/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample2/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample3/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample3/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample4/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample4/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+}
+
+# Verify the snp_filter script produces different results when one of the samples is an outgroup.
+testSnpFilterOutgroup()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+
+    # Run the pipeline, specifing the locations of samples and the reference
+    run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+
+    # Remember the output when there are no outgroups
+    for d in $tempDir/samples/*; do
+        verifyNonEmptyReadableFile $d/var.flt_preserved.vcf
+        mv $d/var.flt_preserved.vcf $d/var.flt_preserved.vcf.save
+    done
+
+    # Force timestamps to change so outputs are newer than inputs.
+    # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
+    touch -d '-11 day' $tempDir/reference/*.fasta
+    touch -d '-10 day' $tempDir/reference/*.bt2
+    touch -d  '-9 day' $tempDir/samples/*/*.fastq
+    touch -d  '-8 day' $tempDir/samples/*/reads.sam
+    touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-4 day' $tempDir/samples/*/var.flt.vcf
+
+    # Remove unwanted log files
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    rm -rf $logDir
+    mkdir -p $logDir
+
+    # One of the samples is an outgroup
+    outgroup="sample4" # this test only works when sample 4 is the outgroup
+    echo $outgroup > "$tempDir/outgroup.txt"
+
+    # Re-run snp_filter.py --
+    snp_filter.py --out_group "$tempDir/outgroup.txt" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterAbnormalSNP.log"
+
+    # Verify log files
+    verifyNonEmptyReadableFile "$logDir/filterAbnormalSNP.log"
+    assertFileNotContains "$logDir/filterAbnormalSNP.log" "already freshly built"
+    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+
+    # Verify all preserved vcf files are different when there is an outgroup
+    for d in $tempDir/samples/*; do
+        verifyNonEmptyReadableFile $d/var.flt_preserved.vcf
+        assertDifferentFiles $d/var.flt_preserved.vcf $d/var.flt_preserved.vcf.save --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    done
+
+    # Verify the outgroup sample preserved vcf matches the original varscan output
+    assertIdenticalFiles $tempDir/samples/$outgroup/var.flt_preserved.vcf $tempDir/samples/$outgroup/var.flt.vcf
+
+    # Verify the outgroup sample removed vcf contains only a header
+    grep -v "^#" $tempDir/samples/$outgroup/var.flt_removed.vcf > $tempDir/samples/$outgroup/var.flt_removed.noheader
+    verifyEmptyFile $tempDir/samples/$outgroup/var.flt_removed.noheader
 }
 
 
@@ -3485,10 +4100,26 @@ testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorNoStop()
     verifyNonEmptyReadableFile "$tempDir/snp_distance_pairwise.tsv"
     verifyNonEmptyReadableFile "$tempDir/snp_distance_matrix.tsv"
 
+    verifyNonEmptyReadableFile "$tempDir/snplist_preserved.txt"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample4/consensus_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample5/consensus_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample4/consensus_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample5/consensus_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_pairwise_preserved.tsv"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_matrix_preserved.tsv"
+
     assertFileContains "$tempDir/snpma.fasta" "sample4"
     assertFileContains "$tempDir/snpma.fasta" "sample5"
     assertFileContains "$tempDir/snpma.vcf" "sample4"
     assertFileContains "$tempDir/snpma.vcf" "sample5"
+
+    assertFileContains "$tempDir/snpma_preserved.fasta" "sample4"
+    assertFileContains "$tempDir/snpma_preserved.fasta" "sample5"
+    assertFileContains "$tempDir/snpma_preserved.vcf" "sample4"
+    assertFileContains "$tempDir/snpma_preserved.vcf" "sample5"
 
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "There were errors processing some samples."
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "See the log file $tempDir/error.log for a summary of errors."
@@ -3700,12 +4331,19 @@ tryRunSnpPipelineTrapPrepReferenceTrap()
     verifyNonExistingFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonExistingFile "$tempDir/samples/sample1/var.flt.vcf"
     verifyNonExistingFile "$tempDir/snplist.txt"
-    verifyNonExistingFile "$tempDir/samples/sample1/reads.snp.pileup"
     verifyNonExistingFile "$tempDir/samples/sample1/consensus.fasta"
     verifyNonExistingFile "$tempDir/samples/sample1/consensus.vcf"
     verifyNonExistingFile "$tempDir/snpma.fasta"
     verifyNonExistingFile "$tempDir/snpma.vcf"
     verifyNonExistingFile "$tempDir/referenceSNP.fasta"
+
+    verifyNonExistingFile "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    verifyNonExistingFile "$tempDir/snplist_preserved.txt"
+    verifyNonExistingFile "$tempDir/samples/sample1/consensus_preserved.fasta"
+    verifyNonExistingFile "$tempDir/samples/sample1/consensus_preserved.vcf"
+    verifyNonExistingFile "$tempDir/snpma_preserved.fasta"
+    verifyNonExistingFile "$tempDir/snpma_preserved.vcf"
+    verifyNonExistingFile "$tempDir/referenceSNP_preserved.fasta"
 }
 
 # Verify run_snp_pipeline.sh trap handling
@@ -3778,12 +4416,19 @@ tryRunSnpPipelineTrapAlignSampleToReferenceTrap()
     verifyNonExistingFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonExistingFile "$tempDir/samples/sample1/var.flt.vcf"
     verifyNonExistingFile "$tempDir/snplist.txt"
-    verifyNonExistingFile "$tempDir/samples/sample1/reads.snp.pileup"
     verifyNonExistingFile "$tempDir/samples/sample1/consensus.fasta"
     verifyNonExistingFile "$tempDir/samples/sample1/consensus.vcf"
     verifyNonExistingFile "$tempDir/snpma.fasta"
     verifyNonExistingFile "$tempDir/snpma.vcf"
     verifyNonExistingFile "$tempDir/referenceSNP.fasta"
+
+    verifyNonExistingFile "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    verifyNonExistingFile "$tempDir/snplist_preserved.txt"
+    verifyNonExistingFile "$tempDir/samples/sample1/consensus_preserved.fasta"
+    verifyNonExistingFile "$tempDir/samples/sample1/consensus_preserved.vcf"
+    verifyNonExistingFile "$tempDir/snpma_preserved.fasta"
+    verifyNonExistingFile "$tempDir/snpma_preserved.vcf"
+    verifyNonExistingFile "$tempDir/referenceSNP_preserved.fasta"
 }
 
 # Verify run_snp_pipeline.sh trap handling
@@ -3859,6 +4504,14 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
     verifyNonExistingFile "$tempDir/snpma.fasta"
     verifyNonExistingFile "$tempDir/snpma.vcf"
     verifyNonExistingFile "$tempDir/referenceSNP.fasta"
+
+    verifyNonExistingFile "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    verifyNonExistingFile "$tempDir/snplist_preserved.txt"
+    verifyNonExistingFile "$tempDir/samples/sample1/consensus_preserved.fasta"
+    verifyNonExistingFile "$tempDir/samples/sample1/consensus_preserved.vcf"
+    verifyNonExistingFile "$tempDir/snpma_preserved.fasta"
+    verifyNonExistingFile "$tempDir/snpma_preserved.vcf"
+    verifyNonExistingFile "$tempDir/referenceSNP_preserved.fasta"
 }
 
 # Verify run_snp_pipeline.sh trap handling
@@ -3899,6 +4552,12 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopSomeFail()
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample4/reads.sam"
     assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "prepSamples.sh finished"
 
+    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileContains "$tempDir/error.log" "Error: 2 VCF files were missing or empty"
+    assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "snp_filter.py finished"
+
     assertFileNotContains "$tempDir/error.log" "create_snp_list.py failed"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
@@ -3927,10 +4586,30 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopSomeFail()
     verifyNonEmptyReadableFile "$tempDir/snp_distance_pairwise.tsv"
     verifyNonEmptyReadableFile "$tempDir/snp_distance_matrix.tsv"
 
+    verifyNonEmptyReadableFile "$tempDir/snplist_preserved.txt"
+    verifyNonExistingFile "$tempDir/samples/sample1/consensus_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample2/consensus_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample3/consensus_preserved.fasta"
+    verifyNonExistingFile "$tempDir/samples/sample4/consensus_preserved.fasta"
+    verifyNonExistingFile "$tempDir/samples/sample1/consensus_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample2/consensus_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample3/consensus_preserved.vcf"
+    verifyNonExistingFile "$tempDir/samples/sample4/consensus_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_pairwise_preserved.tsv"
+    verifyNonEmptyReadableFile "$tempDir/snp_distance_matrix_preserved.tsv"
+
     assertFileContains "$tempDir/snpma.fasta" "sample2"
     assertFileContains "$tempDir/snpma.fasta" "sample3"
     assertFileContains "$tempDir/snpma.vcf" "sample2"
     assertFileContains "$tempDir/snpma.vcf" "sample3"
+
+    assertFileContains "$tempDir/snpma_preserved.fasta" "sample2"
+    assertFileContains "$tempDir/snpma_preserved.fasta" "sample3"
+    assertFileContains "$tempDir/snpma_preserved.vcf" "sample2"
+    assertFileContains "$tempDir/snpma_preserved.vcf" "sample3"
 
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "There were errors processing some samples."
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "See the log file $tempDir/error.log for a summary of errors."
@@ -4013,6 +4692,17 @@ testRunSnpPipelineLambda()
     assertIdenticalFiles "$tempDir/samples/sample3/consensus.vcf" "$tempDir/expectedResults/samples/sample3/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample4/consensus.vcf" "$tempDir/expectedResults/samples/sample4/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
 
+    assertIdenticalFiles "$tempDir/snplist_preserved.txt"                   "$tempDir/expectedResults/snplist_preserved.txt"
+    assertIdenticalFiles "$tempDir/snpma_preserved.fasta"                   "$tempDir/expectedResults/snpma_preserved.fasta"
+    assertIdenticalFiles "$tempDir/snpma_preserved.vcf"                     "$tempDir/expectedResults/snpma_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source --ignore-matching-lines=##bcftools
+    assertIdenticalFiles "$tempDir/referenceSNP_preserved.fasta"            "$tempDir/expectedResults/referenceSNP_preserved.fasta"
+    assertIdenticalFiles "$tempDir/snp_distance_pairwise_preserved.tsv"     "$tempDir/expectedResults/snp_distance_pairwise_preserved.tsv"
+    assertIdenticalFiles "$tempDir/snp_distance_matrix_preserved.tsv"       "$tempDir/expectedResults/snp_distance_matrix_preserved.tsv"
+    assertIdenticalFiles "$tempDir/samples/sample1/consensus_preserved.vcf" "$tempDir/expectedResults/samples/sample1/consensus_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample2/consensus_preserved.vcf" "$tempDir/expectedResults/samples/sample2/consensus_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample3/consensus_preserved.vcf" "$tempDir/expectedResults/samples/sample3/consensus_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample4/consensus_preserved.vcf" "$tempDir/expectedResults/samples/sample4/consensus_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+
     # Verify log files
     logDir=$(echo $(ls -d $tempDir/logs*))
     verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
@@ -4080,6 +4770,11 @@ testRunSnpPipelineLambdaUnpaired()
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
     verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
 
+    verifyNonEmptyReadableFile "$tempDir/snplist_preserved.txt"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP_preserved.fasta"
+
     # Verify log files
     logDir=$(echo $(ls -d $tempDir/logs*))
     verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
@@ -4106,6 +4801,18 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/collectSampleMetrics.log-3" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+
+    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-3" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-4" "call_consensus.py finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
+
 }
 
 
@@ -4148,6 +4855,13 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$tempDir/snp_distance_pairwise.tsv" "^sample1.*sample1.*0$"
     assertFileContains "$tempDir/snp_distance_matrix.tsv" "^sample1.*0$"
 
+    verifyNonEmptyReadableFile "$tempDir/snplist_preserved.txt"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP_preserved.fasta"
+    assertFileContains "$tempDir/snp_distance_pairwise_preserved.tsv" "^sample1.*sample1.*0$"
+    assertFileContains "$tempDir/snp_distance_matrix_preserved.tsv" "^sample1.*0$"
+
     # Verify log files
     logDir=$(echo $(ls -d $tempDir/logs*))
     verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
@@ -4163,9 +4877,18 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
+    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
+
     # Verify correct results
     copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
     assertIdenticalFiles "$tempDir/snpma.vcf"                     "$tempDir/samples/sample1/consensus.vcf"  # Just copy the sample VCF to the snpma.vcf
+    assertIdenticalFiles "$tempDir/snpma_preserved.vcf"           "$tempDir/samples/sample1/consensus_preserved.vcf"  # Just copy the sample VCF to the snpma.vcf
 }
 
 
@@ -4215,6 +4938,15 @@ testRunSnpPipelineZeroSnps()
     lineCount=$(grep -v ">" "$tempDir/referenceSNP.fasta" | wc -l)
     assertEquals "$tempDir/referenceSNP.fasta should not contain any strings of bases." 0 $lineCount
 
+    verifyEmptyFile "$tempDir/snplist_preserved.txt"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP_preserved.fasta"
+    lineCount=$(grep -v ">" "$tempDir/snpma_preserved.fasta" | wc -l)
+    assertEquals "$tempDir/snpma_preserved.fasta should not contain any strings of bases." 0 $lineCount
+    lineCount=$(grep -v ">" "$tempDir/referenceSNP_preserved.fasta" | wc -l)
+    assertEquals "$tempDir/referenceSNP_preserved.fasta should not contain any strings of bases." 0 $lineCount
+
     # Verify log files
     logDir=$(echo $(ls -d $tempDir/logs*))
     verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
@@ -4229,6 +4961,14 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+
+    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 }
 
 
@@ -4276,10 +5016,18 @@ testRunSnpPipelineRerunMissingVCF()
     assertNewerFile "$tempDir/snplist.txt" "$tempDir/samples/sample2/var.flt.vcf"
     assertFileNotContains "$tempDir/snplist.txt" "sample1"
 
-    # Verify output results exist, and no snps were found
+    verifyNonEmptyReadableFile "$tempDir/snplist_preserved.txt"
+    assertNewerFile "$tempDir/snplist_preserved.txt" "$tempDir/samples/sample2/var.flt_preserved.vcf"
+    assertFileNotContains "$tempDir/snplist_preserved.txt" "sample1"
+
+    # Verify output results exist
     verifyNonEmptyReadableFile "$tempDir/snpma.fasta"
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
     verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
+
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.fasta"
+    verifyNonEmptyReadableFile "$tempDir/snpma_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/referenceSNP_preserved.fasta"
 
     # Verify log files
     logDir=$(echo $(ls -d $tempDir/logs*))
@@ -4293,6 +5041,14 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/collectSampleMetrics.log-2" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+
+    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 }
 
 
@@ -4312,16 +5068,19 @@ testAlreadyFreshOutputs()
 
     # Force timestamps to change so outputs are newer than inputs.
     # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
-    touch -d '-10 day' $tempDir/reference/*.fasta
-    touch -d  '-9 day' $tempDir/reference/*.bt2
-    touch -d  '-8 day' $tempDir/samples/*/*.fastq
-    touch -d  '-7 day' $tempDir/samples/*/reads.sam
-    touch -d  '-6 day' $tempDir/samples/*/reads.unsorted.bam
-    touch -d  '-5 day' $tempDir/samples/*/reads.sorted.bam
-    touch -d  '-4 day' $tempDir/samples/*/reads.all.pileup
-    touch -d  '-3 day' $tempDir/samples/*/var.flt.vcf
+    touch -d '-11 day' $tempDir/reference/*.fasta
+    touch -d '-10 day' $tempDir/reference/*.bt2
+    touch -d  '-9 day' $tempDir/samples/*/*.fastq
+    touch -d  '-8 day' $tempDir/samples/*/reads.sam
+    touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-4 day' $tempDir/samples/*/var.flt.vcf
+    touch -d  '-3 day' $tempDir/samples/*/var.flt_preserved.vcf
+    touch -d  '-3 day' $tempDir/samples/*/var.flt_removed.vcf
     touch -d  '-2 day' $tempDir/snplist.txt
-    touch -d  '-1 day' $tempDir/samples/*/consensus.vcf
+    touch -d  '-2 day' $tempDir/snplist_preserved.txt
+    touch -d  '-1 day' $tempDir/samples/*/consensus*.vcf
 
     # Test special collectSampleMetrics result persistence
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
@@ -4407,6 +5166,24 @@ testAlreadyFreshOutputs()
     assertFileNotContains "$logDir/collectSampleMetrics.log-4" "already freshly created"
 
     assertFileContains "$logDir/calcSnpDistances.log" "have already been freshly built.  Use the -f option to force a rebuild"
+
+    # =======
+    assertFileContains "$logDir/filterAbnormalSNP.log" "All preserved and removed vcf files are already freshly built.  Use the -f option to force a rebuild."
+
+    assertFileContains "$logDir/snpList_preserved.log" "snplist_preserved.txt has already been freshly built.  Use the -f option to force a rebuild."
+
+    assertFileContains "$logDir/callConsensus_preserved.log-1" "sample1/consensus_preserved.fasta has already been freshly built.  Use the -f option to force a rebuild."
+    assertFileContains "$logDir/callConsensus_preserved.log-2" "sample2/consensus_preserved.fasta has already been freshly built.  Use the -f option to force a rebuild."
+    assertFileContains "$logDir/callConsensus_preserved.log-3" "sample4/consensus_preserved.fasta has already been freshly built.  Use the -f option to force a rebuild."
+    assertFileContains "$logDir/callConsensus_preserved.log-4" "sample3/consensus_preserved.fasta has already been freshly built.  Use the -f option to force a rebuild."
+
+    assertFileContains "$logDir/snpMatrix_preserved.log" "/snpma_preserved.fasta has already been freshly built.  Use the -f option to force a rebuild."
+
+    assertFileContains "$logDir/snpReference_preserved.log" "referenceSNP_preserved.fasta has already been freshly built.  Use the -f option to force a rebuild."
+
+    assertFileContains "$logDir/mergeVcf_preserved.log" "Multi-VCF file is already freshly created.  Use the -f option to force a rebuild."
+
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "have already been freshly built.  Use the -f option to force a rebuild"
 
     # Special collectSampleMetrics re-use last metrics
     assertFileNotContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
@@ -4494,13 +5271,28 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
+    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
+
     # Verify output
+    # After removing the abnormal high-density snps, sample1 has fewer than 45 snps, so it is included in the analysis
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=Excluded$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSamplePreserved=$"
     assertFileContains "$tempDir/samples/sample2/metrics" "excludedSample=$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "excludedSamplePreserved=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "snps=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32$"
     assertFileContains "$tempDir/samples/sample2/metrics" "snps=44$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "snpsPreserved=41$"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
-    assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "missingPos=0$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "missingPosPreserved=0$"
     assertFileContains "$tempDir/samples/sample1/metrics" "errorList=.*Excluded: exceeded 45 maxsnps."
     assertFileContains "$tempDir/samples/sample2/metrics" "errorList=\"No compressed fastq.gz or fq.gz files were found.\"$"
     assertFileContains "$tempDir/metrics.tsv"             "sample1.*Excluded.*Excluded: exceeded 45 maxsnps."
@@ -4568,6 +5360,9 @@ testRunSnpPipelineAgona()
     assertIdenticalFiles "$tempDir/metrics.tsv"        "$tempDir/expectedResults/metrics.tsv"
     assertIdenticalFiles "$tempDir/snp_distance_pairwise.tsv" "$tempDir/expectedResults/snp_distance_pairwise.tsv"
     assertIdenticalFiles "$tempDir/snp_distance_matrix.tsv"   "$tempDir/expectedResults/snp_distance_matrix.tsv"
+
+    assertIdenticalFiles "$tempDir/snpma_preserved.fasta"     "$tempDir/expectedResults/snpma_preserved.fasta"
+    assertIdenticalFiles "$tempDir/snpma_preserved.vcf"       "$tempDir/expectedResults/snpma_preserved.vcf" "--ignore-matching-lines=##fileDate" "--ignore-matching-lines=##source" "--ignore-matching-lines=##bcftools"
 }
 
 

@@ -2,7 +2,7 @@
 #
 #Author: Steve Davis (scd)
 #  alterations for grid engine by Al Shpuntoff (afs)
-#Purpose: 
+#Purpose:
 #    Run the SNP Pipeline on a specified data set.
 #Input:
 #    reference          : fasta genome reference file
@@ -13,9 +13,9 @@
 #    <reference name>.fasta
 #    <multiple sample subdirectories>/*.fastq
 #Output:
-#	 If requested, this script mirrors the reference and samples into a new 
+#	 If requested, this script mirrors the reference and samples into a new
 #    <workDirectory>.  Within the <workDirectory>, the input files are
-#    linked and the outputs are generated.  Many files are generated, but the 
+#    linked and the outputs are generated.  Many files are generated, but the
 #    most important results are:
 #        <workDirectory>/snplist.txt
 #            a SNP list identifying the SNPs found across all samples
@@ -80,7 +80,7 @@ handleTrappedErrors()
 
     # A subprocess failed and was already trapped.
     # Actually, we cannot be 100% certain the error was trapped if the error code is 123.  This
-    # indicates an error in an array of sample jobs launched in parallel by xargs; but since 
+    # indicates an error in an array of sample jobs launched in parallel by xargs; but since
     # SnpPipeline_StopOnSampleError is true, we will assume the error was already trapped.
     if [[ $errorCode = 100 || $errorCode = 123 && $SnpPipeline_StopOnSampleError = true ]]; then
         logError "See also the log files in directory $logDir"
@@ -123,14 +123,14 @@ usageshort()
 {
     echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q \"torque\"|\"grid\"]  [-o DIR]  (-s DIR | -S FILE)  referenceFile"
     echo '  -h for detailed help message'
-    echo 
+    echo
 }
 
 usagelong()
 {
     echo "usage: run_snp_pipeline.sh [-h] [-f] [-m MODE] [-c FILE] [-Q torque|grid] [-o DIR] (-s DIR|-S FILE)"
     echo "                           referenceFile"
-    echo 
+    echo
     echo 'Run the SNP Pipeline on a specified data set.'
     echo
     echo 'Positional arguments:'
@@ -151,7 +151,7 @@ usagelong()
     echo '                   reference and samples are mirrored.'
     echo '                     -m soft : creates soft links to the fasta and fastq files instead of copying'
     echo '                     -m hard : creates hard links to the fasta and fastq files instead of copying'
-    echo '                     -m copy : copies the fasta and fastq files' 
+    echo '                     -m copy : copies the fasta and fastq files'
     echo
     echo '  -c FILE        : Relative or absolute path to a configuration file for overriding defaults '
     echo '                   and defining extra parameters for the tools and scripts within the pipeline. '
@@ -159,7 +159,7 @@ usagelong()
     echo '                         used whenever the pipeline is run without the -c option.  The '
     echo '                         configuration file used for each run is copied into the log directory, '
     echo '                         capturing the parameters used during the run.'
-    echo 
+    echo
     echo '  -Q torque|grid : Job queue manager for remote parallel job execution in an HPC environment.'
     echo '                   Currently "torque" and "grid" are supported.  If not specified, the pipeline '
     echo '                   will execute locally.'
@@ -183,7 +183,7 @@ usagelong()
     echo '                   Note: Unless you request mirrored inputs, see the -m option, additional files'
     echo '                         will be written to each of the sample directories during the execution '
     echo '                         of the SNP Pipeline'
-    echo 
+    echo
     echo '  -S FILE        : Relative or absolute path to a file listing all of the sample directories.'
     echo '                   The -S option should be used when the samples are not under a common parent '
     echo '                   directory.  '
@@ -198,7 +198,7 @@ usagelong()
     echo
 }
 
-get_abs_filename() 
+get_abs_filename()
 {
   # $1 : relative filename
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
@@ -224,16 +224,16 @@ stripGridEngineJobArraySuffix()
 }
 
 # --------------------------------------------------------
-# getopts command line option handler: 
+# getopts command line option handler:
 
-# For each valid option, 
+# For each valid option,
 #   If it is given, create a var dynamically to
 #   indicate it is set: $opt_name_set = 1
 
 #   If var gets an arg, create another var to
 #   hold its value: $opt_name_arg = some value
 
-# For invalid options given, 
+# For invalid options given,
 #   Invoke Usage routine
 
 # precede option list with a colon
@@ -298,7 +298,7 @@ if [[ ! -s "$referenceFilePath" ]]; then fatalError "Reference file $referenceFi
 export referenceFileName=${referenceFilePath##*/} # strip directories
 
 # Extra arguments not allowed
-if [[ "$2" != "" ]]; then 
+if [[ "$2" != "" ]]; then
     echo "Unexpected argument \"$2\" specified after the reference file."
     echo
     usageshort
@@ -316,7 +316,7 @@ fi
 if [[ "$opt_m_set" = "1" ]]; then
     mirrorMode="$opt_m_arg"
     mirrorMode=$(echo "$mirrorMode" | tr [:upper:] [:lower:])
-    if [[ "$mirrorMode" != "soft" && "$mirrorMode" != "hard" && "$mirrorMode" != "copy" ]]; then 
+    if [[ "$mirrorMode" != "soft" && "$mirrorMode" != "hard" && "$mirrorMode" != "copy" ]]; then
         echo "Invalid mirror mode: $mirrorMode"
         echo
         usageshort
@@ -372,7 +372,7 @@ fi
 if [[ "$SnpPipeline_Aligner" == "" ]]; then
     SnpPipeline_Aligner="bowtie2"
 else
-    # make lowercase 
+    # make lowercase
     SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]')
     if [[ "$SnpPipeline_Aligner" != "bowtie2" && "$SnpPipeline_Aligner" != "smalt" ]]; then
         fatalError "Config file error in SnpPipeline_Aligner parameter: only bowtie2 and smalt aligners are supported."
@@ -411,6 +411,7 @@ export GridEngine_PEname
 onPath=$(verifyOnPath "prepReference.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "alignSampleToReference.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "prepSamples.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "snp_filter.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "create_snp_list.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "call_consensus.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "create_snp_matrix.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
@@ -456,22 +457,22 @@ validateFileOfSampleDirs()
     local foundError=false
 
     while IFS=$'\n' read -r dir || [[ -n "$dir" ]]
-    do 
-        if [[ ! -d "$dir" ]]; then 
+    do
+        if [[ ! -d "$dir" ]]; then
             reportError "Sample directory $dir does not exist."
             foundError=true
-        elif [[ -z $(ls -A "$dir") ]]; then 
+        elif [[ -z $(ls -A "$dir") ]]; then
             reportError "Sample directory $dir is empty."
             foundError=true
         else
             fastqFiles=$({ find "$dir" -path "$dir"'/*.fastq*'; find "$dir" -path "$dir"'/*.fq*'; })
-            if [[ -z "$fastqFiles" ]]; then 
+            if [[ -z "$fastqFiles" ]]; then
                 reportError "Sample directory $dir does not contain any fastq files."
                 foundError=true
             fi
         fi
-    done  < "$sampleDirsFile" 
-    if [[ "$foundError" == true ]]; then 
+    done  < "$sampleDirsFile"
+    if [[ "$foundError" == true ]]; then
         if [[ -z $SnpPipeline_StopOnSampleError || $SnpPipeline_StopOnSampleError == true ]]; then
             exit 1
         else
@@ -495,7 +496,7 @@ persistSortedSampleDirs()
     < "$tmpFile" xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | \
     awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | \
     sort -k 2 -n -r | \
-    cut -f 1 -d" " > "$workDir/sampleDirectories.txt"  
+    cut -f 1 -d" " > "$workDir/sampleDirectories.txt"
     rm "$tmpFile"
 }
 
@@ -575,7 +576,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -j y
 #$ -cwd
 #$ -o $logDir/prepReference.log
-    prepReference.sh $forceFlag "$referenceFilePath" 
+    prepReference.sh $forceFlag "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -710,7 +711,7 @@ elif [[ "$platform" == "torque" ]]; then
 _EOF_
 )
 else
-	snp_filter.py -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
+	snp_filter.py -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams 2>&1 | tee $logDir/filterAbnormalSNP.log
 fi
 
 #Starting from here, there are 2 threads:
@@ -814,15 +815,15 @@ _EOF_
 )
 else
     create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
-fi    
+fi
 
 echo -e "\nStep 9.1 - Create the reference base sequence"
 if [[ "$platform" == "grid" ]]; then
     snpReferenceJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -V
-#$ -N snpReference 
+#$ -N snpReference
 #$ -cwd
-#$ -j y 
+#$ -j y
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/snpReference.log
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
@@ -830,9 +831,9 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     snpReferenceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpReference 
+    #PBS -N snpReference
     #PBS -d $(pwd)
-    #PBS -j oe 
+    #PBS -j oe
     #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -o $logDir/snpReference.log
     #PBS -V
@@ -875,72 +876,7 @@ else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
 fi
 
-echo -e "\nStep 11.1 - Collect metrics for each sample"
-if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
-#$ -N collectMetrics
-#$ -cwd
-#$ -V
-#$ -j y
-#$ -hold_jid_ad $callConsensusJobArray
-#$ -l h_rt=02:00:00
-#$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
-    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
-_EOF_
-)
-elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
-    #PBS -N collectMetrics
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$callConsensusJobArray
-    #PBS -l walltime=02:00:00
-    #PBS -o $logDir/collectSampleMetrics.log
-    #PBS -V
-    sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
-_EOF_
-)
-else
-    if [[ "$MaxConcurrentCollectSampleMetrics" != "" ]]; then
-        numCollectSampleMetricsCores=$MaxConcurrentCollectSampleMetrics
-    else
-        numCollectSampleMetricsCores=$numCores
-    fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
-fi
-
-echo -e "\nStep 12.1 - Combine the metrics across all samples into the metrics table"
-if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobArray=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N combineMetrics
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $collectSampleMetricsJobArray
-#$ -o $logDir/combineSampleMetrics.log
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
-_EOF_
-)
-elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobArray=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N combineMetrics
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$collectSampleMetricsJobArray
-    #PBS -o $logDir/combineSampleMetrics.log
-    #PBS -V
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
-_EOF_
-)
-else
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
-fi
-
-echo -e "\nStep 13.1 - Calculate SNP distance matrix"
+echo -e "\nStep 11.1 - Calculate SNP distance matrix"
 if [[ "$platform" == "grid" ]]; then
     calcSnpDistanceJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N snpDistance
@@ -989,7 +925,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -hold_jid $filterAbnSNPJobId
 #$ -o $logDir/snpList_preserved.log
-    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2" 
+    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -1000,7 +936,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterok:$filterAbnSNPJobId
     #PBS -o $logDir/snpList_preserved.log
     #PBS -V
-    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2" 
+    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2"
 _EOF_
 )
 else
@@ -1071,7 +1007,7 @@ _EOF_
 )
 else
     create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpMatrix_preserved.log
-fi    
+fi
 
 echo -e "\nStep 9.2 - Create the reference base sequence"
 if [[ "$platform" == "grid" ]]; then
@@ -1079,7 +1015,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -N snpReference_preserved
 #$ -cwd
-#$ -j y 
+#$ -j y
 #$ -hold_jid $callConsensusJobArray2
 #$ -o $logDir/snpReference_preserved.log
     create_snp_reference_seq.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
@@ -1087,9 +1023,9 @@ _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
     snpReferenceJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpReference_preserved 
+    #PBS -N snpReference_preserved
     #PBS -d $(pwd)
-    #PBS -j oe 
+    #PBS -j oe
     #PBS -W depend=afterokarray:$callConsensusJobArray2
     #PBS -o $logDir/snpReference_preserved.log
     #PBS -V
@@ -1132,72 +1068,7 @@ else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
 fi
 
-echo -e "\nStep 11.2 - Collect metrics for each sample"
-if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobId2=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
-#$ -N collectMetrics_preserved
-#$ -cwd
-#$ -V
-#$ -j y
-#$ -hold_jid_ad $callConsensusJobArray2
-#$ -l h_rt=02:00:00
-#$ -o $logDir/collectSampleMetrics_preserved.log-\$TASK_ID
-    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
-_EOF_
-)
-elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobId2=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
-    #PBS -N collectMetrics_preserved
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$callConsensusJobArray2
-    #PBS -l walltime=02:00:00
-    #PBS -o $logDir/collectSampleMetrics_preserved.log
-    #PBS -V
-    sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics_preserved" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
-_EOF_
-)
-else
-    if [[ "$MaxConcurrentCollectSampleMetrics" != "" ]]; then
-        numCollectSampleMetricsCores=$MaxConcurrentCollectSampleMetrics
-    else
-        numCollectSampleMetricsCores=$numCores
-    fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics_preserved" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics_preserved.log-$0'
-fi
-
-echo -e "\nStep 12.2 - Combine the metrics across all samples into the metrics table"
-if [[ "$platform" == "grid" ]]; then
-    collectSampleMetricsJobArray2=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N combineMetrics_preserved
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $collectSampleMetricsJobArray2
-#$ -o $logDir/combineSampleMetrics_preserved.log
-    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
-_EOF_
-)
-elif [[ "$platform" == "torque" ]]; then
-    collectSampleMetricsJobArray2=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
-    combineSampleMetricsJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N combineMetrics_preserved
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$collectSampleMetricsJobArray2
-    #PBS -o $logDir/combineSampleMetrics_preserved.log
-    #PBS -V
-    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
-_EOF_
-)
-else
-    combineSampleMetrics.sh -n metrics_preserved -o "$workDir/metrics_preserved.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics_preserved.log
-fi
-
-echo -e "\nStep 13.2 - Calculate SNP distance matrix"
+echo -e "\nStep 11.2 - Calculate SNP distance matrix"
 if [[ "$platform" == "grid" ]]; then
     calcSnpDistanceJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
 #$ -N snpDistance_preserved
@@ -1222,6 +1093,71 @@ _EOF_
 )
 else
     calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta" 2>&1 | tee $logDir/calcSnpDistances_preserved.log
+fi
+
+echo -e "\nStep 12 - Collect metrics for each sample"
+if [[ "$platform" == "grid" ]]; then
+    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
+#$ -N collectMetrics
+#$ -cwd
+#$ -V
+#$ -j y
+#$ -hold_jid_ad $callConsensusJobArray,$callConsensusJobArray2
+#$ -l h_rt=02:00:00
+#$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
+    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    collectSampleMetricsJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
+    #PBS -N collectMetrics
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterokarray:$callConsensusJobArray:$callConsensusJobArray2
+    #PBS -l walltime=02:00:00
+    #PBS -o $logDir/collectSampleMetrics.log
+    #PBS -V
+    sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
+    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+_EOF_
+)
+else
+    if [[ "$MaxConcurrentCollectSampleMetrics" != "" ]]; then
+        numCollectSampleMetricsCores=$MaxConcurrentCollectSampleMetrics
+    else
+        numCollectSampleMetricsCores=$numCores
+    fi
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+fi
+
+echo -e "\nStep 13 - Combine the metrics across all samples into the metrics table"
+if [[ "$platform" == "grid" ]]; then
+    collectSampleMetricsJobArray=$(stripGridEngineJobArraySuffix $collectSampleMetricsJobId)
+    combineSampleMetricsJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
+#$ -N combineMetrics
+#$ -cwd
+#$ -j y
+#$ -V
+#$ -hold_jid $collectSampleMetricsJobArray
+#$ -o $logDir/combineSampleMetrics.log
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+elif [[ "$platform" == "torque" ]]; then
+    collectSampleMetricsJobArray=$(stripTorqueJobArraySuffix $collectSampleMetricsJobId)
+    combineSampleMetricsJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
+    #PBS -N combineMetrics_preserved
+    #PBS -d $(pwd)
+    #PBS -j oe
+    #PBS -W depend=afterokarray:$collectSampleMetricsJobArray
+    #PBS -o $logDir/combineSampleMetrics.log
+    #PBS -V
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
+_EOF_
+)
+else
+    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
 fi
 
 # Step 14.2 - Notify user of any non-fatal errors accumulated during processing
