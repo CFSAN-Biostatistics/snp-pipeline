@@ -150,11 +150,30 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             self.compare_file('metrics.tsv')
 
 
-    def test_1_create_snp_list(self):
+    def test_1_snp_filter(self):
+        """Run snp_filter and verify var.flt_preserved.vcf and var.flt_removed.vcf contains expected contents for each sample.
+        """
+        args_dict = {
+            'sampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt'),
+            'refFastaFile' : os.path.join(self.__class__.directory_run_result, "reference", "lambda_virus.fasta"),
+            'vcfFileName' : 'var.flt.vcf',
+            'edgeLength' : 500,
+            'windowSize' : 1000,
+            'maxSNP' : 3,
+            'outGroupFile' : None,
+            'forceFlag' : True,
+            }
+        for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
+            self.run_function_test(snppipeline.remove_bad_snp, args_dict, os.path.join(dir, 'var.flt_preserved.vcf'))
+            self.run_function_test(snppipeline.remove_bad_snp, args_dict, os.path.join(dir, 'var.flt_removed.vcf'))
+
+
+    def test_2_create_snp_list(self):
         """Run create_snp_list and verify snplist.txt contains expected contents.
         """
         args_dict = {
             'sampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt'),
+            'filteredSampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'filteredSampleDirectories.txt'),
             'vcfFileName' : 'var.flt.vcf',
             'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
             'maxSnps' : -1,
@@ -163,11 +182,12 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         self.run_function_test(snppipeline.create_snp_list, args_dict, 'snplist.txt')
 
 
-    def test_2b_call_consensus(self):
+    def test_3_call_consensus(self):
         """Run call_consensus and verify consensus.fasta and consensus.vcf contain expected contents for each sample.
         """
         args_dict = {
             'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
+            'excludeFile' : None,
             'forceFlag' : True,
             'minBaseQual' : 0,
             'minConsFreq' : 0.6,
@@ -190,7 +210,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.vcf'), ignore_lines)
 
 
-    def test_3_create_snp_matrix(self):
+    def test_4_create_snp_matrix(self):
         """Run create_snp_matrix and verify snpma.fasta contains expected contents.
         """
         args_dict = {
@@ -202,7 +222,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         self.run_function_test(snppipeline.create_snp_matrix, args_dict, 'snpma.fasta')
 
 
-    def test_4_create_snp_reference_seq(self):
+    def test_5_create_snp_reference_seq(self):
         """Run create_snp_reference_seq and verify referenceSNP.fasta contains expected contents.
         """
         args_dict = {
@@ -214,7 +234,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         self.run_function_test(snppipeline.create_snp_reference_seq, args_dict, 'referenceSNP.fasta')
 
 
-    def test_5a_calculate_snp_distances(self):
+    def test_6_calculate_snp_distances(self):
         """Run calculate_snp_distances and verify snp_distance_pairwise.tsv contains expected contents.
         """
         args_dict = {
@@ -226,7 +246,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         self.run_function_test(snppipeline.calculate_snp_distances, args_dict, 'snp_distance_pairwise.tsv')
 
 
-    def test_5b_calculate_snp_distances(self):
+    def test_7_calculate_snp_distances(self):
         """Run calculate_snp_distances and verify snp_distance_matrix.tsv contains expected contents.
         """
         args_dict = {

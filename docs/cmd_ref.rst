@@ -183,6 +183,49 @@ prepSamples.sh
                        are newer than inputs
   
 
+.. _cmd-ref-snp-filter:
+
+snp_filter.py
+------------------------
+
+::
+
+  usage: snp_filter.py [-h] [-f] [-n NAME] [-l EDGE_LENGTH] [-w WINDOW_SIZE]
+                       [-m MAX_NUM_SNPs] [-g OUT_GROUP] [-v 0..5] [--version]
+                       sampleDirsFile refFastaFile
+  
+  Remove abnormally dense SNPs from the input VCF file, save the reserved SNPs
+  into a new VCF file, and save the removed SNPs into another VCF file.
+  
+  positional arguments:
+    sampleDirsFile        Relative or absolute path to file containing a list of
+                          directories -- one per sample
+    refFastaFile          Relative or absolute path to the reference fasta file
+  
+  optional arguments:
+    -h, --help            show this help message and exit
+    -f, --force           Force processing even when result files already exist
+                          and are newer than inputs (default: False)
+    -n NAME, --vcfname NAME
+                          File name of the input VCF files which must exist in
+                          each of the sample directories (default: var.flt.vcf)
+    -l EDGE_LENGTH, --edge_length EDGE_LENGTH
+                          The length of the edge regions in a contig, in which
+                          all SNPs will be removed. (default: 500)
+    -w WINDOW_SIZE, --window_size WINDOW_SIZE
+                          The length of the window in which the number of SNPs
+                          should be no more than max_num_snp. (default: 1000)
+    -m MAX_NUM_SNPs, --max_snp MAX_NUM_SNPs
+                          The maximum number of SNPs allowed in a window.
+                          (default: 3)
+    -g OUT_GROUP, --out_group OUT_GROUP
+                          Relative or absolute path to the file indicating
+                          outgroup samples, one sample ID per line. (default:
+                          None)
+    -v 0..5, --verbose 0..5
+                          Verbose message level (0=no info, 5=lots) (default: 1)
+    --version             show program's version number and exit
+
 create_snp_list.py
 ------------------------
 
@@ -190,7 +233,7 @@ create_snp_list.py
 
   usage: create_snp_list.py [-h] [-f] [-n NAME] [--maxsnps INT] [-o FILE]
                             [-v 0..5] [--version]
-                            sampleDirsFile
+                            sampleDirsFile filteredSampleDirsFile
   
   Combine the SNP positions across all samples into a single unified SNP list
   file identifing the postions and sample names where SNPs were called.
@@ -198,6 +241,12 @@ create_snp_list.py
   positional arguments:
     sampleDirsFile        Relative or absolute path to file containing a list of
                           directories -- one per sample
+    filteredSampleDirsFile
+                          Relative or absolute path to the output file that will
+                          be created containing the filtered list of sample
+                          directories -- one per sample. The samples in this
+                          file are those without an excessive number of snps.
+                          See the --maxsnps parameter.
   
   optional arguments:
     -h, --help            show this help message and exit
@@ -251,8 +300,8 @@ call_consensus.py
 
 ::
 
-  usage: call_consensus.py [-h] [-f] [-l FILE] [-o FILE] [-q INT] [-c FREQ]
-                           [-d INT] [-b FREQ] [--vcfFileName NAME]
+  usage: call_consensus.py [-h] [-f] [-l FILE] [-e FILE] [-o FILE] [-q INT]
+                           [-c FREQ] [-d INT] [-b FREQ] [--vcfFileName NAME]
                            [--vcfRefName NAME] [--vcfAllPos]
                            [--vcfPreserveRefCase] [--vcfFailedSnpGt {.,0,1}]
                            [-v 0..5] [--version]
@@ -273,6 +322,8 @@ call_consensus.py
     -l FILE, --snpListFile FILE
                           Relative or absolute path to the SNP list file across
                           all samples. (default: snplist.txt)
+    -e FILE, --excludeFile FILE
+                          VCF file of positions to exclude. (default: None)
     -o FILE, --output FILE
                           Output file. Relative or absolute path to the
                           consensus fasta file for this sample. (default:
@@ -353,6 +404,7 @@ mergeVcf.sh
                        the sample directories. (default: consensus.vcf)
     -o FILE          : Output file. Relative or absolute path to the merged
                        multi-vcf file. (default: snpma.vcf)
+
 create_snp_matrix.py
 ------------------------
 
@@ -418,6 +470,7 @@ calculate_snp_distances.py
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
+
 create_snp_reference_seq.py
 ---------------------------
 
@@ -466,11 +519,15 @@ collectSampleMetrics.sh
                        are newer than inputs
     -c FILE          : Relative or absolute path to the consensus fasta file
                        (default: consensus.fasta in the sampleDir)
+    -C FILE          : Relative or absolute path to the consensus preserved fasta file
+                       (default: consensus_preserved.fasta in the sampleDir)
     -m INT           : Maximum allowed number of SNPs per sample. (default: -1)
     -o FILE          : Output file. Relative or absolute path to the metrics file
                        (default: metrics in the sampleDir)
     -v FILE          : Relative or absolute path to the consensus vcf file
                        (default: consensus.vcf in the sampleDir)
+    -V FILE          : Relative or absolute path to the consensus preserved vcf file
+                       (default: consensus_preserved.vcf in the sampleDir)
 
 combineSampleMetrics.sh
 ---------------------------

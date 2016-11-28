@@ -1,0 +1,17 @@
+Seq1	Seq2	Distance
+sample1	sample1	0
+sample1	sample2	73
+sample1	sample3	67
+sample1	sample4	60
+sample2	sample1	73
+sample2	sample2	0
+sample2	sample3	76
+sample2	sample4	69
+sample3	sample1	67
+sample3	sample2	76
+sample3	sample3	0
+sample3	sample4	63
+sample4	sample1	60
+sample4	sample2	69
+sample4	sample3	63
+sample4	sample4	0

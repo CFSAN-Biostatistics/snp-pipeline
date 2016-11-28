@@ -32,6 +32,7 @@ if __name__ == '__main__':
     help['allPileupFile']  = """Relative or absolute path to the genome-wide pileup file for this sample."""
     help['force']          = """Force processing even when result file already exists and is newer than inputs."""
     help['snpListFile']    = """Relative or absolute path to the SNP list file across all samples."""
+    help['excludeFile']    = """VCF file of positions to exclude."""
     help['output']         = """Output file. Relative or absolute path to the consensus fasta file for this sample."""
     help['minBaseQual']    = """Mimimum base quality score to count a read. All other snp filters take effect after the low-quality reads are discarded."""
     help['minConsFreq']    = """Consensus frequency. Mimimum fraction of high-quality reads supporting the consensus to make a call."""
@@ -59,6 +60,7 @@ if __name__ == '__main__':
     parser.add_argument(                              dest='allPileupFile',      type=str,                                                        help=help['allPileupFile'])
     parser.add_argument('-f', '--force',              dest='forceFlag',          action='store_true',                                             help=help['force'])
     parser.add_argument('-l', '--snpListFile',        dest='snpListFile',        type=str,            default='snplist.txt',      metavar='FILE', help=help['snpListFile'])
+    parser.add_argument('-e', '--excludeFile',        dest='excludeFile',        type=str,            default=None,               metavar='FILE', help=help['excludeFile'])
     parser.add_argument('-o', '--output',             dest='consensusFile',      type=str,            default='consensus.fasta',  metavar='FILE', help=help['output'])
     parser.add_argument('-q', '--minBaseQual',        dest='minBaseQual',        type=int,            default=0,                  metavar='INT',  help=help['minBaseQual'])
     parser.add_argument('-c', '--minConsFreq',        dest='minConsFreq',        type=minConsFreq,    default=0.60,               metavar='FREQ', help=help['minConsFreq'])
