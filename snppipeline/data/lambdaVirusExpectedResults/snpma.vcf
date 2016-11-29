@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.1
 ##FILTER=<ID=PASS,Description="All filters passed">
-##fileDate=20160329
-##source=CFSAN SNP-Pipeline 0.6.0
+##fileDate=20161128
+##source=CFSAN SNP-Pipeline 0.7.0
 ##reference=lambda_virus.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -18,9 +18,9 @@
 ##FILTER=<ID=StrDpth0,Description="Less than 0 variant-supporing reads on at least one strand">
 ##FILTER=<ID=StrBias0,Description="Fraction of variant supporting reads below 0.00 on one strand">
 ##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">
-##contig=<ID=gi|9626243|ref|NC_001416.1|,length=2147483647>
-##bcftools_mergeVersion=1.1+htslib-1.1
-##bcftools_mergeCommand=merge --info-rules NS:sum -o /home/steven.davis/Projects/snp-pipeline/testing/testLambdaVirus/snpma.vcf tmp.vcf.if8ud3th/sample1.vcf.gz tmp.vcf.if8ud3th/sample2.vcf.gz tmp.vcf.if8ud3th/sample3.vcf.gz tmp.vcf.if8ud3th/sample4.vcf.gz
+##contig=<ID=gi|9626243|ref|NC_001416.1|>
+##bcftools_mergeVersion=1.3.1+htslib-1.3.1
+##bcftools_mergeCommand=merge --merge all --info-rules NS:sum -o /home/steven.davis/Projects/snp-pipeline/testing/testLambdaVirus.0.7.0/snpma.vcf tmp.vcf.6TNe7epg/sample1.vcf.gz tmp.vcf.6TNe7epg/sample2.vcf.gz tmp.vcf.6TNe7epg/sample3.vcf.gz tmp.vcf.6TNe7epg/sample4.vcf.gz
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample1	sample2	sample3	sample4
 gi|9626243|ref|NC_001416.1|	403	.	G	A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:27:0:27:0:0:13:14:PASS	0:24:24:0:11:13:0:0:PASS	0:26:26:0:13:13:0:0:PASS	0:15:15:0:11:4:0:0:PASS
 gi|9626243|ref|NC_001416.1|	550	.	G	A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:22:21:1:13:8:0:1:PASS	0:26:26:0:14:12:0:0:PASS	0:29:29:0:13:16:0:0:PASS	1:26:0:26:0:0:14:12:PASS

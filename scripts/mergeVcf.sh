@@ -17,6 +17,7 @@
 #History:
 #   20150915-scd: Started.
 #   20151217-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
+#   20161128-scd: Fix compatibility with bcftools 1.2 and higher.
 #
 #Notes:
 #
@@ -191,10 +192,10 @@ for filestoidx in $tempDir/*.gz; do
 done
 
 # Merge the VCFs
-bcftools merge --info-rules NS:sum -o "$outFilePath" $tempDir/*.gz
+bcftools merge --merge all --info-rules NS:sum -o "$outFilePath" $tempDir/*.gz
 
 # Clean up
-if [[ -e "$tempDir" ]]; then 
+if [[ -e "$tempDir" ]]; then
     rm -rf "$tempDir"
 fi
 
