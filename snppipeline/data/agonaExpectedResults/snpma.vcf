@@ -1,6 +1,6 @@
 ##fileformat=VCFv4.1
 ##FILTER=<ID=PASS,Description="All filters passed">
-##fileDate=20161128
+##fileDate=20161130
 ##source=CFSAN SNP-Pipeline 0.7.0
 ##reference=NC_011149.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
@@ -20,7 +20,7 @@
 ##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">
 ##contig=<ID=gi|197247352|ref|NC_011149.1|>
 ##bcftools_mergeVersion=1.3.1+htslib-1.3.1
-##bcftools_mergeCommand=merge --merge all --info-rules NS:sum -o /home/steven.davis/Projects/snp-pipeline/testing/testAgona/output/snpma.vcf tmp.vcf.TqgTrF1z/ERR178926.vcf.gz tmp.vcf.TqgTrF1z/ERR178927.vcf.gz tmp.vcf.TqgTrF1z/ERR178928.vcf.gz tmp.vcf.TqgTrF1z/ERR178929.vcf.gz tmp.vcf.TqgTrF1z/ERR178930.vcf.gz
+##bcftools_mergeCommand=merge --merge all --info-rules NS:sum -o /home/steven.davis/Projects/snp-pipeline/testing/testAgona/v0.7.0/snpma.vcf tmp.vcf.kC6vLAVT/ERR178926.vcf.gz tmp.vcf.kC6vLAVT/ERR178927.vcf.gz tmp.vcf.kC6vLAVT/ERR178928.vcf.gz tmp.vcf.kC6vLAVT/ERR178929.vcf.gz tmp.vcf.kC6vLAVT/ERR178930.vcf.gz
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	ERR178926	ERR178927	ERR178928	ERR178929	ERR178930
 gi|197247352|ref|NC_011149.1|	682	.	A	G	.	PASS	NS=5	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:70:70:0:38:32:0:0:PASS	0:33:33:0:23:10:0:0:PASS	0:78:78:0:36:42:0:0:PASS	1:59:0:59:0:0:37:22:PASS	1:279:0:278:0:0:243:35:PASS
 gi|197247352|ref|NC_011149.1|	684	.	T	C	.	PASS	NS=5	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:73:73:0:40:33:0:0:PASS	0:36:36:0:25:11:0:0:PASS	0:79:79:0:37:42:0:0:PASS	1:60:1:59:1:0:37:22:PASS	1:276:0:276:0:0:241:35:PASS

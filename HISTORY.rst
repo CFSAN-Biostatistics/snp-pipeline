@@ -3,7 +3,7 @@
 History
 -------
 
-0.7.0 (2016-11-29)
+0.7.0 (2016-11-30)
 ~~~~~~~~~~~~~~~~~~
 
 * Added a new script to the pipeline: ``snp_filter.py`` removes snps from the ends of contigs and
@@ -12,7 +12,10 @@ History
 * NOTE: You cannot re-use an old configuration file when running SNP Pipeline version 0.7.0.  You
   must create a new configuration file.  See :ref:`configuration-label`.
 * Fixed compatibility with bcftools 1.2 and higher.
-* Updated the result files in the included data sets with the results obtained using bcftools v1.3.1.
+* Updated the result files in the included data sets with the results obtained using bcftools v1.3.1
+  and bowtie2 v2.2.9.  Note: upgrading from bowtie 2.2.2 to 2.2.9 did not change the snp matrix
+  on any of the included datasets.
+
 
 0.6.1 (2016-05-23)
 ~~~~~~~~~~~~~~~~~~
