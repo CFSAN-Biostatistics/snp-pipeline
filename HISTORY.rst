@@ -3,6 +3,12 @@
 History
 -------
 
+0.7.1 (2016-12-??)
+~~~~~~~~~~~~~~~~~~
+
+* Check for ``bc`` on the path when the pipeline is launched.  Complain if it is missing.
+
+
 0.7.0 (2016-11-30)
 ~~~~~~~~~~~~~~~~~~
 

@@ -217,6 +217,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "tabix"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bgzip"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bcftools"
+    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bc"
     assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to VarScan"
     assertFileContains "$tempDir/error.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 
@@ -237,6 +238,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "tabix"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bgzip"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bcftools"
+    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bc"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to VarScan"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 }

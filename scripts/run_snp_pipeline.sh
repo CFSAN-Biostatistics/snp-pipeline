@@ -51,6 +51,7 @@
 #   20160308-scd: Exclude samples with excessive number of snps from the snp matrix and snpma.vcf.
 #   20160405-scd: Add the calculate_snp_distances.py pipeline stage.
 #   20160923-yw+scd: Add the snp_filter.py script to filter dense snp regions.
+#   20161202-scd: check for bc dependency.
 #Notes:
 #
 #Bugs:
@@ -425,6 +426,7 @@ onPath=$(verifyOnPath "java"); if [[ $onPath != true ]]; then (( dependencyError
 onPath=$(verifyOnPath "tabix"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "bgzip"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "bcftools"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "bc"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 result=$(java net.sf.varscan.VarScan 2>&1) || true
 if [[ $result =~ .*Error.* ]]; then
     reportError "CLASSPATH is not configured with the path to VarScan"
