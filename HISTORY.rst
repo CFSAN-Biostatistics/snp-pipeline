@@ -7,6 +7,8 @@ History
 ~~~~~~~~~~~~~~~~~~
 
 * Check for ``bc`` on the path when the pipeline is launched.  Complain if it is missing.
+* Added a new configuration parameter, ``BcftoolsMerge_ExtraParams`` to allow customizing the
+  snpma.vcf files created when merging the consensus VCF files.  See :ref:`configuration-label`.
 
 
 0.7.0 (2016-11-30)

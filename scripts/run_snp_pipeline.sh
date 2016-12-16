@@ -401,6 +401,7 @@ export RemoveAbnormalSnp_ExtraParams
 export CreateSnpList_ExtraParams
 export CallConsensus_ExtraParams
 export CreateSnpMatrix_ExtraParams
+export BcftoolsMerge_ExtraParams
 export CreateSnpReferenceSeq_ExtraParams
 export CollectSampleMetrics_ExtraParams
 export CombineSampleMetrics_ExtraParams

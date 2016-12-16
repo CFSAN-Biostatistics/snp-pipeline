@@ -172,27 +172,37 @@ if [ $numGoodVcfFiles = 1 ]; then
 fi
 
 # Copy single VCF files to a common directory where the files will be edited
-echo "# "$(date +"%Y-%m-%d %T") Starting merge operations
+echo "# "$(date +"%Y-%m-%d %T") "Copying VCF files to temp directory"
 tempDir=$(mktemp -d tmp.vcf.XXXXXXXX)
 cat "$sampleDirsFile" | while IFS='' read -r dir || [[ -n "$dir" ]]
 do
   inFilePath="$dir/$inFileName"
-  echo Copying $inFilePath to $tempDir/$(basename $dir).vcf
+  echo "cp -p -u "$inFilePath" $tempDir/$(basename $dir).vcf"
   cp -p -u "$inFilePath" $tempDir/$(basename $dir).vcf || true
 done
 
 # Zip and create index for all sample files
+echo "# "$(date +"%Y-%m-%d %T") Compressing VCF files
 for filestozip in $tempDir/*.vcf; do
-  echo Compressing $filestozip
+  echo "bgzip -c $filestozip > $filestozip.gz"
   bgzip -c $filestozip > $filestozip.gz
 done
+
+echo "# "$(date +"%Y-%m-%d %T") Indexing VCF files
 for filestoidx in $tempDir/*.gz; do
-  echo Indexing $filestoidx
+  echo "tabix -f -p vcf $filestoidx"
   tabix -f -p vcf $filestoidx
 done
 
 # Merge the VCFs
-bcftools merge --merge all --info-rules NS:sum -o "$outFilePath" $tempDir/*.gz
+
+# Substitute the default parameters if the user did not specify bcftools parameters
+defaultParams="--merge all --info-rules NS:sum"
+BcftoolsMerge_ExtraParams=${BcftoolsMerge_ExtraParams:-$defaultParams}
+
+echo "# "$(date +"%Y-%m-%d %T") Merging VCF files
+echo "bcftools merge -o "$outFilePath" $BcftoolsMerge_ExtraParams $tempDir/*.gz"
+bcftools merge -o "$outFilePath" $BcftoolsMerge_ExtraParams $tempDir/*.gz
 
 # Clean up
 if [[ -e "$tempDir" ]]; then
