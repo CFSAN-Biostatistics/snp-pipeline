@@ -519,7 +519,7 @@ Specifies extra options passed to qsub when running the SNP Pipeline on the Grid
 
 **Example**::
 
-    GridEngine_QsubExtraParams="-q bigmem.q"
+    GridEngine_QsubExtraParams="-q bigmem.q -l h_rt=12:00:00"
 
 
 Torque_QsubExtraParams
@@ -530,4 +530,4 @@ Specifies extra options passed to qsub when running the SNP Pipeline on the Torq
 
 **Example**::
 
-    Torque_QsubExtraParams="-l pmem=16gb"
+    Torque_QsubExtraParams="-l pmem=16gb -l walltime=12:00:00"

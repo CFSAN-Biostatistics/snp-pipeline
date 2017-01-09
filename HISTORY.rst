@@ -9,6 +9,10 @@ History
 * Check for ``bc`` on the path when the pipeline is launched.  Complain if it is missing.
 * Added a new configuration parameter, ``BcftoolsMerge_ExtraParams`` to allow customizing the
   snpma.vcf files created when merging the consensus VCF files.  See :ref:`configuration-label`.
+* Removed the hard-coded wall-clock run-time limits for Torque and Sun Grid Engine jobs.  Added
+  default limits (12 hours) to the configuration file.  You can change the runtime limits for
+  all SNP Pipeline job steps with the ``Torque_QsubExtraParams`` or ``GridEngine_QsubExtraParams``
+  configuration parameters.
 
 
 0.7.0 (2016-11-30)

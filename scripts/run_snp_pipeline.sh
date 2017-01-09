@@ -658,7 +658,6 @@ if [[ "$platform" == "grid" ]]; then
 #$   -V
 #$   -j y
 #$   -hold_jid_ad $alignSamplesJobArray
-#$   -l h_rt=05:00:00
 #$   -o $logDir/prepSamples.log-\$TASK_ID
     prepSamples.sh $forceFlag "$referenceFilePath" "\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)"
 _EOF_
@@ -671,7 +670,6 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterokarray:$alignSamplesJobArray
-    #PBS -l walltime=05:00:00
     #PBS -o $logDir/prepSamples.log
     #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
@@ -798,7 +796,6 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -j y
 #$ -hold_jid $callConsensusJobArray
-#$ -l h_rt=05:00:00
 #$ -o $logDir/snpMatrix.log
     create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
 _EOF_
@@ -810,7 +807,6 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterokarray:$callConsensusJobArray
-    #PBS -l walltime=05:00:00
     #PBS -o $logDir/snpMatrix.log
     #PBS -V
     create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
@@ -990,7 +986,6 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -j y
 #$ -hold_jid $callConsensusJobArray2
-#$ -l h_rt=05:00:00
 #$ -o $logDir/snpMatrix_preserved.log
     create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
 _EOF_
@@ -1002,7 +997,6 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterokarray:$callConsensusJobArray2
-    #PBS -l walltime=05:00:00
     #PBS -o $logDir/snpMatrix_preserved.log
     #PBS -V
     create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
@@ -1106,7 +1100,6 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -j y
 #$ -hold_jid_ad $callConsensusJobArray,$callConsensusJobArray2
-#$ -l h_rt=02:00:00
 #$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
     collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
@@ -1118,7 +1111,6 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -d $(pwd)
     #PBS -j oe
     #PBS -W depend=afterokarray:$callConsensusJobArray:$callConsensusJobArray2
-    #PBS -l walltime=02:00:00
     #PBS -o $logDir/collectSampleMetrics.log
     #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
