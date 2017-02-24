@@ -259,6 +259,48 @@ Any of the SAMtools sort options can be specified.
     SamtoolsSort_ExtraParams=""
 
 
+SnpPipeline_RemoveDuplicateReads
+--------------------------------
+Controls whether the pipeline removes duplicate reads prior to creating the pileup
+and calling snps.
+
+**Default**:
+
+    When this parameter is not set to a value, the pipeline removes duplicate reads.
+
+**Example**::
+
+    SnpPipeline_RemoveDuplicateReads=false
+
+
+PicardMarkDuplicates_ExtraParams
+--------------------------------
+Specifies options passed to the Picard MarkDuplicates tool when removing duplicate reads.
+
+**Default**: None
+
+**Example**::
+
+    PicardMarkDuplicates_ExtraParams="DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH"
+
+
+PicardJvm_ExtraParams
+---------------------
+Specifies options passed to the Picard Java Virtual Machine.
+Any of the JVM options can be specified.
+
+**Default**: None
+
+**Parameter Notes**:
+
+| ``-Xmx300m``  : use 300 MB memory (modify as needed)
+|
+
+**Example**::
+
+    PicardJvm_ExtraParams="-Xmx300m"
+
+
 SamtoolsMpileup_ExtraParams
 ---------------------------
 Specifies options passed to the SAMtools mpileup tool.

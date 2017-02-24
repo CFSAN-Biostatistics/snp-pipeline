@@ -394,6 +394,9 @@ export Bowtie2Align_ExtraParams
 export SmaltAlign_ExtraParams
 export SamtoolsSamFilter_ExtraParams
 export SamtoolsSort_ExtraParams
+export SnpPipeline_RemoveDuplicateReads
+export PicardMarkDuplicates_ExtraParams
+export PicardJvm_ExtraParams
 export SamtoolsMpileup_ExtraParams
 export VarscanMpileup2snp_ExtraParams
 export VarscanJvm_ExtraParams
@@ -432,6 +435,13 @@ result=$(java net.sf.varscan.VarScan 2>&1) || true
 if [[ $result =~ .*Error.* ]]; then
     reportError "CLASSPATH is not configured with the path to VarScan"
     (( dependencyErrors += 1 ))
+fi
+if [[ -z $SnpPipeline_RemoveDuplicateReads || $SnpPipeline_RemoveDuplicateReads = true ]]; then
+    result=$(java picard.cmdline.PicardCommandLine 2>&1) || true
+    if [[ $result =~ .*Error.* ]]; then
+        reportError "CLASSPATH is not configured with the path to Picard"
+        (( dependencyErrors += 1 ))
+    fi
 fi
 if (( $dependencyErrors > 0 )); then
     fatalError 'Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html'

@@ -1006,6 +1006,32 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     xdg-open metrics.tsv
 
 
+.. _remove-duplicate-reads-label:
+
+Duplicate Read Removal
+----------------------
+Prior to creating the pileup and calling snps, the pipeline detects and removes duplicate reads from
+the sample BAM files.  When duplicates are found, the highest quality read among the duplicates is retained.
+Removing duplicate reads slightly reduces the depth of coverage in pileups and will sometimes impact the
+number of called snps.  The number of called snps could either increase or decrease depending on whether
+reference-supporting or variant-supporting reads are removed.  Removing duplicate reads impacts the
+subsequent application of virtually all snp filters: depth, variant allele frequency, strand bias, strand
+depth, and high density snp filtering.
+
+Duplicate reads are removed with the ``Picard`` software tool which must be installed for this functionality.
+
+You can disable this step and keep the duplicate reads by configuring the
+``SnpPipeline_RemoveDuplicateReads`` parameter in the configuration file.
+
+You can customize the picard MarkDuplicates behavior to some extent by configuring the
+``PicardMarkDuplicates_ExtraParams`` parameter in the configuration file.
+
+More information about the Picard MarkDuplicates tool can be found here: 
+https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates 
+
+See also :ref:`configuration-label`.
+
+
 .. _snp-filtering-label:
 
 SNP Filtering
@@ -1123,6 +1149,11 @@ The metrics are:
 | Number of Reads         | | The number of reads in the SAM file.  When using paired fastq  |
 |                         | | files, this number will be twice the number of reads reported  |
 |                         | | by bowtie.                                                     |
++-------------------------+------------------------------------------------------------------+
+| Duplicate Reads         | | The number of reads marked as duplicates.  These reads are not |
+|                         | | included the the pileup and are not used to call snps.  When   |
+|                         | | a set of duplicate reads is found, only the highest-quality    |                                                     |
+|                         | | read in the set is retained.                                   |
 +-------------------------+------------------------------------------------------------------+
 | Percent of Reads Mapped | | The percentage of reference-aligned reads in the SAM file.     |
 +-------------------------+------------------------------------------------------------------+

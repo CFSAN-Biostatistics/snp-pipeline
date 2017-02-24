@@ -11,7 +11,7 @@ with dependencies on executable programs launched by the scripts.
 
 Step 1 - Operating System Requirements
 --------------------------------------
-The SNP Pipeline runs in a Linux environment. It has been tested 
+The SNP Pipeline runs in a Linux environment. It has been tested
 on the following platforms:
 
     * Red Hat
@@ -25,6 +25,7 @@ You should have the following software installed before using the SNP Pipeline.
     * Bowtie2_, a tool for aligning reads to long reference sequences
     * SMALT_, a tool for aligning reads to long reference sequences
     * SAMtools_, utilities for manipulating alignments in the SAM format
+    * Picard_, a set of tools for manipulating sequencing data in SAM/BAM/CRAM/VCF format
     * VarScan_, a tool to detect variants in NGS data
     * tabix_, a generic indexer for tab-delimited genome position files
     * bgzip, part of the tabix package, bgzip is a block compression utility
@@ -37,9 +38,10 @@ when using SMALT.
 
 Step 3 - Environment Variables
 ------------------------------
-Define the CLASSPATH environment variable to specify the location of the VarScan jar file.  Add 
-the following (or something similiar) to your .bashrc file::
+Define the CLASSPATH environment variable to specify the location of the Picard and VarScan jar files.  Add
+the following lines (or something similiar) to your .bashrc file::
 
+    export CLASSPATH=~/software/picard/picard.jar:$CLASSPATH
     export CLASSPATH=~/software/varscan.v2.3.9/VarScan.v2.3.9.jar:$CLASSPATH
 
 
@@ -48,12 +50,12 @@ Step 4 - Python
 The SNP pipeline requires python version 2.6, 2.7, 3.3, 3.4, or 3.5.  The pipeline has not been tested on other python versions.
 If you do not already have python installed, you should install version 2.7.  You can either build from source
 or install a precompiled version with your Linux package manager.
-    
+
 
 Step 5 - Pip
 ------------
 This can be a troublesome installation step -- proceed with caution.  The pip tool is used to install python packages
-including the snp-pipeline and other packages used by the snp-pipeline.  Some newer versions of Python include pip.  
+including the snp-pipeline and other packages used by the snp-pipeline.  Some newer versions of Python include pip.
 Check to see if pip is already installed::
 
     $ pip -V
@@ -69,9 +71,9 @@ Note: avoid using sudo when installing pip.  Some users have experienced problem
 Step 6 - Python Package Dependencies
 ------------------------------------
 
-For the most part, the installer automatically installs the necessary python packages used by snp-pipeline.  However, 
-not all python packages can be reliably installed automatically.  The packages listed below may need to be manually 
-installed if automatic installation fails.  You can either install these packages 
+For the most part, the installer automatically installs the necessary python packages used by snp-pipeline.  However,
+not all python packages can be reliably installed automatically.  The packages listed below may need to be manually
+installed if automatic installation fails.  You can either install these packages
 now, or hope for the best and manually install later if the automatic installation fails.
 
     * Biopython_, a set of tools for biological computation written in Python.
@@ -83,7 +85,7 @@ There is more than one way to install the SNP Pipeline depending on whether you 
 Installation Method 1 for Most Users
 ````````````````````````````````````
 
-This is the recommended installation method for new users. 
+This is the recommended installation method for new users.
 
 If you want to run the software without viewing or changing the source code, follow the instructions below.
 
@@ -115,7 +117,7 @@ If you previously installed with pip, you can upgrade to the newest version from
     $ pip install --user --upgrade snp-pipeline
 
 
-Uninstalling SNP Pipeline 
+Uninstalling SNP Pipeline
 -------------------------
 
 If you installed with pip, you can uninstall from the command line::
@@ -125,17 +127,20 @@ If you installed with pip, you can uninstall from the command line::
 Tips
 ----
 
-There is a dependency on the python psutil package.  Pip will attempt to 
-install the psutil package automatically when installing snp-pipeline.  
-If it fails with an error message about missing Python.h, you will need to 
-manually install the python-dev package.  
+There is a dependency on the python psutil package.  Pip will attempt to
+install the psutil package automatically when installing snp-pipeline.
+If it fails with an error message about missing Python.h, you will need to
+manually install the python-dev package.
 In Ubuntu, use this command::
 
     $ sudo apt-get install python-dev
 
+You may need to upgrade your Java Runtime Environment (JRE) to run Picard.
+
 
 .. _Bowtie2: http://sourceforge.net/projects/bowtie-bio/files/bowtie2/
 .. _SAMtools: http://sourceforge.net/projects/samtools/files/
+.. _Picard: https://broadinstitute.github.io/picard/command-line-overview.html
 .. _VarScan: http://sourceforge.net/projects/varscan/files/
 .. _tabix: http://www.htslib.org/doc/tabix.html
 .. _BcfTools: http://sourceforge.net/projects/samtools/files/samtools/1.1/

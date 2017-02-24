@@ -300,6 +300,27 @@ testRunSnpPipelineDependencySmaltRaiseFatalErrorStopUnset()
     tryRunSnpPipelineDependencyRaiseFatalError 1 smalt
 }
 
+# Verify run_snp_pipeline checks for necessary scripts and tools
+testRunSnpPipelineDependencyPicardRequiredRaiseFatalErrorStop()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+    copy_snppipeline_data.py configurationFile $tempDir
+    echo "SnpPipeline_RemoveDuplicateReads=true" >> "$tempDir/snppipeline.conf"
+    tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
+    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
+}
+
+# Verify run_snp_pipeline checks for necessary scripts and tools
+testRunSnpPipelineDependencyPicardNotRequiredRaiseFatalErrorStop()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+    copy_snppipeline_data.py configurationFile $tempDir
+    echo "SnpPipeline_RemoveDuplicateReads=false" >> "$tempDir/snppipeline.conf"
+    tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
+    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
+}
 
 # Verify the prepReference script detects a misconfigured environment variable
 tryPrepReferenceEnvironmentRaiseGlobalError()
@@ -1134,6 +1155,7 @@ tryPrepSamplesSamtoolsViewTrap()
     verifyNonExistingFile "$tempDir/error.log"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.unsorted.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/var.flt.vcf"
 
@@ -1201,6 +1223,7 @@ tryPrepSamplesSamtoolsSortTrap()
     verifyNonExistingFile "$tempDir/error.log"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.unsorted.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/var.flt.vcf"
 
@@ -1243,6 +1266,151 @@ testPrepSamplesSamtoolsSortTrapStopUnset()
 }
 
 
+# Verify the prepSamples script detects Picard MarkDuplicates failure.
+tryPrepSamplesPicardMarkDuplicatesTrap()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run prep work
+    prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
+    export Bowtie2Align_ExtraParams="--reorder -X 1000"
+    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+
+    # First run prepSamples normally
+    prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
+    verifyNonExistingFile "$tempDir/error.log"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.unsorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.all.pileup"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/var.flt.vcf"
+
+    # Deliberately corrupt the reads.sorted.bam file and re-run prepSamples.sh
+    touch "$tempDir/samples/sample1/reads.unsorted.bam"
+    sleep 1
+    echo "Garbage" > "$tempDir/samples/sample1/reads.sorted.bam"
+    rm "$tempDir/error.log" &> /dev/null
+    prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
+    errorCode=$?
+
+    # Verify prepSamples error handling behavior
+    assertEquals "prepSamples.sh returned incorrect error code when reads.sorted.bam was corrupt." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "Error detected while running prepSamples.sh."
+    assertFileNotContains "$logDir/prepSamples.log" "Error detected while running prepSamples.sh."
+    assertFileContains "$tempDir/error.log" "picard"
+    assertFileContains "$tempDir/error.log" "MarkDuplicates"
+    assertFileContains "$logDir/prepSamples.log" "picard"
+    assertFileContains "$logDir/prepSamples.log" "MarkDuplicates"
+    assertFileNotContains "$logDir/prepSamples.log" "prepSamples.sh finished"
+    assertFileNotContains "$logDir/prepSamples.log" "Pileup file is already freshly created"
+}
+
+# Verify the prepSamples script detects Picard MarkDuplicates failure.
+testPrepSamplesPicardMarkDuplicatesTrapStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryPrepSamplesPicardMarkDuplicatesTrap 100
+}
+
+# Verify the prepSamples script detects Picard MarkDuplicates failure.
+testPrepSamplesPicardMarkDuplicatesTrapNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryPrepSamplesPicardMarkDuplicatesTrap 98
+}
+
+# Verify the prepSamples script detects Picard MarkDuplicates failure.
+testPrepSamplesPicardMarkDuplicatesTrapStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryPrepSamplesPicardMarkDuplicatesTrap 100
+}
+
+
+# Verify the prepSamples script detects unset java classpath needed to run Picard MarkDuplicates.
+tryPrepSamplesPicardMarkDuplicatesClasspathRaiseGlobalError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run prep work
+    prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
+    export Bowtie2Align_ExtraParams="--reorder -X 1000"
+    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+
+    # First run prepSamples normally
+    prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
+    verifyNonExistingFile "$tempDir/error.log"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.unsorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.all.pileup"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/var.flt.vcf"
+
+    # Clear CLASSPATH and re-run prepSamples.sh
+    touch "$tempDir/samples/sample1/reads.unsorted.bam"
+    sleep 1
+    touch "$tempDir/samples/sample1/reads.sorted.bam"
+    saveClassPath="$CLASSPATH"
+    unset CLASSPATH
+    rm "$tempDir/error.log" &> /dev/null
+    prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
+    errorCode=$?
+    export CLASSPATH="$saveClassPath"
+
+    # Verify prepSamples error handling behavior
+    assertEquals "prepSamples.sh returned incorrect error code when CLASSPATH unset failed." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "prepSamples.sh failed"
+    assertFileNotContains "$logDir/prepSamples.log" "prepSamples.sh failed"
+    assertFileContains "$tempDir/error.log" "Error: cannot execute Picard. Define the path to Picard in the CLASSPATH environment variable."
+    assertFileContains "$logDir/prepSamples.log" "Error: cannot execute Picard. Define the path to Picard in the CLASSPATH environment variable."
+    assertFileNotContains "$logDir/prepSamples.log" "prepSamples.sh finished"
+    assertFileNotContains "$logDir/prepSamples.log" "Deduped bam file is already freshly created"
+}
+
+# Verify the prepSamples script detects unset java classpath needed to run PicardMarkDuplicates.
+testPrepSamplesPicardMarkDuplicatesClasspathRaiseGlobalErrorStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryPrepSamplesPicardMarkDuplicatesClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
+}
+
+# Verify the prepSamples script detects unset java classpath needed to run PicardMarkDuplicates.
+testPrepSamplesPicardMarkDuplicatesClasspathRaiseGlobalErrorNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryPrepSamplesPicardMarkDuplicatesClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
+}
+
+# Verify the prepSamples script detects unset java classpath needed to run PicardMarkDuplicates.
+testPrepSamplesPicardMarkDuplicatesClasspathRaiseGlobalErrorStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryPrepSamplesPicardMarkDuplicatesClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
+}
+
+
 # Verify the prepSamples script detects Samtools mpileup failure.
 tryPrepSamplesSamtoolsMpileupTrap()
 {
@@ -1268,19 +1436,22 @@ tryPrepSamplesSamtoolsMpileupTrap()
     verifyNonExistingFile "$tempDir/error.log"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.unsorted.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/var.flt.vcf"
 
-    # Deliberately corrupt the reads.sorted.bam file and re-run prepSamples.sh
+    # Deliberately corrupt the reads.sorted.deduped.bam file and re-run prepSamples.sh
     touch "$tempDir/samples/sample1/reads.unsorted.bam"
     sleep 1
-    echo "Garbage" > "$tempDir/samples/sample1/reads.sorted.bam"
+    touch "$tempDir/samples/sample1/reads.sorted.bam"
+    sleep 1
+    echo "Garbage" > "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     rm "$tempDir/error.log" &> /dev/null
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
     errorCode=$?
 
     # Verify prepSamples error handling behavior
-    assertEquals "prepSamples.sh returned incorrect error code when reads.sorted.bam was corrupt." $expectErrorCode $errorCode
+    assertEquals "prepSamples.sh returned incorrect error code when reads.sorted.deduped.bam was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running prepSamples.sh."
     assertFileNotContains "$logDir/prepSamples.log" "Error detected while running prepSamples.sh."
@@ -1337,6 +1508,7 @@ tryPrepSamplesVarscanRaiseSampleError()
     verifyNonExistingFile "$tempDir/error.log"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.unsorted.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/var.flt.vcf"
 
@@ -1344,6 +1516,8 @@ tryPrepSamplesVarscanRaiseSampleError()
     touch "$tempDir/samples/sample1/reads.unsorted.bam"
     sleep 1
     touch "$tempDir/samples/sample1/reads.sorted.bam"
+    sleep 1
+    touch "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     sleep 1
     touch "$tempDir/samples/sample1/reads.all.pileup"
     export VarscanMpileup2snp_ExtraParams="--min-coverage -1 --min-reads 99999999 --min-avg_qual -100 --min-var-freq 2 --output-vcf 2 --invalid-parameter"
@@ -1409,6 +1583,7 @@ tryPrepSamplesVarscanClasspathRaiseGlobalError()
     verifyNonExistingFile "$tempDir/error.log"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.unsorted.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/var.flt.vcf"
 
@@ -1416,6 +1591,8 @@ tryPrepSamplesVarscanClasspathRaiseGlobalError()
     touch "$tempDir/samples/sample1/reads.unsorted.bam"
     sleep 1
     touch "$tempDir/samples/sample1/reads.sorted.bam"
+    sleep 1
+    touch "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     sleep 1
     touch "$tempDir/samples/sample1/reads.all.pileup"
     saveClassPath="$CLASSPATH"
@@ -1951,12 +2128,13 @@ testSnpFilterPartialRebuild()
 
     # Force timestamps to change so outputs are newer than inputs.
     # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
-    touch -d '-11 day' $tempDir/reference/*.fasta
-    touch -d '-10 day' $tempDir/reference/*.bt2
-    touch -d  '-9 day' $tempDir/samples/*/*.fastq
-    touch -d  '-8 day' $tempDir/samples/*/reads.sam
-    touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
-    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d '-12 day' $tempDir/reference/*.fasta
+    touch -d '-11 day' $tempDir/reference/*.bt2
+    touch -d '-10 day' $tempDir/samples/*/*.fastq
+    touch -d  '-9 day' $tempDir/samples/*/reads.sam
+    touch -d  '-8 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-7 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.deduped.bam
     touch -d  '-5 day' $tempDir/samples/*/reads.all.pileup
     touch -d  '-4 day' $tempDir/samples/*/var.flt.vcf
     touch -d  '-3 day' $tempDir/samples/*/var.flt_preserved.vcf
@@ -2017,8 +2195,9 @@ testSnpFilterOutgroup()
     touch -d  '-8 day' $tempDir/samples/*/reads.sam
     touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
     touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
-    touch -d  '-5 day' $tempDir/samples/*/reads.all.pileup
-    touch -d  '-4 day' $tempDir/samples/*/var.flt.vcf
+    touch -d  '-5 day' $tempDir/samples/*/reads.sorted.deduped.bam
+    touch -d  '-4 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-3 day' $tempDir/samples/*/var.flt.vcf
 
     # Remove unwanted log files
     logDir=$(echo $(ls -d $tempDir/logs*))
@@ -3836,7 +4015,7 @@ testRunSnpPipelineMissingReferenceRaiseFatalErrorNoStop()
     tryRunSnpPipelineMissingReferenceRaiseFatalError 1
 }
 
-# Verify the collectSampleMetrics.sh script detects missing reference
+# Verify the run_snp_pipeline.sh script detects missing reference
 testRunSnpPipelineMissingReferenceRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -4330,6 +4509,7 @@ tryRunSnpPipelineTrapPrepReferenceTrap()
     verifyNonExistingFile "$tempDir/samples/sample4/reads.sam"
     verifyNonExistingFile "$tempDir/samples/sample1/reads.unsorted.bam"
     verifyNonExistingFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonExistingFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     verifyNonExistingFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonExistingFile "$tempDir/samples/sample1/var.flt.vcf"
     verifyNonExistingFile "$tempDir/snplist.txt"
@@ -4415,6 +4595,7 @@ tryRunSnpPipelineTrapAlignSampleToReferenceTrap()
 
     verifyNonExistingFile "$tempDir/samples/sample1/reads.unsorted.bam"
     verifyNonExistingFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonExistingFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     verifyNonExistingFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonExistingFile "$tempDir/samples/sample1/var.flt.vcf"
     verifyNonExistingFile "$tempDir/snplist.txt"
@@ -4497,6 +4678,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
 
     verifyNonExistingFile "$tempDir/samples/sample1/reads.unsorted.bam"
     verifyNonExistingFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonExistingFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
     verifyNonExistingFile "$tempDir/samples/sample1/reads.all.pileup"
     verifyNonExistingFile "$tempDir/samples/sample1/var.flt.vcf"
     verifyNonExistingFile "$tempDir/snplist.txt"
@@ -4922,7 +5104,8 @@ testRunSnpPipelineZeroSnps()
     touch -d  '-7 day' $tempDir/samples/*/reads.sam
     touch -d  '-6 day' $tempDir/samples/*/reads.unsorted.bam
     touch -d  '-5 day' $tempDir/samples/*/reads.sorted.bam
-    touch -d  '-4 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-4 day' $tempDir/samples/*/reads.sorted.deduped.bam
+    touch -d  '-3 day' $tempDir/samples/*/reads.all.pileup
     sed -i '/PASS/d' $tempDir/samples/*/var.flt.vcf
     run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
 
@@ -5003,7 +5186,8 @@ testRunSnpPipelineRerunMissingVCF()
     touch -d  '-7 day' $tempDir/samples/*/reads.sam
     touch -d  '-6 day' $tempDir/samples/*/reads.unsorted.bam
     touch -d  '-5 day' $tempDir/samples/*/reads.sorted.bam
-    touch -d  '-4 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-4 day' $tempDir/samples/*/reads.sorted.deduped.bam
+    touch -d  '-3 day' $tempDir/samples/*/reads.all.pileup
     touch $tempDir/samples/*/var.flt.vcf
     rm -rf "$tempDir/samples/sample1"
     sleep 1
@@ -5070,12 +5254,13 @@ testAlreadyFreshOutputs()
 
     # Force timestamps to change so outputs are newer than inputs.
     # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
-    touch -d '-11 day' $tempDir/reference/*.fasta
-    touch -d '-10 day' $tempDir/reference/*.bt2
-    touch -d  '-9 day' $tempDir/samples/*/*.fastq
-    touch -d  '-8 day' $tempDir/samples/*/reads.sam
-    touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
-    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d '-12 day' $tempDir/reference/*.fasta
+    touch -d '-11 day' $tempDir/reference/*.bt2
+    touch -d '-10 day' $tempDir/samples/*/*.fastq
+    touch -d  '-9 day' $tempDir/samples/*/reads.sam
+    touch -d  '-8 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-7 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.deduped.bam
     touch -d  '-5 day' $tempDir/samples/*/reads.all.pileup
     touch -d  '-4 day' $tempDir/samples/*/var.flt.vcf
     touch -d  '-3 day' $tempDir/samples/*/var.flt_preserved.vcf
@@ -5089,10 +5274,12 @@ testAlreadyFreshOutputs()
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.54"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.89"
     assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=110"
     echo numberReads=AAAAA > "$tempDir/samples/sample1/metrics"
     echo percentReadsMapped=BBBBB >> "$tempDir/samples/sample1/metrics"
     echo avePileupDepth=CCCCC >> "$tempDir/samples/sample1/metrics"
     echo aveInsertSize=DDDDD >> "$tempDir/samples/sample1/metrics"
+    echo numberDupReads=EEEEE >> "$tempDir/samples/sample1/metrics"
 
     # Remove unwanted log files
     rm -rf $tempDir/logs*
@@ -5192,11 +5379,13 @@ testAlreadyFreshOutputs()
     assertFileNotContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.54"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.89"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "numberDupReads=110"
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=AAAAA"
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=BBBBB"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=CCCCC"
     assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=DDDDD"
-    assertFileContains "$tempDir/metrics.tsv" "sample1.*AAAAA.*BBBBB.*DDDDD.*CCCCC"
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=EEEEE"
+    assertFileContains "$tempDir/metrics.tsv" "sample1.*AAAAA.*EEEEE.*BBBBB.*DDDDD.*CCCCC"
 }
 
 

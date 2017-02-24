@@ -23,6 +23,7 @@
 #   20160304-scd: Count missing positions in the consensus.fasta file instead of the snp matrix.
 #   20160309-scd: Add the -m option to specify the maximum allowable snp threshold.  Add the excludedSample flag.
 #   20161021-scd: Modify to work with snp_filter.py output files.
+#   20170222-scd: Count the duplicate reads.
 #Notes:
 #
 #Bugs:
@@ -253,6 +254,34 @@ else
   error="SAM file was not found."
   echo "$error" 1>&2
   errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+fi
+
+
+#-------------------------
+# Calculate number of duplicate reads from deduped bam file
+#-------------------------
+if [[ -z $SnpPipeline_RemoveDuplicateReads || $SnpPipeline_RemoveDuplicateReads = true ]]; then
+  bamFile=$sampleDir/reads.sorted.deduped.bam
+  if [ -s "$bamFile" ]; then
+    # Metrics already freshly collected?
+    unset numDupReads
+    if [[ "$opt_f_set" != "1" && -s "$outfile" && "$outfile" -nt "$bamFile" ]]; then
+      readParameter "$outfile" "numberDupReads" # reuse already fresh metrics
+      numDupReads=$numberDupReads
+    fi
+    if [[ -n $numDupReads ]]; then
+      echo "# "$(date +"%Y-%m-%d %T") Reusing previously calculated number of duplicate reads 1>&2
+    else
+      echo "# "$(date +"%Y-%m-%d %T") Calculate number of duplicate reads from deduped bam file 1>&2
+      numDupReads=$(samtools view -S -c -f 1024 $bamFile)
+    fi
+  else
+    error="reads.sorted.deduped.bam file was not found."
+    echo "$error" 1>&2
+    errorList=${errorList}${errorList:+" "}$"$error"  # Insert spaces between errors
+  fi
+else
+  numDupReads=""  # Nothing to count when duplicates removal is disabled
 fi
 
 
@@ -507,6 +536,7 @@ echo "fastqFileSize=$file_size" >> "$outfile"
 echo "machine=$machine" >> "$outfile"
 echo "flowcell=$flowcell" >> "$outfile"
 echo "numberReads=$nreads" >> "$outfile"
+echo "numberDupReads=$numDupReads" >> "$outfile"
 echo "percentReadsMapped=$perc_mapped" >> "$outfile"
 echo "aveInsertSize=$insertSize" >> "$outfile"
 echo "avePileupDepth=$depth" >> "$outfile"

@@ -3,7 +3,7 @@
 History
 -------
 
-0.7.1 (2016-12-??)
+0.7.1 (2017-02-??)
 ~~~~~~~~~~~~~~~~~~
 
 * Check for ``bc`` on the path when the pipeline is launched.  Complain if it is missing.
@@ -13,7 +13,11 @@ History
   default limits (12 hours) to the configuration file.  You can change the runtime limits for
   all SNP Pipeline job steps with the ``Torque_QsubExtraParams`` or ``GridEngine_QsubExtraParams``
   configuration parameters.
-
+* Added the capability to remove duplicate reads from BAM files prior to creating the pileup and
+  calling snps.  See :ref:`remove-duplicate-reads-label`.  This change introduces a dependency on
+  ``Picard`` and will require changing your CLASSPATH.  See :ref:`installation-label`. You can
+  disable this step and keep the duplicate reads by configuring ``SnpPipeline_RemoveDuplicateReads=false``
+  in the configuration file.
 
 0.7.0 (2016-11-30)
 ~~~~~~~~~~~~~~~~~~

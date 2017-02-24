@@ -19,6 +19,7 @@
 #   20160301-scd: Emit column headings with underscores.
 #   20160309-scd: Add the Excluded Sample metric.
 #   20161021-scd: Modify to work with snp_filter.py output files.
+#   20170222-scd: Add the Duplicate_Reads metric
 #Notes:
 #
 #Bugs:
@@ -148,9 +149,9 @@ if [[ ! -s "$sampleDirsFile" ]]; then globalError "Sample directories file $samp
 #-------------------------------------------------------
 
 if [ "$opt_s_set" = "1" ]; then
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Percent of Reads Mapped" "Average Insert Size" "Average Pileup Depth" "Phase1 SNPs" "Phase1 Preserved SNPs" "Phase2 SNPs" "Phase2 Preserved SNPs" "Missing SNP Matrix Positions" "Missing Preserved SNP Matrix Positions" "Excluded Sample" "Excluded Preserved Sample" "Warnings and Errors" >&3
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq Files" "Fastq File Size" "Machine" "Flowcell" "Number of Reads" "Duplicate Reads" "Percent of Reads Mapped" "Average Insert Size" "Average Pileup Depth" "Phase1 SNPs" "Phase1 Preserved SNPs" "Phase2 SNPs" "Phase2 Preserved SNPs" "Missing SNP Matrix Positions" "Missing Preserved SNP Matrix Positions" "Excluded Sample" "Excluded Preserved Sample" "Warnings and Errors" >&3
 else
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq_Files" "Fastq_File_Size" "Machine" "Flowcell" "Number_of_Reads" "Percent_of_Reads_Mapped" "Average_Insert_Size" "Average_Pileup_Depth" "Phase1_SNPs" "Phase1_Preserved_SNPs" "Phase2_SNPs" "Phase2_Preserved_SNPs" "Missing_SNP_Matrix_Positions" "Missing_Preserved_SNP_Matrix_Positions" "Excluded_Sample" "Excluded_Preserved_Sample" "Warnings_and_Errors" >&3
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "Sample" "Fastq_Files" "Fastq_File_Size" "Machine" "Flowcell" "Number_of_Reads" "Duplicate_Reads" "Percent_of_Reads_Mapped" "Average_Insert_Size" "Average_Pileup_Depth" "Phase1_SNPs" "Phase1_Preserved_SNPs" "Phase2_SNPs" "Phase2_Preserved_SNPs" "Missing_SNP_Matrix_Positions" "Missing_Preserved_SNP_Matrix_Positions" "Excluded_Sample" "Excluded_Preserved_Sample" "Warnings_and_Errors" >&3
 fi
 
 cat "$sampleDirsFile" | while IFS='' read -r dir || [[ -n "$dir" ]]
@@ -168,7 +169,7 @@ do
       declare "$param"="$value"
     fi
   done  < "$metricsFilePath" # This syntax without piping is needed to retain the values of variables declared in the loop
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "$sample" "$fastqFileList" "$fastqFileSize" "$machine" "$flowcell" "$numberReads" "$percentReadsMapped" "$aveInsertSize" "$avePileupDepth" "$phase1Snps" "$phase1SnpsPreserved" "$snps" "$snpsPreserved" "$missingPos" "$missingPosPreserved" "$excludedSample" "$excludedSamplePreserved" "$errorList" >&3
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'  "$sample" "$fastqFileList" "$fastqFileSize" "$machine" "$flowcell" "$numberReads" "$numberDupReads" "$percentReadsMapped" "$aveInsertSize" "$avePileupDepth" "$phase1Snps" "$phase1SnpsPreserved" "$snps" "$snpsPreserved" "$missingPos" "$missingPosPreserved" "$excludedSample" "$excludedSamplePreserved" "$errorList" >&3
 done
 
 echo "# "$(date +"%Y-%m-%d %T") combineSampleMetrics.sh finished 1>&2

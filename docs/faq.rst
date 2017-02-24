@@ -10,8 +10,8 @@ Installation
 **Q: How can I avoid polluting my global python installation when installing the SNP pipeline?**
 
 
-A: You can either use a python virtual environment or install into your user area.  To use a python virtual 
-environment, see the :ref:`get-started-label` section for developers who want to contribute.  To install into 
+A: You can either use a python virtual environment or install into your user area.  To use a python virtual
+environment, see the :ref:`get-started-label` section for developers who want to contribute.  To install into
 your user area instead of installing into your global site packages, do this::
 
 	$ pip install --user snp-pipeline
@@ -19,7 +19,7 @@ your user area instead of installing into your global site packages, do this::
 **Q: The SNP Pipeline cannot find VarScan.  How should I install it?**
 
 A: Download the VarScan jar file from SourceForge.  Put the jar file anywhere.  You need read-access to the
-jar file, but not execute-access.  The supplied shell scripts expect the CLASSPATH environment variable to 
+jar file, but not execute-access.  The supplied shell scripts expect the CLASSPATH environment variable to
 specify the path to the VarScan jar file.  The CLASSPATH should include the filename, not just the directory.
 Define it like this in your .bashrc file::
 
@@ -59,10 +59,10 @@ install Biopython.  See the :ref:`installation-label` section of this documentat
 
 **Q: How can I verify the pipeline is installed and working properly?**
 
-A: The SNP Pipeline includes sets of test data with result files.  You can run the pipeline against the 
+A: The SNP Pipeline includes sets of test data with result files.  You can run the pipeline against the
 test data to verify correct results.  Follow the lambda virus workflow steps here: :ref:`all-in-one-workflow-lambda`.
 
-Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix 
+Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix
 can be found in snpma.fasta.  It should have the following contents::
 
     >sample1
@@ -87,7 +87,7 @@ Note: the expected pipeline results are also included in the distribution.  To f
     copy_snppipeline_data.py lambdaVirusExpectedResults myDirectoryForExpectedResults
 
 After verifying correct results on the lambda data set, you can follow the workflow steps for the agona data
-set, :ref:`all-in-one-workflow-agona` or the listeria data set, :ref:`all-in-one-workflow-listeria`.  
+set, :ref:`all-in-one-workflow-agona` or the listeria data set, :ref:`all-in-one-workflow-listeria`.
 To fetch the expected result files::
 
     copy_snppipeline_data.py agonaExpectedResults myDirectoryForExpectedResults
@@ -95,17 +95,17 @@ To fetch the expected result files::
 
 **Q: My results for the included test data do not match the expected results. What is the cause?**
 
-A: Different versions of the executable tools can generate different results.  The test data was generated with 
+A: Different versions of the executable tools can generate different results.  The test data was generated with
 these versions:
-	
-	* bowtie2 2.2.2
+
+	* bowtie2 2.2.9
 	* samtools 1.3.1
 	* varscan 2.3.9
 
 **Q: How can I run the SNP Pipeline with a mix of paired and unpaired samples?**
 
-A: This is handled automatically if you use the run_snp_pipeline.sh script.  If you are running alignSampleToReference.sh, 
-run the script once per sample with either 1 fastq file or 2 fastq files.  
+A: This is handled automatically if you use the run_snp_pipeline.sh script.  If you are running alignSampleToReference.sh,
+run the script once per sample with either 1 fastq file or 2 fastq files.
 For example::
 
     alignSampleToReference.sh  reference/NC_011149  samples/CFSAN000448/G0H235M04.RL10.fastq
@@ -118,15 +118,15 @@ For example::
 **Q: How can I re-run some of the SNP Pipeline processing steps when I see a message that the results are already freshly built?**
 
 A: The SNP Pipeline detects freshly built result files and does not rebuild them.  Result files are
-not rebuilt when the file timestamp is newer than all of the input files.  To force a rebuild, 
-specfify the ``-f`` option on the command line of any of the tools.  To re-run only some of the steps, 
-you can either delete the output files for that step or touch the input files for that step.  All 
+not rebuilt when the file timestamp is newer than all of the input files.  To force a rebuild,
+specfify the ``-f`` option on the command line of any of the tools.  To re-run only some of the steps,
+you can either delete the output files for that step or touch the input files for that step.  All
 subsequent processing steps will also be re-run since their results will be out-of-date.
 
 **Q: How does the SNP Pipeline know which processing steps should be re-run after changing the configuration file?**
 
-A: It doesn't.  If you change the configuration file, you may want to re-run some parts of the pipeline.  The SNP 
-Pipeline does not detect which parameters have changed since the last run.  You must manually intervene to cause the 
+A: It doesn't.  If you change the configuration file, you may want to re-run some parts of the pipeline.  The SNP
+Pipeline does not detect which parameters have changed since the last run.  You must manually intervene to cause the
 pipeline to re-run the impacted processing steps.  See the question above for guidance.
 
 
@@ -148,9 +148,9 @@ Performance
 **Q: How can I control the number of concurrent processes lauched on my workstation?**
 
 A: If you are using a HPC with a job queue manager, the pipeline will automatically run multiple
-concurrent processes across multiple servers -- there are no options to control the number of 
+concurrent processes across multiple servers -- there are no options to control the number of
 concurrent processes.  On a workstation, the pipeline uses all available CPU cores by default
-and spawns multiple concurrent processes to use all the cores.  However, you may want to 
+and spawns multiple concurrent processes to use all the cores.  However, you may want to
 control the number of concurrent processes.  There are three steps in the pipeline where multiple
 processes are launched on a workstation.  You can control the number of processes with the
 following parameters in the configuration file.  These parameters are used only by the
@@ -158,7 +158,7 @@ run_snp_pipeline.sh script::
 
     # Maximum concurrent prepSamples.sh processes (SAMtools and Varscan)
     MaxConcurrentPrepSamples=
-    
+
     # Maximum concurrent call_consensus.py processes
     MaxConcurrentCallConsensus=
 
@@ -169,7 +169,7 @@ run_snp_pipeline.sh script::
 
 A: By default, the SNP Pipeline will give bowtie2 all available CPU cores on a workstation and 8 CPU cores per
 sample on a high performance computing cluster.  You can override the defaults with the ``-p`` bowtie2 option.  Set
-the option either in the configuration file if you are running run_snp_pipeline.sh, or in the Bowtie2Align_ExtraParams 
+the option either in the configuration file if you are running run_snp_pipeline.sh, or in the Bowtie2Align_ExtraParams
 environment variable if you are running alignSampleToReference.sh directly.  For example, to run alignments with
 16 concurrent threads::
 
@@ -178,13 +178,14 @@ environment variable if you are running alignSampleToReference.sh directly.  For
 On a workstation, alignments are run one at a time using multiple threads per alignment.  On a cluster with
 a job queue, multiple alignments are run concurrently, each with multiple threads.
 
-**Q: How can I control the amount of memory that is used by the VarScan java virtual machine?**
+**Q: How can I control the amount of memory that is used by the Picard and VarScan java virtual machines?**
 
-A: The amount of memory used by the java VM can be set by using the ``-Xmx`` java VM option.  Set the 
-option either in the configuration file if you are running run_snp_pipeline.sh, or in the VarscanJvm_ExtraParams 
-environment variable if you are running prepSamples.sh directly. For example, to set maximum java heap 
+A: The amount of memory used by the java VM can be set by using the ``-Xmx`` java VM option.  Set the
+option either in the configuration file if you are running run_snp_pipeline.sh, or in the VarscanJvm_ExtraParams
+environment variable if you are running prepSamples.sh directly. For example, to set maximum java heap
 size to 3000 MB::
 
+    PicardJvm_ExtraParams="-Xmx3000m"
     VarscanJvm_ExtraParams="-Xmx3000m"
 
 Developer Questions

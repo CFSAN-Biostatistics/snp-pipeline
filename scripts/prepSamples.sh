@@ -42,6 +42,7 @@
 #   20150109-scd: Log the Grid Engine job ID.
 #   20151214-scd: Detect errors and prevent execution of unwanted processing when earlier processing steps fail.
 #   20160414-scd: Support SAMtools 1.3.
+#   20170214-scd: Remove duplicate reads with Picard.
 #Notes:
 #
 #Bugs:
@@ -87,16 +88,16 @@ logSysEnvironment()
 }
 
 # --------------------------------------------------------
-# getopts command line option handler: 
+# getopts command line option handler:
 
-# For each valid option, 
+# For each valid option,
 #   If it is given, create a var dynamically to
 #   indicate it is set: $opt_name_set = 1
 
 #   If var gets an arg, create another var to
 #   hold its value: $opt_name_arg = some value
 
-# For invalid options given, 
+# For invalid options given,
 #   Invoke Usage routine
 
 # precede option list with a colon
@@ -162,14 +163,14 @@ if [[ ! -s "$samFile" ]]; then sampleError "Sample SAM file $samFile is empty." 
 
 sampleId=${sampleDir##*/} # strip the parent directories
 
-# Substitute the default parameters if the user did not specify samtools view parameters
-defaultParams="-F 4"
-SamtoolsSamFilter_Params=${SamtoolsSamFilter_ExtraParams:-$defaultParams}
-
 # Check for fresh bam file; if not, convert to bam file with only mapped positions
 if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.unsorted.bam" && "$sampleDir/reads.unsorted.bam" -nt "$sampleDir/reads.sam" ]]; then
     echo "# Unsorted bam file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
+    # Substitute the default parameters if the user did not specify samtools view parameters
+    defaultParams="-F 4"
+    SamtoolsSamFilter_Params=${SamtoolsSamFilter_ExtraParams:-$defaultParams}
+
     echo "# Convert sam file to bam file with only mapped positions."
     echo "# "$(date +"%Y-%m-%d %T") samtools view -S -b $SamtoolsSamFilter_Params -o "$sampleDir/reads.unsorted.bam" "$sampleDir/reads.sam"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
@@ -201,14 +202,35 @@ else
     echo
 fi
 
-#Check for fresh pileup; if not, create it 
-if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.all.pileup" && "$sampleDir/reads.all.pileup" -nt "$sampleDir/reads.sorted.bam" && "$sampleDir/reads.all.pileup" -nt "$referenceFilePath" ]]; then
+if [[ -z $SnpPipeline_RemoveDuplicateReads || $SnpPipeline_RemoveDuplicateReads = true ]]; then
+    # Check for fresh deduped bam file; if not, remove duplicate reads
+    if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.sorted.deduped.bam" && "$sampleDir/reads.sorted.deduped.bam" -nt "$sampleDir/reads.sorted.bam" ]]; then
+        echo "# Deduped bam file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
+    else
+        if [ ! -z "$CLASSPATH" ]; then
+            echo "# Remove duplicate reads from bam file."
+            echo "# "$(date +"%Y-%m-%d %T") java $PicardJvm_ExtraParams picard.cmdline.PicardCommandLine MarkDuplicates INPUT="$sampleDir/reads.sorted.bam" OUTPUT="$sampleDir/reads.sorted.deduped.bam" METRICS_FILE="$sampleDir/duplicate_reads_metrics.txt" $PicardMarkDuplicates_ExtraParams
+            echo "# Picard version "$(java picard.cmdline.PicardCommandLine MarkDuplicates --version 2>&1)
+            java $PicardJvm_ExtraParams picard.cmdline.PicardCommandLine MarkDuplicates INPUT="$sampleDir/reads.sorted.bam" OUTPUT="$sampleDir/reads.sorted.deduped.bam" METRICS_FILE="$sampleDir/duplicate_reads_metrics.txt" $PicardMarkDuplicates_ExtraParams
+            sampleErrorOnMissingFile "$sampleDir/reads.sorted.deduped.bam" "picard MarkDuplicates"
+            echo
+        else
+            globalError "Error: cannot execute Picard. Define the path to Picard in the CLASSPATH environment variable."
+        fi
+    fi
+    pileupInputFile="$sampleDir/reads.sorted.deduped.bam"
+else
+    pileupInputFile="$sampleDir/reads.sorted.bam"
+fi
+
+#Check for fresh pileup; if not, create it
+if [[ "$opt_f_set" != "1" && -s "$sampleDir/reads.all.pileup" && "$sampleDir/reads.all.pileup" -nt "$pileupInputFile" && "$sampleDir/reads.all.pileup" -nt "$referenceFilePath" ]]; then
     echo "# Pileup file is already freshly created for $sampleId.  Use the -f option to force a rebuild."
 else
     echo "# Create pileup from bam file."
-    echo "# "$(date +"%Y-%m-%d %T") samtools mpileup $SamtoolsMpileup_ExtraParams -f "$referenceFilePath" "$sampleDir/reads.sorted.bam"
+    echo "# "$(date +"%Y-%m-%d %T") samtools mpileup $SamtoolsMpileup_ExtraParams -f "$referenceFilePath" "$pileupInputFile"
     echo "# SAMtools "$(samtools 2>&1 > /dev/null | grep Version)
-    samtools mpileup $SamtoolsMpileup_ExtraParams -f "$referenceFilePath" "$sampleDir/reads.sorted.bam" > "$sampleDir/reads.all.pileup"
+    samtools mpileup $SamtoolsMpileup_ExtraParams -f "$referenceFilePath" "$pileupInputFile" > "$sampleDir/reads.all.pileup"
     sampleErrorOnMissingFile "$sampleDir/reads.all.pileup" "samtools mpileup"
     echo
 fi
