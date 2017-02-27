@@ -674,19 +674,19 @@ Step 6 - Identify regions with abnormal SNP density and remove SNPs in these reg
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
-    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
-    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories2.txt
+    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt sampleDirectories.txt.OrigVCF.filtered
+    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt sampleDirectories.txt.PresVCF.filtered
 
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
     cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_Preserved.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
-    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
-    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories2.txt
+    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt.OrigVCF.filtered
+    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt.PresVCF.filtered
 
 Step 10 - Create the reference base sequence::
 
@@ -703,8 +703,8 @@ Step 12 - Tabulate the metrics for all samples::
 
 Step 13 - Merge the VCF files for all samples into a multi-sample VCF file::
 
-    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
-    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories2.txt
+    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt.OrigVCF.filtered
+    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt.PresVCF.filtered
 
 Step 14 - Compute the SNP distances between samples::
 
@@ -816,19 +816,19 @@ Step 6 - Identify regions with abnormal SNP density and remove SNPs in these reg
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
-    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
-    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories2.txt
+    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt sampleDirectories.txt.OrigVCF.filtered
+    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt sampleDirectories.txt.PresVCF.filtered
 
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
     cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
-    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
-    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories2.txt
+    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt.OrigVCF.filtered
+    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt.PresVCF.filtered
 
 Step 10 - Create the reference base sequence::
 
@@ -845,8 +845,8 @@ Step 12 - Tabulate the metrics for all samples::
 
 Step 13 - Merge the VCF files for all samples into a multi-sample VCF file::
 
-    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
-    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories2.txt
+    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt.OrigVCF.filtered
+    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt.PresVCF.filtered
 
 Step 14 - Compute the SNP distances between samples::
 
@@ -948,19 +948,19 @@ Step 6 - Identify regions with abnormal SNP density and remove SNPs in these reg
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
-    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt
-    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories2.txt
+    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt sampleDirectories.txt.OrigVCF.filtered
+    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt sampleDirectories.txt.PresVCF.filtered
 
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
     cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
-    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt
-    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories2.txt
+    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt.OrigVCF.filtered
+    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt.PresVCF.filtered
 
 Step 10 - Create the reference base sequence::
 
@@ -978,8 +978,8 @@ Step 12 - Tabulate the metrics for all samples::
 
 Step 13 - Merge the VCF files for all samples into a multi-sample VCF file::
 
-    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt
-    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories2.txt
+    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt.OrigVCF.filtered
+    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt.PresVCF.filtered
 
 Step 14 - Compute the SNP distances between samples::
 
@@ -1026,8 +1026,8 @@ You can disable this step and keep the duplicate reads by configuring the
 You can customize the picard MarkDuplicates behavior to some extent by configuring the
 ``PicardMarkDuplicates_ExtraParams`` parameter in the configuration file.
 
-More information about the Picard MarkDuplicates tool can be found here: 
-https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates 
+More information about the Picard MarkDuplicates tool can be found here:
+https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates
 
 See also :ref:`configuration-label`.
 
