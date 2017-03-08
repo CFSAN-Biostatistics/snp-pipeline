@@ -724,9 +724,9 @@ def extract_fastq_metadata_tags(fastq_path):
     >>> from tempfile import NamedTemporaryFile
 
     # Uncompressed file
-    >>> f = NamedTemporaryFile(delete=False)
+    >>> f = NamedTemporaryFile(delete=False, mode='w')
     >>> filepath = f.name
-    >>> f.write("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151\\n")
+    >>> num_bytes = f.write("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151\\n")
     >>> f.close()
     >>> extract_fastq_metadata_tags(filepath)
     FastqSeqTags(instrument='M00229', flow_cell='A1474', lane='1')
@@ -734,7 +734,7 @@ def extract_fastq_metadata_tags(fastq_path):
     # Compressed file
     >>> os.rename(filepath, filepath + ".gz")
     >>> filepath = filepath + ".gz"
-    >>> gf = gzip.open(filepath, "wb")
+    >>> gf = gzip.open(filepath, "wt")
     >>> num_bytes = gf.write("@SRR498276.1 HWI-M00339:9:000000000-A1444:2:1:15012:1874 length=151\\n")
     >>> gf.close()
     >>> extract_fastq_metadata_tags(filepath)
@@ -749,7 +749,7 @@ def extract_fastq_metadata_tags(fastq_path):
     # Case 1: file is gzipped
     if fastq_path.endswith(".gz"):
         line = ""
-        f = gzip.open(fastq_path, "rb")
+        f = gzip.open(fastq_path, "rt")
         try:
             line = f.readline()
         finally:
@@ -757,7 +757,7 @@ def extract_fastq_metadata_tags(fastq_path):
         return parse_fastq_seqid_line(line)
 
     # Case 2: file is NOT gzipped
-    with open(fastq_path, "rb") as f:
+    with open(fastq_path, "r") as f:
         line = ""
         line = f.readline()
     return parse_fastq_seqid_line(line)
@@ -794,18 +794,18 @@ def construct_fastq_read_group(fastq_path):
     >>> from tempfile import NamedTemporaryFile
 
     # Sequence id line contains flowcell and lane
-    >>> f = NamedTemporaryFile(delete=False)
+    >>> f = NamedTemporaryFile(delete=False, mode='w')
     >>> filepath = f.name
-    >>> f.write("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151\\n")
+    >>> num_bytes = f.write("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151\\n")
     >>> f.close()
     >>> construct_fastq_read_group(filepath)
     'A1474.1'
     >>> os.unlink(filepath)
 
     # Sequence id line missing flowcell and lane
-    >>> f = NamedTemporaryFile(delete=False)
+    >>> f = NamedTemporaryFile(delete=False, mode='w')
     >>> filepath = f.name
-    >>> f.write("@SRR498276.1 length=151\\n")
+    >>> num_bytes = f.write("@SRR498276.1 length=151\\n")
     >>> f.close()
     >>> construct_fastq_read_group(filepath) is None
     True
