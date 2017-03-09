@@ -64,3 +64,6 @@ test/testLambdaVirus*
 
 # Eclipse settings
 .settings/*
+
+# Git merge
+*.orig
