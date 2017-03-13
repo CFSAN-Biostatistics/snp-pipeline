@@ -77,5 +77,4 @@ if __name__ == '__main__':
 
     sys.excepthook = utils.handle_sample_exception
     utils.set_logging_verbosity(args_dict)
-    snppipeline.set_logging_verbosity(args_dict)
     snppipeline.call_consensus(args_dict)

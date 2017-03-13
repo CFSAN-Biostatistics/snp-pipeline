@@ -25,5 +25,4 @@ if __name__ == '__main__':
 
     sys.excepthook = utils.handle_global_exception
     utils.set_logging_verbosity(args_dict)
-    snppipeline.set_logging_verbosity(args_dict)
     snppipeline.calculate_snp_distances(args_dict)

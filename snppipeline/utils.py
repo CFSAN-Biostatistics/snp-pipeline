@@ -1,21 +1,26 @@
 from __future__ import print_function
+from __future__ import absolute_import
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import locale
 import os
+import platform
 import pprint
+import psutil
 import sys
 import time
 import traceback
 import vcf
+
+from snppipeline.__init__ import __version__
 
 
 #==============================================================================
 #Prep work
 #==============================================================================
 
-verbose_print  = lambda *a, **k: None
-verbose_pprint = lambda *a, **k: None
+log_verbosity = 0
 
 
 def set_logging_verbosity(options_dict):
@@ -24,10 +29,15 @@ def set_logging_verbosity(options_dict):
     Args:
         verbose : Verbosity value, any value greater than 0 enables logging
     """
-    global verbose_print
-    global verbose_pprint
-    verbose_print  = print         if options_dict['verbose'] > 0 else lambda *a, **k: None
-    verbose_pprint = pprint.pprint if options_dict['verbose'] > 0 else lambda *a, **k: None
+    global log_verbosity
+    log_verbosity = options_dict['verbose']
+
+
+def verbose_print(*args):
+    """Print messages conditionally depending on the configured verbosity.
+    """
+    if log_verbosity > 0:
+        print(*args)
 
 
 #==============================================================================
@@ -52,6 +62,46 @@ def command_line_short():
 def command_line_long():
     """Return the command line string with the full path to the program."""
     return " ".join(sys.argv)
+
+
+def print_log_header():
+    """Print a standardized header for the log with starting conditions."""
+    verbose_print("# Command           : %s" % command_line_long())
+    verbose_print("# Working Directory : %s" % os.getcwd())
+    pbs_jobid = os.environ.get("PBS_JOBID")
+    sge_jobid = os.environ.get("JOB_ID")
+    sge_task_id = os.environ.get("SGE_TASK_ID")
+    if sge_task_id == "undefined":
+        sge_task_id = None
+    if pbs_jobid:
+        verbose_print("# Job ID            : %s" % pbs_jobid)
+    elif sge_jobid and sge_task_id:
+        verbose_print("# Job ID            : %s[%s]" % (sge_jobid, sge_task_id))
+    elif sge_jobid:
+        verbose_print("# Job ID            : %s" % sge_jobid)
+
+    verbose_print("# Hostname          : %s" % platform.node())
+    locale.setlocale(locale.LC_ALL, '')
+    ram_mbytes = psutil.virtual_memory().total / 1024 / 1024
+    ram_str = locale.format("%d", ram_mbytes, grouping=True)
+    verbose_print("# RAM               : %s MB" % ram_str)
+    verbose_print("# Python Version    : %s" % sys.version.replace("\n", " "))
+    verbose_print("")
+    verbose_print("# %s %s" % (timestamp(), command_line_short()))
+    verbose_print("# %s version %s" % (program_name(), __version__))
+
+
+def print_arguments(options_dict):
+    """Print the program options.
+
+    Inputs:
+        options_dict : Dictionary of program arguments
+    """
+    verbose_print("Options:")
+    for key in list(options_dict.keys()):
+        if key in ["subparser_name", "func", "excepthook"]:
+            continue
+        verbose_print("    %s=%s" % (key, options_dict[key]))
 
 
 def global_error(message):

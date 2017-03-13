@@ -29,5 +29,4 @@ if __name__ == '__main__':
 
     sys.excepthook = utils.handle_global_exception
     utils.set_logging_verbosity(args_dict)
-    snppipeline.set_logging_verbosity(args_dict)
     snppipeline.create_snp_matrix(args_dict)

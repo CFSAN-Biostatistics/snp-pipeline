@@ -8,67 +8,12 @@ import itertools
 import os
 import pprint
 import sys
-import platform
-import psutil
-import locale
 import shutil
 import vcf
 from snppipeline.__init__ import __version__
 from snppipeline import pileup
 from snppipeline import utils
 from snppipeline import vcf_writer
-
-
-verbose_print  = lambda *a, **k: None
-verbose_pprint = lambda *a, **k: None
-
-
-def set_logging_verbosity(options_dict):
-    """Enable or disable logging.
-
-    Args:
-        verbose : Verbosity value, any value greater than 0 enables logging
-    """
-    global verbose_print
-    global verbose_pprint
-    verbose_print  = print         if options_dict['verbose'] > 0 else lambda *a, **k: None
-    verbose_pprint = pprint.pprint if options_dict['verbose'] > 0 else lambda *a, **k: None
-
-
-def print_log_header():
-    """Print a standardized header for the log with starting conditions."""
-    verbose_print("# Command           : %s" % utils.command_line_long())
-    verbose_print("# Working Directory : %s" % os.getcwd())
-    pbs_jobid = os.environ.get("PBS_JOBID")
-    sge_jobid = os.environ.get("JOB_ID")
-    sge_task_id = os.environ.get("SGE_TASK_ID")
-    if sge_task_id == "undefined":
-        sge_task_id = None
-    if pbs_jobid:
-        verbose_print("# Job ID            : %s" % pbs_jobid)
-    elif sge_jobid and sge_task_id:
-        verbose_print("# Job ID            : %s[%s]" % (sge_jobid, sge_task_id))
-    elif sge_jobid:
-        verbose_print("# Job ID            : %s" % sge_jobid)
-
-    verbose_print("# Hostname          : %s" % platform.node())
-    locale.setlocale(locale.LC_ALL, '')
-    ram_mbytes = psutil.virtual_memory().total / 1024 / 1024
-    ram_str = locale.format("%d", ram_mbytes, grouping=True)
-    verbose_print("# RAM               : %s MB" % ram_str)
-    verbose_print("# Python Version    : %s" % sys.version.replace("\n", " "))
-    verbose_print("")
-
-
-def print_arguments(options_dict):
-    """Print the program options.
-
-    Inputs:
-        options_dict : Dictionary of program arguments
-    """
-    verbose_print("Options:")
-    for key in list(options_dict.keys()):
-        verbose_print("    %s=%s" % (key, options_dict[key]))
 
 
 def remove_bad_snp(options_dict):
@@ -121,10 +66,8 @@ def remove_bad_snp(options_dict):
                    }
     remove_bad_snp(options_dict)
     """
-    print_log_header()
-    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
-    verbose_print("# %s version %s" % (utils.program_name(), __version__))
-    print_arguments(options_dict)
+    utils.print_log_header()
+    utils.print_arguments(options_dict)
 
     #==========================================================================
     # Validate some parameters
@@ -211,8 +154,8 @@ def remove_bad_snp(options_dict):
         need_rebuild_dict[vcf_file_path] = options_dict['forceFlag'] or preserved_needs_rebuild or removed_needs_rebuild
 
     if not any(need_rebuild_dict.values()):
-        verbose_print("All preserved and removed vcf files are already freshly built.  Use the -f option to force a rebuild.")
-        verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+        utils.verbose_print("All preserved and removed vcf files are already freshly built.  Use the -f option to force a rebuild.")
+        utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
         return
 
     #==========================================================================
@@ -368,7 +311,7 @@ def remove_bad_snp(options_dict):
             vcf_writer_removed.close()
             vcf_reader_handle.close()
 
-    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+    utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def create_snp_list(options_dict):
@@ -415,10 +358,8 @@ def create_snp_list(options_dict):
                    }
     create_snp_list(options_dict)
     """
-    print_log_header()
-    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
-    verbose_print("# %s version %s" % (utils.program_name(), __version__))
-    print_arguments(options_dict)
+    utils.print_log_header()
+    utils.print_arguments(options_dict)
 
     #==========================================================================
     # Prep work
@@ -460,12 +401,12 @@ def create_snp_list(options_dict):
             if os.path.getsize(vcf_file_path) == 0:
                 continue
 
-            verbose_print("Processing VCF file %s" % vcf_file_path)
+            utils.verbose_print("Processing VCF file %s" % vcf_file_path)
             sample_name = os.path.basename(os.path.dirname(vcf_file_path))
             snp_set = utils.convert_vcf_file_to_snp_set(vcf_file_path)
             max_snps = options_dict['maxSnps']
             if max_snps >= 0 and len(snp_set) > max_snps:
-                verbose_print("Excluding sample %s having %d snps." % (sample_name, len(snp_set)))
+                utils.verbose_print("Excluding sample %s having %d snps." % (sample_name, len(snp_set)))
                 excluded_sample_directories.add(sample_dir)
                 continue
 
@@ -477,9 +418,9 @@ def create_snp_list(options_dict):
                     sample_list = snp_dict[key]
                     sample_list.append(sample_name)
 
-        verbose_print('Found %d snp positions across %d sample vcf files.' % (len(snp_dict), len(list_of_vcf_files)))
+        utils.verbose_print('Found %d snp positions across %d sample vcf files.' % (len(snp_dict), len(list_of_vcf_files)))
         utils.write_list_of_snps(snp_list_file_path, snp_dict)
-        verbose_print("")
+        utils.verbose_print("")
 
         #==========================================================================
         # Write the filtered list of sample directories
@@ -493,8 +434,8 @@ def create_snp_list(options_dict):
                 if sample_dir not in excluded_sample_directories:
                     filtered_samples_file_object.write("%s\n" % sample_dir)
     else:
-        verbose_print("SNP list %s has already been freshly built.  Use the -f option to force a rebuild." % snp_list_file_path)
-    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+        utils.verbose_print("SNP list %s has already been freshly built.  Use the -f option to force a rebuild." % snp_list_file_path)
+    utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def create_snp_pileup(options_dict):
@@ -541,10 +482,8 @@ def create_snp_pileup(options_dict):
                    }
     create_snp_pileup(options_dict)
     """
-    print_log_header()
-    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
-    verbose_print("# %s version %s" % (utils.program_name(), __version__))
-    print_arguments(options_dict)
+    utils.print_log_header()
+    utils.print_arguments(options_dict)
 
     snp_list_file_path = options_dict['snpListFile']
     all_pileup_file_path = options_dict['allPileupFile']
@@ -556,10 +495,10 @@ def create_snp_pileup(options_dict):
         # to locations with SNPs only.
         snp_list = utils.read_snp_position_list(snp_list_file_path)
         utils.create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, set(snp_list))
-        verbose_print("")
+        utils.verbose_print("")
     else:
-        verbose_print("SNP pileup %s has already been freshly built.  Use the -f option to force a rebuild." % snp_pileup_file_path)
-    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+        utils.verbose_print("SNP pileup %s has already been freshly built.  Use the -f option to force a rebuild." % snp_pileup_file_path)
+    utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def call_consensus(options_dict):
@@ -633,10 +572,8 @@ def call_consensus(options_dict):
                    }
     call_consensus(options_dict)
     """
-    print_log_header()
-    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
-    verbose_print("# %s version %s" % (utils.program_name(), __version__))
-    print_arguments(options_dict)
+    utils.print_log_header()
+    utils.print_arguments(options_dict)
 
     snp_list_file_path = options_dict['snpListFile']
     all_pileup_file_path = options_dict['allPileupFile']
@@ -669,16 +606,16 @@ def call_consensus(options_dict):
 
     # Check if the result is already fresh
     if not options_dict['forceFlag'] and not utils.target_needs_rebuild(source_files, consensus_file_path):
-        verbose_print("Consensus call file %s has already been freshly built.  Use the -f option to force a rebuild." % consensus_file_path)
-        verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+        utils.verbose_print("Consensus call file %s has already been freshly built.  Use the -f option to force a rebuild." % consensus_file_path)
+        utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
         return
 
     # Load the list of which positions to called
     snp_list = utils.read_snp_position_list(snp_list_file_path)
     snplist_length = len(snp_list)
-    verbose_print("snp position list length = %d" % snplist_length)
-    verbose_print("excluded snps list length = %d" % len(excluded_positions))
-    verbose_print("total snp position list length = %d" % (snplist_length + len(excluded_positions)))
+    utils.verbose_print("snp position list length = %d" % snplist_length)
+    utils.verbose_print("excluded snps list length = %d" % len(excluded_positions))
+    utils.verbose_print("total snp position list length = %d" % (snplist_length + len(excluded_positions)))
 
     # Call consensus. Write results to file.
     position_consensus_base_dict = dict()
@@ -720,7 +657,7 @@ def call_consensus(options_dict):
     if vcf_file_name:
         writer.close()
 
-    verbose_print("called consensus positions = %i" % (len(position_consensus_base_dict)))
+    utils.verbose_print("called consensus positions = %i" % (len(position_consensus_base_dict)))
 
     consensus_list = [position_consensus_base_dict.get(key, '-') for key in snp_list]
     consensus_str = ''.join(consensus_list)
@@ -730,8 +667,8 @@ def call_consensus(options_dict):
     with open(consensus_file_path, "w") as fasta_file_object:
         SeqIO.write([snp_seq_record], fasta_file_object, "fasta")
 
-    verbose_print("")
-    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+    utils.verbose_print("")
+    utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def create_snp_matrix(options_dict):
@@ -788,10 +725,8 @@ def create_snp_matrix(options_dict):
                    }
     create_snp_matrix(options_dict)
     """
-    print_log_header()
-    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
-    verbose_print("# %s version %s" % (utils.program_name(), __version__))
-    print_arguments(options_dict)
+    utils.print_log_header()
+    utils.print_arguments(options_dict)
 
     #==========================================================================
     # Prep work
@@ -830,8 +765,8 @@ def create_snp_matrix(options_dict):
     source_files = consensus_files
     if not options_dict['forceFlag']:
         if not utils.target_needs_rebuild(source_files, snpma_file_path):
-            verbose_print("SNP matrix %s has already been freshly built.  Use the -f option to force a rebuild." % snpma_file_path)
-            verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+            utils.verbose_print("SNP matrix %s has already been freshly built.  Use the -f option to force a rebuild." % snpma_file_path)
+            utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
             return
 
     #==========================================================================
@@ -839,13 +774,13 @@ def create_snp_matrix(options_dict):
     #==========================================================================
     with open(snpma_file_path, "w") as output_file:
         for consensus_file_path in consensus_files:
-            verbose_print("Merging " + consensus_file_path)
+            utils.verbose_print("Merging " + consensus_file_path)
             with open(consensus_file_path, "r") as input_file:
                 for line in input_file:
                     output_file.write(line)
 
-    verbose_print("")
-    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+    utils.verbose_print("")
+    utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def create_snp_reference_seq(options_dict):
@@ -887,10 +822,8 @@ def create_snp_reference_seq(options_dict):
                    }
     create_snp_reference_seq(options_dict)
     """
-    print_log_header()
-    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
-    verbose_print("# %s version %s" % (utils.program_name(), __version__))
-    print_arguments(options_dict)
+    utils.print_log_header()
+    utils.print_arguments(options_dict)
 
     #==========================================================================
     #    Write reference sequence bases at SNP locations to a fasta file.
@@ -916,11 +849,11 @@ def create_snp_reference_seq(options_dict):
     source_files = [reference_file, snp_list_file_path]
     if options_dict['forceFlag'] or utils.target_needs_rebuild(source_files, snp_ref_seq_path):
         utils.write_reference_snp_file(reference_file, snp_list_file_path, snp_ref_seq_path)
-        verbose_print("")
+        utils.verbose_print("")
     else:
-        verbose_print("SNP reference sequence %s has already been freshly built.  Use the -f option to force a rebuild." % snp_ref_seq_path)
+        utils.verbose_print("SNP reference sequence %s has already been freshly built.  Use the -f option to force a rebuild." % snp_ref_seq_path)
 
-    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+    utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
 def calculate_snp_distances(options_dict):
@@ -956,10 +889,8 @@ def calculate_snp_distances(options_dict):
                    }
     calculate_snp_distances(options_dict)
     """
-    print_log_header()
-    verbose_print("# %s %s" % (utils.timestamp(), utils.command_line_short()))
-    verbose_print("# %s version %s" % (utils.program_name(), __version__))
-    print_arguments(options_dict)
+    utils.print_log_header()
+    utils.print_arguments(options_dict)
 
     #==========================================================================
     # Validate arguments
@@ -1027,5 +958,5 @@ def calculate_snp_distances(options_dict):
                     m_out.write("%s\t%s\n" % (id1, '\t'.join(mismatch_strs)))
 
     else:
-        verbose_print("Distance files have already been freshly built.  Use the -f option to force a rebuild.")
-    verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+        utils.verbose_print("Distance files have already been freshly built.  Use the -f option to force a rebuild.")
+    utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
