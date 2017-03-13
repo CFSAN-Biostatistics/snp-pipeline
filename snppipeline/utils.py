@@ -23,14 +23,14 @@ from snppipeline.__init__ import __version__
 log_verbosity = 0
 
 
-def set_logging_verbosity(options_dict):
+def set_logging_verbosity(args):
     """Enable or disable logging.
 
     Args:
         verbose : Verbosity value, any value greater than 0 enables logging
     """
     global log_verbosity
-    log_verbosity = options_dict['verbose']
+    log_verbosity = args.verbose
 
 
 def verbose_print(*args):
@@ -91,13 +91,16 @@ def print_log_header():
     verbose_print("# %s %s" % (timestamp(), command_line_short()))
 
 
-def print_arguments(options_dict):
+def print_arguments(args):
     """Print the program options.
 
-    Inputs:
-        options_dict : Dictionary of program arguments
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Pre-parsed program arguments
     """
     verbose_print("Options:")
+    options_dict = vars(args)
     for key in list(options_dict.keys()):
         if key in ["subparser_name", "func", "excepthook"]:
             continue

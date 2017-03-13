@@ -3,7 +3,7 @@
 from __future__ import print_function
 import sys
 import unittest
-
+import argparse
 import filecmp
 import os
 import subprocess
@@ -79,7 +79,7 @@ class SnpPipelineTest(unittest.TestCase):
         self.assertTrue(match, "Incorrect file contents: %s" % file_to_compare)
 
 
-    def run_function_test(self, funct, args_dict, file_to_compare, not_match_str_list=None):
+    def run_function_test(self, funct, args, file_to_compare, not_match_str_list=None):
         """Test one function and compare the generated file to the expected results.
         """
         # remember the previous file timestamp, if any
@@ -89,7 +89,7 @@ class SnpPipelineTest(unittest.TestCase):
             old_timestamp = os.path.getmtime(result_file)
 
         # Run the function under test and verify the output exists
-        funct(args_dict)
+        funct(args)
         self.assertTrue(os.path.isfile(result_file), "Result file does not exist: %s" % file_to_compare)
 
         # Verify result file has a newer timestamp if it previously existed
@@ -153,109 +153,102 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
     def test_1_snp_filter(self):
         """Run snp_filter and verify var.flt_preserved.vcf and var.flt_removed.vcf contains expected contents for each sample.
         """
-        args_dict = {
-            'sampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt'),
-            'refFastaFile' : os.path.join(self.__class__.directory_run_result, "reference", "lambda_virus.fasta"),
-            'vcfFileName' : 'var.flt.vcf',
-            'edgeLength' : 500,
-            'windowSize' : 1000,
-            'maxSNP' : 3,
-            'outGroupFile' : None,
-            'forceFlag' : True,
-            }
+        args = argparse.Namespace()
+        args.sampleDirsFile = os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt')
+        args.refFastaFile = os.path.join(self.__class__.directory_run_result, "reference", "lambda_virus.fasta")
+        args.vcfFileName = 'var.flt.vcf'
+        args.edgeLength = 500
+        args.windowSize = 1000
+        args.maxSNP = 3
+        args.outGroupFile = None
+        args.forceFlag = True
         for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
-            self.run_function_test(snppipeline.remove_bad_snp, args_dict, os.path.join(dir, 'var.flt_preserved.vcf'))
-            self.run_function_test(snppipeline.remove_bad_snp, args_dict, os.path.join(dir, 'var.flt_removed.vcf'))
+            self.run_function_test(snppipeline.remove_bad_snp, args, os.path.join(dir, 'var.flt_preserved.vcf'))
+            self.run_function_test(snppipeline.remove_bad_snp, args, os.path.join(dir, 'var.flt_removed.vcf'))
 
 
     def test_2_create_snp_list(self):
         """Run create_snp_list and verify snplist.txt contains expected contents.
         """
-        args_dict = {
-            'sampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt'),
-            'filteredSampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'filteredSampleDirectories.txt'),
-            'vcfFileName' : 'var.flt.vcf',
-            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
-            'maxSnps' : -1,
-            'forceFlag' : True,
-            }
-        self.run_function_test(snppipeline.create_snp_list, args_dict, 'snplist.txt')
+        args = argparse.Namespace()
+        args.sampleDirsFile = os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt')
+        args.filteredSampleDirsFile = os.path.join(self.__class__.directory_run_result, 'filteredSampleDirectories.txt')
+        args.vcfFileName = 'var.flt.vcf'
+        args.snpListFile = os.path.join(self.__class__.directory_run_result, 'snplist.txt')
+        args.maxSnps = -1
+        args.forceFlag = True
+        self.run_function_test(snppipeline.create_snp_list, args, 'snplist.txt')
 
 
     def test_3_call_consensus(self):
         """Run call_consensus and verify consensus.fasta and consensus.vcf contain expected contents for each sample.
         """
-        args_dict = {
-            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
-            'excludeFile' : None,
-            'forceFlag' : True,
-            'minBaseQual' : 0,
-            'minConsFreq' : 0.6,
-            'minConsStrdDpth' : 0,
-            'minConsStrdBias' : 0,
-            'vcfRefName' : 'lambda_virus.fasta',
-            'vcfAllPos' : False,
-            'vcfPreserveRefCase' : True,
-            'vcfFailedSnpGt' : '1',
-            }
+        args = argparse.Namespace()
+        args.snpListFile = os.path.join(self.__class__.directory_run_result, 'snplist.txt')
+        args.excludeFile = None
+        args.forceFlag = True
+        args.minBaseQual = 0
+        args.minConsFreq = 0.6
+        args.minConsStrdDpth = 0
+        args.minConsStrdBias = 0
+        args.vcfRefName = 'lambda_virus.fasta'
+        args.vcfAllPos = False
+        args.vcfPreserveRefCase = True
+        args.vcfFailedSnpGt = '1'
 
         ignore_lines = ["##fileDate", "##source"]
 
         for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
-            args_dict['allPileupFile'] = os.path.join(self.__class__.directory_run_result, dir, 'reads.all.pileup')
-            args_dict['consensusFile'] = os.path.join(self.__class__.directory_run_result, dir, 'consensus.fasta')
-            args_dict['vcfFileName'] = None
-            self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.fasta'))
-            args_dict['vcfFileName'] = 'consensus.vcf'
-            self.run_function_test(snppipeline.call_consensus, args_dict, os.path.join(dir, 'consensus.vcf'), ignore_lines)
+            args.allPileupFile = os.path.join(self.__class__.directory_run_result, dir, 'reads.all.pileup')
+            args.consensusFile = os.path.join(self.__class__.directory_run_result, dir, 'consensus.fasta')
+            args.vcfFileName = None
+            self.run_function_test(snppipeline.call_consensus, args, os.path.join(dir, 'consensus.fasta'))
+            args.vcfFileName = 'consensus.vcf'
+            self.run_function_test(snppipeline.call_consensus, args, os.path.join(dir, 'consensus.vcf'), ignore_lines)
 
 
     def test_4_create_snp_matrix(self):
         """Run create_snp_matrix and verify snpma.fasta contains expected contents.
         """
-        args_dict = {
-            'sampleDirsFile' : os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt'),
-            'consFileName' : 'consensus.fasta',
-            'snpmaFile' : os.path.join(self.__class__.directory_run_result, 'snpma.fasta'),
-            'forceFlag' : True,
-            }
-        self.run_function_test(snppipeline.create_snp_matrix, args_dict, 'snpma.fasta')
+        args = argparse.Namespace()
+        args.sampleDirsFile = os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt')
+        args.consFileName = 'consensus.fasta'
+        args.snpmaFile = os.path.join(self.__class__.directory_run_result, 'snpma.fasta')
+        args.forceFlag = True
+        self.run_function_test(snppipeline.create_snp_matrix, args, 'snpma.fasta')
 
 
     def test_5_create_snp_reference_seq(self):
         """Run create_snp_reference_seq and verify referenceSNP.fasta contains expected contents.
         """
-        args_dict = {
-            'referenceFile' : os.path.join(self.__class__.directory_run_result, 'reference/lambda_virus.fasta'),
-            'snpListFile' : os.path.join(self.__class__.directory_run_result, 'snplist.txt'),
-            'snpRefFile' : os.path.join(self.__class__.directory_run_result, 'referenceSNP.fasta'),
-            'forceFlag' : True,
-            }
-        self.run_function_test(snppipeline.create_snp_reference_seq, args_dict, 'referenceSNP.fasta')
+        args = argparse.Namespace()
+        args.referenceFile = os.path.join(self.__class__.directory_run_result, 'reference/lambda_virus.fasta')
+        args.snpListFile = os.path.join(self.__class__.directory_run_result, 'snplist.txt')
+        args.snpRefFile = os.path.join(self.__class__.directory_run_result, 'referenceSNP.fasta')
+        args.forceFlag = True
+        self.run_function_test(snppipeline.create_snp_reference_seq, args, 'referenceSNP.fasta')
 
 
     def test_6_calculate_snp_distances(self):
         """Run calculate_snp_distances and verify snp_distance_pairwise.tsv contains expected contents.
         """
-        args_dict = {
-            'inputFile' : os.path.join(self.__class__.directory_run_result, 'snpma.fasta'),
-            'pairwiseFile' : os.path.join(self.__class__.directory_run_result, 'snp_distance_pairwise.tsv'),
-            'matrixFile' : None,
-            'forceFlag' : True,
-            }
-        self.run_function_test(snppipeline.calculate_snp_distances, args_dict, 'snp_distance_pairwise.tsv')
+        args = argparse.Namespace()
+        args.inputFile = os.path.join(self.__class__.directory_run_result, 'snpma.fasta')
+        args.pairwiseFile = os.path.join(self.__class__.directory_run_result, 'snp_distance_pairwise.tsv')
+        args.matrixFile = None
+        args.forceFlag = True
+        self.run_function_test(snppipeline.calculate_snp_distances, args, 'snp_distance_pairwise.tsv')
 
 
     def test_7_calculate_snp_distances(self):
         """Run calculate_snp_distances and verify snp_distance_matrix.tsv contains expected contents.
         """
-        args_dict = {
-            'inputFile' : os.path.join(self.__class__.directory_run_result, 'snpma.fasta'),
-            'pairwiseFile' : None,
-            'matrixFile' : os.path.join(self.__class__.directory_run_result, 'snp_distance_matrix.tsv'),
-            'forceFlag' : True,
-            }
-        self.run_function_test(snppipeline.calculate_snp_distances, args_dict, 'snp_distance_matrix.tsv')
+        args = argparse.Namespace()
+        args.inputFile = os.path.join(self.__class__.directory_run_result, 'snpma.fasta')
+        args.pairwiseFile = None
+        args.matrixFile = os.path.join(self.__class__.directory_run_result, 'snp_distance_matrix.tsv')
+        args.forceFlag = True
+        self.run_function_test(snppipeline.calculate_snp_distances, args, 'snp_distance_matrix.tsv')
 
 
 

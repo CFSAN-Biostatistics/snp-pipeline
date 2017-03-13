@@ -19,8 +19,8 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output',         dest='snpRefFile',    type=str, default='referenceSNP.fasta', metavar='FILE', help='Output file.  Relative or absolute path to the SNP reference sequence file')
     parser.add_argument('-v', '--verbose',        dest='verbose',       type=int, default=1,                    metavar='0..5', help='Verbose message level (0=no info, 5=lots)')
     parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
-    args_dict = vars(parser.parse_args())
+    args = parser.parse_args()
 
     sys.excepthook = utils.handle_global_exception
-    utils.set_logging_verbosity(args_dict)
-    snppipeline.create_snp_reference_seq(args_dict)
+    utils.set_logging_verbosity(args)
+    snppipeline.create_snp_reference_seq(args)

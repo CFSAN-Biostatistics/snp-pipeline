@@ -16,7 +16,7 @@ from snppipeline import utils
 from snppipeline import vcf_writer
 
 
-def remove_bad_snp(options_dict):
+def remove_bad_snp(args):
     """Remove bad SNPs from original vcf files
 
     Description:
@@ -60,26 +60,26 @@ def remove_bad_snp(options_dict):
     Raises:
 
     Examples:
-    options_dict = {'sampleDirsFile':'sampleDirectories.txt',
-                    'vcfFileName':'var.flt.vcf'
-                    'refFastaFile':'snplist.txt',
-                   }
-    remove_bad_snp(options_dict)
+    args = argparse.Namespace
+    args.sampleDirsFile = 'sampleDirectories.txt'
+    args.vcfFileName = 'var.flt.vcf'
+    args.refFastaFile = 'snplist.txt'
+    remove_bad_snp(args)
     """
     utils.print_log_header()
-    utils.print_arguments(options_dict)
+    utils.print_arguments(args)
 
     #==========================================================================
     # Validate some parameters
     #==========================================================================
-    edge_length = options_dict["edgeLength"]
-    window_size = options_dict["windowSize"]
-    max_num_snp = options_dict["maxSNP"]
+    edge_length = args.edgeLength
+    window_size = args.windowSize
+    max_num_snp = args.maxSNP
 
     #==========================================================================
     # Prep work
     #==========================================================================
-    sample_directories_list_path = options_dict['sampleDirsFile']
+    sample_directories_list_path = args.sampleDirsFile
     bad_file_count = utils.verify_non_empty_input_files("File of sample directories", [sample_directories_list_path])
     if bad_file_count > 0:
         utils.global_error(None)
@@ -90,7 +90,7 @@ def remove_bad_snp(options_dict):
     sorted_list_of_sample_directories = sorted(unsorted_list_of_sample_directories)
 
     input_file_list = list()
-    out_group_list_path = options_dict['outGroupFile']
+    out_group_list_path = args.outGroupFile
     sorted_list_of_outgroup_samples = list()
     if out_group_list_path is not None:
         bad_file_count = utils.verify_non_empty_input_files("File of outgroup samples", [out_group_list_path])
@@ -108,7 +108,7 @@ def remove_bad_snp(options_dict):
     #==========================================================================
     # Validate inputs
     #==========================================================================
-    vcf_file_name = options_dict['vcfFileName']
+    vcf_file_name = args.vcfFileName
     list_of_vcf_files = [os.path.join(dir, vcf_file_name) for dir in sorted_list_of_sample_directories]
     input_file_list.extend(list_of_vcf_files)
 
@@ -118,7 +118,7 @@ def remove_bad_snp(options_dict):
     elif bad_file_count > 0:
         utils.sample_error("Error: %d VCF files were missing or empty." % bad_file_count, continue_possible=True)
 
-    bad_file_count = utils.verify_non_empty_input_files("Reference file", [options_dict['refFastaFile']])
+    bad_file_count = utils.verify_non_empty_input_files("Reference file", [args.refFastaFile])
     if bad_file_count > 0:
         utils.global_error(None)
 
@@ -126,12 +126,12 @@ def remove_bad_snp(options_dict):
     # Get contigs' length from the reference fasta file
     #==========================================================================
     try:
-        handle = open(options_dict['refFastaFile'], "r")
+        handle = open(args.refFastaFile, "r")
         contig_length_dict = dict()
         for record in SeqIO.parse(handle, "fasta"):
             #build contig_length_dict
             contig_length_dict[record.id] = len(record.seq)
-        input_file_list.append(options_dict['refFastaFile'])
+        input_file_list.append(args.refFastaFile)
     except:
         utils.global_error("Error: cannot open the reference fastq file, or fail to read the contigs in the reference fastq file.")
     else:
@@ -151,7 +151,7 @@ def remove_bad_snp(options_dict):
         removed_vcf_file_path = vcf_file_path[:-4] + "_removed.vcf"
         preserved_needs_rebuild = utils.target_needs_rebuild(input_file_list, preserved_vcf_file_path)
         removed_needs_rebuild = utils.target_needs_rebuild(input_file_list, removed_vcf_file_path)
-        need_rebuild_dict[vcf_file_path] = options_dict['forceFlag'] or preserved_needs_rebuild or removed_needs_rebuild
+        need_rebuild_dict[vcf_file_path] = args.forceFlag or preserved_needs_rebuild or removed_needs_rebuild
 
     if not any(need_rebuild_dict.values()):
         utils.verbose_print("All preserved and removed vcf files are already freshly built.  Use the -f option to force a rebuild.")
@@ -314,7 +314,7 @@ def remove_bad_snp(options_dict):
     utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
-def create_snp_list(options_dict):
+def create_snp_list(args):
     """Create SNP list file
 
     Description:
@@ -352,19 +352,19 @@ def create_snp_list(options_dict):
     Raises:
 
     Examples:
-    options_dict = {'sampleDirsFile':'sampleDirectories.txt',
-                    'vcfFileName':'var.flt.vcf'
-                    'snpListFile':'snplist.txt',
-                   }
-    create_snp_list(options_dict)
+    args = argparse.Namespace
+    args.sampleDirsFile = 'sampleDirectories.txt'
+    args.vcfFileName = 'var.flt.vcf'
+    args.snpListFile = 'snplist.txt'
+    create_snp_list(args)
     """
     utils.print_log_header()
-    utils.print_arguments(options_dict)
+    utils.print_arguments(args)
 
     #==========================================================================
     # Prep work
     #==========================================================================
-    sample_directories_list_path = options_dict['sampleDirsFile']
+    sample_directories_list_path = args.sampleDirsFile
     bad_file_count = utils.verify_non_empty_input_files("File of sample directories", [sample_directories_list_path])
     if bad_file_count > 0:
         utils.global_error(None)
@@ -377,8 +377,8 @@ def create_snp_list(options_dict):
     #==========================================================================
     # Validate inputs
     #==========================================================================
-    snp_list_file_path = options_dict['snpListFile']
-    vcf_file_name = options_dict['vcfFileName']
+    snp_list_file_path = args.snpListFile
+    vcf_file_name = args.vcfFileName
     list_of_vcf_files = [os.path.join(dir, vcf_file_name) for dir in sorted_list_of_sample_directories]
 
     bad_file_count = utils.verify_non_empty_input_files("VCF file", list_of_vcf_files)
@@ -391,7 +391,7 @@ def create_snp_list(options_dict):
     # Read in all vcf files and process into dict of SNPs passing various
     # criteria. Do this for each sample. Write to file.
     #==========================================================================
-    if options_dict['forceFlag'] or utils.target_needs_rebuild(list_of_vcf_files, snp_list_file_path):
+    if args.forceFlag or utils.target_needs_rebuild(list_of_vcf_files, snp_list_file_path):
         snp_dict = dict()
         excluded_sample_directories = set()
         for sample_dir, vcf_file_path in zip(sorted_list_of_sample_directories, list_of_vcf_files):
@@ -404,7 +404,7 @@ def create_snp_list(options_dict):
             utils.verbose_print("Processing VCF file %s" % vcf_file_path)
             sample_name = os.path.basename(os.path.dirname(vcf_file_path))
             snp_set = utils.convert_vcf_file_to_snp_set(vcf_file_path)
-            max_snps = options_dict['maxSnps']
+            max_snps = args.maxSnps
             if max_snps >= 0 and len(snp_set) > max_snps:
                 utils.verbose_print("Excluding sample %s having %d snps." % (sample_name, len(snp_set)))
                 excluded_sample_directories.add(sample_dir)
@@ -426,7 +426,7 @@ def create_snp_list(options_dict):
         # Write the filtered list of sample directories
         #==========================================================================
         #sample_directories_list_path = sample_directories_list_path + ".filtered"
-        filtered_sample_directories_list_path = options_dict['filteredSampleDirsFile']
+        filtered_sample_directories_list_path = args.filteredSampleDirsFile
         with open(filtered_sample_directories_list_path, "w") as filtered_samples_file_object:
             # Loop over the unsorted list to keep the order of samples the same as the original.
             # This will keep the same HPC log file suffix number.
@@ -438,7 +438,7 @@ def create_snp_list(options_dict):
     utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
-def create_snp_pileup(options_dict):
+def create_snp_pileup(args):
     """Create the SNP pileup file for a sample.
 
     Description:
@@ -476,21 +476,21 @@ def create_snp_pileup(options_dict):
     Raises:
 
     Examples:
-    options_dict = {'snpListFile':'snplist.txt',
-                    'allPileupFile':'samples/SRR555888/reads.all.pileup'
-                    'snpPileupFile':'samples/SRR555888/reads.snp.pileup'
-                   }
-    create_snp_pileup(options_dict)
+    args = argparse.Namespace
+    args.snpListFile = 'snplist.txt'
+    args.allPileupFile = 'samples/SRR555888/reads.all.pileup'
+    args.snpPileupFile = 'samples/SRR555888/reads.snp.pileup'
+    create_snp_pileup(args)
     """
     utils.print_log_header()
-    utils.print_arguments(options_dict)
+    utils.print_arguments(args)
 
-    snp_list_file_path = options_dict['snpListFile']
-    all_pileup_file_path = options_dict['allPileupFile']
-    snp_pileup_file_path = options_dict['snpPileupFile']
+    snp_list_file_path = args.snpListFile
+    all_pileup_file_path = args.allPileupFile
+    snp_pileup_file_path = args.snpPileupFile
 
     source_files = [snp_list_file_path, all_pileup_file_path]
-    if options_dict['forceFlag'] or utils.target_needs_rebuild(source_files, snp_pileup_file_path):
+    if args.forceFlag or utils.target_needs_rebuild(source_files, snp_pileup_file_path):
         # Create a pileup file with a subset of the whole-genome pileup restricted
         # to locations with SNPs only.
         snp_list = utils.read_snp_position_list(snp_list_file_path)
@@ -501,7 +501,7 @@ def create_snp_pileup(options_dict):
     utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
-def call_consensus(options_dict):
+def call_consensus(args):
     """Call the consensus base for a sample
 
     Call the consensus base for a sample at the positions where SNPs were found
@@ -561,27 +561,27 @@ def call_consensus(options_dict):
     Raises:
 
     Examples:
-    options_dict = {'snpListFile':'snplist.txt',
-                    'allPileupFile':'reads.all.pileup',
-                    'consensusFile':'consensus.fasta',
-                    'minBaseQual':15,
-                    'minConsFreq':0.6,
-                    'minConsStrdDpth':4,
-                    'minConsStrdBias':0.10,
-                    'vcfFailedSnpGt':'.'
-                   }
-    call_consensus(options_dict)
+    args = argparse.Namespace
+    args.snpListFile = 'snplist.txt'
+    args.allPileupFile = 'reads.all.pileup'
+    args.consensusFile = 'consensus.fasta'
+    args.minBaseQual = 15
+    args.minConsFreq = 0.6
+    args.minConsStrdDpth = 4
+    args.minConsStrdBias = 0.10
+    args.vcfFailedSnpGt = '.'
+    call_consensus(args)
     """
     utils.print_log_header()
-    utils.print_arguments(options_dict)
+    utils.print_arguments(args)
 
-    snp_list_file_path = options_dict['snpListFile']
-    all_pileup_file_path = options_dict['allPileupFile']
+    snp_list_file_path = args.snpListFile
+    all_pileup_file_path = args.allPileupFile
     sample_directory = os.path.dirname(os.path.abspath(all_pileup_file_path))
     sample_name = os.path.basename(sample_directory)
-    consensus_file_path = options_dict['consensusFile']
+    consensus_file_path = args.consensusFile
     consensus_file_dir = os.path.dirname(os.path.abspath(consensus_file_path))
-    vcf_file_name = options_dict['vcfFileName']
+    vcf_file_name = args.vcfFileName
     vcf_file_path = os.path.join(consensus_file_dir, vcf_file_name) if vcf_file_name else None
 
     bad_file_count = utils.verify_existing_input_files("Snplist file", [snp_list_file_path])
@@ -594,7 +594,7 @@ def call_consensus(options_dict):
 
     source_files = [snp_list_file_path, all_pileup_file_path]
 
-    exclude_file_path = options_dict['excludeFile']
+    exclude_file_path = args.excludeFile
     if exclude_file_path:
         bad_file_count = utils.verify_existing_input_files("Exclude file", [exclude_file_path])
         if bad_file_count > 0:
@@ -605,7 +605,7 @@ def call_consensus(options_dict):
         excluded_positions = set()
 
     # Check if the result is already fresh
-    if not options_dict['forceFlag'] and not utils.target_needs_rebuild(source_files, consensus_file_path):
+    if not args.forceFlag and not utils.target_needs_rebuild(source_files, consensus_file_path):
         utils.verbose_print("Consensus call file %s has already been freshly built.  Use the -f option to force a rebuild." % consensus_file_path)
         utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
         return
@@ -620,24 +620,24 @@ def call_consensus(options_dict):
     # Call consensus. Write results to file.
     position_consensus_base_dict = dict()
 
-    caller = pileup.ConsensusCaller(options_dict['minConsFreq'],
-                                    options_dict['minConsStrdDpth'],
-                                    options_dict['minConsStrdBias'])
+    caller = pileup.ConsensusCaller(args.minConsFreq,
+                                    args.minConsStrdDpth,
+                                    args.minConsStrdBias)
 
     snp_positions = set(snp_list)
-    if options_dict['vcfAllPos']:
+    if args.vcfAllPos:
         parse_positions = None
     else:
         parse_positions = snp_positions.union(excluded_positions)
     pileup_reader = pileup.Reader(all_pileup_file_path,
-                                  options_dict['minBaseQual'],
+                                  args.minBaseQual,
                                   parse_positions)
     if vcf_file_name:
-        writer = vcf_writer.SingleSampleWriter(vcf_file_path, options_dict['vcfPreserveRefCase'])
+        writer = vcf_writer.SingleSampleWriter(vcf_file_path, args.vcfPreserveRefCase)
         filters = caller.get_filter_descriptions()
         # TODO: it would be better if the exclude file contained filter headers we could read and re-use here instead of hard-coding this
         filters.append(("Region", "Position is in dense region of snps or near the end of the contig."))
-        writer.write_header(sample_name, filters, options_dict['vcfRefName'])
+        writer.write_header(sample_name, filters, args.vcfRefName)
     for pileup_record in pileup_reader:
         chrom = pileup_record.chrom
         pos = pileup_record.position
@@ -653,7 +653,7 @@ def call_consensus(options_dict):
                 position_consensus_base_dict[(chrom, pos)] = consensus_base
 
         if vcf_file_name:
-            writer.write_from_pileup(pileup_record, fail_reasons, options_dict['vcfFailedSnpGt'])
+            writer.write_from_pileup(pileup_record, fail_reasons, args.vcfFailedSnpGt)
     if vcf_file_name:
         writer.close()
 
@@ -671,7 +671,7 @@ def call_consensus(options_dict):
     utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
-def create_snp_matrix(options_dict):
+def create_snp_matrix(args):
     """Create SNP matrix
 
     Description:
@@ -718,20 +718,20 @@ def create_snp_matrix(options_dict):
     Raises:
 
     Examples:
-    options_dict = {'sampleDirsFile':'sampleDirectories.txt',
-                    'consFileName':'consensus.fasta',
-                    'snpmaFile':'snpma.fasta',
-                    'minConsFreq':0.6,
-                   }
-    create_snp_matrix(options_dict)
+    args = argparse.Namespace
+    args.sampleDirsFile = 'sampleDirectories.txt'
+    args.consFileName = 'consensus.fasta'
+    args.snpmaFile = 'snpma.fasta'
+    args.minConsFreq = 0.6
+    create_snp_matrix(args)
     """
     utils.print_log_header()
-    utils.print_arguments(options_dict)
+    utils.print_arguments(args)
 
     #==========================================================================
     # Prep work
     #==========================================================================
-    sample_directories_list_filename = options_dict['sampleDirsFile']
+    sample_directories_list_filename = args.sampleDirsFile
     bad_file_count = utils.verify_non_empty_input_files("File of sample directories", [sample_directories_list_filename])
     if bad_file_count > 0:
         utils.global_error(None)
@@ -746,7 +746,7 @@ def create_snp_matrix(options_dict):
     consensus_files = []
     bad_file_count = 0
     for sample_directory in list_of_sample_directories:
-        consensus_file_path = os.path.join(sample_directory, options_dict['consFileName'])
+        consensus_file_path = os.path.join(sample_directory, args.consFileName)
         bad_count = utils.verify_non_empty_input_files("Consensus fasta file", [consensus_file_path])
         if bad_count == 1:
             bad_file_count += 1
@@ -761,9 +761,9 @@ def create_snp_matrix(options_dict):
     #==========================================================================
     # Check if the result is already fresh
     #==========================================================================
-    snpma_file_path = options_dict['snpmaFile']
+    snpma_file_path = args.snpmaFile
     source_files = consensus_files
-    if not options_dict['forceFlag']:
+    if not args.forceFlag:
         if not utils.target_needs_rebuild(source_files, snpma_file_path):
             utils.verbose_print("SNP matrix %s has already been freshly built.  Use the -f option to force a rebuild." % snpma_file_path)
             utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
@@ -783,7 +783,7 @@ def create_snp_matrix(options_dict):
     utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
-def create_snp_reference_seq(options_dict):
+def create_snp_reference_seq(args):
     """Write reference sequence bases at SNP locations to a fasta file.
 
     Description:
@@ -816,21 +816,21 @@ def create_snp_reference_seq(options_dict):
     Raises:
 
     Examples:
-    options_dict = {'referenceFile':'reference.fasta',
-                    'snpListFile':'snplist.txt',
-                    'snpRefFile':'referenceSNP.fasta'
-                   }
-    create_snp_reference_seq(options_dict)
+    args = argparse.Namespace
+    args.referenceFile = 'reference.fasta'
+    args.snpListFile = 'snplist.txt'
+    args.snpRefFile = 'referenceSNP.fasta'
+    create_snp_reference_seq(args)
     """
     utils.print_log_header()
-    utils.print_arguments(options_dict)
+    utils.print_arguments(args)
 
     #==========================================================================
     #    Write reference sequence bases at SNP locations to a fasta file.
     #==========================================================================
-    reference_file = options_dict['referenceFile']
-    snp_list_file_path = options_dict['snpListFile']
-    snp_ref_seq_path = options_dict['snpRefFile']
+    reference_file = args.referenceFile
+    snp_list_file_path = args.snpListFile
+    snp_ref_seq_path = args.snpRefFile
 
     #==========================================================================
     # Verify input files exist
@@ -847,7 +847,7 @@ def create_snp_reference_seq(options_dict):
     # Find the reference bases at the snp positions
     #==========================================================================
     source_files = [reference_file, snp_list_file_path]
-    if options_dict['forceFlag'] or utils.target_needs_rebuild(source_files, snp_ref_seq_path):
+    if args.forceFlag or utils.target_needs_rebuild(source_files, snp_ref_seq_path):
         utils.write_reference_snp_file(reference_file, snp_list_file_path, snp_ref_seq_path)
         utils.verbose_print("")
     else:
@@ -856,7 +856,7 @@ def create_snp_reference_seq(options_dict):
     utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
-def calculate_snp_distances(options_dict):
+def calculate_snp_distances(args):
     """Calculate pairwise sample SNP distances.
 
     Description:
@@ -883,22 +883,22 @@ def calculate_snp_distances(options_dict):
     Raises:
 
     Examples:
-    options_dict = {'inputFile':'snpma.fasta',
-                    'pairwiseFile':'snp_distance_pairwise.tsv',
-                    'matrixFile':'snp_distance_matrix.tsv'
-                   }
-    calculate_snp_distances(options_dict)
+    args = argparse.Namespace
+    args.inputFile = 'snpma.fasta'
+    args.pairwiseFile = 'snp_distance_pairwise.tsv'
+    args.matrixFile = 'snp_distance_matrix.tsv'
+    calculate_snp_distances(args)
     """
     utils.print_log_header()
-    utils.print_arguments(options_dict)
+    utils.print_arguments(args)
 
     #==========================================================================
     # Validate arguments
     #==========================================================================
-    input_file = options_dict['inputFile']
-    pairwise_file = options_dict['pairwiseFile']
-    matrix_file = options_dict['matrixFile']
-    force_flag = options_dict['forceFlag']
+    input_file = args.inputFile
+    pairwise_file = args.pairwiseFile
+    matrix_file = args.matrixFile
+    force_flag = args.forceFlag
 
     bad_file_count = utils.verify_existing_input_files("SNP matrix file", [input_file])
     if bad_file_count > 0:

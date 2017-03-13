@@ -27,21 +27,21 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose',     dest='verbose',        type=int, default=1,             metavar='0..5',         help='Verbose message level (0=no info, 5=lots)')
     parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
 
-    args_dict = vars(parser.parse_args())
+    args = parser.parse_args()
 
     sys.excepthook = utils.handle_global_exception
-    utils.set_logging_verbosity(args_dict)
+    utils.set_logging_verbosity(args)
 
     #==========================================================================
     # Validate arguments
     #==========================================================================
-    if (args_dict["edgeLength"] < 1):
-        utils.global_error("Error: the length of the edge regions must be a positive integer, and the input is %d." % args_dict["edgeLength"])
+    if (args.edgeLength < 1):
+        utils.global_error("Error: the length of the edge regions must be a positive integer, and the input is %d." % args.edgeLength)
 
-    if (args_dict["windowSize"] < 1):
-        utils.global_error("Error: the length of the window must be a positive integer, and the input is %d." % args_dict["windowSize"])
+    if (args.windowSize < 1):
+        utils.global_error("Error: the length of the window must be a positive integer, and the input is %d." % args.windowSize)
 
-    if (args_dict["maxSNP"] < 1):
-        utils.global_error("Error: the maximum number of SNPs allowed must be a positive integer, and the input is %d." % args_dict["maxSNP"])
+    if (args.maxSNP < 1):
+        utils.global_error("Error: the maximum number of SNPs allowed must be a positive integer, and the input is %d." % args.maxSNP)
 
-    snppipeline.remove_bad_snp(args_dict)
+    snppipeline.remove_bad_snp(args)

@@ -73,8 +73,8 @@ if __name__ == '__main__':
     parser.add_argument(      '--vcfFailedSnpGt',     dest='vcfFailedSnpGt',     type=str,            default=".",                choices=['.','0','1'], help=help['vcfFailedSnpGt'], )
     parser.add_argument('-v', '--verbose',            dest='verbose',            type=int,            default=1,                  metavar='0..5', help=help['verbose'])
     parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
-    args_dict = vars(parser.parse_args())
+    args = parser.parse_args()
 
     sys.excepthook = utils.handle_sample_exception
-    utils.set_logging_verbosity(args_dict)
-    snppipeline.call_consensus(args_dict)
+    utils.set_logging_verbosity(args)
+    snppipeline.call_consensus(args)

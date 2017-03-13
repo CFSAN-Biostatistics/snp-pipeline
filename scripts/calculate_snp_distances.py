@@ -21,8 +21,8 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--matrix', dest='matrixFile',   type=str, default=None,             metavar='FILE',          help='Relative or absolute path to the distance matrix output file.')
     parser.add_argument('-v', '--verbose', dest='verbose',     type=int, default=1,                metavar='0..5',          help='Verbose message level (0=no info, 5=lots)')
     parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
-    args_dict = vars(parser.parse_args())
+    args = parser.parse_args()
 
     sys.excepthook = utils.handle_global_exception
-    utils.set_logging_verbosity(args_dict)
-    snppipeline.calculate_snp_distances(args_dict)
+    utils.set_logging_verbosity(args)
+    snppipeline.calculate_snp_distances(args)

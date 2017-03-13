@@ -23,8 +23,8 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output',  dest='snpListFile',    type=str, default='snplist.txt', metavar='FILE', help='Output file.  Relative or absolute path to the SNP list file')
     parser.add_argument('-v', '--verbose', dest='verbose',        type=int, default=1,             metavar='0..5', help='Verbose message level (0=no info, 5=lots)')
     parser.add_argument('--version', action='version', version='%(prog)s version ' + __version__)
-    args_dict = vars(parser.parse_args())
+    args = parser.parse_args()
 
     sys.excepthook = utils.handle_global_exception
-    utils.set_logging_verbosity(args_dict)
-    snppipeline.create_snp_list(args_dict)
+    utils.set_logging_verbosity(args)
+    snppipeline.create_snp_list(args)
