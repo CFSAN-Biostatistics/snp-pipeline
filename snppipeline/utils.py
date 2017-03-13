@@ -86,9 +86,9 @@ def print_log_header():
     ram_str = locale.format("%d", ram_mbytes, grouping=True)
     verbose_print("# RAM               : %s MB" % ram_str)
     verbose_print("# Python Version    : %s" % sys.version.replace("\n", " "))
+    verbose_print("# Program Version   : %s %s" % (program_name(), __version__))
     verbose_print("")
     verbose_print("# %s %s" % (timestamp(), command_line_short()))
-    verbose_print("# %s version %s" % (program_name(), __version__))
 
 
 def print_arguments(options_dict):

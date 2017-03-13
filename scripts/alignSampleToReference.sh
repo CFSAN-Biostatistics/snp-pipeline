@@ -89,20 +89,21 @@ logSysEnvironment()
     fi
     echo "# Hostname          :" $(hostname)
     echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')
+    echo "# Program Version   :" $(basename $0) $(python -c 'from __future__ import print_function; from snppipeline.__init__ import __version__; print(__version__)')
     echo
 }
 
 # --------------------------------------------------------
-# getopts command line option handler: 
+# getopts command line option handler:
 
-# For each valid option, 
+# For each valid option,
 #   If it is given, create a var dynamically to
 #   indicate it is set: $opt_name_set = 1
 
 #   If var gets an arg, create another var to
 #   hold its value: $opt_name_arg = some value
 
-# For invalid options given, 
+# For invalid options given,
 #   Invoke Usage routine
 
 # precede option list with a colon
@@ -204,11 +205,11 @@ fi
 # echo sampleId=$sampleId
 # echo referenceId=$referenceId
 # echo ==============================
-# exit 0 
+# exit 0
 
 
 # An environment variable selects between bowtie2 and smalt
-SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]') # make lowercase 
+SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]') # make lowercase
 if [[ "$SnpPipeline_Aligner" == "" || "$SnpPipeline_Aligner" == "bowtie2" ]]; then
 
     # Parse the user-specified bowtie parameters to determine if the user specified the number of CPU cores

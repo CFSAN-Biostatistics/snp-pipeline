@@ -18,6 +18,7 @@ History
   ``Picard`` and will require changing your CLASSPATH.  See :ref:`installation-label`. You can
   disable this step and keep the duplicate reads by configuring ``SnpPipeline_RemoveDuplicateReads=false``
   in the configuration file.
+* Log the SNP Pipeline version in the header of all the log files.
 
 0.7.0 (2016-11-30)
 ~~~~~~~~~~~~~~~~~~

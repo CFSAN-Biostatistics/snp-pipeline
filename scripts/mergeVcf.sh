@@ -65,6 +65,7 @@ logSysEnvironment()
     fi
     echo "# Hostname          :" $(hostname)
     echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')
+    echo "# Program Version   :" $(basename $0) $(python -c 'from __future__ import print_function; from snppipeline.__init__ import __version__; print(__version__)')
     echo
 }
 

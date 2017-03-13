@@ -74,20 +74,21 @@ logSysEnvironment()
     fi
     echo "# Hostname          :" $(hostname)
     echo "# RAM               :" $(python -c 'from __future__ import print_function; import psutil; import locale; locale.setlocale(locale.LC_ALL, ""); print("%s MB" % locale.format("%d", psutil.virtual_memory().total / 1024 / 1024, grouping=True))')
+    echo "# Program Version   :" $(basename $0) $(python -c 'from __future__ import print_function; from snppipeline.__init__ import __version__; print(__version__)')
     echo
 }
 
 # --------------------------------------------------------
-# getopts command line option handler: 
+# getopts command line option handler:
 
-# For each valid option, 
+# For each valid option,
 #   If it is given, create a var dynamically to
 #   indicate it is set: $opt_name_set = 1
 
 #   If var gets an arg, create another var to
 #   hold its value: $opt_name_arg = some value
 
-# For invalid options given, 
+# For invalid options given,
 #   Invoke Usage routine
 
 # precede option list with a colon
@@ -141,7 +142,7 @@ referenceBasePath=${referenceFilePath%.fasta} # strip the file extension
 
 # Create index file for reference
 # An environment variable selects between bowtie2 and smalt
-SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]') # make lowercase 
+SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]') # make lowercase
 if [[ "$SnpPipeline_Aligner" == "" || "$SnpPipeline_Aligner" == "bowtie2" ]]; then
     if [[ $opt_f_set != "1" && -s "$referenceBasePath.rev.1.bt2" && "$referenceBasePath.rev.1.bt2" -nt "$referenceFilePath" ]]; then
         echo "# Bowtie index $referenceBasePath.rev.1.bt2 is already freshly built.  Use the -f option to force a rebuild."
@@ -155,7 +156,7 @@ elif [[ "$SnpPipeline_Aligner" == "smalt" ]]; then
     if [[ $opt_f_set != "1" && -s "$referenceBasePath.smi" && "$referenceBasePath.smi" -nt "$referenceFilePath" ]]; then
         echo "# Smalt index $referenceBasePath.smi is already freshly built.  Use the -f option to force a rebuild."
     else
-        echo "# "$(date +"%Y-%m-%d %T") smalt index $SmaltIndex_ExtraParams "$referenceBasePath" "$referenceFilePath" 
+        echo "# "$(date +"%Y-%m-%d %T") smalt index $SmaltIndex_ExtraParams "$referenceBasePath" "$referenceFilePath"
         echo "# Smalt "$(smalt version | grep -i -E "Version")
         smalt index $SmaltIndex_ExtraParams "$referenceBasePath" "$referenceFilePath"
         echo
