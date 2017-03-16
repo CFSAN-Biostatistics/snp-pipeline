@@ -1152,7 +1152,7 @@ The metrics are:
 +-------------------------+------------------------------------------------------------------+
 | Duplicate Reads         | | The number of reads marked as duplicates.  These reads are not |
 |                         | | included the the pileup and are not used to call snps.  When   |
-|                         | | a set of duplicate reads is found, only the highest-quality    |                                                     |
+|                         | | a set of duplicate reads is found, only the highest-quality    |
 |                         | | read in the set is retained.                                   |
 +-------------------------+------------------------------------------------------------------+
 | Percent of Reads Mapped | | The percentage of reference-aligned reads in the SAM file.     |
