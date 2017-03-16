@@ -19,6 +19,7 @@ History
   disable this step and keep the duplicate reads by configuring ``SnpPipeline_RemoveDuplicateReads=false``
   in the configuration file.
 * Log the SNP Pipeline version in the header of all the log files.
+* Removed the unused create_snp_pileup.py script.
 
 0.7.0 (2016-11-30)
 ~~~~~~~~~~~~~~~~~~

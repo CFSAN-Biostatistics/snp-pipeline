@@ -510,27 +510,6 @@ def targets_needs_rebuild(source_files, target_files):
     return False
 
 
-def create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, snp_set):
-    """Create a subset pileup with SNP locations only.
-
-    Given a whole-genome pileup file, create a new pileup file with a subset
-    of the records at the SNP locations only.
-
-    Args:
-        all_pileup_file_path: path to a whole-genome pileup file
-        all_pileup_file_path: path to a snp pileup file to be created
-        snp_set: set of (CHROM, POS) tuples identifying the locations with SNPs
-    """
-    with open(all_pileup_file_path, "r") as all_pileup_file_object:
-        with open(snp_pileup_file_path, "w") as snp_pileup_file_object:
-            for pileup_line in all_pileup_file_object:
-                current_line_data = pileup_line.rstrip().split()
-                seq_id, pos = current_line_data[:2]
-                key = (seq_id, int(pos))
-                if key in snp_set:
-                    snp_pileup_file_object.write(pileup_line)
-
-
 def write_list_of_snps(file_path, snp_dict):
     """Write out list of snps for all samples to a single file.
 

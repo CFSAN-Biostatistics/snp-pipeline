@@ -77,7 +77,6 @@ setup(
         'scripts/prepSamples.sh',
         'scripts/snp_filter.py',
         'scripts/create_snp_list.py',
-        'scripts/create_snp_pileup.py',
         'scripts/call_consensus.py',
         'scripts/create_snp_matrix.py',
         'scripts/create_snp_reference_seq.py',

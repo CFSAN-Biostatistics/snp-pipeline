@@ -270,34 +270,6 @@ create_snp_list.py
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
-create_snp_pileup.py
-------------------------
-
-::
-
-  usage: create_snp_pileup.py [-h] [-f] [-l FILE] [-a FILE] [-o FILE] [-v 0..5]
-                              [--version]
-  
-  Create the SNP pileup file for a sample -- the pileup file at the positions
-  where SNPs were called in any of the samples.
-  
-  optional arguments:
-    -h, --help            show this help message and exit
-    -f, --force           Force processing even when result file already exists
-                          and is newer than inputs (default: False)
-    -l FILE, --snpListFile FILE
-                          Relative or absolute path to the SNP list file across
-                          all samples (default: snplist.txt)
-    -a FILE, --allPileupFile FILE
-                          Relative or absolute path to the genome-wide pileup
-                          file for this sample (default: reads.all.pileup)
-    -o FILE, --output FILE
-                          Output file. Relative or absolute path to the sample
-                          SNP pileup file (default: reads.snp.pileup)
-    -v 0..5, --verbose 0..5
-                          Verbose message level (0=no info, 5=lots) (default: 1)
-    --version             show program's version number and exit
-
 .. _cmd-ref-call-consensus:
 
 call_consensus.py

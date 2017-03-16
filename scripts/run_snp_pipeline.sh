@@ -21,7 +21,7 @@
 #            a SNP list identifying the SNPs found across all samples
 #        <workDirectory>/snpma.fasta
 #            a SNP matrix with one row per sample and one column per SNP
-#        <workDirectory>/samples/<multiple sample subdirectories>/reads.snp.pileup
+#        <workDirectory>/samples/<multiple sample subdirectories>
 #            one pileup file per sample
 #        <workDirectory>/referenceSNP.fasta
 #            a fasta file containing the reference sequence bases at all the SNP locations

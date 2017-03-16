@@ -31,13 +31,6 @@ of shell scripts and python scripts.
 | create_snp_list.py          | | Combines the SNP positions across all samples into a single      |
 |                             | | unified SNP list file                                            |
 +-----------------------------+--------------------------------------------------------------------+
-| create_snp_pileup.py        | | Deprecated -- this command is not used by the pipeline since     |
-|                             | | v0.4.0.  Replaced by call_consensus.py                           |
-|                             | |                                                                  |
-|                             | | Creates the SNP pileup file for a sample -- a subset of the      |
-|                             | | pileup file at only the positions where SNPs were called in any  |
-|                             | | of the samples                                                   |
-+-----------------------------+--------------------------------------------------------------------+
 | call_consensus.py           | | Calls the consensus SNPs for each sample                         |
 +-----------------------------+--------------------------------------------------------------------+
 | create_snp_matrix.py        | | Creates a matrix of SNPs across all samples                      |

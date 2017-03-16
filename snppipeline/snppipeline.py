@@ -438,69 +438,6 @@ def create_snp_list(args):
     utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
 
 
-def create_snp_pileup(args):
-    """Create the SNP pileup file for a sample.
-
-    Description:
-    Create the SNP pileup file for a sample -- the pileup file restricted to
-    only positions where variants were found in any sample.
-    This function expects, or creates '(*)', the following files arranged
-    in the following way:
-            snplist.txt
-            samples
-                sample_name_one/reads.all.pileup
-                sample_name_one/reads.snp.pileup (*)
-                ...
-
-    The files are used as follows:
-        1. The snplist.txt input file contains the list of SNP positions
-           extracted from the var.flt.vcf file.
-        2. The reads.all.pileup input file is the genome-wide pileup file
-           for this sample.
-        3. The reads.snp.pileup output file is the pileup file for this sample,
-           restricted to only positions where variants were found in any
-           sample.
-
-    The snplist.txt and reads.all.pileup files are created outside of this
-    function. The package documentation provides an example of creating these
-    files based on the lambda_virus sequence that is used as one test for
-    this package.
-
-    Args:
-        snpListFile: File path (not just file name) of text format list
-            of SNP positions across all samples
-        allPileupFile: File path (not just file name) of the whole-genome
-            pileup file fot this sample
-        snpPileupFile: File path (not just file name) of the snp pileup file
-
-    Raises:
-
-    Examples:
-    args = argparse.Namespace
-    args.snpListFile = 'snplist.txt'
-    args.allPileupFile = 'samples/SRR555888/reads.all.pileup'
-    args.snpPileupFile = 'samples/SRR555888/reads.snp.pileup'
-    create_snp_pileup(args)
-    """
-    utils.print_log_header()
-    utils.print_arguments(args)
-
-    snp_list_file_path = args.snpListFile
-    all_pileup_file_path = args.allPileupFile
-    snp_pileup_file_path = args.snpPileupFile
-
-    source_files = [snp_list_file_path, all_pileup_file_path]
-    if args.forceFlag or utils.target_needs_rebuild(source_files, snp_pileup_file_path):
-        # Create a pileup file with a subset of the whole-genome pileup restricted
-        # to locations with SNPs only.
-        snp_list = utils.read_snp_position_list(snp_list_file_path)
-        utils.create_snp_pileup(all_pileup_file_path, snp_pileup_file_path, set(snp_list))
-        utils.verbose_print("")
-    else:
-        utils.verbose_print("SNP pileup %s has already been freshly built.  Use the -f option to force a rebuild." % snp_pileup_file_path)
-    utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
-
-
 def call_consensus(args):
     """Call the consensus base for a sample
 
@@ -521,7 +458,7 @@ def call_consensus(args):
         3. The consensus.fasta output file contains the SNP calls for each
            sequence, arranged as a fasta file with one sequence per sample.
 
-    The snplist.txt, and reads.snp.pileup are created outside of this function.
+    The snplist.txt, and reads.all.pileup are created outside of this function.
        The package documentation provides an example
         of creating these files based on the lambda_virus sequence that is used
         as one test for this package.
