@@ -414,7 +414,7 @@ export GridEngine_PEname
 # Verify the scripts and needed tools were properly installed on the path
 (( dependencyErrors = 0 )) || true
 onPath=$(verifyOnPath "prepReference.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "alignSampleToReference.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "cfsan_snp_pipeline"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "prepSamples.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "snp_filter.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "create_snp_list.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
@@ -638,7 +638,7 @@ if [[ "$platform" == "grid" ]]; then
 #$   -pe $GridEngine_PEname $numAlignThreads
 #$   -hold_jid $prepReferenceJobId
 #$   -o $logDir/alignSamples.log-\$TASK_ID
-    alignSampleToReference.sh $forceFlag "$referenceFilePath" \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
+    cfsan_snp_pipeline map_reads $forceFlag "$referenceFilePath" \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -651,11 +651,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/alignSamples.log
     #PBS -V
     samplesToAlign=\$(cat "$workDir/sampleFullPathNames.txt" | head -n \$PBS_ARRAYID | tail -n 1)
-    alignSampleToReference.sh $forceFlag "$referenceFilePath" \$samplesToAlign
+    cfsan_snp_pipeline map_reads $forceFlag "$referenceFilePath" \$samplesToAlign
 _EOF_
 )
 else
-    nl "$workDir/sampleFullPathNames.txt" | xargs -n 3 -L 1 bash -c 'set -o pipefail; alignSampleToReference.sh $forceFlag "$referenceFilePath" $1 $2 2>&1 | tee $logDir/alignSamples.log-$0'
+    nl "$workDir/sampleFullPathNames.txt" | xargs -n 3 -L 1 bash -c 'set -o pipefail; cfsan_snp_pipeline map_reads $forceFlag "$referenceFilePath" $1 $2 2>&1 | tee $logDir/alignSamples.log-$0'
 fi
 
 echo -e "\nStep 4 - Prep the samples"

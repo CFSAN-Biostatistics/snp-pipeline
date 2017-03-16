@@ -97,6 +97,7 @@ assertNewerFile()
 # Verify the scripts were properly installed on the path.
 testScriptsOnPath()
 {
+    assertNotNull "cfsan_snp_pipeline is not on the path"           "$(which cfsan_snp_pipeline)"
     assertNotNull "copy_snppipeline_data.py is not on the path"     "$(which copy_snppipeline_data.py)"
     assertNotNull "run_snp_pipeline.sh is not on the path"          "$(which run_snp_pipeline.sh)"
     assertNotNull "prepReference.sh is not on the path"             "$(which prepReference.sh)"
@@ -200,6 +201,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "Use the -f option to force a rebuild"
     assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "There were errors processing some samples"
 
+    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "cfsan_snp_pipeline"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "prepReference.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "alignSampleToReference.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "prepSamples.sh"
@@ -221,6 +223,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to VarScan"
     assertFileContains "$tempDir/error.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 
+    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "cfsan_snp_pipeline"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "prepReference.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "alignSampleToReference.sh"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "prepSamples.sh"
@@ -655,17 +658,17 @@ tryAlignSampleToReferenceEnvironmentRaiseGlobalError()
     export SnpPipeline_Aligner=garbage
 
     # Try to align a paired-end sample to the reference
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
     errorCode=$?
 
     # Verify alignSampleToReference error handling behavior
     assertEquals "alignSampleToReference returned incorrect error code when the SnpPipeline_Aligner environment variable was misconfigured." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh failed"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "alignSampleToReference.sh failed"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
+    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
     assertFileContains "$tempDir/error.log" "Error: only bowtie2 and smalt aligners are supported."
     assertFileContains "$logDir/alignSampleToReference.log" "Error: only bowtie2 and smalt aligners are supported."
-    assertFileNotContains "$logDir/alignSampleToReference.log" "alignSampleToReference.sh finished"
+    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
 
     # Restore the normal aligner
@@ -713,17 +716,17 @@ tryAlignSampleToReferenceMissingReferenceRaiseGlobalError()
     rm "$tempDir/reference/lambda_virus.fasta"
 
     # Try to align a paired-end sample to the reference
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
     errorCode=$?
 
     # Verify alignSampleToReference error handling behavior
     assertEquals "alignSampleToReference returned incorrect error code when the reference file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh failed"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "alignSampleToReference.sh failed"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
+    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
     assertFileContains "$tempDir/error.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
     assertFileContains "$logDir/alignSampleToReference.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "alignSampleToReference.sh finished"
+    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
 }
 
@@ -768,17 +771,17 @@ tryAlignSampleToReferenceMissingSample1RaiseSampleError()
     rm "$tempDir/samples/sample1/sample1_1.fastq"
 
     # Try to align a paired-end sample to the reference
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
     errorCode=$?
 
     # Verify alignSampleToReference error handling behavior
     assertEquals "alignSampleToReference returned incorrect error code when the sample file 1 was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh failed"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "alignSampleToReference.sh failed"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
+    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
     assertFileContains "$tempDir/error.log" "Sample file $tempDir/samples/sample1/sample1_1.fastq does not exist"
     assertFileContains "$logDir/alignSampleToReference.log" "Sample file $tempDir/samples/sample1/sample1_1.fastq does not exist"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "alignSampleToReference.sh finished"
+    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
 }
 
@@ -823,17 +826,17 @@ tryAlignSampleToReferenceMissingSample2RaiseSampleError()
     rm "$tempDir/samples/sample1/sample1_2.fastq"
 
     # Try to align a paired-end sample to the reference
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
     errorCode=$?
 
     # Verify alignSampleToReference error handling behavior
     assertEquals "alignSampleToReference returned incorrect error code when the sample file 1 was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh failed"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "alignSampleToReference.sh failed"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
+    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
     assertFileContains "$tempDir/error.log" "Sample file $tempDir/samples/sample1/sample1_2.fastq does not exist"
     assertFileContains "$logDir/alignSampleToReference.log" "Sample file $tempDir/samples/sample1/sample1_2.fastq does not exist"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "alignSampleToReference.sh finished"
+    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
 
     # Restore the normal aligner
@@ -885,33 +888,33 @@ tryAlignSampleToReferenceBowtieAlignTrap()
     echo "Garbage" > "$tempDir/samples/sample1/sample1_1.fastq"
 
     # Try to align a paired-end sample to the reference
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log-1"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log-1"
     errorCode=$?
 
     # Verify alignSampleToReference error handling behavior
     assertEquals "alignSampleToReference with bowtie2 returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running alignSampleToReference.sh."
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "Error detected while running alignSampleToReference.sh."
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileNotContains "$logDir/alignSampleToReference.log-1" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "bowtie2"
     assertFileContains "$logDir/alignSampleToReference.log-1" "bowtie2"
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "alignSampleToReference.sh finished"
+    assertFileNotContains "$logDir/alignSampleToReference.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/alignSampleToReference.log-1" "Use the -f option to force a rebuild"
 
     # Repeat the test with an unpaired fastq
     echo "Garbage" > "$tempDir/samples/sample3/sample3_1.fastq"
     rm "$tempDir/error.log" &> /dev/null
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/alignSampleToReference.log-3"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/alignSampleToReference.log-3"
     errorCode=$?
 
     # Verify alignSampleToReference error handling behavior
     assertEquals "alignSampleToReference with bowtie2 returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running alignSampleToReference.sh."
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "Error detected while running alignSampleToReference.sh."
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileNotContains "$logDir/alignSampleToReference.log-3" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "bowtie2"
     assertFileContains "$logDir/alignSampleToReference.log-3" "bowtie2"
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "alignSampleToReference.sh finished"
+    assertFileNotContains "$logDir/alignSampleToReference.log-3" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/alignSampleToReference.log-3" "Use the -f option to force a rebuild"
 }
 
@@ -961,33 +964,33 @@ tryAlignSampleToReferenceSmaltAlignTrap()
     echo "Garbage" > "$tempDir/samples/sample1/sample1_1.fastq"
 
     # Try to align a paired-end sample to the reference
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log-1"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log-1"
     errorCode=$?
 
     # Verify alignSampleToReference error handling behavior
     assertEquals "alignSampleToReference with smalt returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running alignSampleToReference.sh."
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "Error detected while running alignSampleToReference.sh."
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileNotContains "$logDir/alignSampleToReference.log-1" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "smalt map"
     assertFileContains "$logDir/alignSampleToReference.log-1" "smalt map"
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "alignSampleToReference.sh finished"
+    assertFileNotContains "$logDir/alignSampleToReference.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/alignSampleToReference.log-1" "Use the -f option to force a rebuild"
 
     # Repeat the test with an unpaired fastq
     echo "Garbage" > "$tempDir/samples/sample3/sample3_1.fastq"
     rm "$tempDir/error.log" &> /dev/null
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/alignSampleToReference.log-3"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/alignSampleToReference.log-3"
     errorCode=$?
 
     # Verify alignSampleToReference error handling behavior
     assertEquals "alignSampleToReference with smalt returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running alignSampleToReference.sh."
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "Error detected while running alignSampleToReference.sh."
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileNotContains "$logDir/alignSampleToReference.log-3" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "smalt map"
     assertFileContains "$logDir/alignSampleToReference.log-3" "smalt map"
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "alignSampleToReference.sh finished"
+    assertFileNotContains "$logDir/alignSampleToReference.log-3" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/alignSampleToReference.log-3" "Use the -f option to force a rebuild"
 
     # Restore the normal aligner
@@ -1148,7 +1151,7 @@ tryPrepSamplesSamtoolsViewTrap()
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
 
     # First run prepSamples normally
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
@@ -1216,7 +1219,7 @@ tryPrepSamplesSamtoolsSortTrap()
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
 
     # First run prepSamples normally
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
@@ -1284,7 +1287,7 @@ tryPrepSamplesPicardMarkDuplicatesTrap()
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
 
     # First run prepSamples normally
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
@@ -1356,7 +1359,7 @@ tryPrepSamplesPicardMarkDuplicatesClasspathRaiseGlobalError()
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
 
     # First run prepSamples normally
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
@@ -1429,7 +1432,7 @@ tryPrepSamplesSamtoolsMpileupTrap()
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
 
     # First run prepSamples normally
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
@@ -1501,7 +1504,7 @@ tryPrepSamplesVarscanRaiseSampleError()
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
 
     # First run prepSamples normally
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
@@ -1576,7 +1579,7 @@ tryPrepSamplesVarscanClasspathRaiseGlobalError()
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
 
     # First run prepSamples normally
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
@@ -2028,7 +2031,7 @@ trySnpFilterMissingVcfRaiseSampleError()
 
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
     # Run snp_filter.py -- fail because of missing some, but not all VCF files
@@ -2077,7 +2080,7 @@ testSnpFilterMissingVcfRaiseSampleErrorNoStop()
 
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
     # Run snp_filter.py -- fail because of missing some, but not all VCF files
@@ -2423,7 +2426,7 @@ tryCreateSnpListMissingVcfRaiseSampleError()
 
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
     # Run create_snp_list.py -- fail because of missing some, but not all VCF files
@@ -2472,7 +2475,7 @@ testCreateSnpListMissingVcfRaiseSampleErrorNoStop()
 
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
     # Run create_snp_list.py -- fail because of missing some, but not all VCF files
@@ -2632,7 +2635,7 @@ tryCallConsensusEmptySnpList()
 
     # Run prep work
     prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
-    alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
     # Run call_consensus.py with empty snplist
@@ -3164,7 +3167,7 @@ tryCreateSnpMatrixMissingConsensusRaiseGlobalError()
 
     # Run prep work
     #prepReference.sh "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
-    #alignSampleToReference.sh "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
+    #cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     #prepSamples.sh "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
     # Run create_snp_matrix.py -- fail because of missing all VCF files
@@ -4576,15 +4579,15 @@ tryRunSnpPipelineTrapAlignSampleToReferenceTrap()
 
     # Verify error handling behavior
     assertEquals "run_snp_pipeline.sh did not return an error code when the input fastq files were corrupt." $expectErrorCode $errorCode
-    assertFileContains "$tempDir/error.log" "Error detected while running alignSampleToReference.sh."
-    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "Error detected while running alignSampleToReference.sh."
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "bowtie2"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "bowtie2"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample1/sample1_1.fastq $tempDir/samples/sample1/sample1_2.fastq"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample2/sample2_1.fastq $tempDir/samples/sample2/sample2_2.fastq"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample3/sample3_1.fastq $tempDir/samples/sample3/sample3_2.fastq"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample4/sample4_1.fastq $tempDir/samples/sample4/sample4_2.fastq"
-    assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "alignSampleToReference.sh finished"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample1/sample1_1.fastq $tempDir/samples/sample1/sample1_2.fastq"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample2/sample2_1.fastq $tempDir/samples/sample2/sample2_2.fastq"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample3/sample3_1.fastq $tempDir/samples/sample3/sample3_2.fastq"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample4/sample4_1.fastq $tempDir/samples/sample4/sample4_2.fastq"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "Use the -f option to force a rebuild"
     assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "prepSamples.sh"
     assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "create_snp_list.py"
@@ -4646,15 +4649,15 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
 
     # Verify error handling behavior
     assertEquals "run_snp_pipeline.sh did not return an error code when all the input fastq files were corrupt." $expectErrorCode $errorCode
-    assertFileContains "$tempDir/error.log" "Error detected while running alignSampleToReference.sh."
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "bowtie2"
-    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "Error detected while running alignSampleToReference.sh."
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample1/sample1_1.fastq $tempDir/samples/sample1/sample1_2.fastq"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample2/sample2_1.fastq $tempDir/samples/sample2/sample2_2.fastq"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample3/sample3_1.fastq $tempDir/samples/sample3/sample3_2.fastq"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample4/sample4_1.fastq $tempDir/samples/sample4/sample4_2.fastq"
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample1/sample1_1.fastq $tempDir/samples/sample1/sample1_2.fastq"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample2/sample2_1.fastq $tempDir/samples/sample2/sample2_2.fastq"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample3/sample3_1.fastq $tempDir/samples/sample3/sample3_2.fastq"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample4/sample4_1.fastq $tempDir/samples/sample4/sample4_2.fastq"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "bowtie2"
-    assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "alignSampleToReference.sh finished"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "Use the -f option to force a rebuild"
     assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "prepSamples.sh"
 
@@ -4719,13 +4722,13 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopSomeFail()
 
     # Verify error handling behavior
     assertEquals "run_snp_pipeline.sh did not return an error code when some the input fastq files were corrupt." $expectErrorCode $errorCode
-    assertFileContains "$tempDir/error.log" "Error detected while running alignSampleToReference.sh."
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "bowtie2"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample1/sample1_1.fastq $tempDir/samples/sample1/sample1_2.fastq"
-    assertFileNotContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample2/sample2_1.fastq $tempDir/samples/sample2/sample2_2.fastq"
-    assertFileNotContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample3/sample3_1.fastq $tempDir/samples/sample3/sample3_2.fastq"
-    assertFileContains "$tempDir/error.log" "alignSampleToReference.sh $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample4/sample4_1.fastq $tempDir/samples/sample4/sample4_2.fastq"
-    assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "alignSampleToReference.sh finished"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample1/sample1_1.fastq $tempDir/samples/sample1/sample1_2.fastq"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample2/sample2_1.fastq $tempDir/samples/sample2/sample2_2.fastq"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample3/sample3_1.fastq $tempDir/samples/sample3/sample3_2.fastq"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads $tempDir/reference/lambda_virus.fasta $tempDir/samples/sample4/sample4_1.fastq $tempDir/samples/sample4/sample4_2.fastq"
+    assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "Use the -f option to force a rebuild"
     assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "prepSamples.sh"
 
@@ -4963,10 +4966,10 @@ testRunSnpPipelineLambdaUnpaired()
     logDir=$(echo $(ls -d $tempDir/logs*))
     verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
     assertFileContains "$logDir/prepReference.log" "prepReference.sh finished"
-    assertFileContains "$logDir/alignSamples.log-1" "alignSampleToReference.sh finished"
-    assertFileContains "$logDir/alignSamples.log-2" "alignSampleToReference.sh finished"
-    assertFileContains "$logDir/alignSamples.log-3" "alignSampleToReference.sh finished"
-    assertFileContains "$logDir/alignSamples.log-4" "alignSampleToReference.sh finished"
+    assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
+    assertFileContains "$logDir/alignSamples.log-2" "cfsan_snp_pipeline map_reads finished"
+    assertFileContains "$logDir/alignSamples.log-3" "cfsan_snp_pipeline map_reads finished"
+    assertFileContains "$logDir/alignSamples.log-4" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
     assertFileContains "$logDir/prepSamples.log-2" "prepSamples.sh finished"
     assertFileContains "$logDir/prepSamples.log-3" "prepSamples.sh finished"
@@ -5050,7 +5053,7 @@ testRunSnpPipelineLambdaSingleSample()
     logDir=$(echo $(ls -d $tempDir/logs*))
     verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
     assertFileContains "$logDir/prepReference.log" "prepReference.sh finished"
-    assertFileContains "$logDir/alignSamples.log-1" "alignSampleToReference.sh finished"
+    assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
     assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
@@ -5136,7 +5139,7 @@ testRunSnpPipelineZeroSnps()
     logDir=$(echo $(ls -d $tempDir/logs*))
     verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
     assertFileContains "$logDir/prepReference.log" "prepReference.sh finished"
-    assertFileContains "$logDir/alignSamples.log-1" "alignSampleToReference.sh finished"
+    assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
     assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
@@ -5451,7 +5454,7 @@ testRunSnpPipelineExcessiveSnps()
 	# Verify each pipeline stage runs to completion
     logDir=$(echo $(ls -d $tempDir/logs*))
     assertFileContains "$logDir/prepReference.log" "prepReference.sh finished"
-    assertFileContains "$logDir/alignSamples.log-1" "alignSampleToReference.sh finished"
+    assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
     assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"

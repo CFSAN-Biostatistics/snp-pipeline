@@ -8,12 +8,15 @@ import os
 import platform
 import pprint
 import psutil
+import re
 import sys
+import subprocess
 import time
 import traceback
 import vcf
 
 from snppipeline.__init__ import __version__
+from snppipeline import command
 
 
 #==============================================================================
@@ -22,6 +25,10 @@ from snppipeline.__init__ import __version__
 
 log_verbosity = 0
 
+
+#==============================================================================
+#Define functions
+#==============================================================================
 
 def set_logging_verbosity(args):
     """Enable or disable logging.
@@ -40,10 +47,6 @@ def verbose_print(*args):
         print(*args)
 
 
-#==============================================================================
-#Define functions
-#==============================================================================
-
 def timestamp():
     """Return a timestamp string."""
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
@@ -52,6 +55,15 @@ def timestamp():
 def program_name():
     """Return the basename of the python script being executed."""
     return os.path.basename(sys.argv[0])
+
+
+def program_name_with_command():
+    """Return the basename of the python script being executed with the
+    subcommand if possible."""
+    program = os.path.basename(sys.argv[0])
+    if program == "cfsan_snp_pipeline":
+        program += " " + sys.argv[1]
+    return program
 
 
 def command_line_short():
@@ -86,7 +98,7 @@ def print_log_header():
     ram_str = locale.format("%d", ram_mbytes, grouping=True)
     verbose_print("# RAM               : %s MB" % ram_str)
     verbose_print("# Python Version    : %s" % sys.version.replace("\n", " "))
-    verbose_print("# Program Version   : %s %s" % (program_name(), __version__))
+    verbose_print("# Program Version   : %s %s" % (program_name_with_command(), __version__))
     verbose_print("")
     verbose_print("# %s %s" % (timestamp(), command_line_short()))
 
@@ -107,6 +119,78 @@ def print_arguments(args):
         verbose_print("    %s=%s" % (key, options_dict[key]))
 
 
+def detect_numeric_option_in_parameters_str(parameters, option):
+    """
+    Parses a string of options to find a particular option followed by its
+    value.
+
+    This function is used to determine whether a user is overriding a default
+    parameter.
+
+    Parameters
+    ----------
+    parameters : str
+        String of multiple user-specified options with values
+    option : str
+        The particular option to look for.  Should have a leading '-' if expected.
+
+    Returns
+    -------
+    found : bool
+        True if the option is detected, false otherwise
+
+    Examples
+    --------
+    >>> detect_numeric_option_in_parameters_str("-p1", "-p")
+    True
+    >>> detect_numeric_option_in_parameters_str("-p 1", "-p")
+    True
+    >>> detect_numeric_option_in_parameters_str("-p 22", "-p")
+    True
+    >>> detect_numeric_option_in_parameters_str("-a x -p 22 -z 44", "-p")
+    True
+    >>> detect_numeric_option_in_parameters_str("-p 22", "-n")
+    False
+    >>> detect_numeric_option_in_parameters_str("-p", "-p")
+    False
+    >>> detect_numeric_option_in_parameters_str("", "-p")
+    False
+    """
+    regex_str = option + "[ ]*([0-9])+"
+    regex = re.compile(regex_str)
+    return regex.search(parameters) is not None
+
+
+def extract_version_str(program_name, command_line):
+    """Run a program with options to emit the version and construct
+    a string with the program name a version.
+
+    Parameters
+    ----------
+    program_name : str
+        Friendly program name -- this will be returned in the version string
+    command_line : str
+        Command to be executed to get the version somewhere in the output
+
+    Returns
+    -------
+    version_str : str
+        A version string of the form "program_name version 2.3.0" or
+        "Unrecognized program_name version".
+    """
+    text = command.run(command_line)
+    lines = text.split('\n')
+    for line in lines:
+        lowerline = line.lower()
+        if "version" in lowerline:
+            lowerline = lowerline.replace(':', ' ')
+            tokens = lowerline.split()
+            for index, token in enumerate(tokens):
+                if token == "version" and len(tokens) > index+1:
+                    return program_name + " version " + tokens[index+1]
+    return "Unrecognized " + program_name + " version"
+
+
 def global_error(message):
     """
     Log a fatal error to the error summary file and exit with error code 100
@@ -123,7 +207,7 @@ def global_error(message):
     error_output_file = os.environ.get("errorOutputFile")
     if error_output_file:
         with open(error_output_file, "a") as err_log:
-            print("%s failed." % program_name(), file=err_log)
+            print("%s failed." % program_name_with_command(), file=err_log)
             if message:
                 print(message, file=err_log)
             print("=" * 80, file=err_log)
@@ -170,9 +254,9 @@ def sample_error(message, continue_possible=False):
     if error_output_file:
         with open(error_output_file, "a") as err_log:
             if stop_on_error or not continue_possible:
-                print("%s failed." % program_name(), file=err_log)
+                print("%s failed." % program_name_with_command(), file=err_log)
             else:
-                print("%s" % program_name(), file=err_log)
+                print("%s" % program_name_with_command(), file=err_log)
             print(message, file=err_log)
             print("=" * 80, file=err_log)
 
@@ -200,6 +284,9 @@ def handle_global_exception(exc_type, exc_value, exc_traceback):
     It Logs the error and returns error code 100 to cause Sun Grid Engine to
     also detect the error.
     """
+
+    # TODO: add the subprocess.CalledProcessError logic here.  See handle_sample_exception() below.
+
     # Report the exception in the error log if configuired
     error_output_file = os.environ.get("errorOutputFile")
     if error_output_file:
@@ -208,7 +295,7 @@ def handle_global_exception(exc_type, exc_value, exc_traceback):
             file_name, line_number, function_name, code_text = trace_entries[-1]
             exc_type_name = exc_type.__name__
 
-            print("Error detected while running %s." % program_name(), file=err_log)
+            print("Error detected while running %s." % program_name_with_command(), file=err_log)
             print("", file=err_log)
             print("The command line was:", file=err_log)
             print("    %s" % command_line_short(), file=err_log)
@@ -233,6 +320,10 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
     It Logs the error and returns error code 100 to cause Sun Grid Engine to
     also detect the error.
     """
+    external_program_command = None
+    if exc_type == subprocess.CalledProcessError:
+        external_program_command = exc_value.cmd
+
     # Report the exception in the error log if configuired
     error_output_file = os.environ.get("errorOutputFile")
     if error_output_file:
@@ -241,18 +332,26 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
             file_name, line_number, function_name, code_text = trace_entries[-1]
             exc_type_name = exc_type.__name__
 
-            print("Error detected while running %s." % program_name(), file=err_log)
+            print("Error detected while running %s." % program_name_with_command(), file=err_log)
             print("", file=err_log)
             print("The command line was:", file=err_log)
             print("    %s" % command_line_short(), file=err_log)
             print("", file=err_log)
-            print("%s exception in function %s at line %d in file %s" % (exc_type_name, function_name, line_number, file_name), file=err_log)
-            print("    %s" % code_text, file=err_log)
+            if external_program_command:
+                print("The error occured while running:", file=err_log)
+                print("    %s" % external_program_command, file=err_log)
+            else:
+                print("%s exception in function %s at line %d in file %s" % (exc_type_name, function_name, line_number, file_name), file=err_log)
+                print("    %s" % code_text, file=err_log)
             print("=" * 80, file=err_log)
 
     # Report the exception in the usual way to stderr
     sys.stdout.flush() # make sure stdout is flushed before printing the trace
-    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    if external_program_command:
+        print("Error occured while running:", file=sys.stderr)
+        print("    %s" % external_program_command, file=sys.stderr)
+    else:
+        traceback.print_exception(exc_type, exc_value, exc_traceback)
 
     # Exit 100 does two things:
     # 1. Sun Grid Engine will stop execution of dependent jobs

@@ -147,21 +147,26 @@ alignSampleToReference.sh
 
 ::
 
-  usage: alignSampleToReference.sh [-h] [-f] referenceFile sampleFastqFile1 [sampleFastqFile2]
+  usage: cfsan_snp_pipeline map_reads [-h] [-f] [-v 0..5] [--version]
+                                      referenceFile sampleFastqFile1
+                                      [sampleFastqFile2]
   
-  Align the sequence reads for a specified sample to a specified reference genome.
-  The output is written to the file "reads.sam" in the sample directory.
+  Align the sequence reads for a specified sample to a specified reference
+  genome. The output is written to the file "reads.sam" in the sample directory.
   
-  Positional arguments:
-    referenceFile    : Relative or absolute path to the reference fasta file
-    sampleFastqFile1 : Relative or absolute path to the fastq file
-    sampleFastqFile2 : Optional relative or absolute path to the mate fastq file, if paired
+  positional arguments:
+    referenceFile         Relative or absolute path to the reference fasta file
+    sampleFastqFile1      Relative or absolute path to the fastq file
+    sampleFastqFile2      Optional relative or absolute path to the mate fastq
+                          file, if paired
   
-  Options:
-    -h               : Show this help message and exit
-    -f               : Force processing even when result files already exist and 
-                       are newer than inputs
-  
+  optional arguments:
+    -h, --help            show this help message and exit
+    -f, --force           Force processing even when result files already exist
+                          and are newer than inputs
+    -v 0..5, --verbose 0..5
+                          Verbose message level (0=no info, 5=lots)
+    --version             show program's version number and exit
 
 prepSamples.sh
 ------------------------
