@@ -20,6 +20,7 @@ def run(command, outfile=None):
         Process to run with command line options and arguments.
     outfile : str, optional
         Path to stdout output file.  If not specified, the stdout is captured and returned in a string.
+        You can also specify sys.stdout to inherit the stdout from the calling Python program.
 
     Raises
     ------
@@ -68,6 +69,8 @@ def run(command, outfile=None):
         if sys.version_info > (3,):
             stdout = stdout.decode("utf-8")  # Python 3 stdout is bytes, not str
         return stdout
+    elif outfile == sys.stdout:
+        subprocess.check_call(command, shell=True)
     else:
         with open(outfile, "wb") as out:
             subprocess.check_call(command, stdout=out, shell=True)

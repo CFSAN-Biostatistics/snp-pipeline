@@ -9,12 +9,44 @@ import os
 import re
 
 
+def sample_id(fastq_path):
+    """Return the sample id of a fastq file as defined by the cfsan snp pipeline.
+
+    This assumes the file has been placed in a directory whose basename is the sample_id.
+
+    Parameters
+    ----------
+    fastq_path : str
+        Path to the fastq file.
+
+    Returns
+    -------
+    sample_id : str
+        The cfsan snp pipeline defines the sample id as the basename of the parent directory.
+
+    Examples
+    --------
+    >>> sample_id("x.fastq") == os.path.basename(os.getcwd())
+    True
+
+    >>> sample_id("aaa/x.fastq")
+    'aaa'
+
+    >>> sample_id("aaa/bbb/x.fastq")
+    'bbb'
+    """
+    sample_abs_path = os.path.abspath(fastq_path)
+    sample_dir = os.path.dirname(sample_abs_path)
+    sample_id = os.path.basename(sample_dir)
+    return sample_id
+
+
 # Regular expression used to parse Illumina fastq sequence id lines.
 # This is an abbreviated regular expression, there may be more tags after these.
 ILLUMINA_FASTQ_SEQ_ID_REGEX = re.compile("@[^:]*(M[0-9]+):([^:]*):([^:]*):([^:]*)")
 
 # Named tuple to contain fastq metadata
-FastqSeqTags = collections.namedtuple("FastqSeqTags", "instrument flow_cell lane")
+FastqSeqTags = collections.namedtuple("FastqSeqTags", "platform instrument flow_cell lane")
 
 def parse_seqid_line(seqid_line):
     """Examine a fastq sequence id line and extract various metadata tags.
@@ -34,6 +66,8 @@ def parse_seqid_line(seqid_line):
     Returns
     -------
     FastqSeqTags named-tuple with the following named elements or None if the line cannot be parsed
+        platform : str
+            Currently, only Illumina data is supported and this will always be "illumina" if the line can be parsed
         instrument : str
             Instrument name
         flow_cell : str
@@ -49,27 +83,27 @@ def parse_seqid_line(seqid_line):
 
     # fastq-dump default settings
     >>> parse_seqid_line("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151")
-    FastqSeqTags(instrument='M00229', flow_cell='A1474', lane='1')
+    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A1474', lane='1')
 
     # trailing colon after lane
     >>> parse_seqid_line("@M00229:7:A0WG8:1:")
-    FastqSeqTags(instrument='M00229', flow_cell='A0WG8', lane='1')
+    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
 
     # no trailing colon after lane
     >>> parse_seqid_line("@M00229:7:A0WG8:1")
-    FastqSeqTags(instrument='M00229', flow_cell='A0WG8', lane='1')
+    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
 
     # leading whitespace
     >>> parse_seqid_line("  @M00229:7:A0WG8:1")
-    FastqSeqTags(instrument='M00229', flow_cell='A0WG8', lane='1')
+    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
 
     # hyphen before instrument and flowcell
     >>> parse_seqid_line("@-M00229:7:-A0WG8:1:")
-    FastqSeqTags(instrument='M00229', flow_cell='A0WG8', lane='1')
+    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
 
     # Lee's fastq-dump defline-seq format
     >>> parse_seqid_line("@SRR498423_HWI-M00229:7:000000000-A0WG8:1:1:12203:2225/1")
-    FastqSeqTags(instrument='M00229', flow_cell='A0WG8', lane='1')
+    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
 
     References
     ----------
@@ -90,7 +124,7 @@ def parse_seqid_line(seqid_line):
     flow_cell_parts = flow_cell.split('-')
     flow_cell = flow_cell_parts[-1]
 
-    return FastqSeqTags(instrument, flow_cell, lane)
+    return FastqSeqTags("illumina", instrument, flow_cell, lane)
 
 
 def extract_metadata_tags(fastq_path):
@@ -107,6 +141,8 @@ def extract_metadata_tags(fastq_path):
     Returns
     -------
     FastqSeqTags named-tuple with the following named elements or None if the line cannot be parsed
+        platform : str
+            Currently, only Illumina data is supported and this will always be "illumina" if the line can be parsed
         instrument : str
             Instrument name
         flow_cell : str
@@ -125,7 +161,7 @@ def extract_metadata_tags(fastq_path):
     >>> num_bytes = f.write("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151\\n")
     >>> f.close()
     >>> extract_metadata_tags(filepath)
-    FastqSeqTags(instrument='M00229', flow_cell='A1474', lane='1')
+    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A1474', lane='1')
 
     # Compressed file
     >>> os.rename(filepath, filepath + ".gz")
@@ -134,7 +170,7 @@ def extract_metadata_tags(fastq_path):
     >>> num_bytes = gf.write("@SRR498276.1 HWI-M00339:9:000000000-A1444:2:1:15012:1874 length=151\\n")
     >>> gf.close()
     >>> extract_metadata_tags(filepath)
-    FastqSeqTags(instrument='M00339', flow_cell='A1444', lane='2')
+    FastqSeqTags(platform='illumina', instrument='M00339', flow_cell='A1444', lane='2')
 
     >>> os.unlink(filepath)
 
@@ -159,14 +195,16 @@ def extract_metadata_tags(fastq_path):
     return parse_seqid_line(line)
 
 
-def construct_read_group(fastq_path):
-    """Examine a fastq file and construct a read group id tag from the
+# Named tuple to contain read group tags parsed from fastq metadata
+ReadGroupTags = collections.namedtuple("ReadGroupTags", "ID SM LB PL PU")
+
+def construct_read_group_tags(fastq_path):
+    """Examine a fastq file and construct read group tags from the
     flowcell and lane if possible.
 
     A read group is a set of reads originating from a separate library
     and generated from a single run of a sequencing instrument.  This function
     assumes all the reads in the fastq file are from the same library.
-    The read group id is formed by concatenating the flowcell and lane.
 
     This function only looks at the first line of the fastq file and assumes
     all the reads in the file have the same read group.  When sequencing is
@@ -180,9 +218,20 @@ def construct_read_group(fastq_path):
 
     Returns
     -------
-    read_group_id : str or None
-        An identifier for the source of reads within the fastq file formed
-        from the flowcell and lane.
+    tags : ReadGroupTags or None
+        ID : str
+            An identifier for the source of reads within the fastq file formed
+            from the flowcell and lane.  The read group id is {flowcell}.{lane}".
+        SM : str
+            The name of the sample sequenced in this read group.
+        LB : str
+            DNA preparation library identifier.  This function assumes all the reads
+            in the fastq file are from the same library.  Always set to "1".
+        PL : str
+            Platform/technology used to produce the read.  Valid values are:
+            illumina, solid, ls454, helicos and pacbio.
+        PU : str
+            Platform Unit is {flowcell}.{lane}.{sample}.
 
     Examples
     --------
@@ -194,8 +243,8 @@ def construct_read_group(fastq_path):
     >>> filepath = f.name
     >>> num_bytes = f.write("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151\\n")
     >>> f.close()
-    >>> construct_read_group(filepath)
-    'A1474.1'
+    >>> construct_read_group_tags(filepath)
+    ReadGroupTags(ID='A1474.1', SM='tmp', LB='1', PL='illumina', PU='A1474.1.tmp')
     >>> os.unlink(filepath)
 
     # Sequence id line missing flowcell and lane
@@ -203,7 +252,7 @@ def construct_read_group(fastq_path):
     >>> filepath = f.name
     >>> num_bytes = f.write("@SRR498276.1 length=151\\n")
     >>> f.close()
-    >>> construct_read_group(filepath) is None
+    >>> construct_read_group_tags(filepath) is None
     True
     >>> os.unlink(filepath)
 
@@ -215,4 +264,9 @@ def construct_read_group(fastq_path):
     if tags is None:
         return None
 
-    return tags.flow_cell + '.' + tags.lane
+    id = tags.flow_cell + '.' + tags.lane
+    sm = sample_id(fastq_path)
+    lb = '1'
+    pl = tags.platform
+    pu = id + '.' + sm
+    return ReadGroupTags(id, sm, lb, pl, pu)

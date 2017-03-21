@@ -1,5 +1,6 @@
 """This module contains the code to align reads to a reference genome using an
-external mapper -- bowtie2 or smalt.
+external mapper -- bowtie2 or smalt.  Read group tags are also assigned during
+this step.
 """
 
 from __future__ import print_function
@@ -8,8 +9,11 @@ from __future__ import absolute_import
 import os
 import psutil
 import re
+import shutil
+import sys
 
 from snppipeline import command
+from snppipeline import fastq
 from snppipeline import utils
 from snppipeline.utils import verbose_print
 
@@ -77,7 +81,7 @@ def map_reads(args):
         utils.global_error("Error: only bowtie2 and smalt aligners are supported.")
 
     sample_dir = os.path.dirname(sample_fastq_file1)
-    sample_id = os.path.basename(sample_dir)
+    sample_id = fastq.sample_id(sample_fastq_file1)
     reference_base_path = os.path.splitext(reference_file_path)[0]
     reference_id = os.path.basename(reference_base_path)
 
@@ -103,6 +107,9 @@ def map_reads(args):
     # Construct the command line to execute bowtie2 or smalt
     #==========================================================================
 
+    # The read group identifies reads from a single run and lane
+    read_group_tags = fastq.construct_read_group_tags(sample_fastq_file1)
+
     # Default to 8 cores on HPC or all cpu cores on workstation
     if os.environ.get("JOB_ID") or os.environ.get("PBS_JOBID"):
         num_cores = 8
@@ -119,11 +126,21 @@ def map_reads(args):
         if not utils.detect_numeric_option_in_parameters_str(bowtie2_align_extra_params, "-p"):
             num_cores_param = "-p " + str(num_cores)
 
+        # Specify the read group and sample tags here, --rg tags cannot be specified without ID.
+        # The read group tags are used by some downstream tools, like Picard and GATK.
+        read_group_params = ""
+        if read_group_tags:
+            read_group_params += " --rg-id " + read_group_tags.ID
+            read_group_params += " --rg SM:" + read_group_tags.SM
+            read_group_params += " --rg LB:" + read_group_tags.LB
+            read_group_params += " --rg PL:" + read_group_tags.PL
+            read_group_params += " --rg PU:" + read_group_tags.PU
+
         # Substitute the default parameters if the user did not specify bowtie parameters
         bowtie2_align_params = bowtie2_align_extra_params or "--reorder -q"
 
         # Build the command with options depending on whether the fastq files are paired
-        command_line = "bowtie2 " + num_cores_param + " " + bowtie2_align_params + " -x " + reference_base_path
+        command_line = "bowtie2 " + num_cores_param + " " + read_group_params + " " + bowtie2_align_params + " -x " + reference_base_path
         if sample_fastq_file2:
             command_line += " -1 " + sample_fastq_file1 + " -2 " + sample_fastq_file2
         else:
@@ -154,3 +171,27 @@ def map_reads(args):
     verbose_print("# %s %s" % (utils.timestamp(), command_line))
     verbose_print("# %s" % version_str)
     command.run(command_line, sam_file)
+
+
+    #==========================================================================
+    # When using smalt, assign read groups in a separate step.
+    # This is already done when using bowtie2.
+    #==========================================================================
+    if snp_pipeline_aligner == "smalt" and read_group_tags:
+        smalt_sam_file = os.path.join(sample_dir, "reads.smalt.sam")
+        shutil.move(sam_file, smalt_sam_file)
+        version_str = utils.extract_version_str("Picard", "java  picard.cmdline.PicardCommandLine AddOrReplaceReadGroups --version 2>&1")
+        jvm_params = os.environ.get("PicardJvm_ExtraParams") or ""
+        command_line = "java " +  jvm_params + " picard.cmdline.PicardCommandLine AddOrReplaceReadGroups"
+        command_line += " I=" + smalt_sam_file
+        command_line += " O=" + sam_file
+        command_line += " RGID=" + read_group_tags.ID
+        command_line += " RGSM=" + read_group_tags.SM
+        command_line += " RGLB=" + read_group_tags.LB
+        command_line += " RGPL=" + read_group_tags.PL
+        command_line += " RGPU=" + read_group_tags.PU
+        verbose_print("")
+        verbose_print("# Assign read group id %s" % (read_group_tags.ID))
+        verbose_print("# %s %s" % (utils.timestamp(), command_line))
+        verbose_print("# %s" % version_str)
+        command.run(command_line, sys.stdout)

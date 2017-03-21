@@ -20,6 +20,7 @@ History
   in the configuration file.
 * Log the SNP Pipeline version in the header of all the log files.
 * Removed the unused create_snp_pileup.py script.
+* Capture read-group metadata in the SAM/BAM files during the read mapping step.
 
 0.7.0 (2016-11-30)
 ~~~~~~~~~~~~~~~~~~

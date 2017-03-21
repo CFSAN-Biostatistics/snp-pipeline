@@ -178,8 +178,13 @@ def extract_version_str(program_name, command_line):
         A version string of the form "program_name version 2.3.0" or
         "Unrecognized program_name version".
     """
+    # Run the command to get the version, split and clean the output
     text = command.run(command_line)
     lines = text.split('\n')
+    lines = [line.strip() for line in lines]
+    lines = [line for line in lines if line]
+
+    # Look for an output line with the word "version"
     for line in lines:
         lowerline = line.lower()
         if "version" in lowerline:
@@ -188,6 +193,13 @@ def extract_version_str(program_name, command_line):
             for index, token in enumerate(tokens):
                 if token == "version" and len(tokens) > index+1:
                     return program_name + " version " + tokens[index+1]
+
+    # if only one line and only one token, assume it is the version identifier
+    if len(lines) == 1:
+        tokens = lines[0].split()
+        if len(tokens) == 1:
+            return program_name + " version " + tokens[0]
+
     return "Unrecognized " + program_name + " version"
 
 
