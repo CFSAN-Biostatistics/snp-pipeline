@@ -41,12 +41,159 @@ def sample_id(fastq_path):
     return sample_id
 
 
+# Mapping of Illumina flowcell last 4 characters to instrument type
+ILLUMINA_FLOWCELL_INSTRUMENT_TYPE_DICT = {
+    "AAXX" : "Genome Analyzer",
+    "ACXX" : "HiSeq",   # HiSeq High-Output v3
+    "ADXX" : "HiSeq",   # HiSeq RR v1
+    "AFXX" : "NextSeq", # NextSeq Mid-Output
+    "AGXX" : "NextSeq", # NextSeq High-Output
+    "ALXX" : "HiSeqX",
+    "AMXX" : "HiSeq",   # HiSeq RR v2
+    "ANXX" : "HiSeq",   # HiSeq High-Output v4
+    "BBXX" : "HiSeq",   # See SRR3619967
+    "BCXX" : "HiSeq",   # HiSeq v1.5 or HiSeq RR v2
+    "BGXY" : "NextSeq", # NextSeq High-Output
+}
+
+def flowcell_to_instrument_type(flow_cell):
+    """Given a flow cell id, determine the sequencing instrument type.
+
+    Parameters
+    ----------
+    flow_cell : str
+        Flowcell identifier
+
+    Returns
+    -------
+    instrument_type : str or None
+        A string identifying the instrument type if recognized, otherwise None.
+
+    Examples
+    --------
+    >>> flowcell_to_instrument_type("fcAAXX")
+    'Genome Analyzer'
+    >>> flowcell_to_instrument_type("fcALXX")
+    'HiSeqX'
+    >>> flowcell_to_instrument_type("fc") is None
+    True
+
+    References
+    ----------
+    https://www.biostars.org/p/198143/
+    """
+    last4 = flow_cell[-4:]
+    return ILLUMINA_FLOWCELL_INSTRUMENT_TYPE_DICT.get(last4)
+
+
+# Regular expressions used to determine the Illumina instrument type from an instrument name.
+ILLUMINA_MISEQ_PATTERN = "((HWI-)?M[0-9]{5}(R|L1)?)$"
+ILLUMINA_HISEQ_PATTERN = "((HWI-)?(([DJK][0-9]{5})|(ST[0-9]{3,4})))$"
+ILLUMINA_NEXTSEQ_PATTERN = "(NS[0-9]{6})$"
+ILLUMINA_MISEQ_REGEX = re.compile(ILLUMINA_MISEQ_PATTERN)
+ILLUMINA_HISEQ_REGEX = re.compile(ILLUMINA_HISEQ_PATTERN)
+ILLUMINA_NEXTSEQ_REGEX = re.compile(ILLUMINA_NEXTSEQ_PATTERN)
+
+def instrument_name_to_instrument_type(instrument_name):
+    """Given an instrument_name, determine the sequencing instrument type.
+
+    Parameters
+    ----------
+    instrument_name : str
+        Instrument name
+
+    Returns
+    -------
+    instrument_type : str or None
+        A string identifying the instrument type if recognized, otherwise None.
+
+    Examples
+    --------
+    @HWI-Mxxxx or @Mxxxx - MiSeq
+    @HWUSI - GAIIx
+    @HWI-Dxxxx - HiSeq 2000/2500
+    @Jxxxxx - HiSeq 3000/4000
+    @Kxxxxx - HiSeq 3000/4000
+    @Nxxxx - NextSeq 500/550
+    @NSxxxxxx - NextSeq
+
+    >>> instrument_name_to_instrument_type(None) is None
+    True
+    >>> instrument_name_to_instrument_type("") is None
+    True
+    >>> instrument_name_to_instrument_type("HWI-M00229")
+    'MiSeq'
+    >>> instrument_name_to_instrument_type("M00229")
+    'MiSeq'
+    >>> instrument_name_to_instrument_type("HWI-M00229R")
+    'MiSeq'
+    >>> instrument_name_to_instrument_type("M00229R")
+    'MiSeq'
+    >>> instrument_name_to_instrument_type("M00229L1")
+    'MiSeq'
+    >>> instrument_name_to_instrument_type("M00229L2") is None
+    True
+    >>> instrument_name_to_instrument_type("M00229Z") is None
+    True
+    >>> instrument_name_to_instrument_type("HWI-ST1029")
+    'HiSeq'
+    >>> instrument_name_to_instrument_type("HWI-ST741")
+    'HiSeq'
+    >>> instrument_name_to_instrument_type("ST741")
+    'HiSeq'
+    >>> instrument_name_to_instrument_type("NS500287")
+    'NextSeq'
+    >>> instrument_name_to_instrument_type("HWUSIxxx")
+    'GAIIx'
+    >>> instrument_name_to_instrument_type("Unknown") is None
+    True
+
+    References
+    ----------
+    https://www.biostars.org/p/198143/
+    """
+    if not instrument_name:
+        return None
+    if ILLUMINA_MISEQ_REGEX.match(instrument_name):
+        return "MiSeq"
+    if ILLUMINA_HISEQ_REGEX.match(instrument_name):
+        return "HiSeq"
+    if ILLUMINA_NEXTSEQ_REGEX.match(instrument_name):
+        return "NextSeq"
+    if instrument_name.startswith("HWUSI"):
+        return "GAIIx"
+    return None
+
+
 # Regular expression used to parse Illumina fastq sequence id lines.
 # This is an abbreviated regular expression, there may be more tags after these.
-ILLUMINA_FASTQ_SEQ_ID_REGEX = re.compile("@[^:]*(M[0-9]+):([^:]*):([^:]*):([^:]*)")
+ILLUMINA_INSTRUMENT_PATTERN = "([A-Z][A-Z0-9\-]*)"   # Instrument name : starts with A-Z and contains A-Z,0-9,'-'
+ILLUMINA_RUN_PATTERN = "([0-9]+)" # Run number : sequence of digits
+ILLUMINA_FLOWCELL_PATTERN = "([a-zA-Z0-9\-]*)" # Flowcell : contains A-Z,0-9,'-'
+ILLUMINA_LANE_PATTERN = "([0-9]{1,2})" # Lane number : one or two digits
+ILLUMINA_TILE_PATTERN = "([0-9]+)" # Tile number : digits
+ILLUMINA_XYPOS_PATTERN = "([0-9]+)" # X pos or y pos : digits
+
+ILLUMINA_FASTQ_SEQ_ID_ENDS_WITH_PATTERN = ILLUMINA_FLOWCELL_PATTERN + "[:_]" + \
+                                          ILLUMINA_LANE_PATTERN + "[:_]" + \
+                                          ILLUMINA_TILE_PATTERN + "[:_]" + \
+                                          ILLUMINA_XYPOS_PATTERN + "[:_]" + \
+                                          ILLUMINA_XYPOS_PATTERN
+
+# @<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos>#<index sequence>
+ILLUMINA_FASTQ_SEQ_ID_REGEX1 = re.compile("@" + ILLUMINA_FASTQ_SEQ_ID_ENDS_WITH_PATTERN)
+
+# @<sample id> <flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos>#<index sequence>
+ILLUMINA_FASTQ_SEQ_ID_REGEX2 = re.compile("@[SE]RR[A-Z0-9\-.]+[ _]" + ILLUMINA_FASTQ_SEQ_ID_ENDS_WITH_PATTERN)
+
+# @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos>
+ILLUMINA_FASTQ_SEQ_ID_REGEX3 = re.compile("@" + ILLUMINA_INSTRUMENT_PATTERN + "[:_]" + ILLUMINA_RUN_PATTERN + "[:_]" + ILLUMINA_FASTQ_SEQ_ID_ENDS_WITH_PATTERN)
+
+# @<sample id> <instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos>
+ILLUMINA_FASTQ_SEQ_ID_REGEX4 = re.compile("@[SE]RR[A-Z0-9\-.]+[ _]" + ILLUMINA_INSTRUMENT_PATTERN + "[:_]" + ILLUMINA_RUN_PATTERN + "[:_]" + ILLUMINA_FASTQ_SEQ_ID_ENDS_WITH_PATTERN)
 
 # Named tuple to contain fastq metadata
-FastqSeqTags = collections.namedtuple("FastqSeqTags", "platform instrument flow_cell lane")
+FastqSeqTags = collections.namedtuple("FastqSeqTags", "platform instrument_type instrument run flow_cell lane")
 
 def parse_seqid_line(seqid_line):
     """Examine a fastq sequence id line and extract various metadata tags.
@@ -55,8 +202,10 @@ def parse_seqid_line(seqid_line):
     flowcell, and lane if possible.  There is one of these lines preceeding
     every read in a fastq file and the information is highly redundant.
 
-    Illumina fastq files have this sequence id format:
-    @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos>:<UMI> <read>:<is filtered>:<control number>:<index>
+    Illumina fastq files have a variety of sequence id formats:
+    @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos>:<UMI> <read>:<is filtered>:<control number>:<index sequence>
+    @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos>       <read>:<is filtered>:<control number>:<index sequence>
+    @<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos>#<index sequence>
 
     Parameters
     ----------
@@ -68,8 +217,13 @@ def parse_seqid_line(seqid_line):
     FastqSeqTags named-tuple with the following named elements or None if the line cannot be parsed
         platform : str
             Currently, only Illumina data is supported and this will always be "illumina" if the line can be parsed
+        instrument_type : str or None
+            The instrument type can _sometimes_ be determined from the flowcell or instrument name.
+            This is not well tested.
         instrument : str
             Instrument name
+        run : str
+            Run number
         flow_cell : str
             Flowcell with leading zeros removed
         lane : str
@@ -83,48 +237,95 @@ def parse_seqid_line(seqid_line):
 
     # fastq-dump default settings
     >>> parse_seqid_line("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151")
-    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A1474', lane='1')
+    FastqSeqTags(platform='illumina', instrument_type='MiSeq', instrument='HWI-M00229', run='9', flow_cell='A1474', lane='1')
 
-    # trailing colon after lane
-    >>> parse_seqid_line("@M00229:7:A0WG8:1:")
-    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
-
-    # no trailing colon after lane
-    >>> parse_seqid_line("@M00229:7:A0WG8:1")
-    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
-
-    # leading whitespace
-    >>> parse_seqid_line("  @M00229:7:A0WG8:1")
-    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
-
-    # hyphen before instrument and flowcell
-    >>> parse_seqid_line("@-M00229:7:-A0WG8:1:")
-    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
+    # something other than zeros in flowcell prefix
+    >>> parse_seqid_line("@SRR498276.1 HWI-M00229:9:000100000-A1474:1:1:15012:1874 length=151")
+    FastqSeqTags(platform='illumina', instrument_type='MiSeq', instrument='HWI-M00229', run='9', flow_cell='000100000-A1474', lane='1')
 
     # Lee's fastq-dump defline-seq format
     >>> parse_seqid_line("@SRR498423_HWI-M00229:7:000000000-A0WG8:1:1:12203:2225/1")
-    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A0WG8', lane='1')
+    FastqSeqTags(platform='illumina', instrument_type='MiSeq', instrument='HWI-M00229', run='7', flow_cell='A0WG8', lane='1')
+
+    # HiSeq
+    >>> parse_seqid_line("@HWI-ST741:189:C0GU5ACXX:8:1101:1219:1953 1:N:0:")
+    FastqSeqTags(platform='illumina', instrument_type='HiSeq', instrument='HWI-ST741', run='189', flow_cell='C0GU5ACXX', lane='8')
+
+    # NextSeq
+    >>> parse_seqid_line("@NS500287:189:FLOW0000:8:1101:1219:1953 1:N:0:")
+    FastqSeqTags(platform='illumina', instrument_type='NextSeq', instrument='NS500287', run='189', flow_cell='FLOW0000', lane='8')
+
+    # ERR178930 pattern with "HWI-" instrument prefix
+    >>> parse_seqid_line('@ERR178930.1 HWI-ST322_0214_"AC0HTNACXX":8:1101:1555:2158#ATCACG length=101')
+    FastqSeqTags(platform='illumina', instrument_type='HiSeq', instrument='HWI-ST322', run='0214', flow_cell='AC0HTNACXX', lane='8')
+
+    # ERR178930 pattern with MiSeq instrument
+    >>> parse_seqid_line('@ERR178930.1 M01234_0214_"000100000-A1474":8:1101:1555:2158#ATCACG length=101')
+    FastqSeqTags(platform='illumina', instrument_type='MiSeq', instrument='M01234', run='0214', flow_cell='000100000-A1474', lane='8')
+
+    # GAIIx
+    >>> parse_seqid_line("@HWUSI:189:0000-FLOW:8:1101:1219:1953 1:N:0:")
+    FastqSeqTags(platform='illumina', instrument_type='GAIIx', instrument='HWUSI', run='189', flow_cell='FLOW', lane='8')
+
+    # Unrecognized instrument type
+    >>> parse_seqid_line("@UNKNOWN:189:FLOW0000:8:1101:1219:1953 1:N:0:")
+    FastqSeqTags(platform='illumina', instrument_type=None, instrument='UNKNOWN', run='189', flow_cell='FLOW0000', lane='8')
+
+    # MISEQ literal
+    >>> parse_seqid_line("@MISEQ:6:000000000-A1445:1:1:16976:1440 2:N:0:CGTACTAGTAGATCGC SEQ000001383")
+    FastqSeqTags(platform='illumina', instrument_type=None, instrument='MISEQ', run='6', flow_cell='A1445', lane='1')
+
+    # Hiseq starting with flowcell, no instrument, no run
+    >>> parse_seqid_line("@FCC3NWVACXX:3:1101:1161:2200#AACCGAGAA/2")
+    FastqSeqTags(platform='illumina', instrument_type='HiSeq', instrument=None, run=None, flow_cell='FCC3NWVACXX', lane='3')
+
+    # Hiseq starting with sample id, then flowcell, no instrument, no run
+    >>> parse_seqid_line("@SRR1840614.1 FCC1KPRACXX:1:1101:1291:2172 length=200")
+    FastqSeqTags(platform='illumina', instrument_type='HiSeq', instrument=None, run=None, flow_cell='FCC1KPRACXX', lane='1')
+
+    # Lowercase flowcell
+    >>> parse_seqid_line("@SRR1166969.1 HWI-ST406:204:d1cywacxx:7:1101:1292:1941 length=100")
+    FastqSeqTags(platform='illumina', instrument_type='HiSeq', instrument='HWI-ST406', run='204', flow_cell='d1cywacxx', lane='7')
 
     References
     ----------
     https://support.illumina.com/help/BaseSpace_OLH_009008/Content/Source/Informatics/BS/FileFormat_FASTQ-files_swBS.htm
+    https://support.illumina.com/help/SequencingAnalysisWorkflow/Content/Vault/Informatics/Sequencing_Analysis/CASAVA/swSEQ_mCA_FASTQFormat.htm
     """
+    seqid_line = seqid_line.replace('"', '') # strip quotes
 
-    # Does the sequence id line look like Illumina format?
-    match = ILLUMINA_FASTQ_SEQ_ID_REGEX.search(seqid_line)
+    # Does the sequence id line look like one of the Illumina formats?
+    for regex in [ILLUMINA_FASTQ_SEQ_ID_REGEX1, ILLUMINA_FASTQ_SEQ_ID_REGEX2]:
+        match = regex.search(seqid_line)
+        if match:
+            instrument = None
+            run = None
+            flow_cell = match.group(1)
+            lane = match.group(2)
+            break
+    if match is None:
+        for regex in [ILLUMINA_FASTQ_SEQ_ID_REGEX3, ILLUMINA_FASTQ_SEQ_ID_REGEX4]:
+            match = regex.search(seqid_line)
+            if match:
+                instrument = match.group(1)
+                run = match.group(2)
+                flow_cell = match.group(3)
+                lane = match.group(4)
+                break
     if match is None:
         return None
 
-    # Parse the sequence id line
-    instrument = match.group(1)
-    flow_cell = match.group(3)
-    lane = match.group(4)
-
-    # strip leading zeros and minus from flowcell if present
+    # Strip leading zeros and minus from flowcell if present
     flow_cell_parts = flow_cell.split('-')
-    flow_cell = flow_cell_parts[-1]
+    if len(flow_cell_parts[0].strip('0')) == 0:  # everything before - is 0
+        flow_cell = flow_cell_parts[-1]
 
-    return FastqSeqTags("illumina", instrument, flow_cell, lane)
+    # Lookup the instrument type from the flowcell or instrument name
+    instrument_type = flowcell_to_instrument_type(flow_cell)
+    if not instrument_type:
+        instrument_type = instrument_name_to_instrument_type(instrument)
+
+    return FastqSeqTags("illumina", instrument_type, instrument, run, flow_cell, lane)
 
 
 def extract_metadata_tags(fastq_path):
@@ -143,8 +344,13 @@ def extract_metadata_tags(fastq_path):
     FastqSeqTags named-tuple with the following named elements or None if the line cannot be parsed
         platform : str
             Currently, only Illumina data is supported and this will always be "illumina" if the line can be parsed
+        instrument_type : str or None
+            The instrument type can _sometimes_ be determined from the flowcell or instrument name.
+            This is not well tested.
         instrument : str
             Instrument name
+        run : str
+            Run number
         flow_cell : str
             Flowcell with leading zeros removed
         lane : str
@@ -161,16 +367,16 @@ def extract_metadata_tags(fastq_path):
     >>> num_bytes = f.write("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151\\n")
     >>> f.close()
     >>> extract_metadata_tags(filepath)
-    FastqSeqTags(platform='illumina', instrument='M00229', flow_cell='A1474', lane='1')
+    FastqSeqTags(platform='illumina', instrument_type='MiSeq', instrument='HWI-M00229', run='9', flow_cell='A1474', lane='1')
 
     # Compressed file
     >>> os.rename(filepath, filepath + ".gz")
     >>> filepath = filepath + ".gz"
     >>> gf = gzip.open(filepath, "wt")
-    >>> num_bytes = gf.write("@SRR498276.1 HWI-M00339:9:000000000-A1444:2:1:15012:1874 length=151\\n")
+    >>> num_bytes = gf.write("@SRR498276.1 HWI-ST1029:398:000000000-A1444:2:1:15012:1874 length=151\\n")
     >>> gf.close()
     >>> extract_metadata_tags(filepath)
-    FastqSeqTags(platform='illumina', instrument='M00339', flow_cell='A1444', lane='2')
+    FastqSeqTags(platform='illumina', instrument_type='HiSeq', instrument='HWI-ST1029', run='398', flow_cell='A1444', lane='2')
 
     >>> os.unlink(filepath)
 
