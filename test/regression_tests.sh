@@ -2812,18 +2812,18 @@ tryMergeVcfCorruptVcfTrap()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run mergeVcf.sh with corrupt consensus.vcf
+    # Run cfsan_snp_pipeline merge_vcfs with corrupt consensus.vcf
     sleep 1
     sed -i 's/1/@@@/g' "$tempDir/samples/sample1/consensus.vcf"
-    mergeVcf.sh -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
+    cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
     # Verify mergeVcf error handling behavior
-    assertEquals "mergeVcf.sh returned incorrect error code when consensus.vcf was corrupt." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when consensus.vcf was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running mergeVcf.sh."
-    assertFileNotContains "$logDir/mergeVcf.log" "Error detected while running mergeVcf.sh."
-    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline merge_vcfs."
+    assertFileNotContains "$logDir/mergeVcf.log" "Error detected while running cfsan_snp_pipeline merge_vcfs."
+    assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
 }
 
@@ -2864,18 +2864,18 @@ tryMergeVcfMissingSampleDirRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run mergeVcf.sh with missing sampleDirectories.txt
-    mergeVcf.sh -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
+    # Run cfsan_snp_pipeline merge_vcfs with missing sampleDirectories.txt
+    cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
     # Verify mergeVcf error handling behavior
-    assertEquals "mergeVcf.sh returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "mergeVcf.sh failed."
-    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh failed."
-    assertFileContains "$tempDir/error.log" "Sample directories file $tempDir/sampleDirectories.txt does not exist."
-    assertFileContains "$logDir/mergeVcf.log" "Sample directories file $tempDir/sampleDirectories.txt does not exist."
-    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_vcfs failed."
+    assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs failed."
+    assertFileContains "$tempDir/error.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist."
+    assertFileContains "$logDir/mergeVcf.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist."
+    assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
 }
 
@@ -2901,7 +2901,7 @@ testMergeVcfMissingSampleDirRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the mergeVcf script detects failure.
+# Verify the mergeVcf script detects a missing consensus VCF file.
 tryMergeVcfMissingVcfRaiseSampleError()
 {
     expectErrorCode=$1
@@ -2916,30 +2916,30 @@ tryMergeVcfMissingVcfRaiseSampleError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run mergeVcf.sh with missing vcf files
+    # Run cfsan_snp_pipeline merge_vcfs with missing vcf files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirectories.txt"
-    mergeVcf.sh -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
+    cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
     # Verify mergeVcf error handling behavior
-    assertEquals "mergeVcf.sh returned incorrect error code when vcf file was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when vcf file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "mergeVcf.sh failed."
-    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_vcfs failed."
+    assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs failed."
     assertFileContains "$tempDir/error.log" "Sample vcf file $tempDir/samples/sample1/consensus.vcf does not exist."
     assertFileContains "$logDir/mergeVcf.log" "Sample vcf file $tempDir/samples/sample1/consensus.vcf does not exist."
-    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the mergeVcf script detects a missing consensus VCF file.
 testMergeVcfMissingVcfRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryMergeVcfMissingVcfRaiseSampleError 100
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the mergeVcf script detects a missing consensus VCF file - but continues running.
 testMergeVcfMissingVcfRaiseSampleErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -2957,26 +2957,26 @@ testMergeVcfMissingVcfRaiseSampleErrorNoStop()
     export SnpPipeline_StopOnSampleError=false
     export errorOutputFile="$tempDir/error.log"
 
-    # Run mergeVcf.sh with missing vcf files
+    # Run cfsan_snp_pipeline merge_vcfs with missing vcf files
     rm "$tempDir/samples/sample1/consensus.vcf"
     rm "$tempDir/snpma.vcf"
-    mergeVcf.sh -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
+    cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
     # Verify mergeVcf keeps running when only one vcf file is missing
-    assertEquals "mergeVcf.sh returned incorrect error code when vcf file was missing." 0 $errorCode
+    assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when vcf file was missing." 0 $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "mergeVcf.sh"
-    assertFileNotContains "$tempDir/error.log" "mergeVcf.sh failed."
-    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_vcfs"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline merge_vcfs failed."
+    assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs failed."
     assertFileContains "$tempDir/error.log" "Sample vcf file $tempDir/samples/sample1/consensus.vcf does not exist."
     assertFileContains "$logDir/mergeVcf.log" "Sample vcf file $tempDir/samples/sample1/consensus.vcf does not exist."
-    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the mergeVcf script detects a missing consensus VCF file.
 testMergeVcfMissingVcfRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2984,7 +2984,38 @@ testMergeVcfMissingVcfRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the mergeVcf script detects failure.
+# Verify the mergeVcf script simply copies the input consensus VCF file when there is only one sample
+testMergeVcfOnlyOneSample()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export SnpPipeline_StopOnSampleError=true
+    export errorOutputFile="$tempDir/error.log"
+
+    # Run cfsan_snp_pipeline merge_vcfs with only one vcf file
+    mkdir -p "$tempDir/samples/sample1"
+    echo "$tempDir/samples/sample1" > "$tempDir/sampleDirectories.txt"
+    echo "Dummy VCF contents" > "$tempDir/samples/sample1/consensus.vcf"
+    cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
+    errorCode=$?
+
+    # Verify mergeVcf copies the input consensus VCF file when there is only one sample
+    assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when there was only one vcf file." 0 $errorCode
+    verifyNonExistingFile "$tempDir/error.log"
+    assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs failed."
+    assertFileNotContains "$logDir/mergeVcf.log" "Sample vcf file $tempDir/samples/sample1/consensus.vcf does not exist."
+    assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
+    assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
+    verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
+    assertIdenticalFiles "$tempDir/samples/sample1/consensus.vcf" "$tempDir/snpma.vcf"
+}
+
+
+# Verify the mergeVcf script detects all the consensus VCF files missing
 tryMergeVcfZeroGoodSamplesRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -2999,27 +3030,28 @@ tryMergeVcfZeroGoodSamplesRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run mergeVcf.sh with no consensus vcf files
+    # Run cfsan_snp_pipeline merge_vcfs with no consensus vcf files
     echo   "$tempDir/samples/sample1" > "$tempDir/sampleDirectories.txt"
     echo   "$tempDir/samples/sample2" >> "$tempDir/sampleDirectories.txt"
-    mergeVcf.sh -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
+    cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
     # Verify mergeVcf error handling behavior
-    assertEquals "mergeVcf.sh returned incorrect error code when no good VCF files." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when no good VCF files." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "mergeVcf.sh failed."
-    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_vcfs failed."
+    assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs failed."
     assertFileContains "$tempDir/error.log" "There are no vcf files to merge."
     assertFileContains "$logDir/mergeVcf.log" "There are no vcf files to merge."
-    assertFileNotContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the mergeVcf script detects failure.
 #testMergeVcfZeroGoodSamplesRaiseGlobalErrorStop()
 #{
-#    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path
+#    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path.
+#    # Otherwise, the first missing VCF file will trigger stop upon sample error -- already tested.
 #}
 
 # Verify the mergeVcf script detects failure.
@@ -3032,8 +3064,10 @@ testMergeVcfZeroGoodSamplesRaiseGlobalErrorNoStop()
 # Verify the mergeVcf script detects failure.
 #testMergeVcfZeroGoodSamplesRaiseGlobalErrorStopUnset()
 #{
-#    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path
+#    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path.
+#    # Otherwise, the first missing VCF file will trigger stop upon sample error -- already tested.
 #}
+
 
 
 # Verify the create_snp_matrix.py script traps attempts to write to unwritable file
@@ -4977,7 +5011,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/callConsensus.log-2" "call_consensus.py finished"
     assertFileContains "$logDir/callConsensus.log-3" "call_consensus.py finished"
     assertFileContains "$logDir/callConsensus.log-4" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
@@ -4993,7 +5027,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-3" "call_consensus.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-4" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
@@ -5055,7 +5089,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
     assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
@@ -5065,7 +5099,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
     assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
@@ -5141,7 +5175,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
     assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
@@ -5151,7 +5185,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
     assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
@@ -5222,7 +5256,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/prepSamples.log-2" "prepSamples.sh finished"
     assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus.log-2" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-2" "collectSampleMetrics.sh finished"
@@ -5232,7 +5266,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
     assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
@@ -5456,7 +5490,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/prepSamples.log-1" "prepSamples.sh finished"
     assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
@@ -5466,7 +5500,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
     assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
-    assertFileContains "$logDir/mergeVcf_preserved.log" "mergeVcf.sh finished"
+    assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"

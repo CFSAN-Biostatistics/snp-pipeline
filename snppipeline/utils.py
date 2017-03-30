@@ -117,6 +117,7 @@ def print_arguments(args):
         if key in ["subparser_name", "func", "excepthook"]:
             continue
         verbose_print("    %s=%s" % (key, options_dict[key]))
+    verbose_print("")
 
 
 def detect_numeric_option_in_parameters_str(parameters, option):
@@ -296,8 +297,9 @@ def handle_global_exception(exc_type, exc_value, exc_traceback):
     It Logs the error and returns error code 100 to cause Sun Grid Engine to
     also detect the error.
     """
-
-    # TODO: add the subprocess.CalledProcessError logic here.  See handle_sample_exception() below.
+    external_program_command = None
+    if exc_type == subprocess.CalledProcessError:
+        external_program_command = exc_value.cmd
 
     # Report the exception in the error log if configuired
     error_output_file = os.environ.get("errorOutputFile")
@@ -312,13 +314,22 @@ def handle_global_exception(exc_type, exc_value, exc_traceback):
             print("The command line was:", file=err_log)
             print("    %s" % command_line_short(), file=err_log)
             print("", file=err_log)
-            print("%s exception in function %s at line %d in file %s" % (exc_type_name, function_name, line_number, file_name), file=err_log)
-            print("    %s" % code_text, file=err_log)
+
+            if external_program_command:
+                print("The error occured while running:", file=err_log)
+                print("    %s" % external_program_command, file=err_log)
+            else:
+                print("%s exception in function %s at line %d in file %s" % (exc_type_name, function_name, line_number, file_name), file=err_log)
+                print("    %s" % code_text, file=err_log)
             print("=" * 80, file=err_log)
 
     # Report the exception in the usual way to stderr
     sys.stdout.flush() # make sure stdout is flushed before printing the trace
-    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    if external_program_command:
+        print("Error occured while running:", file=sys.stderr)
+        print("    %s" % external_program_command, file=sys.stderr)
+    else:
+        traceback.print_exception(exc_type, exc_value, exc_traceback)
 
     # Exit 100 does two things:
     # 1. Sun Grid Engine will stop execution of dependent jobs
@@ -349,6 +360,7 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
             print("The command line was:", file=err_log)
             print("    %s" % command_line_short(), file=err_log)
             print("", file=err_log)
+
             if external_program_command:
                 print("The error occured while running:", file=err_log)
                 print("    %s" % external_program_command, file=err_log)
@@ -394,56 +406,106 @@ def report_error(message):
         print(message, file=sys.stderr)
 
 
-def verify_existing_input_files(error_prefix, file_list):
+def verify_existing_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):
     """Verify each file in a list of files exists.  It does
     not matter whether the file is empty.
     Missing files are reported in the verbose log.
 
-    Args:
-        error_prefix : first part of error message to be logged
-        file_list : list of relative or absolute paths to files
+    Parameters
+    ----------
+    error_prefix : str
+        First part of error message to be logged per bad file
+    file_list : list
+        List of relative or absolute paths to files
+    error_handler : str, optional
+        Allowed values are "global", "sample", or None.
+        When set to "global", any error are handled by the global_error() function which will
+        cause program exit.
+        When set to "sample", any error are handled by the sample_error() function which might
+        cause program exit when configured to do so.
+        When set to None, errors are logged with no possibility of exiting the program
+    continue_possible : boolean, optional
+        Only used when error_handler is "sample".  Indicates if it is possible
+        to continue execution.  Setting this flag true may allow the code
+        to continue without exiting if configured to do so.
 
-    Returns:
-        int number of missing files
+    Returns
+    -------
+    count : int
+        Number of missing files
     """
-    bad_count = 0
+    if error_handler not in ["global", "sample", None]:
+        raise ValueError("Invalid error_handler: %s" % repr(error_handler))
+
+    err_messages = []
     for file_path in file_list:
 
         if not os.path.isfile(file_path):
-            bad_count += 1
-            err_message = "%s %s does not exist." % (error_prefix, file_path)
-            report_error(err_message)
+            err_messages.append("%s %s does not exist." % (error_prefix, file_path))
             continue
 
-    return bad_count
+    if len(err_messages) > 0:
+        err_message = '\n'.join(err_messages)
+        if error_handler == "global":
+            global_error(err_message)
+        elif error_handler == "sample":
+            sample_error(err_message, continue_possible=continue_possible)
+        else:
+            report_error(err_message)
+
+    return len(err_messages)
 
 
-def verify_non_empty_input_files(error_prefix, file_list):
+def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):
     """Verify each file in a list of files exists and is non-empty.
     Missing or empty files are reported in the verbose log.
 
-    Args:
-        error_prefix : first part of error message to be logged
-        file_list : list of relative or absolute paths to files
+    Parameters
+    ----------
+    error_prefix : str
+        First part of error message to be logged per bad file
+    file_list : list
+        List of relative or absolute paths to files
+    error_handler : str, optional
+        Allowed values are "global", "sample", or None.
+        When set to "global", any error are handled by the global_error() function which will
+        cause program exit.
+        When set to "sample", any error are handled by the sample_error() function which might
+        cause program exit when configured to do so.
+        When set to None, errors are logged with no possibility of exiting the program
+    continue_possible : boolean, optional
+        Only used when error_handler is "sample".  Indicates if it is possible
+        to continue execution.  Setting this flag true may allow the code
+        to continue without exiting if configured to do so.
 
-    Returns:
-        int number of missing or empty files
+    Returns
+    -------
+    count : int
+        Number of missing or empty files
     """
-    bad_count = 0
+    if error_handler not in ["global", "sample", None]:
+        raise ValueError("Invalid error_handler: %s" % repr(error_handler))
+
+    err_messages = []
     for file_path in file_list:
 
         if not os.path.isfile(file_path):
-            bad_count += 1
-            err_message = "%s %s does not exist." % (error_prefix, file_path)
-            report_error(err_message)
+            err_messages.append("%s %s does not exist." % (error_prefix, file_path))
             continue
         if os.path.getsize(file_path) == 0:
-            bad_count += 1
-            err_message = "%s %s is empty." % (error_prefix, file_path)
-            report_error(err_message)
+            err_messages.append("%s %s is empty." % (error_prefix, file_path))
             continue
 
-    return bad_count
+    if len(err_messages) > 0:
+        err_message = '\n'.join(err_messages)
+        if error_handler == "global":
+            global_error(err_message)
+        elif error_handler == "sample":
+            sample_error(err_message, continue_possible=continue_possible)
+        else:
+            report_error(err_message)
+
+    return len(err_messages)
 
 
 def target_needs_rebuild(source_files, target_file):

@@ -864,7 +864,7 @@ if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
 #$ -V
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/mergeVcf.log
-        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
+        cfsan_snp_pipeline merge_vcfs $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
     elif [[ "$platform" == "torque" ]]; then
@@ -875,11 +875,11 @@ _EOF_
         #PBS -W depend=afterokarray:$callConsensusJobArray
         #PBS -o $logDir/mergeVcf.log
         #PBS -V
-        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
+        cfsan_snp_pipeline merge_vcfs $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
     else
-        mergeVcf.sh $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
+        cfsan_snp_pipeline merge_vcfs $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
     fi
 else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
@@ -1054,7 +1054,7 @@ if [[ $CallConsensus_ExtraParams =~ .*vcfFileName.* ]]; then
 #$ -V
 #$ -hold_jid $callConsensusJobArray2
 #$ -o $logDir/mergeVcf_preserved.log
-        mergeVcf.sh $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
+        cfsan_snp_pipeline merge_vcfs $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -1065,11 +1065,11 @@ elif [[ "$platform" == "torque" ]]; then
         #PBS -W depend=afterokarray:$callConsensusJobArray2
         #PBS -o $logDir/mergeVcf_preserved.log
         #PBS -V
-        mergeVcf.sh $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
+        cfsan_snp_pipeline merge_vcfs $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
 _EOF_
 )
     else
-        mergeVcf.sh $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/mergeVcf_preserved.log
+        cfsan_snp_pipeline merge_vcfs $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/mergeVcf_preserved.log
     fi
 else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"

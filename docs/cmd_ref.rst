@@ -158,14 +158,14 @@ alignSampleToReference.sh
     referenceFile         Relative or absolute path to the reference fasta file
     sampleFastqFile1      Relative or absolute path to the fastq file
     sampleFastqFile2      Optional relative or absolute path to the mate fastq
-                          file, if paired
+                          file, if paired (default: None)
   
   optional arguments:
     -h, --help            show this help message and exit
     -f, --force           Force processing even when result files already exist
-                          and are newer than inputs
+                          and are newer than inputs (default: False)
     -v 0..5, --verbose 0..5
-                          Verbose message level (0=no info, 5=lots)
+                          Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
 prepSamples.sh
@@ -362,25 +362,30 @@ mergeVcf.sh
 
 ::
 
-  usage: mergeVcf.sh [-h] [-f] [-n NAME] [-o FILE] sampleDirsFile
+  usage: cfsan_snp_pipeline merge_vcfs [-h] [-f] [-n NAME] [-o FILE] [-v 0..5]
+                                       [--version]
+                                       sampleDirsFile
   
-  Merge the vcf files from all samples into a single multi-vcf file for all samples.
+  Merge the consensus vcf files from all samples into a single multi-vcf file
+  for all samples.
   
-  Before running this command, the vcf file for each sample must be created by the
-  call_consensus.py script.
+  positional arguments:
+    sampleDirsFile        Relative or absolute path to file containing a list of
+                          directories -- one per sample
   
-  Positional arguments:
-    sampleDirsFile   : Relative or absolute path to file containing a list of
-                       directories -- one per sample
-  
-  Options:
-    -h               : Show this help message and exit
-    -f               : Force processing even when result files already exist and 
-                       are newer than inputs
-    -n NAME          : File name of the vcf files which must exist in each of
-                       the sample directories. (default: consensus.vcf)
-    -o FILE          : Output file. Relative or absolute path to the merged
-                       multi-vcf file. (default: snpma.vcf)
+  optional arguments:
+    -h, --help            show this help message and exit
+    -f, --force           Force processing even when result files already exist
+                          and are newer than inputs (default: False)
+    -n NAME, --vcfname NAME
+                          File name of the vcf files which must exist in each of
+                          the sample directories (default: consensus.vcf)
+    -o FILE, --output FILE
+                          Output file. Relative or absolute path to the merged
+                          multi-vcf file (default: snpma.vcf)
+    -v 0..5, --verbose 0..5
+                          Verbose message level (0=no info, 5=lots) (default: 1)
+    --version             show program's version number and exit
 
 create_snp_matrix.py
 ------------------------

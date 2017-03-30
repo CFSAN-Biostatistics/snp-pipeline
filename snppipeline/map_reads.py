@@ -70,9 +70,7 @@ def map_reads(args):
     if sample_fastq_file2:
         fastq_files.append(sample_fastq_file2)
 
-    bad_file_count = utils.verify_non_empty_input_files("Sample file", fastq_files)
-    if bad_file_count > 0:
-        utils.sample_error(None)
+    utils.verify_non_empty_input_files("Sample file", fastq_files, error_handler="sample")
 
     # The environment variable SnpPipeline_Aligner selects between bowtie2 and smalt
     snp_pipeline_aligner = os.environ.get("SnpPipeline_Aligner") or "bowtie2"
