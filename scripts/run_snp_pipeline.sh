@@ -413,8 +413,8 @@ export GridEngine_PEname
 
 # Verify the scripts and needed tools were properly installed on the path
 (( dependencyErrors = 0 )) || true
-onPath=$(verifyOnPath "prepReference.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "cfsan_snp_pipeline"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
+onPath=$(verifyOnPath "prepReference.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "prepSamples.sh"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "snp_filter.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "create_snp_list.py"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
@@ -589,7 +589,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -j y
 #$ -cwd
 #$ -o $logDir/prepReference.log
-    prepReference.sh $forceFlag "$referenceFilePath"
+    cfsan_snp_pipeline index_ref $forceFlag "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -599,11 +599,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -d $(pwd)
     #PBS -o $logDir/prepReference.log
     #PBS -V
-    prepReference.sh $forceFlag "$referenceFilePath"
+    cfsan_snp_pipeline index_ref $forceFlag "$referenceFilePath"
 _EOF_
 )
 else
-    prepReference.sh $forceFlag "$referenceFilePath" 2>&1 | tee $logDir/prepReference.log
+    cfsan_snp_pipeline index_ref $forceFlag "$referenceFilePath" 2>&1 | tee $logDir/prepReference.log
 fi
 
 echo -e "\nStep 3 - Align the samples to the reference"

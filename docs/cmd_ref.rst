@@ -127,20 +127,23 @@ prepReference.sh
 
 ::
 
-  usage: prepReference.sh [-h] [-f] referenceFile
+  usage: cfsan_snp_pipeline index_ref [-h] [-f] [-v 0..5] [--version]
+                                      referenceFile
   
-  Index the reference genome for subsequent alignment, and create
-  the faidx index file for subsequent pileups. The output is written
-  to the reference directory.
+  Index the reference genome for subsequent read mapping, and create the faidx
+  index file for subsequent pileups. The output is written to the reference
+  directory.
   
-  Positional arguments:
-    referenceFile    : Relative or absolute path to the reference fasta file
+  positional arguments:
+    referenceFile         Relative or absolute path to the reference fasta file
   
-  Options:
-    -h               : Show this help message and exit
-    -f               : Force processing even when result files already exist and
-                       are newer than inputs
-  
+  optional arguments:
+    -h, --help            show this help message and exit
+    -f, --force           Force processing even when result files already exist
+                          and are newer than inputs (default: False)
+    -v 0..5, --verbose 0..5
+                          Verbose message level (0=no info, 5=lots) (default: 1)
+    --version             show program's version number and exit
 
 alignSampleToReference.sh
 -------------------------

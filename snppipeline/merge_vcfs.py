@@ -25,13 +25,12 @@ def merge_vcfs(args):
                 sample_name_one/consensus.vcf
             snpma.vcf*
 
-    The all the input files are created outside of this function.  Before
+    All the input files are created outside of this function.  Before
     running this command, the vcf file for each sample must be created by the
     call_consensus.py script.
 
-    The package
-    documentation provides an example of preparing these files based on the
-    lambda_virus sequence that is used as one test for this package.
+    The package documentation provides an example of preparing these files based
+    on the lambda_virus sequence that is used as one test for this package.
 
     Parameters
     ----------

@@ -39,14 +39,14 @@ def map_reads(args):
 
     The reverse fastq file is optional.
 
-    The all the input files are created outside of this function. The package
+    All the input files are created outside of this function. The package
     documentation provides an example of preparing these files based on the
     lambda_virus sequence that is used as one test for this package.
 
     Parameters
     ----------
     args : argparse.Namespace
-        referenceFile : File path of the reference fast file
+        referenceFile : File path of the reference fasta file
         sampleFastqFile1 : File path of the forward fastq file
         sampleFastqFile2 : Optional file path of the reverse fastq file
     """
@@ -59,9 +59,7 @@ def map_reads(args):
 
     # Verify reference fasta file exists and is not empty
     reference_file_path = args.referenceFile
-    bad_file_count = utils.verify_non_empty_input_files("Reference file", [reference_file_path])
-    if bad_file_count > 0:
-        utils.global_error(None)
+    utils.verify_non_empty_input_files("Reference file", [reference_file_path], error_handler="global")
 
     # Verify fastq files exist and are not empty
     sample_fastq_file1 = args.sampleFastqFile1
@@ -80,7 +78,7 @@ def map_reads(args):
 
     sample_dir = os.path.dirname(sample_fastq_file1)
     sample_id = fastq.sample_id(sample_fastq_file1)
-    reference_base_path = os.path.splitext(reference_file_path)[0]
+    reference_base_path = os.path.splitext(reference_file_path)[0] # strip the file extension
     reference_id = os.path.basename(reference_base_path)
 
     #==========================================================================

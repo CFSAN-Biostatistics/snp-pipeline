@@ -508,6 +508,28 @@ def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, co
     return len(err_messages)
 
 
+def global_error_on_missing_file(file_path, program):
+    """Generate a global error if a specified file is missing or empty after
+    running a named program.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the file to check
+    program : str
+        Name of the program that should have created the file.
+
+    Returns
+    -------
+    None
+        If the file is missing or empty, this function does not return, the program exits.
+    """
+    if not os.path.isfile(file_path):
+        global_error("Error: %s does not exist after running %s." % (file_path, program))
+    if os.path.getsize(file_path) == 0:
+        global_error("Error: %s is empty after running %s." % (file_path, program))
+
+
 def target_needs_rebuild(source_files, target_file):
     """Determine if a target file needs a fresh rebuild, i.e. the target does
     not exist or its modification time is older than any of its source files.

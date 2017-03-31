@@ -12,6 +12,7 @@ from snppipeline import snppipeline
 from snppipeline import utils
 from snppipeline.utils import verbose_print
 
+from snppipeline import index_ref
 from snppipeline import map_reads
 from snppipeline import merge_vcfs
 
@@ -44,6 +45,20 @@ def parse_arguments(system_args):
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparsers = parser.add_subparsers(dest="subparser_name", help="Command help:")
+
+    # -------------------------------------------------------------------------
+    # Create the parser for the "index_ref" command
+    # -------------------------------------------------------------------------
+    description = """Index the reference genome for subsequent read mapping, and create
+                     the faidx index file for subsequent pileups. The output is written
+                     to the reference directory."""
+    subparser = subparsers.add_parser("index_ref", help="Index the reference", description=description, formatter_class=formatter_class)
+    subparser.add_argument(dest="referenceFile",    type=str, help="Relative or absolute path to the reference fasta file")
+    subparser.add_argument("-f", "--force",   dest="forceFlag", action="store_true", help="Force processing even when result files already exist and are newer than inputs")
+    subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=index_ref.index_ref)
+    subparser.set_defaults(excepthook=utils.handle_global_exception)
 
     # -------------------------------------------------------------------------
     # Create the parser for the "map_reads" command
