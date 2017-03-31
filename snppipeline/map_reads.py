@@ -1,6 +1,6 @@
-"""This module contains the code to align reads to a reference genome using an
-external mapper -- bowtie2 or smalt.  Read group tags are also assigned during
-this step.
+"""This module is part of the CFSAN SNP Pipeline. It contains the code to
+align reads to a reference genome using an external mapper -- bowtie2 or smalt.
+Read group tags are also assigned during this step.
 """
 
 from __future__ import print_function
