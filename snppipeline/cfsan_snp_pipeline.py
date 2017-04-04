@@ -15,6 +15,7 @@ from snppipeline.utils import verbose_print
 from snppipeline import index_ref
 from snppipeline import map_reads
 from snppipeline import merge_vcfs
+from snppipeline import combine_metrics
 
 #==============================================================================
 # Command line driver
@@ -87,6 +88,27 @@ def parse_arguments(system_args):
     subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=merge_vcfs.merge_vcfs)
+    subparser.set_defaults(excepthook=utils.handle_global_exception)
+
+    # -------------------------------------------------------------------------
+    # Create the parser for the "combine_metrics" command
+    # -------------------------------------------------------------------------
+    description = """Combine the metrics from all samples into a single table of metrics for all samples.
+                     The output is a tab-separated-values file with a row for each sample and a column
+                     for each metric.
+
+                     Before running this command, the metrics for each sample must be created by the
+                     collectSampleMetrics.sh script."""
+
+    subparser = subparsers.add_parser("combine_metrics", help="Merge the per-sample metrics", description=description, formatter_class=formatter_class)
+    subparser.add_argument(dest="sampleDirsFile", type=str, help="Relative or absolute path to file containing a list of directories -- one per sample")
+    subparser.add_argument("-f", "--force",   dest="forceFlag", action="store_true", help="Force processing even when result files already exist and are newer than inputs")
+    subparser.add_argument("-n", "--metrics", dest="metricsFileName", type=str, default="metrics", metavar="NAME", help="File name of the metrics files which must exist in each of the sample directories.")
+    subparser.add_argument("-o", "--output",  dest="mergedMetricsFile", type=str, default="metrics.tsv", metavar="FILE", help="Output file. Relative or absolute path to the combined metrics file.")
+    subparser.add_argument("-s", "--spaces",  dest="spaceHeadings", action="store_true", help="Emit column headings with spaces instead of underscores")
+    subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=combine_metrics.combine_metrics)
     subparser.set_defaults(excepthook=utils.handle_global_exception)
 
     # -------------------------------------------------------------------------

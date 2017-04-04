@@ -519,23 +519,31 @@ combineSampleMetrics.sh
 
 ::
 
-  usage: combineSampleMetrics.sh [-h] [-n NAME] [-o FILE] sampleDirsFile
+  usage: cfsan_snp_pipeline combine_metrics [-h] [-f] [-n NAME] [-o FILE] [-s]
+                                            [-v 0..5] [--version]
+                                            sampleDirsFile
   
-  Combine the metrics from all samples into a single table of metrics for all samples.
-  The output is a tab-separated-values file with a row for each sample and a column
-  for each metric.
+  Combine the metrics from all samples into a single table of metrics for all
+  samples. The output is a tab-separated-values file with a row for each sample
+  and a column for each metric. Before running this command, the metrics for
+  each sample must be created by the collectSampleMetrics.sh script.
   
-  Before running this command, the metrics for each sample must be created by the
-  collectSampleMetrics.sh script.
+  positional arguments:
+    sampleDirsFile        Relative or absolute path to file containing a list of
+                          directories -- one per sample
   
-  Positional arguments:
-    sampleDirsFile   : Relative or absolute path to file containing a list of
-                       directories -- one per sample
-  
-  Options:
-    -h               : Show this help message and exit
-    -n NAME          : File name of the metrics files which must exist in each of
-                       the sample directories. (default: metrics)
-    -o FILE          : Output file. Relative or absolute path to the combined metrics
-                       file. (default: stdout)
-    -s               : Emit column headings with spaces instead of underscores
+  optional arguments:
+    -h, --help            show this help message and exit
+    -f, --force           Force processing even when result files already exist
+                          and are newer than inputs (default: False)
+    -n NAME, --metrics NAME
+                          File name of the metrics files which must exist in
+                          each of the sample directories. (default: metrics)
+    -o FILE, --output FILE
+                          Output file. Relative or absolute path to the combined
+                          metrics file. (default: metrics.tsv)
+    -s, --spaces          Emit column headings with spaces instead of
+                          underscores (default: False)
+    -v 0..5, --verbose 0..5
+                          Verbose message level (0=no info, 5=lots) (default: 1)
+    --version             show program's version number and exit

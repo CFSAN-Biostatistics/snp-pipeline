@@ -1146,7 +1146,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -hold_jid $collectSampleMetricsJobArray
 #$ -o $logDir/combineSampleMetrics.log
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
+    cfsan_snp_pipeline combine_metrics -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -1158,11 +1158,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterokarray:$collectSampleMetricsJobArray
     #PBS -o $logDir/combineSampleMetrics.log
     #PBS -V
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
+    cfsan_snp_pipeline combine_metrics -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile"
 _EOF_
 )
 else
-    combineSampleMetrics.sh -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
+    cfsan_snp_pipeline combine_metrics -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams "$sampleDirsFile" 2>&1 | tee $logDir/combineSampleMetrics.log
 fi
 
 # Step 14.2 - Notify user of any non-fatal errors accumulated during processing

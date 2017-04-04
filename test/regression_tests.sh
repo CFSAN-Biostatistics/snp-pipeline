@@ -49,7 +49,7 @@ assertFileContains()
 {
     file=$1
     targetString="$2"
-    grepResult=$(grep "$targetString" "$file")
+    grepResult=$(grep -E "$targetString" "$file")
     assertNotNull "$targetString is missing from $file" "$grepResult"
 }
 
@@ -2266,7 +2266,7 @@ tryCreateSnpListPermissionTrap()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running create_snp_list.py"
     assertFileNotContains "$logDir/create_snp_list.log" "Error detected while running create_snp_list.py"
-    assertFileContains "$tempDir/error.log" "IOError"
+    assertFileContains "$tempDir/error.log" "IOError|PermissionError"
     assertFileNotContains "$logDir/create_snp_list.log" "create_snp_list.py finished"
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/snplist.txt"
@@ -3103,7 +3103,7 @@ tryCreateSnpMatrixPermissionTrap()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running create_snp_matrix.py"
     assertFileNotContains "$logDir/create_snp_matrix.log" "Error detected while running create_snp_matrix.py"
-    assertFileContains "$tempDir/error.log" "IOError"
+    assertFileContains "$tempDir/error.log" "IOError|PermissionError"
     assertFileNotContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py finished"
     assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/snpma.fasta"
@@ -3376,7 +3376,7 @@ tryCreateSnpReferenceSeqPermissionTrap()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running create_snp_reference_seq.py"
     assertFileNotContains "$logDir/create_snp_reference_seq.log" "Error detected while running create_snp_reference_seq.py"
-    assertFileContains "$tempDir/error.log" "IOError"
+    assertFileContains "$tempDir/error.log" "IOError|PermissionError"
     assertFileNotContains "$logDir/create_snp_reference_seq.log" "create_snp_reference_seq.py finished"
     assertFileNotContains "$logDir/create_snp_reference_seq.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/referenceSNP.fasta"
@@ -3682,7 +3682,7 @@ testCollectSampleMetricsSamtoolsViewTrapStopUnset()
 }
 
 
-# Verify the combineSampleMetrics.sh script detects missing input file
+# Verify the cfsan_snp_pipeline combine_metrics script detects missing input file
 tryCombineSampleMetricsMissingSampleDirRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -3697,36 +3697,36 @@ tryCombineSampleMetricsMissingSampleDirRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run combineSampleMetrics with missing sampleDirectories.txt
-    combineSampleMetrics.sh "$tempDir/sampleDirectories.txt" &> "$logDir/combineSampleMetrics.log"
+    # Run cfsan_snp_pipeline combine_metrics with missing sampleDirectories.txt
+    cfsan_snp_pipeline combine_metrics "$tempDir/sampleDirectories.txt" &> "$logDir/combineSampleMetrics.log"
     errorCode=$?
 
     # Verify error handling behavior
-    assertEquals "combineSampleMetrics.sh returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline combine_metrics returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "combineSampleMetrics.sh failed."
-    assertFileNotContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh failed."
-    assertFileContains "$tempDir/error.log" "Sample directories file $tempDir/sampleDirectories.txt does not exist"
-    assertFileContains "$logDir/combineSampleMetrics.log" "Sample directories file $tempDir/sampleDirectories.txt does not exist"
-    assertFileNotContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline combine_metrics failed."
+    assertFileNotContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics failed."
+    assertFileContains "$tempDir/error.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
+    assertFileContains "$logDir/combineSampleMetrics.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
+    assertFileNotContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileNotContains "$logDir/combineSampleMetrics.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the combineSampleMetrics.sh script detects missing input file
+# Verify the cfsan_snp_pipeline combine_metrics script detects missing input file
 testCombineSampleMetricsMissingSampleDirRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCombineSampleMetricsMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the combineSampleMetrics.sh script detects missing input file
+# Verify the cfsan_snp_pipeline combine_metrics script detects missing input file
 testCombineSampleMetricsMissingSampleDirRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCombineSampleMetricsMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the combineSampleMetrics.sh script detects missing input file
+# Verify the cfsan_snp_pipeline combine_metrics script detects missing input file
 testCombineSampleMetricsMissingSampleDirRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -3734,7 +3734,7 @@ testCombineSampleMetricsMissingSampleDirRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the combineSampleMetrics.sh script detects a missing sample metrics file
+# Verify the cfsan_snp_pipeline combine_metrics script detects a missing sample metrics file
 tryCombineSampleMetricsMissingSampleMetricsRaiseSampleWarning()
 {
     expectErrorCode=$1
@@ -3751,37 +3751,41 @@ tryCombineSampleMetricsMissingSampleMetricsRaiseSampleWarning()
 
     # Try to combine metrics
     printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
-    echo "Dummy snpma.fasta content" > "$tempDir/snpma.fasta"
-    combineSampleMetrics.sh -o "$tempDir/metrics.tsv" "$tempDir/sampleDirectories.txt" &> "$logDir/combineSampleMetrics.log"
+    touch $tempDir/samples/sample4/metrics
+    cfsan_snp_pipeline combine_metrics -o "$tempDir/metrics.tsv" "$tempDir/sampleDirectories.txt" &> "$logDir/combineSampleMetrics.log"
     errorCode=$?
 
-    # Verify combineSampleMetrics.sh error handling behavior
-    assertEquals "combineSampleMetrics.sh returned incorrect error code when the sample metrics file was missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline combine_metrics error handling behavior
+    assertEquals "cfsan_snp_pipeline combine_metrics returned incorrect error code when the sample metrics file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "combineSampleMetrics.sh warning"
-    assertFileNotContains "$tempDir/error.log" "combineSampleMetrics.sh failed"
-    assertFileNotContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh failed"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline combine_metrics warning"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline combine_metrics failed"
+    assertFileNotContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics failed"
+    assertFileContains "$tempDir/metrics.tsv" "Sample metrics file $tempDir/samples/sample1/metrics does not exist"
     assertFileContains "$tempDir/error.log" "Sample metrics file $tempDir/samples/sample1/metrics does not exist"
     assertFileContains "$logDir/combineSampleMetrics.log" "Sample metrics file $tempDir/samples/sample1/metrics does not exist"
-    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$tempDir/metrics.tsv" "Sample metrics file $tempDir/samples/sample4/metrics is empty"
+    assertFileContains "$tempDir/error.log" "Sample metrics file $tempDir/samples/sample4/metrics is empty"
+    assertFileContains "$logDir/combineSampleMetrics.log" "Sample metrics file $tempDir/samples/sample4/metrics is empty"
+    assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileNotContains "$logDir/combineSampleMetrics.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the combineSampleMetrics.sh script detects a missing sample metrics file
+# Verify the cfsan_snp_pipeline combine_metrics script detects a missing sample metrics file
 testCombineSampleMetricsMissingSampleMetricsRaiseSampleWarningStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCombineSampleMetricsMissingSampleMetricsRaiseSampleWarning 0
 }
 
-# Verify the combineSampleMetrics.sh script detects a missing sample metrics file
+# Verify the cfsan_snp_pipeline combine_metrics script detects a missing sample metrics file
 testCombineSampleMetricsMissingSampleMetricsRaiseSampleWarningNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCombineSampleMetricsMissingSampleMetricsRaiseSampleWarning 0
 }
 
-# Verify the combineSampleMetrics.sh script detects a missing sample metrics file
+# Verify the cfsan_snp_pipeline combine_metrics script detects a missing sample metrics file
 testCombineSampleMetricsMissingSampleMetricsRaiseSampleWarningStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -3789,7 +3793,7 @@ testCombineSampleMetricsMissingSampleMetricsRaiseSampleWarningStopUnset()
 }
 
 
-# Verify the combineSampleMetrics.sh script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline combine_metrics script traps attempts to write to unwritable file
 tryCombineSampleMetricsPermissionTrap()
 {
     expectErrorCode=$1
@@ -3811,35 +3815,35 @@ tryCombineSampleMetricsPermissionTrap()
     # Try to combine metrics
     printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
     echo "Dummy snpma.fasta content" > "$tempDir/snpma.fasta"
-    combineSampleMetrics.sh -o "$tempDir/metrics.tsv" "$tempDir/sampleDirectories.txt" &> "$logDir/combineSampleMetrics.log"
+    cfsan_snp_pipeline combine_metrics -o "$tempDir/metrics.tsv" "$tempDir/sampleDirectories.txt" &> "$logDir/combineSampleMetrics.log"
     errorCode=$?
 
-    # Verify combineSampleMetrics.sh error handling behavior
-    assertEquals "combineSampleMetrics.sh returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline combine_metrics error handling behavior
+    assertEquals "cfsan_snp_pipeline combine_metrics returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running combineSampleMetrics.sh"
-    assertFileNotContains "$logDir/combineSampleMetrics.log" "Error detected while running combineSampleMetrics.sh"
-    assertFileContains "$tempDir/error.log" "printf"
-    assertFileNotContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline combine_metrics"
+    assertFileNotContains "$logDir/combineSampleMetrics.log" "Error detected while running cfsan_snp_pipeline combine_metrics"
+    assertFileContains "$tempDir/error.log" "IOError|PermissionError"
+    assertFileNotContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileNotContains "$logDir/combineSampleMetrics.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/metrics.tsv"
 }
 
-# Verify the combineSampleMetrics.sh script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline combine_metrics script traps attempts to write to unwritable file
 testCombineSampleMetricsPermissionTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCombineSampleMetricsPermissionTrap 100
 }
 
-# Verify the combineSampleMetrics.sh script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline combine_metrics script traps attempts to write to unwritable file
 testCombineSampleMetricsPermissionTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCombineSampleMetricsPermissionTrap 100
 }
 
-# Verify the combineSampleMetrics.sh script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline combine_metrics script traps attempts to write to unwritable file
 testCombineSampleMetricsPermissionTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -3977,8 +3981,8 @@ tryCalculateSnpDistancesPermissionTrap()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running calculate_snp_distances.py"
     assertFileNotContains "$logDir/calcSnpDistances.log" "Error detected while running calculate_snp_distances.py"
-    assertFileContains "$tempDir/error.log" "IOError"
-    assertFileContains "$logDir/calcSnpDistances.log" "IOError"
+    assertFileContains "$tempDir/error.log" "IOError|PermissionError"
+    assertFileContains "$logDir/calcSnpDistances.log" "IOError|PermissionError"
     assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
     assertFileNotContains "$logDir/calcSnpDistances.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/pairwise"
@@ -4700,7 +4704,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample3/reads.sam"
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample4/reads.sam"
 
-    assertFileContains "$tempDir/error.log" "snp_filter.py failed\|create_snp_list.py failed"  # either/or
+    assertFileContains "$tempDir/error.log" "snp_filter.py failed|create_snp_list.py failed"  # either/or
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
@@ -5018,7 +5022,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/collectSampleMetrics.log-2" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/collectSampleMetrics.log-4" "collectSampleMetrics.sh finished"
     assertFileContains "$logDir/collectSampleMetrics.log-3" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
@@ -5093,7 +5097,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
@@ -5179,7 +5183,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
@@ -5260,7 +5264,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-2" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
@@ -5494,7 +5498,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/combineSampleMetrics.log" "combineSampleMetrics.sh finished"
+    assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"

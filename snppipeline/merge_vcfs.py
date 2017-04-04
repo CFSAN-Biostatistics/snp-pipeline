@@ -50,12 +50,10 @@ def merge_vcfs(args):
     vcf_file_name = args.vcfFileName
     merged_vcf_file = args.mergedVcfFile
 
-    bad_file_count = utils.verify_non_empty_input_files("File of sample directories", [sample_directories_list_path])
-    if bad_file_count > 0:
-        utils.global_error(None)
+    utils.verify_non_empty_input_files("File of sample directories", [sample_directories_list_path], error_handler="global")
 
     with open(sample_directories_list_path, "r") as f:
-      sample_directories = [line.rstrip() for line in f]
+        sample_directories = [line.rstrip() for line in f]
     sample_directories = [d for d in sample_directories if d]
     vcf_files = [os.path.join(d, vcf_file_name) for d in sample_directories]
 

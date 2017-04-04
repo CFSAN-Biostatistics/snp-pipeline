@@ -21,6 +21,7 @@ History
 * Log the SNP Pipeline version in the header of all the log files.
 * Removed the unused create_snp_pileup.py script.
 * Capture read-group metadata in the SAM/BAM files during the read mapping step.
+* Changed the combineSampleMetrics script to write to metrics.tsv by default, not stdout.
 
 0.7.0 (2016-11-30)
 ~~~~~~~~~~~~~~~~~~

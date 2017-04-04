@@ -3,6 +3,12 @@ from __future__ import absolute_import
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+
 import locale
 import os
 import platform
@@ -121,8 +127,7 @@ def print_arguments(args):
 
 
 def detect_numeric_option_in_parameters_str(parameters, option):
-    """
-    Parses a string of options to find a particular option followed by its
+    """Parses a string of options to find a particular option followed by its
     value.
 
     This function is used to determine whether a user is overriding a default
@@ -202,6 +207,69 @@ def extract_version_str(program_name, command_line):
             return program_name + " version " + tokens[0]
 
     return "Unrecognized " + program_name + " version"
+
+
+def read_properties(prop_file_path):
+    """Read a file of name=value pairs and load them into a dictionary.
+
+    Name and value must be separated by =.
+    Spaces are stripped around both name and value.
+    Quotes around value are removed.
+    Comment lines starting with # are ignored.
+
+    Parameters
+    ----------
+    prop_file_path : str
+        Path to the property file.
+
+    Returns
+    -------
+    properties : dict
+        Dictionary mapping property names to str values.
+
+    Examples
+    --------
+    # Setup tests
+    >>> from tempfile import NamedTemporaryFile
+
+    # Create a property file
+    >>> f = NamedTemporaryFile(delete=False, mode='w')
+    >>> filepath = f.name
+    >>> print(" # Comment", file=f)         # space before comment
+    >>> print("Aaa=bbb", file=f)            # no spaces around =, no quotes around value
+    >>> print(" Bbb = '2' ", file=f)        # leading space, spaces around =, single quoted value
+    >>> print("Ccc = \\"33\\"", file=f)     # double quotes around value
+    >>> print("Ddd=", file=f)               # no value
+    >>> print("Eee='5\\"'", file=f)         # double quote within single-quoted value
+    >>> print("Fff=\\"6'\\"", file=f)       # single quote within double-quoted value
+    >>> f.close()
+
+    # Read the properties
+    >>> read_properties(filepath)
+    OrderedDict([('Aaa', 'bbb'), ('Bbb', '2'), ('Ccc', '33'), ('Ddd', ''), ('Eee', '5"'), ('Fff', "6'")])
+    >>> os.unlink(filepath)
+    """
+    properties = OrderedDict()
+    with open(prop_file_path) as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith('#'):
+                continue
+            assign_op_idx = line.find('=')
+            if assign_op_idx < 0:
+                continue
+            key = line[:assign_op_idx]
+            value = line[assign_op_idx + 1 :]
+            key = key.strip()
+            value = value.strip()
+            if value.startswith('"') and value.endswith('"'):
+                value = value.strip('"')
+            elif value.startswith("'") and value.endswith("'"):
+                value = value.strip("'")
+            properties[key] = value
+
+    return properties
+
 
 
 def global_error(message):
@@ -404,6 +472,30 @@ def report_error(message):
     sys.stdout.flush() # make sure stdout is flushed before printing the error
     if message:
         print(message, file=sys.stderr)
+
+
+def sample_warning(message):
+    """Log a warning to the error summary file with special formatting and also print the warning to stderr.
+    Do not exit regardless of the SnpPipeline_StopOnSampleError setting.
+
+    Parameters
+    ----------
+    message : str
+        Warning message text.
+    """
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            print("%s warning:" % program_name_with_command(), file=err_log)
+            print(message, file=err_log)
+            print("================================================================================", file=err_log)
+
+    # Also send the detail error message to stderr -- this will put the error message in the
+    # process-specific log file.
+    sys.stdout.flush() # make sure stdout is flushed before printing the error
+    if message:
+        print(message, file=sys.stderr)
+
 
 
 def verify_existing_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):
