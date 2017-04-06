@@ -1019,6 +1019,9 @@ You can disable this step and keep the duplicate reads by configuring the
 You can customize the picard MarkDuplicates behavior to some extent by configuring the
 ``PicardMarkDuplicates_ExtraParams`` parameter in the configuration file.
 
+Duplicate read removal works best when the read names in the fastq files are in the original Illumina format.
+When downloading fastq files from NCBI with ``fastq-dump``, you should use the ``--origfmt`` command line option.
+
 More information about the Picard MarkDuplicates tool can be found here:
 
 * https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates
