@@ -3,7 +3,7 @@
 History
 -------
 
-0.7.1 (2017-02-??)
+0.7.1 (2017-04-??)
 ~~~~~~~~~~~~~~~~~~
 
 * Check for ``bc`` on the path when the pipeline is launched.  Complain if it is missing.
@@ -22,6 +22,9 @@ History
 * Removed the unused create_snp_pileup.py script.
 * Capture read-group metadata in the SAM/BAM files during the read mapping step.
 * Changed the combineSampleMetrics script to write to metrics.tsv by default, not stdout.
+* Changed the composition of the included Salmonella Agona data set to remove the excessively large
+  sample ERR178930 and include a more diverse set of isolates from different geographic locations,
+  different environmental sources, and different types of sequencing instruments.
 
 0.7.0 (2016-11-30)
 ~~~~~~~~~~~~~~~~~~

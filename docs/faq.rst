@@ -140,17 +140,16 @@ A: Gaps, “-“, are either missing bases (indels) or cases where there is insu
 A: Older versions of VarScan failed to generate the header section of some VCF files.  This in turn, caused the SNP Pipeline
 to ignore the first snp in the VCF file.  Upgrade to a newer version VarScan.
 
+.. _optical-dup-read-label:
 
 **Q: Why are there no optical duplicate reads and why am I seeing the warning message "Default READ_NAME_REGEX '<optimized capture of last three ':' separated fields as numeric values>' did not match read name"?**
 
 A: First, this is not a serious problem -- optical duplicate reads occur much less frequently than PCR amplification duplicates.
-This message appears in the log file when the Picard MarkDuplicates command cannot parse the read names in the BAM file.
-It trys to identify the tile number, x-position, and y-position of every read.  Without those data elements, optical duplicates
-cannot be identified.  You will see this warning only once, but it's usually a problem for every read in the file.  When
-downloading fastq files from NCBI with ``fastq-dump``, you can specify the ``--origfmt`` option to format the read names in the
-original Illumina format when possible.  It is not always possible because NCBI does not always store the read names in the SRA
-database.
-
+This message appears in the log file when Picard MarkDuplicates cannot identify the tile number, x-position, and y-position in
+the read names in the BAM file.  Without those data elements, optical duplicates cannot be identified.  You will see this warning
+only once, but it's usually a problem for every read in the file.  When downloading fastq files from NCBI with ``fastq-dump``,
+you can specify the ``--origfmt`` option to format the read names in the original Illumina format when possible.  It is not always
+possible because NCBI does not always store the original read names in the SRA database.
 
 .. _faq-performance-label:
 

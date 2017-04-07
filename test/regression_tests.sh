@@ -49,7 +49,7 @@ assertFileContains()
 {
     file=$1
     targetString="$2"
-    grepResult=$(grep -E "$targetString" "$file")
+    grepResult=$(grep --max-count=1 -E "$targetString" "$file")
     assertNotNull "$targetString is missing from $file" "$grepResult"
 }
 
@@ -5550,15 +5550,9 @@ testRunSnpPipelineAgona()
     # Copy the supplied test data to a work area:
     copy_snppipeline_data.py agonaInputs "$tempDir"
 
-    # Create sample directories
-    mkdir -p "$tempDir/samples/ERR178926"  "$tempDir/samples/ERR178927"  "$tempDir/samples/ERR178928"  "$tempDir/samples/ERR178929"  "$tempDir/samples/ERR178930"
-
     # Download sample data from SRA at NCBI.
-    fastq-dump --split-files --outdir "$tempDir/samples/ERR178926" ERR178926 &> /dev/null
-    fastq-dump --split-files --outdir "$tempDir/samples/ERR178927" ERR178927 &> /dev/null
-    fastq-dump --split-files --outdir "$tempDir/samples/ERR178928" ERR178928 &> /dev/null
-    fastq-dump --split-files --outdir "$tempDir/samples/ERR178929" ERR178929 &> /dev/null
-    fastq-dump --split-files --outdir "$tempDir/samples/ERR178930" ERR178930 &> /dev/null
+     mkdir "$tempDir/samples"
+    < "$tempDir/sampleList" xargs -P 10 -I % sh -c "mkdir $tempDir/samples/%; fastq-dump --gzip --origfmt --split-files --outdir $tempDir/samples/% % > /dev/null;"
 
     # Verify the agona data was downloaded properly
     cd "$tempDir"
@@ -5587,12 +5581,35 @@ testRunSnpPipelineAgona()
     assertIdenticalFiles "$tempDir/snpma.fasta"        "$tempDir/expectedResults/snpma.fasta"
     assertIdenticalFiles "$tempDir/snpma.vcf"          "$tempDir/expectedResults/snpma.vcf" "--ignore-matching-lines=##fileDate" "--ignore-matching-lines=##source" "--ignore-matching-lines=##bcftools"
     assertIdenticalFiles "$tempDir/referenceSNP.fasta" "$tempDir/expectedResults/referenceSNP.fasta"
-    assertIdenticalFiles "$tempDir/metrics.tsv"        "$tempDir/expectedResults/metrics.tsv"
+
+    assertIdenticalFiles "$tempDir/metrics.tsv"               "$tempDir/expectedResults/metrics.tsv"
     assertIdenticalFiles "$tempDir/snp_distance_pairwise.tsv" "$tempDir/expectedResults/snp_distance_pairwise.tsv"
     assertIdenticalFiles "$tempDir/snp_distance_matrix.tsv"   "$tempDir/expectedResults/snp_distance_matrix.tsv"
 
-    assertIdenticalFiles "$tempDir/snpma_preserved.fasta"     "$tempDir/expectedResults/snpma_preserved.fasta"
-    assertIdenticalFiles "$tempDir/snpma_preserved.vcf"       "$tempDir/expectedResults/snpma_preserved.vcf" "--ignore-matching-lines=##fileDate" "--ignore-matching-lines=##source" "--ignore-matching-lines=##bcftools"
+    assertIdenticalFiles "$tempDir/snplist_preserved.txt"             "$tempDir/expectedResults/snplist_preserved.txt"
+    assertIdenticalFiles "$tempDir/snpma_preserved.fasta"             "$tempDir/expectedResults/snpma_preserved.fasta"
+    assertIdenticalFiles "$tempDir/snpma_preserved.vcf"               "$tempDir/expectedResults/snpma_preserved.vcf" "--ignore-matching-lines=##fileDate" "--ignore-matching-lines=##source" "--ignore-matching-lines=##bcftools"
+    assertIdenticalFiles "$tempDir/referenceSNP_preserved.fasta"      "$tempDir/expectedResults/referenceSNP_preserved.fasta"
+    assertIdenticalFiles "$tempDir/snp_distance_matrix_preserved.tsv" "$tempDir/expectedResults/snp_distance_matrix_preserved.tsv"
+
+    # Verify proper read group tags
+    assertFileContains "$tempDir/samples/SRR1566386/reads.sam" "@RG"
+    assertFileContains "$tempDir/samples/SRR1566386/reads.sam" "ID:H92ARADXX.2"
+    assertFileContains "$tempDir/samples/SRR1566386/reads.sam" "SM:SRR1566386"
+    assertFileContains "$tempDir/samples/SRR1566386/reads.sam" "LB:1"
+    assertFileContains "$tempDir/samples/SRR1566386/reads.sam" "PL:illumina"
+    assertFileContains "$tempDir/samples/SRR1566386/reads.sam" "PU:H92ARADXX.2.SRR1566386"
+    assertFileContains "$tempDir/samples/SRR1566386/reads.sam" "RG:Z:H92ARADXX.2"
+    assertFileContains "$tempDir/samples/SRR1566386/reads.sam" "HWI-ST1029:112:H92ARADXX:2:1101:1623:2163"
+
+    assertFileContains "$tempDir/samples/SRR2566901/reads.sam" "@RG"
+    assertFileContains "$tempDir/samples/SRR2566901/reads.sam" "ID:A87H3.1"
+    assertFileContains "$tempDir/samples/SRR2566901/reads.sam" "SM:SRR2566901"
+    assertFileContains "$tempDir/samples/SRR2566901/reads.sam" "LB:1"
+    assertFileContains "$tempDir/samples/SRR2566901/reads.sam" "PL:illumina"
+    assertFileContains "$tempDir/samples/SRR2566901/reads.sam" "PU:A87H3.1.SRR2566901"
+    assertFileContains "$tempDir/samples/SRR2566901/reads.sam" "RG:Z:A87H3.1"
+    assertFileContains "$tempDir/samples/SRR2566901/reads.sam" "M02070:11:000000000-A87H3:1:1101:16393:1371"
 }
 
 

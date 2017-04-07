@@ -416,9 +416,12 @@ below to download and process the data set.
 
 Step 1 - Gather data::
 
-    # The SNP Pipeline distribution includes sample data organized as shown below:
+    # The SNP Pipeline distribution does not include the sample data, but does
+    #   include information about the sample data, as well as the reference
+    #   sequence.  The files are organized as shown below:
     snppipeline/data/agonaInputs/sha256sumCheck
     snppipeline/data/agonaInputs/reference/NC_011149.fasta
+    snppipeline/data/agonaInputs/sampleList
 
     # Copy the supplied test data to a work area:
     mkdir testAgona
@@ -426,18 +429,12 @@ Step 1 - Gather data::
     copy_snppipeline_data.py agonaInputs cleanInputs
     cd cleanInputs
 
-    # Create sample directories
-    mkdir -p samples/ERR178926  samples/ERR178927  samples/ERR178928  samples/ERR178929  samples/ERR178930
-
-    # Download sample data from SRA at NCBI. Note that we use the fastq-dump command from
-    #   the NCBI SRA-toolkit to fetch sample sequences. There are other ways to get the data,
-    #   but the SRA-toolkit is easy to install, and does a good job of downloading large
-    #   files.
-    fastq-dump --split-files --outdir samples/ERR178926 ERR178926
-    fastq-dump --split-files --outdir samples/ERR178927 ERR178927
-    fastq-dump --split-files --outdir samples/ERR178928 ERR178928
-    fastq-dump --split-files --outdir samples/ERR178929 ERR178929
-    fastq-dump --split-files --outdir samples/ERR178930 ERR178930
+    # Create sample directories and download sample data from SRA at NCBI. Note that
+    #   we use the fastq-dump command from the NCBI SRA-toolkit to fetch sample
+    #   sequences. There are other ways to get the data, but the SRA-toolkit is
+    #   easy to install, and does a good job of downloading large files.
+    mkdir samples
+    < sampleList xargs -I % sh -c 'mkdir samples/%; fastq-dump --gzip --origfmt --split-files --outdir samples/% %;'
 
     # Check the data
     #   The original data was used to generate a hash as follows:
@@ -459,8 +456,8 @@ Step 2 - Run the SNP Pipeline::
 
 Step 3 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 3583 entries, and the snplist_preserved.txt
-should have 204 entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference bases are in the files
+Upon successful completion of the pipeline, the snplist.txt file should have 3121 entries, and the snplist_preserved.txt
+should have 249 entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference bases are in the files
 referenceSNP.fasta and referenceSNP_preserved.fasta::
 
     # Verify the result files were created
@@ -529,7 +526,7 @@ Step 1 - Create dataset::
     #   sequences. There are other ways to get the data, but the SRA-toolkit is
     #   easy to install, and does a good job of downloading large files.
     mkdir samples
-    < sampleList xargs -I % sh -c ' mkdir samples/%; fastq-dump --split-files --outdir samples/% %;'
+    < sampleList xargs -I % sh -c ' mkdir samples/%; fastq-dump --gzip --origfmt --split-files --outdir samples/% %;'
 
     # Check the data
     #   The original data was used to generate a hash as follows:
@@ -641,7 +638,7 @@ Step 2 - Prep work::
     # Create files of sample directories and fastQ files:
     ls -d samples/* > sampleDirectories.txt
     rm sampleFullPathNames.txt 2>/dev/null
-    cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
+    cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq* >> sampleFullPathNames.txt; done
     # Determine the number of CPU cores in your computer
     numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
@@ -748,27 +745,24 @@ and process the data set.
 
 Step 1 - Gather data::
 
-    # The SNP Pipeline distribution includes sample data organized as shown below:
+    # The SNP Pipeline distribution does not include the sample data, but does
+    #   include information about the sample data, as well as the reference
+    #   sequence.  The files are organized as shown below:
     snppipeline/data/agonaInputs/sha256sumCheck
     snppipeline/data/agonaInputs/reference/NC_011149.fasta
+    snppipeline/data/agonaInputs/sampleList
 
     # Copy the supplied test data to a work area:
-    cd test
-    copy_snppipeline_data.py agonaInputs testAgona
+    mkdir testAgona
     cd testAgona
+    copy_snppipeline_data.py agonaInputs .
 
-    # Create sample directories
-    mkdir -p samples/ERR178926  samples/ERR178927  samples/ERR178928  samples/ERR178929  samples/ERR178930
-
-    # Download sample data from SRA at NCBI. Note that we use the fastq-dump command from
-    #   the NCBI SRA-toolkit to fetch sample sequences. There are other ways to get the data,
-    #   but the SRA-toolkit is easy to install, and does a good job of downloading large
-    #   files.
-    fastq-dump --split-files --outdir samples/ERR178926 ERR178926
-    fastq-dump --split-files --outdir samples/ERR178927 ERR178927
-    fastq-dump --split-files --outdir samples/ERR178928 ERR178928
-    fastq-dump --split-files --outdir samples/ERR178929 ERR178929
-    fastq-dump --split-files --outdir samples/ERR178930 ERR178930
+    # Create sample directories and download sample data from SRA at NCBI. Note that
+    #   we use the fastq-dump command from the NCBI SRA-toolkit to fetch sample
+    #   sequences. There are other ways to get the data, but the SRA-toolkit is
+    #   easy to install, and does a good job of downloading large files.
+    mkdir samples
+    < sampleList xargs -I % sh -c 'mkdir samples/%; fastq-dump --gzip --origfmt --split-files --outdir samples/% %;'
 
     # Check the data
     #   The original data was used to generate a hash as follows:
@@ -783,7 +777,7 @@ Step 2 - Prep work::
     # Create files of sample directories and fastQ files:
     ls -d samples/* > sampleDirectories.txt
     rm sampleFullPathNames.txt 2>/dev/null
-    cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq >> sampleFullPathNames.txt; done
+    cat sampleDirectories.txt | while read dir; do echo $dir/*.fastq* >> sampleFullPathNames.txt; done
     # Determine the number of CPU cores in your computer
     numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
@@ -848,7 +842,7 @@ Step 14 - Compute the SNP distances between samples::
 
 Step 15 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 3583 entries.  The SNP Matrix
+Upon successful completion of the pipeline, the snplist.txt file should have 3121 entries.  The SNP Matrix
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     # Verify the result files were created
@@ -1021,6 +1015,7 @@ You can customize the picard MarkDuplicates behavior to some extent by configuri
 
 Duplicate read removal works best when the read names in the fastq files are in the original Illumina format.
 When downloading fastq files from NCBI with ``fastq-dump``, you should use the ``--origfmt`` command line option.
+See :ref:`Why are there no optical duplicates? <optical-dup-read-label>`
 
 More information about the Picard MarkDuplicates tool can be found here:
 
