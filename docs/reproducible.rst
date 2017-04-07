@@ -57,15 +57,15 @@ other portions of this document.
 
 The pipeline depends on some fairly complex software packages, and these packages have
 large numbers of parameters. As released, the pipeline does not specify values
-for every possible parameter, but only those we have found it useful to modify in our work. 
-A configuration file used by the pipeline provides a record of the parameters used 
-and also makes it possible to customize the behavior of the pipeline by adding or 
+for every possible parameter, but only those we have found it useful to modify in our work.
+A configuration file used by the pipeline provides a record of the parameters used
+and also makes it possible to customize the behavior of the pipeline by adding or
 modifying parameters as needed. Those wishing to further modify the
 software behavior will have to adjust the code to meet their needs.
 
-We recommend retaining the parameter values used for any important results,  ideally 
+We recommend retaining the parameter values used for any important results,  ideally
 in a script or configuration file that is under version control.  The pipeline generates
-log files documenting each run by capturing software versions and parameters used for 
+log files documenting each run by capturing software versions and parameters used for
 each run.
 
 Concurrency
@@ -113,11 +113,11 @@ from the versions of SAMtools and Bowtie that we have used below.
 
 **Bowtie**
 
-Different versions of Bowtie can generate different SAM files, which 
+Different versions of Bowtie can generate different SAM files, which
 subsequently causes different pileups and different variant detection.
 For example, with our included data sets, Bowtie 2.1.0 and 2.2.2 produce
-functionally identical SAM files when run on the Lambda Virus data set.  
-However, the generated SAM files (and downstream results) are different 
+functionally identical SAM files when run on the Lambda Virus data set.
+However, the generated SAM files (and downstream results) are different
 when run on the Salmonella Agona data set.
 
 **SAMtools**
@@ -144,16 +144,16 @@ have found one problem worth mentioning here.
 
 **SAMtools snp pileup difference from genome-wide pileup**
 
-An important processing step in the SNP Pipeline is creation of a pileup 
-file per sample containing read pileups at the positions where snps were called 
+An important processing step in the SNP Pipeline is creation of a pileup
+file per sample containing read pileups at the positions where snps were called
 in *any* of the samples.  This pileup file should be a subset of the genome-wide
-pileup for each sample.  However, the SAMtools software does not generate 
-pileup records exactly matching the genome-wide pileup when given a list of 
-positions for which the pileup should be generated.  The differences are 
+pileup for each sample.  However, the SAMtools software does not generate
+pileup records exactly matching the genome-wide pileup when given a list of
+positions for which the pileup should be generated.  The differences are
 particularly evident at the first few snp positions and cause missing
 values in the SNP matrix. We first noticed this problem when the first or
 last position of the reference sequence was identified as a variant site.
-To work around this problem, the SNP Pipeline 
+To work around this problem, the SNP Pipeline
 internally extracts the desired pileup records from the genome-wide pileup.
 
 This SAMtools issue has been reported here: https://github.com/samtools/samtools/issues/282
@@ -186,7 +186,7 @@ Listeria monocytogenes
 ----------------------
 
 This is designed to be a realistic-sized data set based on an outbreak
-of L. m.  in soft cheese. The data must be downloaded from the NCBI
+of L. m. in stone fruit. The data must be downloaded from the NCBI
 due to its large size. We provide a file of hashes that can easily be
 used to verify that the data downloaded matches the data originally
 used to produce our results. (Use sha256sum at the unix command line.)
