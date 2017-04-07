@@ -18,6 +18,7 @@ History
   ``Picard`` and will require changing your CLASSPATH.  See :ref:`installation-label`. You can
   disable this step and keep the duplicate reads by configuring ``SnpPipeline_RemoveDuplicateReads=false``
   in the configuration file.
+* Added a new metric to count the number of duplicate reads in each sample.
 * Log the SNP Pipeline version in the header of all the log files.
 * Removed the unused create_snp_pileup.py script.
 * Capture read-group metadata in the SAM/BAM files during the read mapping step.

@@ -1144,7 +1144,7 @@ The metrics are:
 |                         | | by bowtie.                                                     |
 +-------------------------+------------------------------------------------------------------+
 | Duplicate Reads         | | The number of reads marked as duplicates.  These reads are not |
-|                         | | included the the pileup and are not used to call snps.  When   |
+|                         | | included in the pileup and are not used to call snps.  When    |
 |                         | | a set of duplicate reads is found, only the highest-quality    |
 |                         | | read in the set is retained.                                   |
 +-------------------------+------------------------------------------------------------------+
