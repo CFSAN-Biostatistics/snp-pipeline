@@ -77,7 +77,7 @@ def map_reads(args):
         utils.global_error("Error: only bowtie2 and smalt aligners are supported.")
 
     sample_dir = os.path.dirname(sample_fastq_file1)
-    sample_id = fastq.sample_id(sample_fastq_file1)
+    sample_id = utils.sample_id_from_file(sample_fastq_file1)
     reference_base_path = os.path.splitext(reference_file_path)[0] # strip the file extension
     reference_id = os.path.basename(reference_base_path)
 
@@ -104,7 +104,7 @@ def map_reads(args):
     #==========================================================================
 
     # The read group identifies reads from a single run and lane
-    read_group_tags = fastq.construct_read_group_tags(sample_fastq_file1)
+    read_group_tags = fastq.construct_read_group_tags(sample_fastq_file1, sample_id)
 
     # Default to 8 cores on HPC or all cpu cores on workstation
     if os.environ.get("JOB_ID") or os.environ.get("PBS_JOBID"):

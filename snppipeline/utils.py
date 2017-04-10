@@ -271,6 +271,71 @@ def read_properties(prop_file_path):
     return properties
 
 
+def sample_id_from_dir(dir_path):
+    """Return the sample id of a sample directory as defined by the cfsan snp pipeline.
+
+    This assumes the files for the sample are placed in a directory whose basename is the sample_id.
+
+    Parameters
+    ----------
+    dir_path : str
+        Path to the directory.
+
+    Returns
+    -------
+    sample_id : str
+        The cfsan snp pipeline defines the sample id as the basename of the parent directory.
+
+    Examples
+    --------
+    >>> sample_id_from_dir("") == os.path.basename(os.getcwd())
+    True
+
+    >>> sample_id_from_dir(".") == os.path.basename(os.getcwd())
+    True
+
+    >>> sample_id_from_dir("aaa")
+    'aaa'
+
+    >>> sample_id_from_dir("aaa/bbb")
+    'bbb'
+    """
+    sample_dir = os.path.abspath(dir_path)
+    sample_id = os.path.basename(sample_dir)
+    return sample_id
+
+
+def sample_id_from_file(file_path):
+    """Return the sample id of a file as defined by the cfsan snp pipeline.
+
+    This assumes the file has been placed in a directory whose basename is the sample_id.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the file.  This could be a fastq, sam, bam. pileup, vcf, etc.
+
+    Returns
+    -------
+    sample_id : str
+        The cfsan snp pipeline defines the sample id as the basename of the parent directory.
+
+    Examples
+    --------
+    >>> sample_id_from_file("x.fastq") == os.path.basename(os.getcwd())
+    True
+
+    >>> sample_id_from_file("aaa/x.fastq")
+    'aaa'
+
+    >>> sample_id_from_file("aaa/bbb/x.fastq")
+    'bbb'
+    """
+    sample_abs_path = os.path.abspath(file_path)
+    sample_dir = os.path.dirname(sample_abs_path)
+    sample_id = os.path.basename(sample_dir)
+    return sample_id
+
 
 def global_error(message):
     """

@@ -9,38 +9,6 @@ import os
 import re
 
 
-def sample_id(fastq_path):
-    """Return the sample id of a fastq file as defined by the cfsan snp pipeline.
-
-    This assumes the file has been placed in a directory whose basename is the sample_id.
-
-    Parameters
-    ----------
-    fastq_path : str
-        Path to the fastq file.
-
-    Returns
-    -------
-    sample_id : str
-        The cfsan snp pipeline defines the sample id as the basename of the parent directory.
-
-    Examples
-    --------
-    >>> sample_id("x.fastq") == os.path.basename(os.getcwd())
-    True
-
-    >>> sample_id("aaa/x.fastq")
-    'aaa'
-
-    >>> sample_id("aaa/bbb/x.fastq")
-    'bbb'
-    """
-    sample_abs_path = os.path.abspath(fastq_path)
-    sample_dir = os.path.dirname(sample_abs_path)
-    sample_id = os.path.basename(sample_dir)
-    return sample_id
-
-
 # Mapping of Illumina flowcell last 4 characters to instrument type
 ILLUMINA_FLOWCELL_INSTRUMENT_TYPE_DICT = {
     "AAXX" : "Genome Analyzer",
@@ -404,7 +372,7 @@ def extract_metadata_tags(fastq_path):
 # Named tuple to contain read group tags parsed from fastq metadata
 ReadGroupTags = collections.namedtuple("ReadGroupTags", "ID SM LB PL PU")
 
-def construct_read_group_tags(fastq_path):
+def construct_read_group_tags(fastq_path, sample_name):
     """Examine a fastq file and construct read group tags from the
     flowcell and lane if possible.
 
@@ -421,6 +389,8 @@ def construct_read_group_tags(fastq_path):
     ----------
     fastq_path : str
         Path to the fastq file.
+    sample_name : str
+        The name of the sample sequenced in this read group.
 
     Returns
     -------
@@ -429,7 +399,7 @@ def construct_read_group_tags(fastq_path):
             An identifier for the source of reads within the fastq file formed
             from the flowcell and lane.  The read group id is {flowcell}.{lane}".
         SM : str
-            The name of the sample sequenced in this read group.
+            This will always be the value of the sample_name argument.
         LB : str
             DNA preparation library identifier.  This function assumes all the reads
             in the fastq file are from the same library.  Always set to "1".
@@ -449,8 +419,8 @@ def construct_read_group_tags(fastq_path):
     >>> filepath = f.name
     >>> num_bytes = f.write("@SRR498276.1 HWI-M00229:9:000000000-A1474:1:1:15012:1874 length=151\\n")
     >>> f.close()
-    >>> construct_read_group_tags(filepath)
-    ReadGroupTags(ID='A1474.1', SM='tmp', LB='1', PL='illumina', PU='A1474.1.tmp')
+    >>> construct_read_group_tags(filepath, 'sampleA')
+    ReadGroupTags(ID='A1474.1', SM='sampleA', LB='1', PL='illumina', PU='A1474.1.sampleA')
     >>> os.unlink(filepath)
 
     # Sequence id line missing flowcell and lane
@@ -458,7 +428,7 @@ def construct_read_group_tags(fastq_path):
     >>> filepath = f.name
     >>> num_bytes = f.write("@SRR498276.1 length=151\\n")
     >>> f.close()
-    >>> construct_read_group_tags(filepath) is None
+    >>> construct_read_group_tags(filepath, 'sampleA') is None
     True
     >>> os.unlink(filepath)
 
@@ -471,7 +441,7 @@ def construct_read_group_tags(fastq_path):
         return None
 
     id = tags.flow_cell + '.' + tags.lane
-    sm = sample_id(fastq_path)
+    sm = sample_name
     lb = '1'
     pl = tags.platform
     pu = id + '.' + sm
