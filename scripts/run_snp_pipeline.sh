@@ -669,7 +669,7 @@ if [[ "$platform" == "grid" ]]; then
 #$   -j y
 #$   -hold_jid_ad $alignSamplesJobArray
 #$   -o $logDir/prepSamples.log-\$TASK_ID
-    prepSamples.sh $forceFlag "$referenceFilePath" "\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)"
+    cfsan_snp_pipeline call_sites $forceFlag "$referenceFilePath" "\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -683,7 +683,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/prepSamples.log
     #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    prepSamples.sh $forceFlag "$referenceFilePath" "\$sampleDir"
+    cfsan_snp_pipeline call_sites $forceFlag "$referenceFilePath" "\$sampleDir"
 _EOF_
 )
 else
@@ -692,7 +692,7 @@ else
     else
         numPrepSamplesCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numPrepSamplesCores bash -c 'set -o pipefail; prepSamples.sh $forceFlag "$referenceFilePath" $1 2>&1 | tee $logDir/prepSamples.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numPrepSamplesCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_sites $forceFlag "$referenceFilePath" $1 2>&1 | tee $logDir/prepSamples.log-$0'
 fi
 
 #Filter abnormal SNPs if needed

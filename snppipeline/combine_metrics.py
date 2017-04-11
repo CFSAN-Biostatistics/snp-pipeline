@@ -6,9 +6,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import os
-import sys
 
-from snppipeline import command
 from snppipeline import utils
 from snppipeline.utils import verbose_print
 

@@ -8,12 +8,12 @@ from __future__ import absolute_import
 import argparse
 import sys
 from snppipeline import __version__
-from snppipeline import snppipeline
 from snppipeline import utils
 from snppipeline.utils import verbose_print
 
 from snppipeline import index_ref
 from snppipeline import map_reads
+from snppipeline import call_sites
 from snppipeline import merge_vcfs
 from snppipeline import combine_metrics
 
@@ -74,6 +74,19 @@ def parse_arguments(system_args):
     subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=map_reads.map_reads)
+    subparser.set_defaults(excepthook=utils.handle_sample_exception)
+
+    # -------------------------------------------------------------------------
+    # Create the parser for the "call_sites" command
+    # -------------------------------------------------------------------------
+    description = """Find the sites with SNPs in a sample."""
+    subparser = subparsers.add_parser("call_sites", help="Find the sites with SNPs in a sample", description=description, formatter_class=formatter_class)
+    subparser.add_argument(dest="referenceFile",    type=str, help="Relative or absolute path to the reference fasta file")
+    subparser.add_argument(dest="sampleDir", type=str, help="Relative or absolute directory of the sample")
+    subparser.add_argument("-f", "--force",   dest="forceFlag", action="store_true", help="Force processing even when result files already exist and are newer than inputs")
+    subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=call_sites.call_sites)
     subparser.set_defaults(excepthook=utils.handle_sample_exception)
 
     # -------------------------------------------------------------------------

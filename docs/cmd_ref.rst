@@ -176,20 +176,22 @@ prepSamples.sh
 
 ::
 
-  usage: prepSamples.sh [-h] [-f] referenceFile sampleDir
+  usage: cfsan_snp_pipeline call_sites [-h] [-f] [-v 0..5] [--version]
+                                       referenceFile sampleDir
   
-  Find variants in a specified sample.
-  The output files are written to the sample directory.
+  Find the sites with SNPs in a sample.
   
-  Positional arguments:
-    referenceFile    : Relative or absolute path to the reference fasta file
-    sampleDir        : Relative or absolute directory of the sample
+  positional arguments:
+    referenceFile         Relative or absolute path to the reference fasta file
+    sampleDir             Relative or absolute directory of the sample
   
-  Options:
-    -h               : Show this help message and exit
-    -f               : Force processing even when result files already exist and 
-                       are newer than inputs
-  
+  optional arguments:
+    -h, --help            show this help message and exit
+    -f, --force           Force processing even when result files already exist
+                          and are newer than inputs (default: False)
+    -v 0..5, --verbose 0..5
+                          Verbose message level (0=no info, 5=lots) (default: 1)
+    --version             show program's version number and exit
 
 .. _cmd-ref-snp-filter:
 

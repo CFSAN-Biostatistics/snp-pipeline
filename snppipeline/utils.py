@@ -12,7 +12,6 @@ except ImportError:
 import locale
 import os
 import platform
-import pprint
 import psutil
 import re
 import sys
@@ -82,8 +81,15 @@ def command_line_long():
     return " ".join(sys.argv)
 
 
-def print_log_header():
-    """Print a standardized header for the log with starting conditions."""
+def print_log_header(classpath=False):
+    """Print a standardized header for the log with starting conditions.
+
+    Parameters
+    ----------
+    classpath : bool
+        When True, the Java CLASSPATH environment variable is logged.  This should be
+        enabled when a script executes a Java program.
+    """
     verbose_print("# Command           : %s" % command_line_long())
     verbose_print("# Working Directory : %s" % os.getcwd())
     pbs_jobid = os.environ.get("PBS_JOBID")
@@ -103,6 +109,8 @@ def print_log_header():
     ram_mbytes = psutil.virtual_memory().total / 1024 / 1024
     ram_str = locale.format("%d", ram_mbytes, grouping=True)
     verbose_print("# RAM               : %s MB" % ram_str)
+    if classpath:
+        verbose_print("# CLASSPATH         : %s" % os.environ.get("CLASSPATH"))
     verbose_print("# Python Version    : %s" % sys.version.replace("\n", " "))
     verbose_print("# Program Version   : %s %s" % (program_name_with_command(), __version__))
     verbose_print("")
@@ -685,6 +693,51 @@ def global_error_on_missing_file(file_path, program):
         global_error("Error: %s does not exist after running %s." % (file_path, program))
     if os.path.getsize(file_path) == 0:
         global_error("Error: %s is empty after running %s." % (file_path, program))
+
+
+def sample_error_on_missing_file(file_path, program):
+    """Generate a sample error if a specified file is missing or empty after
+    running a named program.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the file to check
+    program : str
+        Name of the program that should have created the file.
+
+    Returns
+    -------
+    None
+        If the file is missing or empty, this function does not return, the program exits.
+    """
+    if not os.path.isfile(file_path):
+        sample_error("Error: %s does not exist after running %s." % (file_path, program))
+    if os.path.getsize(file_path) == 0:
+        sample_error("Error: %s is empty after running %s." % (file_path, program))
+
+
+def sample_error_on_file_contains(file_path, text, program):
+    """Generate a sample error if a specified file contains a specified string.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the file to check
+    text : str
+        The text to serach for in the file
+    program : str
+        Name of the program that should have created the file.
+
+    Returns
+    -------
+    None
+        If the file is missing or empty, this function does not return, the program exits.
+    """
+    with open(file_path) as f:
+        for line in f:
+            if text in line:
+                sample_error("Error: %s contains unexpected text: '%s' after running %s." % (file_path, text, program))
 
 
 def target_needs_rebuild(source_files, target_file):
