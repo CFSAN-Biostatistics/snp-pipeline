@@ -6,6 +6,25 @@ History
 0.7.1 (2017-04-??)
 ~~~~~~~~~~~~~~~~~~
 
+**Changes Impacting Backwards Compatibility:**
+
+* Changed the collectSampleMetrics script to only accept input files in the sample directory,
+  not in arbitrary locations.
+* Changed the combineSampleMetrics script to write to metrics.tsv by default, not stdout.
+* Leading zeros are stripped from Miseq flowcell identifiers in the metrics files.
+* Added a dependency on Picard.  You need to install Picard and change your CLASSPATH.
+  See :ref:`installation-label`.
+
+**Bug fixes:**
+
+* Fixed the machine and flow cell reporting in the metrics file when the fastq read names are not
+  in the original Illumina format.
+* Fixed the calculation of average pileup depth in the metrics file.  The formula previously
+  included whitespace characters when calculating the length of the reference.  The correct
+  average depth is slightly deeper than previously calculated.
+
+**Other Changes:**
+
 * Check for ``bc`` on the path when the pipeline is launched.  Complain if it is missing.
 * Added a new configuration parameter, ``BcftoolsMerge_ExtraParams`` to allow customizing the
   snpma.vcf files created when merging the consensus VCF files.  See :ref:`configuration-label`.
@@ -22,7 +41,6 @@ History
 * Log the SNP Pipeline version in the header of all the log files.
 * Removed the unused create_snp_pileup.py script.
 * Capture read-group metadata in the SAM/BAM files during the read mapping step.
-* Changed the combineSampleMetrics script to write to metrics.tsv by default, not stdout.
 * Changed the composition of the included Salmonella Agona data set to remove the excessively large
   sample ERR178930 and include a more diverse set of isolates from different geographic locations,
   different environmental sources, and different types of sequencing instruments.

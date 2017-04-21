@@ -15,6 +15,7 @@ from snppipeline import index_ref
 from snppipeline import map_reads
 from snppipeline import call_sites
 from snppipeline import merge_vcfs
+from snppipeline import collect_metrics
 from snppipeline import combine_metrics
 
 #==============================================================================
@@ -102,6 +103,25 @@ def parse_arguments(system_args):
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=merge_vcfs.merge_vcfs)
     subparser.set_defaults(excepthook=utils.handle_global_exception)
+
+    # -------------------------------------------------------------------------
+    # Create the parser for the "collect_metrics" command
+    # -------------------------------------------------------------------------
+    description = """Collect alignment, coverage, and variant metrics for a single specified sample."""
+    subparser = subparsers.add_parser("collect_metrics", help="Collect quality and SNP metrics for a sample", description=description, formatter_class=formatter_class)
+    subparser.add_argument(dest="sampleDir", type=str, help="Relative or absolute directory of the sample")
+    subparser.add_argument(dest="referenceFile",    type=str, help="Relative or absolute path to the reference fasta file")
+    subparser.add_argument("-f", "--force",   dest="forceFlag", action="store_true", help="Force processing even when result files already exist and are newer than inputs")
+    subparser.add_argument("-o", "--output",  dest="metricsFile",            type=str, default="metrics",                   metavar="FILE", help="Output file.  Relative or absolute path to the metrics file")
+    subparser.add_argument("-m", "--maxsnps", dest='maxSnps',                type=int, default=-1,                          metavar='INT',  help="Maximum allowed number of SNPs per sample")
+    subparser.add_argument("-c", dest="consensusFastaFileName",              type=str, default="consensus.fasta",           metavar="NAME", help="File name of the consensus fasta file which must exist in the sample directory")
+    subparser.add_argument("-C", dest="consensusPreservedFastaFileName",     type=str, default="consensus_preserved.fasta", metavar="NAME", help="File name of the consensus preserved fasta file which must exist in the sample directory")
+    subparser.add_argument("-v", dest="consensusVcfFileName",                type=str, default="consensus.vcf",             metavar="NAME", help="File name of the consensus vcf file which must exist in the sample directory")
+    subparser.add_argument("-V", dest="consensusPreservedVcfFileName",       type=str, default="consensus_preserved.vcf",   metavar="NAME", help="File name of the consensus preserved vcf file which must exist in the sample directory")
+    subparser.add_argument("--verbose", dest="verbose",                      type=int, default=1,                           metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=collect_metrics.collect_metrics)
+    subparser.set_defaults(excepthook=utils.handle_sample_exception)
 
     # -------------------------------------------------------------------------
     # Create the parser for the "combine_metrics" command

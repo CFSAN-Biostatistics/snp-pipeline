@@ -492,29 +492,41 @@ collectSampleMetrics.sh
 
 ::
 
-  usage: collectSampleMetrics.sh [-h] [-f] [-c FILE] [-m INT ] [-o FILE] [-v FILE] sampleDir referenceFile
+  usage: cfsan_snp_pipeline collect_metrics [-h] [-f] [-o FILE] [-m INT]
+                                            [-c NAME] [-C NAME] [-v NAME]
+                                            [-V NAME] [--verbose 0..5]
+                                            [--version]
+                                            sampleDir referenceFile
   
-  Collect alignment, coverage, and variant metrics for a single specified sample.
+  Collect alignment, coverage, and variant metrics for a single specified
+  sample.
   
-  Positional arguments:
-    sampleDir        : Relative or absolute directory of the sample
-    referenceFile    : Relative or absolute path to the reference fasta file
+  positional arguments:
+    sampleDir             Relative or absolute directory of the sample
+    referenceFile         Relative or absolute path to the reference fasta file
   
-  Options:
-    -h               : Show this help message and exit
-    -f               : Force processing even when result files already exist and
-                       are newer than inputs
-    -c FILE          : Relative or absolute path to the consensus fasta file
-                       (default: consensus.fasta in the sampleDir)
-    -C FILE          : Relative or absolute path to the consensus preserved fasta file
-                       (default: consensus_preserved.fasta in the sampleDir)
-    -m INT           : Maximum allowed number of SNPs per sample. (default: -1)
-    -o FILE          : Output file. Relative or absolute path to the metrics file
-                       (default: metrics in the sampleDir)
-    -v FILE          : Relative or absolute path to the consensus vcf file
-                       (default: consensus.vcf in the sampleDir)
-    -V FILE          : Relative or absolute path to the consensus preserved vcf file
-                       (default: consensus_preserved.vcf in the sampleDir)
+  optional arguments:
+    -h, --help            show this help message and exit
+    -f, --force           Force processing even when result files already exist
+                          and are newer than inputs (default: False)
+    -o FILE, --output FILE
+                          Output file. Relative or absolute path to the metrics
+                          file (default: metrics)
+    -m INT, --maxsnps INT
+                          Maximum allowed number of SNPs per sample (default:
+                          -1)
+    -c NAME               File name of the consensus fasta file which must exist
+                          in the sample directory (default: consensus.fasta)
+    -C NAME               File name of the consensus preserved fasta file which
+                          must exist in the sample directory (default:
+                          consensus_preserved.fasta)
+    -v NAME               File name of the consensus vcf file which must exist
+                          in the sample directory (default: consensus.vcf)
+    -V NAME               File name of the consensus preserved vcf file which
+                          must exist in the sample directory (default:
+                          consensus_preserved.vcf)
+    --verbose 0..5        Verbose message level (0=no info, 5=lots) (default: 1)
+    --version             show program's version number and exit
 
 combineSampleMetrics.sh
 ---------------------------

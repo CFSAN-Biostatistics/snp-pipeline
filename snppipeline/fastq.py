@@ -3,10 +3,57 @@ Utility functions for fastq files.
 """
 
 from __future__ import print_function
+
 import collections
+import glob
 import gzip
 import os
 import re
+
+
+def list_fastq_files(directory):
+    """Return a list of fastq files in a directory.
+
+    The files match any of the suffixes: .fastq, .fq, .fastq.gz, fq.gz.
+
+    Parameters
+    ----------
+    directory : str
+        Directory path.
+
+    Returns
+    -------
+    files : list
+        Sorted list of fastq files in the directory.
+
+    Examples
+    --------
+    # Setup tests
+    >>> import tempfile
+    >>> import shutil
+    >>> temp_dir = tempfile.mkdtemp(prefix="tmp.fastq.test", dir="./")
+    >>> f = open(os.path.join(temp_dir, "aaa_2.fastq"), 'w'); f.close()
+    >>> f = open(os.path.join(temp_dir, "aaa_1.fastq"), 'w'); f.close()
+    >>> f = open(os.path.join(temp_dir, "bbb.fastq.gz"), 'w'); f.close()
+    >>> f = open(os.path.join(temp_dir, "ccc.fq"), 'w'); f.close()
+    >>> f = open(os.path.join(temp_dir, "ddd.fq.gz"), 'w'); f.close()
+    >>> f = open(os.path.join(temp_dir, "eee.notfastq"), 'w'); f.close()
+    >>> f = open(os.path.join(temp_dir, "fff.fastq.not"), 'w'); f.close()
+    >>> files = list_fastq_files(temp_dir)
+    >>> [os.path.basename(file) for file in files]
+    ['aaa_1.fastq', 'aaa_2.fastq', 'bbb.fastq.gz', 'ccc.fq', 'ddd.fq.gz']
+
+    # Clean up
+    >>> shutil.rmtree(temp_dir)
+    """
+    fastq_files = list()
+
+    for suffix in ["*.fastq", "*.fastq.gz", "*.fq", "*.fq.gz"]:
+        fastq_glob_pattern = os.path.join(directory, suffix)
+        fastq_files.extend(glob.glob(fastq_glob_pattern))
+
+    fastq_files.sort()
+    return fastq_files
 
 
 # Mapping of Illumina flowcell last 4 characters to instrument type

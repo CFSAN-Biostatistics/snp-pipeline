@@ -673,6 +673,51 @@ def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, co
     return len(err_messages)
 
 
+def verify_non_empty_directory(error_prefix, directory, error_handler=None, continue_possible=False):
+    """Verify a directory exists and is non-empty.
+    Missing or empty files are reported in the verbose log.
+
+    Parameters
+    ----------
+    error_prefix : str
+        First part of error message to be logged
+    directory : list
+        List of relative or absolute paths to files
+    error_handler : str, optional
+        Allowed values are "global", "sample", or None.
+        When set to "global", any error are handled by the global_error() function which will
+        cause program exit.
+        When set to "sample", any error are handled by the sample_error() function which might
+        cause program exit when configured to do so.
+        When set to None, errors are logged with no possibility of exiting the program
+    continue_possible : boolean, optional
+        Only used when error_handler is "sample".  Indicates if it is possible
+        to continue execution.  Setting this flag true may allow the code
+        to continue without exiting if configured to do so.
+    """
+    if error_handler not in ["global", "sample", None]:
+        raise ValueError("Invalid error_handler: %s" % repr(error_handler))
+
+    error_prefix = error_prefix + ' ' if error_prefix else ''
+    message = None
+    if not os.path.exists(directory):
+        message = error_prefix + directory + " does not exist."
+    elif not os.path.isdir(directory):
+        message = error_prefix + directory + " is not a directory."
+    elif len(os.listdir(directory)) == 0:
+        message = error_prefix + directory + " is empty."
+
+    if not message:
+        return
+
+    if error_handler == "global":
+        global_error(message)
+    elif error_handler == "sample":
+        sample_error(message, continue_possible=continue_possible)
+    else:
+        report_error(message)
+
+
 def global_error_on_missing_file(file_path, program):
     """Generate a global error if a specified file is missing or empty after
     running a named program.

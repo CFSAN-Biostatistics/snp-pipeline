@@ -51,7 +51,6 @@
 #   20160308-scd: Exclude samples with excessive number of snps from the snp matrix and snpma.vcf.
 #   20160405-scd: Add the calculate_snp_distances.py pipeline stage.
 #   20160923-yw+scd: Add the snp_filter.py script to filter dense snp regions.
-#   20161202-scd: check for bc dependency.
 #Notes:
 #
 #Bugs:
@@ -430,7 +429,6 @@ onPath=$(verifyOnPath "java"); if [[ $onPath != true ]]; then (( dependencyError
 onPath=$(verifyOnPath "tabix"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "bgzip"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 onPath=$(verifyOnPath "bcftools"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "bc"); if [[ $onPath != true ]]; then (( dependencyErrors += 1 )); fi
 result=$(java net.sf.varscan.VarScan 2>&1) || true
 if [[ $result =~ .*Error.* ]]; then
     reportError "CLASSPATH is not configured with the path to VarScan"
@@ -1112,7 +1110,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -hold_jid_ad $callConsensusJobArray,$callConsensusJobArray2
 #$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$SGE_TASK_ID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    cfsan_snp_pipeline collect_metrics -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -1124,7 +1122,7 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -o $logDir/collectSampleMetrics.log
     #PBS -V
     sampleDir=\$(cat "$sampleDirsFile" | head -n \$PBS_ARRAYID | tail -n 1)
-    collectSampleMetrics.sh -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    cfsan_snp_pipeline collect_metrics -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
 _EOF_
 )
 else
@@ -1133,7 +1131,7 @@ else
     else
         numCollectSampleMetricsCores=$numCores
     fi
-    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; collectSampleMetrics.sh -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+    nl "$sampleDirsFile" | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; cfsan_snp_pipeline collect_metrics -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
 echo -e "\nStep 13 - Combine the metrics across all samples into the metrics table"

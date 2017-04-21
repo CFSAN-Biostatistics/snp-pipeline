@@ -218,7 +218,6 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "tabix"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bgzip"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bcftools"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bc"
     assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to VarScan"
     assertFileContains "$tempDir/error.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 
@@ -240,7 +239,6 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "tabix"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bgzip"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bcftools"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bc"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to VarScan"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 }
@@ -3514,7 +3512,7 @@ testCreateSnpReferenceSeqMissingReferenceRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the collectSampleMetrics.sh script detects a missing sample directory
+# Verify the cfsan_snp_pipeline collect_metrics script detects a missing sample directory
 tryCollectSampleMetricsMissingSampleDirRaiseSampleError()
 {
     expectErrorCode=$1
@@ -3534,35 +3532,35 @@ tryCollectSampleMetricsMissingSampleDirRaiseSampleError()
 
     # Try to collect metrics
     echo "Dummy consensus.fasta content" > "$tempDir/consensus.fasta"
-    collectSampleMetrics.sh -c "$tempDir/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
+    cfsan_snp_pipeline collect_metrics -c "$tempDir/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
     errorCode=$?
 
-    # Verify collectSampleMetrics.sh error handling behavior
-    assertEquals "collectSampleMetrics.sh returned incorrect error code when the sample directory was missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline collect_metricsn error handling behavior
+    assertEquals "cfsan_snp_pipeline collect_metrics returned incorrect error code when the sample directory was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "collectSampleMetrics.sh failed"
-    assertFileNotContains "$logDir/collectSampleMetrics.log" "collectSampleMetrics.sh failed"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline collect_metrics failed"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "cfsan_snp_pipeline collect_metrics failed"
     assertFileContains "$tempDir/error.log" "Sample directory $tempDir/samples/sample1 does not exist"
     assertFileContains "$logDir/collectSampleMetrics.log" "Sample directory $tempDir/samples/sample1 does not exist"
-    assertFileNotContains "$logDir/collectSampleMetrics.log" "collectSampleMetrics.sh finished"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "cfsan_snp_pipeline collect_metrics finished"
     assertFileNotContains "$logDir/collectSampleMetrics.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the collectSampleMetrics.sh script detects a missing sample directory
+# Verify the cfsan_snp_pipeline collect_metrics script detects a missing sample directory
 testCollectSampleMetricsMissingSampleDirRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCollectSampleMetricsMissingSampleDirRaiseSampleError 100
 }
 
-# Verify the collectSampleMetrics.sh script detects a missing sample directory
+# Verify the cfsan_snp_pipeline collect_metrics script detects a missing sample directory
 testCollectSampleMetricsMissingSampleDirRaiseSampleErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCollectSampleMetricsMissingSampleDirRaiseSampleError 98
 }
 
-# Verify the collectSampleMetrics.sh script detects a missing sample directory
+# Verify the cfsan_snp_pipeline collect_metrics script detects a missing sample directory
 testCollectSampleMetricsMissingSampleDirRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -3570,7 +3568,7 @@ testCollectSampleMetricsMissingSampleDirRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the collectSampleMetrics.sh script detects missing reference
+# Verify the cfsan_snp_pipeline collect_metrics script detects missing reference
 tryCollectSampleMetricsMissingReferenceRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -3590,44 +3588,231 @@ tryCollectSampleMetricsMissingReferenceRaiseGlobalError()
 
     # Try to collect metrics
     echo "Dummy consensus.fasta content" > "$tempDir/samples/sample1/consensus.fasta"
-    collectSampleMetrics.sh -c "$tempDir/samples/sample1/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
+    cfsan_snp_pipeline collect_metrics -c "$tempDir/samples/sample1/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
     errorCode=$?
 
-    # Verify collectSampleMetrics.sh error handling behavior
-    assertEquals "collectSampleMetrics.sh returned incorrect error code when the reference fasta file was missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline collect_metrics error handling behavior
+    assertEquals "cfsan_snp_pipeline collect_metrics returned incorrect error code when the reference fasta file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "collectSampleMetrics.sh failed"
-    assertFileNotContains "$logDir/collectSampleMetrics.log" "collectSampleMetrics.sh failed"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline collect_metrics failed"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "cfsan_snp_pipeline collect_metrics failed"
     assertFileContains "$tempDir/error.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
     assertFileContains "$logDir/collectSampleMetrics.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
-    assertFileNotContains "$logDir/collectSampleMetrics.log" "collectSampleMetrics.sh finished"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "cfsan_snp_pipeline collect_metrics finished"
     assertFileNotContains "$logDir/collectSampleMetrics.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the collectSampleMetrics.sh script detects missing reference
+# Verify the cfsan_snp_pipeline collect_metrics script detects missing reference
 testCollectSampleMetricsMissingReferenceRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCollectSampleMetricsMissingReferenceRaiseGlobalError 100
 }
 
-# Verify the collectSampleMetrics.sh script detects missing reference
+# Verify the cfsan_snp_pipeline collect_metrics script detects missing reference
 testCollectSampleMetricsMissingReferenceRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCollectSampleMetricsMissingReferenceRaiseGlobalError 100
 }
 
-# Verify the collectSampleMetrics.sh script detects missing reference
+# Verify the cfsan_snp_pipeline collect_metrics script detects missing reference
 testCollectSampleMetricsMissingReferenceRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
     tryCollectSampleMetricsMissingReferenceRaiseGlobalError 100
 }
 
+# Verify the cfsan_snp_pipeline collect_metrics script handles missing input files
+tryCollectSampleMetricsMissingInputFiles()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
-# Verify the collectSampleMetrics.sh script traps errors
-tryCollectSampleMetricsSamtoolsViewTrap()
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Try to collect metrics
+    cfsan_snp_pipeline collect_metrics -o "$tempDir/samples/sample1/metrics" -c "$tempDir/samples/sample1/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
+    errorCode=$?
+
+    # Verify cfsan_snp_pipeline collect_metrics error handling behavior
+    assertEquals "cfsan_snp_pipeline collect_metrics returned incorrect error code when the SAM file was corrupt." $expectErrorCode $errorCode
+    verifyNonExistingFile "$tempDir/error.log"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "Error detected while running cfsan_snp_pipeline collect_metrics."
+
+    assertFileContains "$logDir/collectSampleMetrics.log" "SAM file reads.sam was not found"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Deduped BAM file reads.sorted.deduped.bam was not found"
+    assertFileContains "$logDir/collectSampleMetrics.log" "BAM file reads.sorted.bam was not found"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Pileup file reads.all.pileup was not found"
+    assertFileContains "$logDir/collectSampleMetrics.log" "VCF file var.flt.vcf was not found"
+    assertFileContains "$logDir/collectSampleMetrics.log" "VCF file var.flt_preserved.vcf was not found"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Consensus VCF file consensus.vcf was not found"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Consensus VCF file consensus_preserved.vcf was not found"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Consensus fasta file consensus.fasta was not found"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Consensus fasta file consensus_preserved.fasta was not found"
+
+    assertFileContains "$tempDir/samples/sample1/metrics" "SAM file reads.sam was not found"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Deduped BAM file reads.sorted.deduped.bam was not found"
+    assertFileContains "$tempDir/samples/sample1/metrics" "BAM file reads.sorted.bam was not found"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Pileup file reads.all.pileup was not found"
+    assertFileContains "$tempDir/samples/sample1/metrics" "VCF file var.flt.vcf was not found"
+    assertFileContains "$tempDir/samples/sample1/metrics" "VCF file var.flt_preserved.vcf was not found"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Consensus VCF file consensus.vcf was not found"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Consensus VCF file consensus_preserved.vcf was not found"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Consensus fasta file consensus.fasta was not found"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Consensus fasta file consensus_preserved.fasta was not found"
+
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snps=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSamplePreserved=$"
+
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "Cannot calculate"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "Cannot calculate"
+    assertFileContains "$logDir/collectSampleMetrics.log" "cfsan_snp_pipeline collect_metrics finished"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the cfsan_snp_pipeline collect_metrics script handles missing input files
+testCollectSampleMetricsMissingInputFilesStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryCollectSampleMetricsMissingInputFiles 0
+}
+
+# Verify the cfsan_snp_pipeline collect_metrics script handles missing input files
+testCollectSampleMetricsMissingInputFilesNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryCollectSampleMetricsMissingInputFiles 0
+}
+
+# Verify the cfsan_snp_pipeline collect_metrics script handles missing input files
+testCollectSampleMetricsMissingInputFilesStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryCollectSampleMetricsMissingInputFiles 0
+}
+
+
+# Verify the cfsan_snp_pipeline collect_metrics script handles empty input files
+tryCollectSampleMetricsEmptyInputFiles()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Deliberately corrupt files
+    touch "$tempDir/samples/sample1/reads.sam"
+    touch "$tempDir/samples/sample1/reads.sorted.deduped.bam"
+    touch "$tempDir/samples/sample1/reads.sorted.bam"
+    touch "$tempDir/samples/sample1/reads.all.pileup"
+    touch "$tempDir/samples/sample1/var.flt.vcf"
+    touch "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    touch "$tempDir/samples/sample1/consensus.vcf"
+    touch "$tempDir/samples/sample1/consensus_preserved.vcf"
+    touch "$tempDir/samples/sample1/consensus.fasta"
+    touch "$tempDir/samples/sample1/consensus_preserved.fasta"
+
+    # Try to collect metrics
+    cfsan_snp_pipeline collect_metrics -o "$tempDir/samples/sample1/metrics" -c "$tempDir/samples/sample1/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
+    errorCode=$?
+
+    # Verify cfsan_snp_pipeline collect_metrics error handling behavior
+    assertEquals "cfsan_snp_pipeline collect_metrics returned incorrect error code when the SAM file was corrupt." $expectErrorCode $errorCode
+    verifyNonExistingFile "$tempDir/error.log"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "Error detected while running cfsan_snp_pipeline collect_metrics."
+
+    assertFileContains "$logDir/collectSampleMetrics.log" "SAM file reads.sam is empty"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Deduped BAM file reads.sorted.deduped.bam is empty"
+    assertFileContains "$logDir/collectSampleMetrics.log" "BAM file reads.sorted.bam is empty"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Pileup file reads.all.pileup is empty"
+    assertFileContains "$logDir/collectSampleMetrics.log" "VCF file var.flt.vcf is empty"
+    assertFileContains "$logDir/collectSampleMetrics.log" "VCF file var.flt_preserved.vcf is empty"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Consensus VCF file consensus.vcf is empty"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Consensus VCF file consensus_preserved.vcf is empty"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Consensus fasta file consensus.fasta is empty"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Consensus fasta file consensus_preserved.fasta is empty"
+
+    assertFileContains "$tempDir/samples/sample1/metrics" "SAM file reads.sam is empty"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Deduped BAM file reads.sorted.deduped.bam is empty"
+    assertFileContains "$tempDir/samples/sample1/metrics" "BAM file reads.sorted.bam is empty"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Pileup file reads.all.pileup is empty"
+    assertFileContains "$tempDir/samples/sample1/metrics" "VCF file var.flt.vcf is empty"
+    assertFileContains "$tempDir/samples/sample1/metrics" "VCF file var.flt_preserved.vcf is empty"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Consensus VCF file consensus.vcf is empty"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Consensus VCF file consensus_preserved.vcf is empty"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Consensus fasta file consensus.fasta is empty"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Consensus fasta file consensus_preserved.fasta is empty"
+
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snps=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSamplePreserved=$"
+
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "Cannot calculate"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "Cannot calculate"
+    assertFileContains "$logDir/collectSampleMetrics.log" "cfsan_snp_pipeline collect_metrics finished"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "Use the -f option to force a rebuild"
+}
+
+# Verify the cfsan_snp_pipeline collect_metrics script handles empty input files
+testCollectSampleMetricsEmptyInputFilesStop()
+{
+    export SnpPipeline_StopOnSampleError=true
+    tryCollectSampleMetricsEmptyInputFiles 0
+}
+
+# Verify the cfsan_snp_pipeline collect_metrics script handles empty input files
+testCollectSampleMetricsEmptyInputFilesNoStop()
+{
+    export SnpPipeline_StopOnSampleError=false
+    tryCollectSampleMetricsEmptyInputFiles 0
+}
+
+# Verify the cfsan_snp_pipeline collect_metrics script handles empty input files
+testCollectSampleMetricsEmptyInputFilesStopUnset()
+{
+    unset SnpPipeline_StopOnSampleError
+    tryCollectSampleMetricsEmptyInputFiles 0
+}
+
+
+# Verify the cfsan_snp_pipeline collect_metrics script handles corrupt input files
+tryCollectSampleMetricsCorruptInputFiles()
 {
     expectErrorCode=$1
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -3643,42 +3828,66 @@ tryCollectSampleMetricsSamtoolsViewTrap()
 
     # Deliberately corrupt files
     echo "Garbage" > "$tempDir/samples/sample1/reads.sam"
+    echo "Garbage" > "$tempDir/samples/sample1/reads.sorted.deduped.bam"
+    echo "Garbage" > "$tempDir/samples/sample1/reads.sorted.bam"
+    echo "Garbage" > "$tempDir/samples/sample1/reads.all.pileup"
+    echo "Garbage" > "$tempDir/samples/sample1/var.flt.vcf"
+    echo "Garbage" > "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    echo "Garbage" > "$tempDir/samples/sample1/consensus.vcf"
+    echo "Garbage" > "$tempDir/samples/sample1/consensus_preserved.vcf"
+    echo "Garbage" > "$tempDir/samples/sample1/consensus.fasta"
+    echo "Garbage" > "$tempDir/samples/sample1/consensus_preserved.fasta"
 
     # Try to collect metrics
-    echo "Dummy consensus.fasta content" > "$tempDir/samples/sample1/consensus.fasta"
-    collectSampleMetrics.sh -c "$tempDir/samples/sample1/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
+    cfsan_snp_pipeline collect_metrics -o "$tempDir/samples/sample1/metrics" -c "$tempDir/samples/sample1/consensus.fasta" "$tempDir/samples/sample1" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/collectSampleMetrics.log"
     errorCode=$?
 
-    # Verify collectSampleMetrics.sh error handling behavior
-    assertEquals "collectSampleMetrics.sh returned incorrect error code when the SAM file was corrupt." $expectErrorCode $errorCode
-    verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running collectSampleMetrics.sh."
-    assertFileNotContains "$logDir/collectSampleMetrics.log" "Error detected while running collectSampleMetrics.sh."
-    assertFileContains "$tempDir/error.log" "samtools view"
-    assertFileContains "$logDir/collectSampleMetrics.log" "sam file"
-    assertFileNotContains "$logDir/collectSampleMetrics.log" "collectSampleMetrics.sh finished"
+    # Verify cfsan_snp_pipeline collect_metrics error handling behavior
+    assertEquals "cfsan_snp_pipeline collect_metrics returned incorrect error code when the SAM file was corrupt." $expectErrorCode $errorCode
+    verifyNonExistingFile "$tempDir/error.log"
+    assertFileNotContains "$logDir/collectSampleMetrics.log" "Error detected while running cfsan_snp_pipeline collect_metrics."
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=0$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=0$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snps=0$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=0$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=0$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSamplePreserved=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Cannot calculate number of reads and %mapped"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Cannot calculate number of reads and %mapped"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Cannot calculate mean insert size"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Cannot calculate mean insert size"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Cannot calculate mean pileup depth"
+    assertFileContains "$logDir/collectSampleMetrics.log" "Cannot calculate mean pileup depth"
+    assertFileContains "$logDir/collectSampleMetrics.log" "cfsan_snp_pipeline collect_metrics finished"
     assertFileNotContains "$logDir/collectSampleMetrics.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the collectSampleMetrics.sh script traps errors
-testCollectSampleMetricsSamtoolsViewTrapStop()
+# Verify the cfsan_snp_pipeline collect_metrics script handles corrupt input files
+testCollectSampleMetricsCorruptInputFilesStop()
 {
     export SnpPipeline_StopOnSampleError=true
-    tryCollectSampleMetricsSamtoolsViewTrap 100
+    tryCollectSampleMetricsCorruptInputFiles 0
 }
 
-# Verify the collectSampleMetrics.sh script traps errors
-testCollectSampleMetricsSamtoolsViewTrapNoStop()
+# Verify the cfsan_snp_pipeline collect_metrics script handles corrupt input files
+testCollectSampleMetricsCorruptInputFilesNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
-    tryCollectSampleMetricsSamtoolsViewTrap 98
+    tryCollectSampleMetricsCorruptInputFiles 0
 }
 
-# Verify the collectSampleMetrics.sh script traps errors
-testCollectSampleMetricsSamtoolsViewTrapStopUnset()
+# Verify the cfsan_snp_pipeline collect_metrics script handles corrupt input files
+testCollectSampleMetricsCorruptInputFilesStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
-    tryCollectSampleMetricsSamtoolsViewTrap 100
+    tryCollectSampleMetricsCorruptInputFiles 0
 }
 
 
@@ -4915,6 +5124,11 @@ testRunSnpPipelineLambda()
     assertIdenticalFiles "$tempDir/samples/sample3/consensus.vcf" "$tempDir/expectedResults/samples/sample3/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample4/consensus.vcf" "$tempDir/expectedResults/samples/sample4/consensus.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
 
+    assertIdenticalFiles "$tempDir/samples/sample1/metrics" "$tempDir/expectedResults/samples/sample1/metrics"
+    assertIdenticalFiles "$tempDir/samples/sample2/metrics" "$tempDir/expectedResults/samples/sample2/metrics"
+    assertIdenticalFiles "$tempDir/samples/sample3/metrics" "$tempDir/expectedResults/samples/sample3/metrics"
+    assertIdenticalFiles "$tempDir/samples/sample4/metrics" "$tempDir/expectedResults/samples/sample4/metrics"
+
     assertIdenticalFiles "$tempDir/snplist_preserved.txt"                   "$tempDir/expectedResults/snplist_preserved.txt"
     assertIdenticalFiles "$tempDir/snpma_preserved.fasta"                   "$tempDir/expectedResults/snpma_preserved.fasta"
     assertIdenticalFiles "$tempDir/snpma_preserved.vcf"                     "$tempDir/expectedResults/snpma_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source --ignore-matching-lines=##bcftools
@@ -5018,10 +5232,10 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/collectSampleMetrics.log-2" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/collectSampleMetrics.log-4" "collectSampleMetrics.sh finished"
-    assertFileContains "$logDir/collectSampleMetrics.log-3" "collectSampleMetrics.sh finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-2" "cfsan_snp_pipeline collect_metrics finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-4" "cfsan_snp_pipeline collect_metrics finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-3" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
@@ -5096,7 +5310,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
@@ -5182,7 +5396,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
@@ -5263,7 +5477,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics.log-2" "collectSampleMetrics.sh finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-2" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
@@ -5308,17 +5522,38 @@ testAlreadyFreshOutputs()
     touch -d  '-2 day' $tempDir/snplist_preserved.txt
     touch -d  '-1 day' $tempDir/samples/*/consensus*.vcf
 
-    # Test special collectSampleMetrics result persistence
+    # Test special cfsan_snp_pipeline collect_metrics result persistence
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
-    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.54"
-    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.89"
-    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
     assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=110"
-    echo numberReads=AAAAA > "$tempDir/samples/sample1/metrics"
-    echo percentReadsMapped=BBBBB >> "$tempDir/samples/sample1/metrics"
-    echo avePileupDepth=CCCCC >> "$tempDir/samples/sample1/metrics"
-    echo aveInsertSize=DDDDD >> "$tempDir/samples/sample1/metrics"
-    echo numberDupReads=EEEEE >> "$tempDir/samples/sample1/metrics"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.55"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
+    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.22"
+
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=110"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.55"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
+    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.22"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snps=46"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=0"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0"
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample="
+    assertFileContains "$tempDir/samples/sample1/metrics" "excludedSamplePreserved="
+
+    echo numberReads=AA > "$tempDir/samples/sample1/metrics"
+    echo numberDupReads=BB >> "$tempDir/samples/sample1/metrics"
+    echo percentReadsMapped=CC >> "$tempDir/samples/sample1/metrics"
+    echo aveInsertSize=DD >> "$tempDir/samples/sample1/metrics"
+    echo avePileupDepth=EE >> "$tempDir/samples/sample1/metrics"
+    echo phase1Snps=FF >> "$tempDir/samples/sample1/metrics"
+    echo phase1SnpsPreserved=GG >> "$tempDir/samples/sample1/metrics"
+    echo snps=HH >> "$tempDir/samples/sample1/metrics"
+    echo snpsPreserved=II >> "$tempDir/samples/sample1/metrics"
+    echo missingPos=JJ >> "$tempDir/samples/sample1/metrics"
+    echo missingPosPreserved=KK >> "$tempDir/samples/sample1/metrics"
 
     # Remove unwanted log files
     rm -rf $tempDir/logs*
@@ -5413,18 +5648,32 @@ testAlreadyFreshOutputs()
 
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "have already been freshly built.  Use the -f option to force a rebuild"
 
-    # Special collectSampleMetrics re-use last metrics
+    # Special cfsan_snp_pipeline collect_metrics re-use last metrics
     assertFileNotContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.54"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.89"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "numberDupReads=110"
-    assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=AAAAA"
-    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=BBBBB"
-    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=CCCCC"
-    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=DDDDD"
-    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=EEEEE"
-    assertFileContains "$tempDir/metrics.tsv" "sample1.*AAAAA.*EEEEE.*BBBBB.*DDDDD.*CCCCC"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.55"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.22"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "snps=46"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "missingPos=0"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0"
+
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=AA"
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=BB"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=CC"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=DD"
+    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=EE"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=FF"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=GG"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snps=HH"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=II"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=JJ"
+    assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=KK"
+
+    assertFileContains "$tempDir/metrics.tsv" "sample1.*AA.*BB.*CC.*DD.*EE.*FF.*GG.*HH.*II.*JJ.*KK"
 }
 
 
@@ -5476,7 +5725,7 @@ testRunSnpPipelineExcessiveSnps()
 
     # Create a config file with a low enough maxsnps setting to block a sample
     copy_snppipeline_data.py configurationFile $tempDir
-    sed -i s:SnpPipeline_MaxSnps=-1:SnpPipeline_MaxSnps=45: "$tempDir/snppipeline.conf"
+    sed -i s:SnpPipeline_MaxSnps=-1:SnpPipeline_MaxSnps=40: "$tempDir/snppipeline.conf"
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
@@ -5497,7 +5746,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/collectSampleMetrics.log-1" "collectSampleMetrics.sh finished"
+    assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
@@ -5510,22 +5759,28 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 
     # Verify output
-    # After removing the abnormal high-density snps, sample1 has fewer than 45 snps, so it is included in the analysis
+    # After removing the abnormal high-density snps, sample1 has more than 40 snps, so it is included in the analysis - non-preserved only
+    # After removing the abnormal high-density snps, sample2 has more than 40 snps, so it is included in the analysis - both non-preserved and preserved
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=Excluded$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "excludedSample=Excluded$"
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSamplePreserved=$"
-    assertFileContains "$tempDir/samples/sample2/metrics" "excludedSample=$"
-    assertFileContains "$tempDir/samples/sample2/metrics" "excludedSamplePreserved=$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "excludedSamplePreserved=Excluded$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
+    assertFileContains "$tempDir/samples/sample2/metrics" "phase1Snps=44"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
+    assertFileContains "$tempDir/samples/sample2/metrics" "phase1SnpsPreserved=41"
     assertFileContains "$tempDir/samples/sample1/metrics" "snps=$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "snps=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32$"
-    assertFileContains "$tempDir/samples/sample2/metrics" "snps=44$"
-    assertFileContains "$tempDir/samples/sample2/metrics" "snpsPreserved=41$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "snpsPreserved=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
+    assertFileContains "$tempDir/samples/sample2/metrics" "missingPos=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0$"
-    assertFileContains "$tempDir/samples/sample2/metrics" "missingPos=0$"
-    assertFileContains "$tempDir/samples/sample2/metrics" "missingPosPreserved=0$"
-    assertFileContains "$tempDir/samples/sample1/metrics" "errorList=.*Excluded: exceeded 45 maxsnps."
-    assertFileContains "$tempDir/samples/sample2/metrics" "errorList=\"No compressed fastq.gz or fq.gz files were found.\"$"
-    assertFileContains "$tempDir/metrics.tsv"             "sample1.*Excluded.*Excluded: exceeded 45 maxsnps."
+    assertFileContains "$tempDir/samples/sample2/metrics" "missingPosPreserved=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "errorList=.*Excluded: exceeded 40 maxsnps"
+    assertFileContains "$tempDir/samples/sample2/metrics" "errorList=.*Excluded: exceeded 40 maxsnps.*Excluded: preserved exceeded 40 maxsnps"
+    assertFileContains "$tempDir/metrics.tsv"             "sample1.*Excluded.*Excluded: exceeded 40 maxsnps"
+    assertFileContains "$tempDir/metrics.tsv"             "sample2.*Excluded.*Excluded: exceeded 40 maxsnps.*Excluded: preserved exceeded 40 maxsnps"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "Consensus.*not found"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "Consensus.*not found"
     assertFileNotContains "$tempDir/metrics.tsv"             "sample1.*Consensus.*not found"
@@ -5536,9 +5791,9 @@ testRunSnpPipelineExcessiveSnps()
     assertFileNotContains "$tempDir/snp_distance_matrix.tsv" "sample1"
 
     copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
-    grep -v sample1 "$tempDir/expectedResults/metrics.tsv" > "$tempDir/expectedResults/metrics.withoutSample1.tsv"
-    grep -v sample1 "$tempDir/metrics.tsv" > "$tempDir/metrics.withoutSample1.tsv"
-    assertIdenticalFiles "$tempDir/metrics.withoutSample1.tsv" "$tempDir/expectedResults/metrics.withoutSample1.tsv"
+    grep -v sample[12] "$tempDir/expectedResults/metrics.tsv" > "$tempDir/expectedResults/metrics.withoutSample1and2.tsv"
+    grep -v sample[12] "$tempDir/metrics.tsv" > "$tempDir/metrics.withoutSample1and2.tsv"
+    assertIdenticalFiles "$tempDir/metrics.withoutSample1and2.tsv" "$tempDir/expectedResults/metrics.withoutSample1and2.tsv"
 }
 
 
