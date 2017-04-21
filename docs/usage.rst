@@ -1021,6 +1021,7 @@ More information about the Picard MarkDuplicates tool can be found here:
 
 * https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates
 * http://gatkforums.broadinstitute.org/gatk/discussion/6747/how-to-mark-duplicates-with-markduplicates-or-markduplicateswithmatecigar
+* http://broadinstitute.github.io/picard/faq.html
 
 See also :ref:`configuration-label`.
 
