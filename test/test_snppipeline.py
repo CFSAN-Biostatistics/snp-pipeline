@@ -112,9 +112,9 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         print("\nPreparing data files for tests.  This will take a minute...")
         temp_dir = TempDirectory()
         lambda_dir = os.path.join(temp_dir.path, "testLambdaVirus")
-        ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusInputs", lambda_dir])
+        ret = subprocess.call(["cfsan_snp_pipeline", "data", "lambdaVirusInputs", lambda_dir])
         SnpPipelineTest.directory_correct = os.path.join(lambda_dir, "lambdaVirusExpectedResults")
-        ret = subprocess.call(["copy_snppipeline_data.py", "lambdaVirusExpectedResults", SnpPipelineTest.directory_correct])
+        ret = subprocess.call(["cfsan_snp_pipeline", "data", "lambdaVirusExpectedResults", SnpPipelineTest.directory_correct])
         samples_dir = os.path.join(lambda_dir, "samples")
         reference_file = os.path.join(lambda_dir, "reference", "lambda_virus.fasta")
 

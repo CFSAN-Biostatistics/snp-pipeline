@@ -113,12 +113,12 @@ testScriptsOnPath()
     assertNotNull "calculate_snp_distances.py is not on the path"   "$(which calculate_snp_distances.py)"
 }
 
-# Verify copy_snppipeline_data.py emits lambda test data
+# Verify cfsan_snp_pipeline data emits lambda test data
 testCopySnpPipelineLambdaData()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
     verifyNonEmptyReadableFile "$tempDir/reference/lambda_virus.fasta"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/sample1_1.fastq"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/sample1_2.fastq"
@@ -129,7 +129,7 @@ testCopySnpPipelineLambdaData()
     verifyNonEmptyReadableFile "$tempDir/samples/sample4/sample4_1.fastq"
     verifyNonEmptyReadableFile "$tempDir/samples/sample4/sample4_2.fastq"
 
-    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir
+    cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir
     verifyNonEmptyReadableFile "$tempDir/snplist.txt"
     verifyNonEmptyReadableFile "$tempDir/referenceSNP.fasta"
     verifyNonEmptyReadableFile "$tempDir/snpma.fasta"
@@ -145,12 +145,12 @@ testCopySnpPipelineLambdaData()
     verifyNonEmptyReadableFile "$tempDir/snp_distance_matrix_preserved.tsv"
 }
 
-# Verify copy_snppipeline_data.py emits configuration file
+# Verify cfsan_snp_pipeline data emits configuration file
 testCopySnpPipelineConfigurationFile()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     verifyNonEmptyReadableFile "$tempDir/snppipeline.conf"
 }
 
@@ -181,7 +181,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     export CLASSPATH=""
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" 2> "$tempDir/run_snp_pipeline.stderr.log" > "$tempDir/run_snp_pipeline.stdout.log"
@@ -247,7 +247,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
 testRunSnpPipelineDependencyBowtie2RaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
 }
@@ -256,7 +256,7 @@ testRunSnpPipelineDependencyBowtie2RaiseFatalErrorStop()
 testRunSnpPipelineDependencyBowtie2RaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
 }
@@ -265,7 +265,7 @@ testRunSnpPipelineDependencyBowtie2RaiseFatalErrorNoStop()
 testRunSnpPipelineDependencyBowtie2RaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
 }
@@ -274,7 +274,7 @@ testRunSnpPipelineDependencyBowtie2RaiseFatalErrorStopUnset()
 testRunSnpPipelineDependencySmaltRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     echo "SnpPipeline_Aligner=smalt" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 smalt
@@ -284,7 +284,7 @@ testRunSnpPipelineDependencySmaltRaiseFatalErrorStop()
 testRunSnpPipelineDependencySmaltRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     echo "SnpPipeline_Aligner=smalt" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 smalt
@@ -294,7 +294,7 @@ testRunSnpPipelineDependencySmaltRaiseFatalErrorNoStop()
 testRunSnpPipelineDependencySmaltRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     echo "SnpPipeline_Aligner=smalt" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 smalt
@@ -304,7 +304,7 @@ testRunSnpPipelineDependencySmaltRaiseFatalErrorStopUnset()
 testRunSnpPipelineDependencyPicardRequiredRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_RemoveDuplicateReads=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
     assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
@@ -315,7 +315,7 @@ testRunSnpPipelineDependencyPicardRequiredRaiseFatalErrorStop()
 testRunSnpPipelineDependencyPicardNotRequiredRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_RemoveDuplicateReads=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
     assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
@@ -329,7 +329,7 @@ tryPrepReferenceEnvironmentRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables prepReference will use.
     # This simulates what run_snp_pipeline does before running prepReference.
@@ -386,7 +386,7 @@ tryPrepReferenceEmptyFastaFileRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables prepReference will use.
     # This simulates what run_snp_pipeline does before running prepReference.
@@ -442,7 +442,7 @@ tryPrepReferenceBowtieIndexTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables prepReference will use.
     # This simulates what run_snp_pipeline does before running prepReference.
@@ -496,7 +496,7 @@ tryPrepReferenceSmaltIndexTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables prepReference will use.
     # This simulates what run_snp_pipeline does before running prepReference.
@@ -554,7 +554,7 @@ tryPrepReferenceSamtoolsFaidxTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables prepReference will use.
     # This simulates what run_snp_pipeline does before running prepReference.
@@ -640,7 +640,7 @@ tryAlignSampleToReferenceEnvironmentRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -701,7 +701,7 @@ tryAlignSampleToReferenceMissingReferenceRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -756,7 +756,7 @@ tryAlignSampleToReferenceMissingSample1RaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -811,7 +811,7 @@ tryAlignSampleToReferenceMissingSample2RaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -869,7 +869,7 @@ tryAlignSampleToReferenceBowtieAlignTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -945,7 +945,7 @@ tryAlignSampleToReferenceSmaltAlignTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1024,7 +1024,7 @@ tryPrepSamplesMissingReferenceRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1082,7 +1082,7 @@ tryPrepSamplesMissingSamFileRaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1137,7 +1137,7 @@ tryPrepSamplesSamtoolsViewTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1205,7 +1205,7 @@ tryPrepSamplesSamtoolsSortTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1273,7 +1273,7 @@ tryPrepSamplesPicardMarkDuplicatesTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1345,7 +1345,7 @@ tryPrepSamplesPicardMarkDuplicatesClasspathRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1418,7 +1418,7 @@ tryPrepSamplesSamtoolsMpileupTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1490,7 +1490,7 @@ tryPrepSamplesVarscanRaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1565,7 +1565,7 @@ tryPrepSamplesVarscanClasspathRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1642,7 +1642,7 @@ trySnpFilterPermissionTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1716,7 +1716,7 @@ testSnpFilterPermissionTrapNoStop()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1791,7 +1791,7 @@ trySnpFilterMissingSampleDirRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1843,7 +1843,7 @@ trySnpFilterMissingReferenceRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1900,7 +1900,7 @@ trySnpFilterMissingOutgroupRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -1957,7 +1957,7 @@ trySnpFilterMissingVcfRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2018,7 +2018,7 @@ trySnpFilterMissingVcfRaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2066,7 +2066,7 @@ testSnpFilterMissingVcfRaiseSampleErrorNoStop()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2118,7 +2118,7 @@ testSnpFilterPartialRebuild()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
@@ -2156,7 +2156,7 @@ testSnpFilterPartialRebuild()
     assertFileNotContains "$logDir/filterAbnormalSNP.log" "already freshly built"
 
     # Verify correct results
-    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir/expectedResults
     assertIdenticalFiles "$tempDir/samples/sample1/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample1/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample2/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample2/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
     assertIdenticalFiles "$tempDir/samples/sample3/var.flt_preserved.vcf" "$tempDir/expectedResults/samples/sample3/var.flt_preserved.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
@@ -2173,7 +2173,7 @@ testSnpFilterOutgroup()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
@@ -2238,7 +2238,7 @@ tryCreateSnpListPermissionTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2300,7 +2300,7 @@ tryCreateSnpListMissingSampleDirRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2352,7 +2352,7 @@ tryCreateSnpListMissingVcfRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2413,7 +2413,7 @@ tryCreateSnpListMissingVcfRaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2461,7 +2461,7 @@ testCreateSnpListMissingVcfRaiseSampleErrorNoStop()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2513,7 +2513,7 @@ tryCallConsensusCorruptSnplistTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2568,7 +2568,7 @@ tryCallConsensusMissingSnpListRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2622,7 +2622,7 @@ tryCallConsensusEmptySnpList()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2681,7 +2681,7 @@ tryCallConsensusMissingPileupRaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2739,7 +2739,7 @@ tryCallConsensusMissingExcludeRaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2799,7 +2799,7 @@ tryMergeVcfCorruptVcfTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
@@ -2854,7 +2854,7 @@ tryMergeVcfMissingSampleDirRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2906,7 +2906,7 @@ tryMergeVcfMissingVcfRaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -2943,7 +2943,7 @@ testMergeVcfMissingVcfRaiseSampleErrorNoStop()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
@@ -3020,7 +3020,7 @@ tryMergeVcfZeroGoodSamplesRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3075,7 +3075,7 @@ tryCreateSnpMatrixPermissionTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3136,7 +3136,7 @@ tryCreateSnpMatrixMissingSampleDirRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3188,7 +3188,7 @@ tryCreateSnpMatrixMissingConsensusRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3254,7 +3254,7 @@ tryCreateSnpMatrixMissingConsensusRaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3300,7 +3300,7 @@ testCreateSnpMatrixMissingConsensusRaiseSampleErrorNoStop()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3351,7 +3351,7 @@ tryCreateSnpReferenceSeqPermissionTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3409,7 +3409,7 @@ tryCreateSnpReferenceSeqMissingSnpListRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3463,7 +3463,7 @@ tryCreateSnpReferenceSeqMissingReferenceRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3519,7 +3519,7 @@ tryCollectSampleMetricsMissingSampleDirRaiseSampleError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3575,7 +3575,7 @@ tryCollectSampleMetricsMissingReferenceRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3630,7 +3630,7 @@ tryCollectSampleMetricsMissingInputFiles()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3718,7 +3718,7 @@ tryCollectSampleMetricsEmptyInputFiles()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3818,7 +3818,7 @@ tryCollectSampleMetricsCorruptInputFiles()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3898,7 +3898,7 @@ tryCombineSampleMetricsMissingSampleDirRaiseGlobalError()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -3950,7 +3950,7 @@ tryCombineSampleMetricsMissingSampleMetricsRaiseSampleWarning()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -4009,7 +4009,7 @@ tryCombineSampleMetricsPermissionTrap()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Setup directories and env variables used to trigger error handling.
     # This simulates what run_snp_pipeline does before running other scripts
@@ -4225,7 +4225,7 @@ tryRunSnpPipelineMissingReferenceRaiseFatalError()
     expectErrorCode=$1
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Deliberately try run with missing file
     rm "$tempDir/reference/lambda_virus.fasta"
@@ -4250,7 +4250,7 @@ tryRunSnpPipelineMissingReferenceRaiseFatalError()
 testRunSnpPipelineMissingReferenceRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingReferenceRaiseFatalError 1
 }
@@ -4259,7 +4259,7 @@ testRunSnpPipelineMissingReferenceRaiseFatalErrorStop()
 testRunSnpPipelineMissingReferenceRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingReferenceRaiseFatalError 1
 }
@@ -4268,7 +4268,7 @@ testRunSnpPipelineMissingReferenceRaiseFatalErrorNoStop()
 testRunSnpPipelineMissingReferenceRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingReferenceRaiseFatalError 1
 }
@@ -4280,7 +4280,7 @@ tryRunSnpPipelineMissingConfigurationFileRaiseFatalError()
     expectErrorCode=$1
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -c "$tempDir/not-exist.conf" -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" 2> "$tempDir/run_snp_pipeline.stderr.log" > "$tempDir/run_snp_pipeline.stdout.log"
@@ -4302,7 +4302,7 @@ tryRunSnpPipelineMissingConfigurationFileRaiseFatalError()
 testRunSnpPipelineMissingConfigurationFileRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingConfigurationFileRaiseFatalError 1
 }
@@ -4311,7 +4311,7 @@ testRunSnpPipelineMissingConfigurationFileRaiseFatalErrorStop()
 testRunSnpPipelineMissingConfigurationFileRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingConfigurationFileRaiseFatalError 1
 }
@@ -4320,7 +4320,7 @@ testRunSnpPipelineMissingConfigurationFileRaiseFatalErrorNoStop()
 testRunSnpPipelineMissingConfigurationFileRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingConfigurationFileRaiseFatalError 1
 }
@@ -4332,8 +4332,8 @@ tryRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalError()
     expectErrorCode=$1
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
 
     # Misconfigure the aligner
     echo "SnpPipeline_Aligner=garbage" >> "$tempDir/snppipeline.conf"
@@ -4358,7 +4358,7 @@ tryRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalError()
 testRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalError 1
 }
@@ -4367,7 +4367,7 @@ testRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalErrorStop()
 testRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalError 1
 }
@@ -4376,7 +4376,7 @@ testRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalErrorNoStop()
 testRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalError 1
 }
@@ -4388,7 +4388,7 @@ tryRunSnpPipelineMissingSampleDirFileRaiseFatalError()
     expectErrorCode=$1
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -S "not-exist-file" "$tempDir/reference/lambda_virus.fasta" 2> "$tempDir/run_snp_pipeline.stderr.log" > "$tempDir/run_snp_pipeline.stdout.log"
@@ -4410,7 +4410,7 @@ tryRunSnpPipelineMissingSampleDirFileRaiseFatalError()
 testRunSnpPipelineMissingSampleDirFileRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSampleDirFileRaiseFatalError 1
 }
@@ -4419,7 +4419,7 @@ testRunSnpPipelineMissingSampleDirFileRaiseFatalErrorStop()
 testRunSnpPipelineMissingSampleDirFileRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSampleDirFileRaiseFatalError 1
 }
@@ -4428,7 +4428,7 @@ testRunSnpPipelineMissingSampleDirFileRaiseFatalErrorNoStop()
 testRunSnpPipelineMissingSampleDirFileRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSampleDirFileRaiseFatalError 1
 }
@@ -4440,7 +4440,7 @@ tryRunSnpPipelineValidateSampleDirFileRaiseFatalError()
     expectErrorCode=$1
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Create some error conditions
     printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
@@ -4473,7 +4473,7 @@ tryRunSnpPipelineValidateSampleDirFileRaiseFatalError()
 testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineValidateSampleDirFileRaiseFatalError 1
 }
@@ -4482,11 +4482,11 @@ testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorStop()
 testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
     cp -r "$tempDir/samples/sample1" "$tempDir/samples/sample5"  # extra sample so at least 2 will be merged
 
     # Create some error conditions
@@ -4559,7 +4559,7 @@ testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorNoStop()
 testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineValidateSampleDirFileRaiseFatalError 1
 }
@@ -4571,7 +4571,7 @@ tryRunSnpPipelineMissingSamplesDirRaiseFatalError()
     expectErrorCode=$1
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -s "not-exist-dir" "$tempDir/reference/lambda_virus.fasta" 2> "$tempDir/run_snp_pipeline.stderr.log" > "$tempDir/run_snp_pipeline.stdout.log"
@@ -4593,7 +4593,7 @@ tryRunSnpPipelineMissingSamplesDirRaiseFatalError()
 testRunSnpPipelineMissingSamplesDirRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSamplesDirRaiseFatalError 1
 }
@@ -4602,7 +4602,7 @@ testRunSnpPipelineMissingSamplesDirRaiseFatalErrorStop()
 testRunSnpPipelineMissingSamplesDirRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSamplesDirRaiseFatalError 1
 }
@@ -4611,7 +4611,7 @@ testRunSnpPipelineMissingSamplesDirRaiseFatalErrorNoStop()
 testRunSnpPipelineMissingSamplesDirRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSamplesDirRaiseFatalError 1
 }
@@ -4623,7 +4623,7 @@ tryRunSnpPipelineEmptySamplesDirRaiseFatalError()
     expectErrorCode=$1
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     mkdir -p "$tempDir/emptySamplesDir"
@@ -4646,7 +4646,7 @@ tryRunSnpPipelineEmptySamplesDirRaiseFatalError()
 testRunSnpPipelineEmptySamplesDirRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineEmptySamplesDirRaiseFatalError 1
 }
@@ -4655,7 +4655,7 @@ testRunSnpPipelineEmptySamplesDirRaiseFatalErrorStop()
 testRunSnpPipelineEmptySamplesDirRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineEmptySamplesDirRaiseFatalError 1
 }
@@ -4664,7 +4664,7 @@ testRunSnpPipelineEmptySamplesDirRaiseFatalErrorNoStop()
 testRunSnpPipelineEmptySamplesDirRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineEmptySamplesDirRaiseFatalError 1
 }
@@ -4676,7 +4676,7 @@ tryRunSnpPipelineSamplesDirNoFastqRaiseFatalError()
     expectErrorCode=$1
 
     # Extract test data to temp dir
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     find $tempDir -name *.fastq -delete
@@ -4699,7 +4699,7 @@ tryRunSnpPipelineSamplesDirNoFastqRaiseFatalError()
 testRunSnpPipelineSamplesDirNoFastqRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineSamplesDirNoFastqRaiseFatalError 1
 }
@@ -4708,7 +4708,7 @@ testRunSnpPipelineSamplesDirNoFastqRaiseFatalErrorStop()
 testRunSnpPipelineSamplesDirNoFastqRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineSamplesDirNoFastqRaiseFatalError 1
 }
@@ -4717,7 +4717,7 @@ testRunSnpPipelineSamplesDirNoFastqRaiseFatalErrorNoStop()
 testRunSnpPipelineSamplesDirNoFastqRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineSamplesDirNoFastqRaiseFatalError 1
 }
@@ -4729,7 +4729,7 @@ tryRunSnpPipelineTrapPrepReferenceTrap()
     expectErrorCode=$1
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Deliberately corrupt the fasta file
     sed -i 's/>/@@@/g' "$tempDir/reference/lambda_virus.fasta"
@@ -4781,7 +4781,7 @@ tryRunSnpPipelineTrapPrepReferenceTrap()
 testRunSnpPipelineTrapPrepReferenceTrapStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapPrepReferenceTrap 1
 }
@@ -4790,7 +4790,7 @@ testRunSnpPipelineTrapPrepReferenceTrapStop()
 testRunSnpPipelineTrapPrepReferenceTrapNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapPrepReferenceTrap 1
 }
@@ -4799,7 +4799,7 @@ testRunSnpPipelineTrapPrepReferenceTrapNoStop()
 testRunSnpPipelineTrapPrepReferenceTrapStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapPrepReferenceTrap 1
 }
@@ -4811,7 +4811,7 @@ tryRunSnpPipelineTrapAlignSampleToReferenceTrap()
     expectErrorCode=$1
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Deliberately corrupt the fastq files
     echo "Garbage" > "$tempDir/samples/sample1/sample1_1.fastq"
@@ -4867,7 +4867,7 @@ tryRunSnpPipelineTrapAlignSampleToReferenceTrap()
 testRunSnpPipelineTrapAlignSampleToReferenceTrapStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapAlignSampleToReferenceTrap 1
 }
@@ -4876,12 +4876,12 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapStop()
 testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     expectErrorCode=1
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Deliberately corrupt the fastq files
     echo "Garbage" > "$tempDir/samples/sample1/sample1_1.fastq"
@@ -4950,12 +4950,12 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
 testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopSomeFail()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     expectErrorCode=0
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Deliberately corrupt some of the fastq files
     echo "Garbage" > "$tempDir/samples/sample1/sample1_1.fastq"
@@ -5051,7 +5051,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopSomeFail()
 testRunSnpPipelineTrapAlignSampleToReferenceTrapStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapAlignSampleToReferenceTrap 1
 }
@@ -5063,7 +5063,7 @@ testRunSnpPipelineLambda()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
     # Simulate left-over errors from a prior run
     echo "Old errors from prior run" > "$tempDir/error.log"
@@ -5090,7 +5090,7 @@ testRunSnpPipelineLambda()
     assertIdenticalFiles "$tempDir/originalInputs/reference/lambda_virus.fasta"    "$tempDir/reference/lambda_virus.fasta"
 
     # Verify correct results
-    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir/expectedResults
     assertIdenticalFiles "$tempDir/snplist.txt"                   "$tempDir/expectedResults/snplist.txt"
     assertIdenticalFiles "$tempDir/snpma.fasta"                   "$tempDir/expectedResults/snpma.fasta"
     assertIdenticalFiles "$tempDir/snpma.vcf"                     "$tempDir/expectedResults/snpma.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source --ignore-matching-lines=##bcftools
@@ -5175,7 +5175,7 @@ testRunSnpPipelineLambdaUnpaired()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
     # Delete the 2nd half of all the paired fastq files
     rm "$tempDir"/originalInputs/samples/sample*/sample*_2.fastq
@@ -5201,7 +5201,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertIdenticalFiles "$tempDir/originalInputs/reference/lambda_virus.fasta"    "$tempDir/reference/lambda_virus.fasta"
 
     # Verify output results exist
-    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir/expectedResults
     verifyNonEmptyReadableFile "$tempDir/snplist.txt"
     verifyNonEmptyReadableFile "$tempDir/snpma.fasta"
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
@@ -5259,7 +5259,7 @@ testRunSnpPipelineLambdaSingleSample()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
     # Delete all but one sample
     rm -rf "$tempDir"/originalInputs/samples/sample2
@@ -5284,7 +5284,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertIdenticalFiles "$tempDir/originalInputs/reference/lambda_virus.fasta"    "$tempDir/reference/lambda_virus.fasta"
 
     # Verify output results exist
-    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir/expectedResults
     verifyNonEmptyReadableFile "$tempDir/snplist.txt"
     verifyNonEmptyReadableFile "$tempDir/snpma.fasta"
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
@@ -5323,7 +5323,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 
     # Verify correct results
-    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir/expectedResults
     assertIdenticalFiles "$tempDir/snpma.vcf"                     "$tempDir/samples/sample1/consensus.vcf"  # Just copy the sample VCF to the snpma.vcf
     assertIdenticalFiles "$tempDir/snpma_preserved.vcf"           "$tempDir/samples/sample1/consensus_preserved.vcf"  # Just copy the sample VCF to the snpma.vcf
 }
@@ -5335,7 +5335,7 @@ testRunSnpPipelineZeroSnps()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
@@ -5417,7 +5417,7 @@ testRunSnpPipelineRerunMissingVCF()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
@@ -5445,7 +5445,7 @@ testRunSnpPipelineRerunMissingVCF()
     rm -rf "$tempDir/samples/sample1"
     sleep 1
 
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
 
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -S "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
@@ -5497,7 +5497,7 @@ testAlreadyFreshOutputs()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
@@ -5683,7 +5683,7 @@ testRunSnpPipelineMetricsColumnHeadingsUnderscores()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir/originalInputs
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
@@ -5695,14 +5695,14 @@ testRunSnpPipelineMetricsColumnHeadingsUnderscores()
     assertFileNotContains "$tempDir/run_snp_pipeline.log" "Use the -f option to force a rebuild"
 
     # Verify output metrics
-    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir/expectedResults
     assertIdenticalFiles "$tempDir/metrics.tsv" "$tempDir/expectedResults/metrics.tsv"
     head -n 1 "$tempDir/metrics.tsv" | grep "_" > /dev/null
     assertTrue "No underscores were found in the metrics column headings"  $?
 
     # Delete the metrics file and re-run with the option to use spaces
     rm "$tempDir/metrics.tsv"
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     echo 'CombineSampleMetrics_ExtraParams="-s"' >> "$tempDir/snppipeline.conf"
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
 
@@ -5721,10 +5721,10 @@ testRunSnpPipelineExcessiveSnps()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py lambdaVirusInputs $tempDir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
     # Create a config file with a low enough maxsnps setting to block a sample
-    copy_snppipeline_data.py configurationFile $tempDir
+    cfsan_snp_pipeline data configurationFile $tempDir
     sed -i s:SnpPipeline_MaxSnps=-1:SnpPipeline_MaxSnps=40: "$tempDir/snppipeline.conf"
 
     # Run the pipeline, specifing the locations of samples and the reference
@@ -5790,7 +5790,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileNotContains "$tempDir/snp_distance_pairwise.tsv" "sample1"
     assertFileNotContains "$tempDir/snp_distance_matrix.tsv" "sample1"
 
-    copy_snppipeline_data.py lambdaVirusExpectedResults $tempDir/expectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir/expectedResults
     grep -v sample[12] "$tempDir/expectedResults/metrics.tsv" > "$tempDir/expectedResults/metrics.withoutSample1and2.tsv"
     grep -v sample[12] "$tempDir/metrics.tsv" > "$tempDir/metrics.withoutSample1and2.tsv"
     assertIdenticalFiles "$tempDir/metrics.withoutSample1and2.tsv" "$tempDir/expectedResults/metrics.withoutSample1and2.tsv"
@@ -5803,7 +5803,7 @@ testRunSnpPipelineAgona()
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
-    copy_snppipeline_data.py agonaInputs "$tempDir"
+    cfsan_snp_pipeline data agonaInputs "$tempDir"
 
     # Download sample data from SRA at NCBI.
      mkdir "$tempDir/samples"
@@ -5831,7 +5831,7 @@ testRunSnpPipelineAgona()
     assertFileNotContains "$tempDir/run_snp_pipeline.log" "Use the -f option to force a rebuild"
 
     # Verify correct results
-    copy_snppipeline_data.py agonaExpectedResults $tempDir/expectedResults
+    cfsan_snp_pipeline data agonaExpectedResults $tempDir/expectedResults
     assertIdenticalFiles "$tempDir/snplist.txt"        "$tempDir/expectedResults/snplist.txt"
     assertIdenticalFiles "$tempDir/snpma.fasta"        "$tempDir/expectedResults/snpma.fasta"
     assertIdenticalFiles "$tempDir/snpma.vcf"          "$tempDir/expectedResults/snpma.vcf" "--ignore-matching-lines=##fileDate" "--ignore-matching-lines=##source" "--ignore-matching-lines=##bcftools"

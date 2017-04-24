@@ -11,6 +11,7 @@ from snppipeline import __version__
 from snppipeline import utils
 from snppipeline.utils import verbose_print
 
+from snppipeline import data
 from snppipeline import index_ref
 from snppipeline import map_reads
 from snppipeline import call_sites
@@ -26,13 +27,13 @@ def not_implemented(args):
     print("The %s command will be added in a future release" % args.subparser_name)
 
 
-def parse_arguments(system_args):
+def parse_arguments(argv):
     """
     Parse command line arguments.
 
     Parameters
     ----------
-    system_args : list
+    argv : list
         List of command line arguments, usually sys.argv[1:].
 
     Returns
@@ -47,6 +48,53 @@ def parse_arguments(system_args):
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparsers = parser.add_subparsers(dest="subparser_name", help="Command help:")
+
+    # -------------------------------------------------------------------------
+    # Create the parser for the "data" command
+    # -------------------------------------------------------------------------
+    description = """Copy data included with the CFSAN SNP Pipeline to a specified directory."""
+    subparser = subparsers.add_parser("data", help="Copy included data to a specified directory", description=description, formatter_class=argparse.RawTextHelpFormatter,
+        epilog="""
+Example:
+# create a new directory "testLambdaVirus" and copy the Lambda virus input data there
+$ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
+"""
+    )
+
+    subparser.add_argument("whichData",
+    metavar="whichData",
+    choices=["lambdaVirusInputs", "lambdaVirusExpectedResults",
+             "agonaInputs", "agonaExpectedResults",
+             "listeriaInputs", "listeriaExpectedResults",
+             "configurationFile"],
+    help="""    Which of the supplied data sets to copy.  The choices are:
+        lambdaVirusInputs          : Input reference and fastq files
+        lambdaVirusExpectedResults : Expected results files
+        agonaInputs                : Input reference file
+        agonaExpectedResults       : Expected results files
+        listeriaInputs             : Input reference file
+        listeriaExpectedResults    : Expected results files
+        configurationFile          : File of parameters to customize the
+                                     SNP pipeline
+
+    Note: the lambda virus data set is complete with input data and expected
+    results.  The agona and listeria data sets have the reference genome and
+    the expected results, but not the input fastq files, because the files are
+    too large to include with the package.
+    """)
+
+    subparser.add_argument("destDirectory",
+    nargs="?",
+    type=str,
+    default=".",
+    help="""    Destination directory into which the SNP pipeline data files will be copied.
+    The data files are copied into the destination directory if the directory
+    already exists.  Otherwise the destination directory is created and the
+    data files are copied there.  (default: current directory)""")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=data.copy_data)
+    subparser.set_defaults(excepthook=None) # keep default exception handler
+    subparser.set_defaults(verbose=0)
 
     # -------------------------------------------------------------------------
     # Create the parser for the "index_ref" command
@@ -113,7 +161,7 @@ def parse_arguments(system_args):
     subparser.add_argument(dest="referenceFile",    type=str, help="Relative or absolute path to the reference fasta file")
     subparser.add_argument("-f", "--force",   dest="forceFlag", action="store_true", help="Force processing even when result files already exist and are newer than inputs")
     subparser.add_argument("-o", "--output",  dest="metricsFile",            type=str, default="metrics",                   metavar="FILE", help="Output file.  Relative or absolute path to the metrics file")
-    subparser.add_argument("-m", "--maxsnps", dest='maxSnps',                type=int, default=-1,                          metavar='INT',  help="Maximum allowed number of SNPs per sample")
+    subparser.add_argument("-m", "--maxsnps", dest="maxSnps",                type=int, default=-1,                          metavar="INT",  help="Maximum allowed number of SNPs per sample")
     subparser.add_argument("-c", dest="consensusFastaFileName",              type=str, default="consensus.fasta",           metavar="NAME", help="File name of the consensus fasta file which must exist in the sample directory")
     subparser.add_argument("-C", dest="consensusPreservedFastaFileName",     type=str, default="consensus_preserved.fasta", metavar="NAME", help="File name of the consensus preserved fasta file which must exist in the sample directory")
     subparser.add_argument("-v", dest="consensusVcfFileName",                type=str, default="consensus.vcf",             metavar="NAME", help="File name of the consensus vcf file which must exist in the sample directory")
@@ -147,13 +195,39 @@ def parse_arguments(system_args):
     # -------------------------------------------------------------------------
     # parse the args
     # -------------------------------------------------------------------------
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Special validation
     if args.subparser_name == "my-subcommand":
         pass  # special validation here
 
     return args
+
+
+def run_command(argv):
+    """Run a subcommand with arguments in the argv list.
+
+    Parameters
+    ----------
+    argv : list of str
+        List of command line arguments.  Usually sys.argv[1:].
+        The first item in the list should be the subcommand name.
+
+    Returns
+    -------
+    Returns 0 on success if it completes with no exceptions.
+    """
+    args = parse_arguments(argv)
+
+    # Call the sub-command function
+    if args.excepthook:
+        sys.excepthook = args.excepthook
+    utils.set_logging_verbosity(args)
+    args.func(args)  # this executes the function previously associated with the subparser with set_defaults
+
+    verbose_print("")
+    verbose_print("# %s %s %s finished" % (utils.timestamp(), utils.program_name(), args.subparser_name))
+    return 0
 
 
 def main():
@@ -174,13 +248,5 @@ def main():
     -------
     The return value is passed to sys.exit()
     """
-    args = parse_arguments(sys.argv[1:])
+    return run_command(sys.argv[1:])
 
-    # Call the sub-command function
-    sys.excepthook = args.excepthook
-    utils.set_logging_verbosity(args)
-    args.func(args)  # this executes the function previously associated with the subparser with set_defaults
-
-    verbose_print("")
-    verbose_print("# %s %s %s finished" % (utils.timestamp(), utils.program_name(), args.subparser_name))
-    return 0

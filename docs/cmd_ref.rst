@@ -13,9 +13,9 @@ copy_snppipeline_data.py
 
 ::
 
-  usage: copy_snppipeline_data.py [-h] whichData [destDirectory]
+  usage: cfsan_snp_pipeline data [-h] [--version] whichData [destDirectory]
   
-  Copy SNP Pipeline data to a specified directory.
+  Copy data included with the CFSAN SNP Pipeline to a specified directory.
   
   positional arguments:
     whichData          Which of the supplied data sets to copy.  The choices are:
@@ -31,20 +31,20 @@ copy_snppipeline_data.py
                        Note: the lambda virus data set is complete with input data and expected
                        results.  The agona and listeria data sets have the reference genome and
                        the expected results, but not the input fastq files, because the files are
-                       too large to include with the package.  (default: None)
+                       too large to include with the package.
                        
     destDirectory      Destination directory into which the SNP pipeline data files will be copied.
                        The data files are copied into the destination directory if the directory
                        already exists.  Otherwise the destination directory is created and the
                        data files are copied there.  (default: current directory)
-                       
   
   optional arguments:
     -h, --help     show this help message and exit
+    --version      show program's version number and exit
   
   Example:
-  # create a new directory "testLambdaVirus" and copy the input data there
-  $ copy_snppipeline_data.py lambdaVirusInputs testLambdaVirus
+  # create a new directory "testLambdaVirus" and copy the Lambda virus input data there
+  $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
 
 .. _cmd-ref-run-snp-pipeline:
 
