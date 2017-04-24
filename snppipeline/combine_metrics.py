@@ -10,6 +10,7 @@ import os
 from snppipeline import utils
 from snppipeline.utils import verbose_print
 
+
 def combine_metrics(args):
     """Combine the per-sample metrics files into a single table of metrics for all samples.
 

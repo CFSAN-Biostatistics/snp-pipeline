@@ -110,7 +110,7 @@ class SingleSampleWriter(object):
             in_memory_file.write(VCF_FILTER % (name, description))
         in_memory_file.write(VCF_FORMAT)
         in_memory_file.write(VCF_REFERENCE % reference)
-        in_memory_file.write(VCF_HDR_LINE  % sample_id)
+        in_memory_file.write(VCF_HDR_LINE % sample_id)
 
         # Rewind to the beginning of the file buffer to prepare for reading
         in_memory_file.seek(0)
@@ -252,7 +252,7 @@ class SingleSampleWriter(object):
             adf = pileup_record.forward_good_depth - pileup_record.forward_base_good_depth[upper_ref]
             adr = pileup_record.reverse_good_depth - pileup_record.reverse_base_good_depth[upper_ref]
         else:
-            if failed_filters == None:
+            if failed_filters is None:
                 gt = '1' # alt allele
             elif failed_snp_gt == '.':
                 gt = '.' # missing, unable to make a call
@@ -279,7 +279,7 @@ class SingleSampleWriter(object):
 
         # info_dict contains fields that match our VCF_HEAD info fields
         # this sample has a pileup record at this position, so NS=1
-        info_dict = {'NS' : 1}
+        info_dict = {'NS': 1}
 
         # Make the list of _AltRecord objects needed for the _Record initializer
         if alt is None:

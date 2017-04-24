@@ -13,6 +13,7 @@ from snppipeline import command
 from snppipeline import utils
 from snppipeline.utils import verbose_print
 
+
 def index_ref(args):
     """Index the reference genome.
 
@@ -60,7 +61,6 @@ def index_ref(args):
     if snp_pipeline_aligner not in ["bowtie2", "smalt"]:
         utils.global_error("Error: only bowtie2 and smalt aligners are supported.")
 
-
     # Create index file for reference
     if snp_pipeline_aligner == "bowtie2":
         target_file = reference_base_path + ".rev.1.bt2"
@@ -102,4 +102,3 @@ def index_ref(args):
         verbose_print("# %s" % version_str)
         command.run(command_line, sys.stdout)
         utils.global_error_on_missing_file(target_file, "samtools faidx")
-

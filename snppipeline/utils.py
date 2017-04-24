@@ -205,8 +205,8 @@ def extract_version_str(program_name, command_line):
             lowerline = lowerline.replace(':', ' ')
             tokens = lowerline.split()
             for index, token in enumerate(tokens):
-                if token == "version" and len(tokens) > index+1:
-                    return program_name + " version " + tokens[index+1]
+                if token == "version" and len(tokens) > index + 1:
+                    return program_name + " version " + tokens[index + 1]
 
     # if only one line and only one token, assume it is the version identifier
     if len(lines) == 1:
@@ -267,7 +267,7 @@ def read_properties(prop_file_path):
             if assign_op_idx < 0:
                 continue
             key = line[:assign_op_idx]
-            value = line[assign_op_idx + 1 :]
+            value = line[assign_op_idx + 1:]
             key = key.strip()
             value = value.strip()
             if value.startswith('"') and value.endswith('"'):
@@ -568,7 +568,6 @@ def sample_warning(message):
     sys.stdout.flush() # make sure stdout is flushed before printing the error
     if message:
         print(message, file=sys.stderr)
-
 
 
 def verify_existing_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):

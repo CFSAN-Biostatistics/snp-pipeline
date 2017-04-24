@@ -249,4 +249,3 @@ def main():
     The return value is passed to sys.exit()
     """
     return run_command(sys.argv[1:])
-

@@ -337,7 +337,7 @@ class Reader(object):
             Returns a parsed pileup record each time this method is called.
         """
         with open(self.file_path, "r") as f:
-            if self.chrom_position_set == None:
+            if self.chrom_position_set is None:
                 for line in f:
                     record = Record(line, self.min_base_quality)
                     yield record
@@ -383,9 +383,9 @@ class ConsensusCaller(object):
         self.min_cons_strand_bias = min_cons_strand_bias
 
         self.fail_raw_depth = "RawDpth"
-        self.fail_freq = "VarFreq" +  str(int(100 * min_cons_freq))
+        self.fail_freq = "VarFreq" + str(int(100 * min_cons_freq))
         self.fail_strand_depth = "StrDpth" + str(min_cons_strand_depth)
-        self.fail_strand_bias = "StrBias" +  str(int(100 * min_cons_strand_bias))
+        self.fail_strand_bias = "StrBias" + str(int(100 * min_cons_strand_bias))
 
 
     def get_filter_descriptions(self):
@@ -400,7 +400,7 @@ class ConsensusCaller(object):
         description : str
             Long description of the filter
         """
-        return [(self.fail_raw_depth, "No read depth" ),
+        return [(self.fail_raw_depth, "No read depth"),
                 (self.fail_freq, "Variant base frequency below %.2f" % self.min_cons_freq),
                 (self.fail_strand_depth, "Less than %i variant-supporing reads on at least one strand" % self.min_cons_strand_depth),
                 (self.fail_strand_bias, "Fraction of variant supporting reads below %.2f on one strand" % self.min_cons_strand_bias),
@@ -459,7 +459,7 @@ class ConsensusCaller(object):
         ('-', ['RawDpth'])
         """
         consensus_base = record.most_common_base
-        if consensus_base == None:
+        if consensus_base is None:
             failed_filters = [self.fail_raw_depth]
             return ('-', failed_filters)
 
@@ -493,5 +493,3 @@ class ConsensusCaller(object):
             consensus_base = record.reference_base
 
         return (consensus_base, failed_filters)
-
-

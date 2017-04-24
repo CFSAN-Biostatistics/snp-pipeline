@@ -6,11 +6,9 @@ from Bio.SeqRecord import SeqRecord
 from collections import defaultdict
 import itertools
 import os
-import pprint
 import sys
 import shutil
 import vcf
-from snppipeline.__init__ import __version__
 from snppipeline import pileup
 from snppipeline import utils
 from snppipeline import vcf_writer

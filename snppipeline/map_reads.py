@@ -17,6 +17,7 @@ from snppipeline import fastq
 from snppipeline import utils
 from snppipeline.utils import verbose_print
 
+
 def map_reads(args):
     """Align reads to the reference.
 
@@ -98,7 +99,6 @@ def map_reads(args):
         verbose_print("# %s has already been aligned to %s.  Use the -f option to force a rebuild." % (sample_id, reference_id))
         return
 
-
     #==========================================================================
     # Construct the command line to execute bowtie2 or smalt
     #==========================================================================
@@ -159,7 +159,6 @@ def map_reads(args):
 
         command_line = "smalt map " + num_cores_param + " " + smalt_align_params + " " + reference_base_path + " " + sample_fastq_file1 + " " + (sample_fastq_file2 or "")
 
-
     #==========================================================================
     # Run the command to execute bowtie2 or smalt
     #==========================================================================
@@ -167,7 +166,6 @@ def map_reads(args):
     verbose_print("# %s %s" % (utils.timestamp(), command_line))
     verbose_print("# %s" % version_str)
     command.run(command_line, sam_file)
-
 
     #==========================================================================
     # When using smalt, assign read groups in a separate step.
@@ -178,7 +176,7 @@ def map_reads(args):
         shutil.move(sam_file, smalt_sam_file)
         version_str = utils.extract_version_str("Picard", "java  picard.cmdline.PicardCommandLine AddOrReplaceReadGroups --version 2>&1")
         jvm_params = os.environ.get("PicardJvm_ExtraParams") or ""
-        command_line = "java " +  jvm_params + " picard.cmdline.PicardCommandLine AddOrReplaceReadGroups"
+        command_line = "java " + jvm_params + " picard.cmdline.PicardCommandLine AddOrReplaceReadGroups"
         command_line += " I=" + smalt_sam_file
         command_line += " O=" + sam_file
         command_line += " RGID=" + read_group_tags.ID
