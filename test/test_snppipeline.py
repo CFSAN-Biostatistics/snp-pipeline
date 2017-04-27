@@ -9,6 +9,7 @@ import os
 import subprocess
 from testfixtures import TempDirectory
 from pkg_resources import resource_filename
+from snppipeline import cfsan_snp_pipeline
 from snppipeline import snppipeline
 
 data_directory = resource_filename(snppipeline.__name__, 'data')
@@ -82,6 +83,8 @@ class SnpPipelineTest(unittest.TestCase):
     def run_function_test(self, funct, args, file_to_compare, not_match_str_list=None):
         """Test one function and compare the generated file to the expected results.
         """
+        args.verbose = 0
+
         # remember the previous file timestamp, if any
         result_file = os.path.join(self.directory_run_result, file_to_compare)
         pre_exist = os.path.isfile(result_file)
@@ -153,18 +156,14 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
     def test_1_snp_filter(self):
         """Run snp_filter and verify var.flt_preserved.vcf and var.flt_removed.vcf contains expected contents for each sample.
         """
-        args = argparse.Namespace()
-        args.sampleDirsFile = os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt')
-        args.refFastaFile = os.path.join(self.__class__.directory_run_result, "reference", "lambda_virus.fasta")
-        args.vcfFileName = 'var.flt.vcf'
-        args.edgeLength = 500
-        args.windowSize = 1000
-        args.maxSNP = 3
-        args.outGroupFile = None
-        args.forceFlag = True
+        command_line = "filter_regions -f " + \
+                       os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt') + ' ' + \
+                       os.path.join(self.__class__.directory_run_result, "reference", "lambda_virus.fasta")
+        args = cfsan_snp_pipeline.parse_command_line(command_line)
+
         for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
-            self.run_function_test(snppipeline.remove_bad_snp, args, os.path.join(dir, 'var.flt_preserved.vcf'))
-            self.run_function_test(snppipeline.remove_bad_snp, args, os.path.join(dir, 'var.flt_removed.vcf'))
+            self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, os.path.join(dir, 'var.flt_preserved.vcf'))
+            self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, os.path.join(dir, 'var.flt_removed.vcf'))
 
 
     def test_2_create_snp_list(self):

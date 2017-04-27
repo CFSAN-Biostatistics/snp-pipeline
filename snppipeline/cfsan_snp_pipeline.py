@@ -15,6 +15,7 @@ from snppipeline import data
 from snppipeline import index_ref
 from snppipeline import map_reads
 from snppipeline import call_sites
+from snppipeline import filter_regions
 from snppipeline import merge_vcfs
 from snppipeline import collect_metrics
 from snppipeline import combine_metrics
@@ -27,9 +28,8 @@ def not_implemented(args):
     print("The %s command will be added in a future release" % args.subparser_name)
 
 
-def parse_arguments(argv):
-    """
-    Parse command line arguments.
+def parse_argument_list(argv):
+    """Parse command line arguments.
 
     Parameters
     ----------
@@ -38,7 +38,7 @@ def parse_arguments(argv):
 
     Returns
     -------
-    Namespace
+    args : Namespace
         Command line arguments are stored as attributes of a Namespace.
     """
     # Create the top-level parser
@@ -139,6 +139,24 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.set_defaults(excepthook=utils.handle_sample_exception)
 
     # -------------------------------------------------------------------------
+    # Create the parser for the "filter_regions" command
+    # -------------------------------------------------------------------------
+    description = "Remove abnormally dense SNPs from the input VCF file, save the reserved SNPs into a new VCF file, and save the removed SNPs into another VCF file."
+    subparser = subparsers.add_parser("filter_regions", help="Remove abnormally dense SNPs from all samples", description=description, formatter_class=formatter_class)
+    subparser.add_argument(                       dest="sampleDirsFile", type=str,                                                help="Relative or absolute path to file containing a list of directories -- one per sample")
+    subparser.add_argument(                       dest="refFastaFile",   type=str,                                                help="Relative or absolute path to the reference fasta file")
+    subparser.add_argument("-f", "--force",       dest="forceFlag",      action="store_true",                                     help="Force processing even when result files already exist and are newer than inputs")
+    subparser.add_argument("-n", "--vcfname",     dest="vcfFileName",    type=str, default="var.flt.vcf", metavar="NAME",         help="File name of the input VCF files which must exist in each of the sample directories")
+    subparser.add_argument("-l", "--edge_length", dest="edgeLength",     type=int, default=500,           metavar="EDGE_LENGTH",  help="The length of the edge regions in a contig, in which all SNPs will be removed.")
+    subparser.add_argument("-w", "--window_size", dest="windowSize",     type=int, default=1000,          metavar="WINDOW_SIZE",  help="The length of the window in which the number of SNPs should be no more than max_num_snp.")
+    subparser.add_argument("-m", "--max_snp",     dest="maxSNP",         type=int, default=3,             metavar="MAX_NUM_SNPs", help="The maximum number of SNPs allowed in a window.")
+    subparser.add_argument("-g", "--out_group",   dest="outGroupFile",   type=str, default=None,          metavar="OUT_GROUP",    help="Relative or absolute path to the file indicating outgroup samples, one sample ID per line.")
+    subparser.add_argument("-v", "--verbose",     dest="verbose",        type=int, default=1,             metavar="0..5",         help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=filter_regions.filter_regions)
+    subparser.set_defaults(excepthook=utils.handle_global_exception)
+
+    # -------------------------------------------------------------------------
     # Create the parser for the "merge_vcfs" command
     # -------------------------------------------------------------------------
     description = """Merge the consensus vcf files from all samples into a single multi-vcf file for all samples."""
@@ -198,13 +216,64 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     args = parser.parse_args(argv)
 
     # Special validation
-    if args.subparser_name == "my-subcommand":
-        pass  # special validation here
+    if args.subparser_name == "filter_regions":
+        if (args.edgeLength < 1):
+            utils.global_error("Error: the length of the edge regions must be a positive integer, and the input is %d." % args.edgeLength)
+
+        if (args.windowSize < 1):
+            utils.global_error("Error: the length of the window must be a positive integer, and the input is %d." % args.windowSize)
+
+        if (args.maxSNP < 1):
+            utils.global_error("Error: the maximum number of SNPs allowed must be a positive integer, and the input is %d." % args.maxSNP)
 
     return args
 
 
-def run_command(argv):
+def parse_command_line(line):
+    """Parse command line arguments.
+
+    This function is intended to be used for unit testing.
+
+    Parameters
+    ----------
+    line : str
+        Command line starting with the subcommand name.
+
+    Returns
+    -------
+    args : Namespace
+        Command line arguments are stored as attributes of a Namespace.
+    """
+    argv = line.split()
+    args = parse_argument_list(argv)
+    return args
+
+
+def run_command_from_args(args):
+    """Run a subcommand with previously parsed arguments in an argparse namespace.
+
+    Parameters
+    ----------
+    args : Namespace
+        Command line arguments are stored as attributes of a Namespace.
+        The args are obtained by calling parse_argument_list().
+
+    Returns
+    -------
+    Returns 0 on success if it completes with no exceptions.
+    """
+    # Call the sub-command function
+    if args.excepthook:
+        sys.excepthook = args.excepthook
+    utils.set_logging_verbosity(args)
+    args.func(args)  # this executes the function previously associated with the subparser with set_defaults
+
+    verbose_print("")
+    verbose_print("# %s %s %s finished" % (utils.timestamp(), utils.program_name(), args.subparser_name))
+    return 0
+
+
+def run_command_from_arg_list(argv):
     """Run a subcommand with arguments in the argv list.
 
     Parameters
@@ -217,17 +286,26 @@ def run_command(argv):
     -------
     Returns 0 on success if it completes with no exceptions.
     """
-    args = parse_arguments(argv)
+    args = parse_argument_list(argv)
+    return run_command_from_args(args)
 
-    # Call the sub-command function
-    if args.excepthook:
-        sys.excepthook = args.excepthook
-    utils.set_logging_verbosity(args)
-    args.func(args)  # this executes the function previously associated with the subparser with set_defaults
 
-    verbose_print("")
-    verbose_print("# %s %s %s finished" % (utils.timestamp(), utils.program_name(), args.subparser_name))
-    return 0
+def run_command_from_line(line):
+    """Run a subcommand with a command line.
+
+    This function is intended to be used for unit testing.
+
+    Parameters
+    ----------
+    line : str
+        Command line starting with the subcommand name.
+
+    Returns
+    -------
+    Returns 0 on success if it completes with no exceptions.
+    """
+    argv = line.split()
+    return run_command_from_arg_list(argv)
 
 
 def main():
@@ -248,4 +326,4 @@ def main():
     -------
     The return value is passed to sys.exit()
     """
-    return run_command(sys.argv[1:])
+    return run_command_from_arg_list(sys.argv[1:])

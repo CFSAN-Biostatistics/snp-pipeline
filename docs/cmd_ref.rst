@@ -200,9 +200,10 @@ snp_filter.py
 
 ::
 
-  usage: snp_filter.py [-h] [-f] [-n NAME] [-l EDGE_LENGTH] [-w WINDOW_SIZE]
-                       [-m MAX_NUM_SNPs] [-g OUT_GROUP] [-v 0..5] [--version]
-                       sampleDirsFile refFastaFile
+  usage: cfsan_snp_pipeline filter_regions [-h] [-f] [-n NAME] [-l EDGE_LENGTH]
+                                           [-w WINDOW_SIZE] [-m MAX_NUM_SNPs]
+                                           [-g OUT_GROUP] [-v 0..5] [--version]
+                                           sampleDirsFile refFastaFile
   
   Remove abnormally dense SNPs from the input VCF file, save the reserved SNPs
   into a new VCF file, and save the removed SNPs into another VCF file.

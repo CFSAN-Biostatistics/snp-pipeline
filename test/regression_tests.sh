@@ -1635,7 +1635,7 @@ testPrepSamplesVarscanClasspathRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the snp_filter.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline filter_regions script traps attempts to write to unwritable file
 trySnpFilterPermissionTrap()
 {
     expectErrorCode=$1
@@ -1663,17 +1663,17 @@ trySnpFilterPermissionTrap()
     touch "$tempDir/samples/sample1/var.flt_preserved.vcf"
     chmod -w "$tempDir/samples/sample1/var.flt_preserved.vcf"
 
-    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_preserved.vcf
-    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    # Try to run cfsan_snp_pipeline filter_regions -- it should have problems writing to sample1/var.flt_preserved.vcf
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter.py error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when var.flt_preserved.vcf was unwritable." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline filter_regions error handling behavior
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when var.flt_preserved.vcf was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Cannot create the file for preserved SNPs"
-    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running cfsan_snp_pipeline filter_regions"
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/samples/sample1/var.flt_preserved.vcf"
     rm "$tempDir/error.log"
@@ -1684,30 +1684,30 @@ trySnpFilterPermissionTrap()
     touch "$tempDir/samples/sample1/var.flt_removed.vcf"
     chmod -w "$tempDir/samples/sample1/var.flt_removed.vcf"
 
-    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_removed.vcf
-    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    # Try to run cfsan_snp_pipeline filter_regions -- it should have problems writing to sample1/var.flt_removed.vcf
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter.py error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when var.flt_removed.vcf was unwritable." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline filter_regions error handling behavior
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when var.flt_removed.vcf was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Cannot create the file for removed SNPs"
-    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running cfsan_snp_pipeline filter_regions"
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/samples/sample1/var.flt_removed.vcf"
     rm "$tempDir/error.log"
 }
 
-# Verify the snp_filter.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline filter_regions script traps attempts to write to unwritable file
 testSnpFilterPermissionTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     trySnpFilterPermissionTrap 100
 }
 
-# Verify the snp_filter.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline filter_regions script traps attempts to write to unwritable file
 testSnpFilterPermissionTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
@@ -1737,18 +1737,18 @@ testSnpFilterPermissionTrapNoStop()
     touch "$tempDir/samples/sample1/var.flt_preserved.vcf"
     chmod -w "$tempDir/samples/sample1/var.flt_preserved.vcf"
 
-    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_preserved.vcf
-    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    # Try to run cfsan_snp_pipeline filter_regions -- it should have problems writing to sample1/var.flt_preserved.vcf
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter.py error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when var.flt_preserved.vcf was unwritable." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline filter_regions error handling behavior
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when var.flt_preserved.vcf was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py"
-    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Cannot create the file for preserved SNPs"
-    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
-    assertFileContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running cfsan_snp_pipeline filter_regions"
+    assertFileContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/samples/sample1/var.flt_preserved.vcf"
     rm "$tempDir/error.log"
@@ -1759,24 +1759,24 @@ testSnpFilterPermissionTrapNoStop()
     touch "$tempDir/samples/sample1/var.flt_removed.vcf"
     chmod -w "$tempDir/samples/sample1/var.flt_removed.vcf"
 
-    # Try to run snp_filter.py -- it should have problems writing to sample1/var.flt_removed.vcf
-    python -Wd $(which snp_filter.py) "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    # Try to run cfsan_snp_pipeline filter_regions -- it should have problems writing to sample1/var.flt_removed.vcf
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter.py error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when var.flt_removed.vcf was unwritable." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline filter_regions error handling behavior
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when var.flt_removed.vcf was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py"
-    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Cannot create the file for removed SNPs"
-    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running snp_filter.py"
-    assertFileContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running cfsan_snp_pipeline filter_regions"
+    assertFileContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/samples/sample1/var.flt_removed.vcf"
     rm "$tempDir/error.log"
 }
 
-# Verify the snp_filter.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline filter_regions script traps attempts to write to unwritable file
 testSnpFilterPermissionTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -1784,7 +1784,7 @@ testSnpFilterPermissionTrapStopUnset()
 }
 
 
-# Verify the snp_filter.py script detects missing sample directories file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing sample directories file
 trySnpFilterMissingSampleDirRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -1799,36 +1799,36 @@ trySnpFilterMissingSampleDirRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run snp_filter.py with missing sampleDirectories.txt
-    snp_filter.py "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    # Run cfsan_snp_pipeline filter_regions with missing sampleDirectories.txt
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
     # Verify snp_filter error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
     assertFileContains "$logDir/snp_filter.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the snp_filter.py script detects missing sample directories file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing sample directories file
 testSnpFilterMissingSampleDirRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     trySnpFilterMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the snp_filter.py script detects missing sample directories file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing sample directories file
 testSnpFilterMissingSampleDirRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     trySnpFilterMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the snp_filter.py script detects missing sample directories file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing sample directories file
 testSnpFilterMissingSampleDirRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -1836,7 +1836,7 @@ testSnpFilterMissingSampleDirRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the snp_filter.py script detects missing reference file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing reference file
 trySnpFilterMissingReferenceRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -1851,41 +1851,41 @@ trySnpFilterMissingReferenceRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run snp_filter.py with missing reference
+    # Run cfsan_snp_pipeline filter_regions with missing reference
     printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
     echo "Dummy vcf content" > "$tempDir/samples/sample1/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
-    snp_filter.py "$tempDir/sampleDirectories.txt" "$tempDir/non-exist-reference" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/non-exist-reference" &> "$logDir/snp_filter.log"
     errorCode=$?
 
     # Verify snp_filter error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when reference file was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when reference file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Reference file $tempDir/non-exist-reference does not exist"
     assertFileContains "$logDir/snp_filter.log" "Reference file $tempDir/non-exist-reference does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the snp_filter.py script detects missing reference file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing reference file
 testSnpFilterMissingReferenceRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     trySnpFilterMissingReferenceRaiseGlobalError 100
 }
 
-# Verify the snp_filter.py script detects missing reference file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing reference file
 testSnpFilterMissingReferenceRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     trySnpFilterMissingReferenceRaiseGlobalError 100
 }
 
-# Verify the snp_filter.py script detects missing reference file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing reference file
 testSnpFilterMissingReferenceRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -1893,7 +1893,7 @@ testSnpFilterMissingReferenceRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the snp_filter.py script detects missing outgroup samples file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing outgroup samples file
 trySnpFilterMissingOutgroupRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -1908,41 +1908,41 @@ trySnpFilterMissingOutgroupRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run snp_filter.py with missing outgroup samples file
+    # Run cfsan_snp_pipeline filter_regions with missing outgroup samples file
     printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
     echo "Dummy vcf content" > "$tempDir/samples/sample1/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
-    snp_filter.py -g "$tempDir/outgroup" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions -g "$tempDir/outgroup" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
     # Verify snp_filter error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when file of outgroup samples file was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when file of outgroup samples file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "File of outgroup samples $tempDir/outgroup does not exist"
     assertFileContains "$logDir/snp_filter.log" "File of outgroup samples $tempDir/outgroup does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the snp_filter.py script detects missing outgroup samples file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing outgroup samples file
 testSnpFilterMissingOutgroupRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     trySnpFilterMissingOutgroupRaiseGlobalError 100
 }
 
-# Verify the snp_filter.py script detects missing outgroup samples file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing outgroup samples file
 testSnpFilterMissingOutgroupRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     trySnpFilterMissingOutgroupRaiseGlobalError 100
 }
 
-# Verify the snp_filter.py script detects missing outgroup samples file
+# Verify the cfsan_snp_pipeline filter_regions script detects missing outgroup samples file
 testSnpFilterMissingOutgroupRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -1950,7 +1950,7 @@ testSnpFilterMissingOutgroupRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the snp_filter.py script detects all vcf files missing
+# Verify the cfsan_snp_pipeline filter_regions script detects all vcf files missing
 trySnpFilterMissingVcfRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -1965,16 +1965,16 @@ trySnpFilterMissingVcfRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run snp_filter.py -- fail because of missing all VCF files
+    # Run cfsan_snp_pipeline filter_regions -- fail because of missing all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    snp_filter.py "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
     # Verify snp_filter error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when all var.flt.vcf were missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when all var.flt.vcf were missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Error: all 4 VCF files were missing or empty"
     assertFileContains "$logDir/snp_filter.log" "Error: all 4 VCF files were missing or empty"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
@@ -1985,25 +1985,25 @@ trySnpFilterMissingVcfRaiseGlobalError()
     assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the snp_filter.py script detects all vcf files missing
+# Verify the cfsan_snp_pipeline filter_regions script detects all vcf files missing
 testSnpFilterMissingVcfRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     trySnpFilterMissingVcfRaiseGlobalError 100
 }
 
-# Verify the snp_filter.py script detects all vcf files missing
+# Verify the cfsan_snp_pipeline filter_regions script detects all vcf files missing
 testSnpFilterMissingVcfRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     trySnpFilterMissingVcfRaiseGlobalError 100
 }
 
-# Verify the snp_filter.py script detects all vcf files missing
+# Verify the cfsan_snp_pipeline filter_regions script detects all vcf files missing
 testSnpFilterMissingVcfRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2031,16 +2031,16 @@ trySnpFilterMissingVcfRaiseSampleError()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
-    # Run snp_filter.py -- fail because of missing some, but not all VCF files
+    # Run cfsan_snp_pipeline filter_regions -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    snp_filter.py "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
     # Verify snp_filter error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when some var.flt.vcf were missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when some var.flt.vcf were missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py failed."
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
     assertFileContains "$logDir/snp_filter.log" "Error: 3 VCF files were missing or empty"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
@@ -2049,7 +2049,7 @@ trySnpFilterMissingVcfRaiseSampleError()
     assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
 }
 
@@ -2080,17 +2080,17 @@ testSnpFilterMissingVcfRaiseSampleErrorNoStop()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
-    # Run snp_filter.py -- fail because of missing some, but not all VCF files
+    # Run cfsan_snp_pipeline filter_regions -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    snp_filter.py "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
     # Verify snp_filter error handling behavior
-    assertEquals "snp_filter.py returned incorrect error code when some var.flt.vcf were missing." 0 $errorCode
+    assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when some var.flt.vcf were missing." 0 $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "snp_filter.py"
-    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed."
-    assertFileNotContains "$logDir/snp_filter.log" "snp_filter.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
@@ -2099,7 +2099,7 @@ testSnpFilterMissingVcfRaiseSampleErrorNoStop()
     assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
     assertFileContains "$logDir/snp_filter.log" "Error: 3 VCF files were missing or empty"
-    assertFileContains "$logDir/snp_filter.log" "snp_filter.py finished"
+    assertFileContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
 }
 
@@ -2148,8 +2148,8 @@ testSnpFilterPartialRebuild()
     # Remove the results for one of the samples
     rm $tempDir/samples/sample1/var.flt_preserved.vcf
 
-    # Re-run snp_filter.py -- this should only rebuild results for sample1, but it should use the var.flt.vcf input file for all samples
-    snp_filter.py "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterAbnormalSNP.log"
+    # Re-run cfsan_snp_pipeline filter_regions -- this should only rebuild results for sample1, but it should use the var.flt.vcf input file for all samples
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterAbnormalSNP.log"
 
     # Verify log files
     verifyNonEmptyReadableFile "$logDir/filterAbnormalSNP.log"
@@ -2208,13 +2208,13 @@ testSnpFilterOutgroup()
     outgroup="sample4" # this test only works when sample 4 is the outgroup
     echo $outgroup > "$tempDir/outgroup.txt"
 
-    # Re-run snp_filter.py --
-    snp_filter.py --out_group "$tempDir/outgroup.txt" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterAbnormalSNP.log"
+    # Re-run cfsan_snp_pipeline filter_regions --
+    cfsan_snp_pipeline filter_regions --out_group "$tempDir/outgroup.txt" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterAbnormalSNP.log"
 
     # Verify log files
     verifyNonEmptyReadableFile "$logDir/filterAbnormalSNP.log"
     assertFileNotContains "$logDir/filterAbnormalSNP.log" "already freshly built"
-    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
 
     # Verify all preserved vcf files are different when there is an outgroup
     for d in $tempDir/samples/*; do
@@ -4913,7 +4913,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample3/reads.sam"
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample4/reads.sam"
 
-    assertFileContains "$tempDir/error.log" "snp_filter.py failed|create_snp_list.py failed"  # either/or
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed|create_snp_list.py failed"  # either/or
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
@@ -4984,11 +4984,11 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopSomeFail()
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample4/reads.sam"
     assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline call_sites finished"
 
-    assertFileNotContains "$tempDir/error.log" "snp_filter.py failed"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "Error: 2 VCF files were missing or empty"
-    assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "snp_filter.py finished"
+    assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline filter_regions finished"
 
     assertFileNotContains "$tempDir/error.log" "create_snp_list.py failed"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
@@ -5239,7 +5239,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
-    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
@@ -5314,7 +5314,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
-    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
@@ -5400,7 +5400,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
-    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
@@ -5481,7 +5481,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
-    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
@@ -5750,7 +5750,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
-    assertFileContains "$logDir/filterAbnormalSNP.log" "snp_filter.py finished"
+    assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"

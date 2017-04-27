@@ -704,7 +704,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -hold_jid $prepSamplesJobArray
 #$ -o $logDir/filterAbnormalSNP.log
-snp_filter.py -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
+cfsan_snp_pipeline filter_regions -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -716,11 +716,11 @@ elif [[ "$platform" == "torque" ]]; then
 	#PBS -W depend=afterokarray:$prepSamplesJobArray
 	#PBS -o $logDir/filterAbnormalSNP.log
 	#PBS -V
-	snp_filter.py -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
+	cfsan_snp_pipeline filter_regions -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
 _EOF_
 )
 else
-	snp_filter.py -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams 2>&1 | tee $logDir/filterAbnormalSNP.log
+	cfsan_snp_pipeline filter_regions -n var.flt.vcf "$sampleDirsFile" "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams 2>&1 | tee $logDir/filterAbnormalSNP.log
 fi
 
 #Starting from here, there are 2 threads:
