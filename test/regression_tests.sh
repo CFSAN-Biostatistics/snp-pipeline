@@ -2231,7 +2231,7 @@ testSnpFilterOutgroup()
 }
 
 
-# Verify the create_snp_list.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline merge_sites script traps attempts to write to unwritable file
 tryCreateSnpListPermissionTrap()
 {
     expectErrorCode=$1
@@ -2256,35 +2256,35 @@ tryCreateSnpListPermissionTrap()
     echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
-    # Verify create_snp_list.py error handling behavior
-    assertEquals "create_snp_list.py returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline merge_sites error handling behavior
+    assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running create_snp_list.py"
-    assertFileNotContains "$logDir/create_snp_list.log" "Error detected while running create_snp_list.py"
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline merge_sites"
+    assertFileNotContains "$logDir/create_snp_list.log" "Error detected while running cfsan_snp_pipeline merge_sites"
     assertFileContains "$tempDir/error.log" "IOError|PermissionError"
-    assertFileNotContains "$logDir/create_snp_list.log" "create_snp_list.py finished"
+    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/snplist.txt"
 }
 
-# Verify the create_snp_list.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline merge_sites script traps attempts to write to unwritable file
 testCreateSnpListPermissionTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpListPermissionTrap 100
 }
 
-# Verify the create_snp_list.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline merge_sites script traps attempts to write to unwritable file
 testCreateSnpListPermissionTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCreateSnpListPermissionTrap 100
 }
 
-# Verify the create_snp_list.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline merge_sites script traps attempts to write to unwritable file
 testCreateSnpListPermissionTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2308,18 +2308,18 @@ tryCreateSnpListMissingSampleDirRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run create_snp_list.py with missing sampleDirectories.txt
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    # Run cfsan_snp_pipeline merge_sites with missing sampleDirectories.txt
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
     # Verify create_snp_list error handling behavior
-    assertEquals "create_snp_list.py returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_list.py failed."
-    assertFileNotContains "$logDir/create_snp_list.log" "create_snp_list.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
+    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites failed."
     assertFileContains "$tempDir/error.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
     assertFileContains "$logDir/create_snp_list.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
-    assertFileNotContains "$logDir/create_snp_list.log" "create_snp_list.py finished"
+    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
 }
 
@@ -2360,16 +2360,16 @@ tryCreateSnpListMissingVcfRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run create_snp_list.py -- fail because of missing all VCF files
+    # Run cfsan_snp_pipeline merge_sites -- fail because of missing all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
     # Verify create_snp_list error handling behavior
-    assertEquals "create_snp_list.py returned incorrect error code when var.flt.vcf was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when var.flt.vcf was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_list.py failed."
-    assertFileNotContains "$logDir/create_snp_list.log" "create_snp_list.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
+    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites failed."
     assertFileContains "$tempDir/error.log" "Error: all 4 VCF files were missing or empty"
     assertFileContains "$logDir/create_snp_list.log" "Error: all 4 VCF files were missing or empty"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
@@ -2380,7 +2380,7 @@ tryCreateSnpListMissingVcfRaiseGlobalError()
     assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileNotContains "$logDir/create_snp_list.log" "create_snp_list.py finished"
+    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
 }
 
@@ -2426,16 +2426,16 @@ tryCreateSnpListMissingVcfRaiseSampleError()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
-    # Run create_snp_list.py -- fail because of missing some, but not all VCF files
+    # Run cfsan_snp_pipeline merge_sites -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
     # Verify create_snp_list error handling behavior
-    assertEquals "create_snp_list.py returned incorrect error code when var.flt.vcf was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when var.flt.vcf was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_list.py failed."
-    assertFileNotContains "$logDir/create_snp_list.log" "create_snp_list.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
+    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites failed."
     assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
     assertFileContains "$logDir/create_snp_list.log" "Error: 3 VCF files were missing or empty"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
@@ -2444,7 +2444,7 @@ tryCreateSnpListMissingVcfRaiseSampleError()
     assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileNotContains "$logDir/create_snp_list.log" "create_snp_list.py finished"
+    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
 }
 
@@ -2475,17 +2475,17 @@ testCreateSnpListMissingVcfRaiseSampleErrorNoStop()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
-    # Run create_snp_list.py -- fail because of missing some, but not all VCF files
+    # Run cfsan_snp_pipeline merge_sites -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    create_snp_list.py -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
     # Verify create_snp_list error handling behavior
-    assertEquals "create_snp_list.py returned incorrect error code when var.flt.vcf was missing." 0 $errorCode
+    assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when var.flt.vcf was missing." 0 $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_list.py"
-    assertFileNotContains "$tempDir/error.log" "create_snp_list.py failed."
-    assertFileNotContains "$logDir/create_snp_list.log" "create_snp_list.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
+    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites failed."
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
@@ -2494,7 +2494,7 @@ testCreateSnpListMissingVcfRaiseSampleErrorNoStop()
     assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
     assertFileContains "$logDir/create_snp_list.log" "Error: 3 VCF files were missing or empty"
-    assertFileContains "$logDir/create_snp_list.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
 }
 
@@ -4836,7 +4836,7 @@ tryRunSnpPipelineTrapAlignSampleToReferenceTrap()
     assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "Use the -f option to force a rebuild"
     assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline call_sites"
-    assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "create_snp_list.py"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline merge_sites"
 
     assertFileContains "$tempDir/error.log" "Shutting down the SNP Pipeline"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "Shutting down the SNP Pipeline"
@@ -4913,7 +4913,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample3/reads.sam"
     assertFileContains "$tempDir/error.log" "Sample SAM file $tempDir/samples/sample4/reads.sam"
 
-    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed|create_snp_list.py failed"  # either/or
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed|cfsan_snp_pipeline merge_sites failed"  # either/or
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
@@ -4990,11 +4990,11 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopSomeFail()
     assertFileContains "$tempDir/error.log" "Error: 2 VCF files were missing or empty"
     assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline filter_regions finished"
 
-    assertFileNotContains "$tempDir/error.log" "create_snp_list.py failed"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "Error: 2 VCF files were missing or empty"
-    assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "create_snp_list.py finished"
+    assertFileContains "$tempDir/run_snp_pipeline.stdout.log" "cfsan_snp_pipeline merge_sites finished"
 
     assertFileNotContains "$tempDir/error.log" "See also the log files in directory $tempDir/logs"
     assertFileNotContains "$tempDir/error.log" "Shutting down the SNP Pipeline"
@@ -5224,7 +5224,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/prepSamples.log-2" "cfsan_snp_pipeline call_sites finished"
     assertFileContains "$logDir/prepSamples.log-3" "cfsan_snp_pipeline call_sites finished"
     assertFileContains "$logDir/prepSamples.log-4" "cfsan_snp_pipeline call_sites finished"
-    assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/callConsensus.log-2" "call_consensus.py finished"
     assertFileContains "$logDir/callConsensus.log-3" "call_consensus.py finished"
@@ -5240,7 +5240,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
     assertFileContains "$logDir/callConsensus_preserved.log-3" "call_consensus.py finished"
@@ -5305,7 +5305,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/prepReference.log" "cfsan_snp_pipeline index_ref finished"
     assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "cfsan_snp_pipeline call_sites finished"
-    assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
@@ -5315,7 +5315,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
@@ -5391,7 +5391,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/prepReference.log" "cfsan_snp_pipeline index_ref finished"
     assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "cfsan_snp_pipeline call_sites finished"
-    assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
@@ -5401,7 +5401,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
@@ -5472,7 +5472,7 @@ testRunSnpPipelineRerunMissingVCF()
     logDir=$(echo $(ls -d $tempDir/logs*))
     verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
     assertFileContains "$logDir/prepSamples.log-2" "cfsan_snp_pipeline call_sites finished"
-    assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus.log-2" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
@@ -5482,7 +5482,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
@@ -5741,7 +5741,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/prepReference.log" "cfsan_snp_pipeline index_ref finished"
     assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "cfsan_snp_pipeline call_sites finished"
-    assertFileContains "$logDir/snpList.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
@@ -5751,7 +5751,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileContains "$logDir/snpList_preserved.log" "create_snp_list.py finished"
+    assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"

@@ -242,12 +242,12 @@ create_snp_list.py
 
 ::
 
-  usage: create_snp_list.py [-h] [-f] [-n NAME] [--maxsnps INT] [-o FILE]
-                            [-v 0..5] [--version]
-                            sampleDirsFile filteredSampleDirsFile
+  usage: cfsan_snp_pipeline merge_sites [-h] [-f] [-n NAME] [--maxsnps INT]
+                                        [-o FILE] [-v 0..5] [--version]
+                                        sampleDirsFile filteredSampleDirsFile
   
   Combine the SNP positions across all samples into a single unified SNP list
-  file identifing the postions and sample names where SNPs were called.
+  file identifing the positions and sample names where SNPs were called.
   
   positional arguments:
     sampleDirsFile        Relative or absolute path to file containing a list of

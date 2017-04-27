@@ -16,6 +16,7 @@ from snppipeline import index_ref
 from snppipeline import map_reads
 from snppipeline import call_sites
 from snppipeline import filter_regions
+from snppipeline import merge_sites
 from snppipeline import merge_vcfs
 from snppipeline import collect_metrics
 from snppipeline import combine_metrics
@@ -154,6 +155,22 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.add_argument("-v", "--verbose",     dest="verbose",        type=int, default=1,             metavar="0..5",         help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=filter_regions.filter_regions)
+    subparser.set_defaults(excepthook=utils.handle_global_exception)
+
+    # -------------------------------------------------------------------------
+    # Create the parser for the "merge_sites" command
+    # -------------------------------------------------------------------------
+    description = "Combine the SNP positions across all samples into a single unified SNP list file identifing the positions and sample names where SNPs were called."
+    subparser = subparsers.add_parser("merge_sites", help="Prepare the list of sites having SNPs", description=description, formatter_class=formatter_class)
+    subparser.add_argument(                   dest="sampleDirsFile", type=str,                        help="Relative or absolute path to file containing a list of directories -- one per sample")
+    subparser.add_argument(                   dest="filteredSampleDirsFile", type=str,                help="Relative or absolute path to the output file that will be created containing the filtered list of sample directories -- one per sample.  The samples in this file are those without an excessive number of snps.  See the --maxsnps parameter.")
+    subparser.add_argument("-f", "--force",   dest="forceFlag",      action="store_true",             help="Force processing even when result file already exists and is newer than inputs")
+    subparser.add_argument("-n", "--vcfname", dest="vcfFileName",    type=str, default="var.flt.vcf", metavar="NAME", help="File name of the VCF files which must exist in each of the sample directories")
+    subparser.add_argument(      "--maxsnps", dest="maxSnps",        type=int, default=-1,            metavar="INT",  help="Exclude samples having more than this maximum allowed number of SNPs. Set to -1 to disable this function.")
+    subparser.add_argument("-o", "--output",  dest="snpListFile",    type=str, default="snplist.txt", metavar="FILE", help="Output file.  Relative or absolute path to the SNP list file")
+    subparser.add_argument("-v", "--verbose", dest="verbose",        type=int, default=1,             metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=merge_sites.merge_sites)
     subparser.set_defaults(excepthook=utils.handle_global_exception)
 
     # -------------------------------------------------------------------------

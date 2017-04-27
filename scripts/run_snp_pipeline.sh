@@ -743,7 +743,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -hold_jid $filterAbnSNPJobId
 #$ -o $logDir/snpList.log
-create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile"
+cfsan_snp_pipeline merge_sites $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -754,11 +754,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterok:$filterAbnSNPJobId
     #PBS -o $logDir/snpList.log
     #PBS -V
-    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile"
+    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile"
 _EOF_
 )
 else
-    create_snp_list.py $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpList.log
+    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpList.log
 fi
 
 echo -e "\nStep 7.1 - Call the consensus SNPs for each sample"
@@ -932,7 +932,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -hold_jid $filterAbnSNPJobId
 #$ -o $logDir/snpList_preserved.log
-    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -943,11 +943,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterok:$filterAbnSNPJobId
     #PBS -o $logDir/snpList_preserved.log
     #PBS -V
-    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2"
 _EOF_
 )
 else
-    create_snp_list.py $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpList_preserved.log
+    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams "$sampleDirsFile" "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpList_preserved.log
 fi
 
 

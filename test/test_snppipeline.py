@@ -153,8 +153,8 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             self.compare_file('metrics.tsv')
 
 
-    def test_1_snp_filter(self):
-        """Run snp_filter and verify var.flt_preserved.vcf and var.flt_removed.vcf contains expected contents for each sample.
+    def test_1_filter_regions(self):
+        """Run filter_regions and verify var.flt_preserved.vcf and var.flt_removed.vcf contains expected contents for each sample.
         """
         command_line = "filter_regions -f " + \
                        os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt') + ' ' + \
@@ -166,17 +166,14 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, os.path.join(dir, 'var.flt_removed.vcf'))
 
 
-    def test_2_create_snp_list(self):
-        """Run create_snp_list and verify snplist.txt contains expected contents.
+    def test_2_merge_sites(self):
+        """Run merge_sites and verify snplist.txt contains expected contents.
         """
-        args = argparse.Namespace()
-        args.sampleDirsFile = os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt')
-        args.filteredSampleDirsFile = os.path.join(self.__class__.directory_run_result, 'filteredSampleDirectories.txt')
-        args.vcfFileName = 'var.flt.vcf'
-        args.snpListFile = os.path.join(self.__class__.directory_run_result, 'snplist.txt')
-        args.maxSnps = -1
-        args.forceFlag = True
-        self.run_function_test(snppipeline.create_snp_list, args, 'snplist.txt')
+        command_line = "merge_sites -f -o " + os.path.join(self.__class__.directory_run_result, 'snplist.txt') + ' ' + \
+                       os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt') + ' ' + \
+                       os.path.join(self.__class__.directory_run_result, 'filteredSampleDirectories.txt')
+        args = cfsan_snp_pipeline.parse_command_line(command_line)
+        self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'snplist.txt')
 
 
     def test_3_call_consensus(self):
