@@ -179,18 +179,11 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
     def test_3_call_consensus(self):
         """Run call_consensus and verify consensus.fasta and consensus.vcf contain expected contents for each sample.
         """
-        args = argparse.Namespace()
-        args.snpListFile = os.path.join(self.__class__.directory_run_result, 'snplist.txt')
-        args.excludeFile = None
-        args.forceFlag = True
-        args.minBaseQual = 0
-        args.minConsFreq = 0.6
-        args.minConsStrdDpth = 0
-        args.minConsStrdBias = 0
-        args.vcfRefName = 'lambda_virus.fasta'
-        args.vcfAllPos = False
-        args.vcfPreserveRefCase = True
-        args.vcfFailedSnpGt = '1'
+        command_line = "call_consensus -f -l " + os.path.join(self.__class__.directory_run_result, 'snplist.txt') + \
+                       " --vcfRefName lambda_virus.fasta" + \
+                       " --vcfFailedSnpGt 1" + \
+                       " dummyAllPileupFile"
+        args = cfsan_snp_pipeline.parse_command_line(command_line)
 
         ignore_lines = ["##fileDate", "##source"]
 
@@ -198,9 +191,9 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             args.allPileupFile = os.path.join(self.__class__.directory_run_result, dir, 'reads.all.pileup')
             args.consensusFile = os.path.join(self.__class__.directory_run_result, dir, 'consensus.fasta')
             args.vcfFileName = None
-            self.run_function_test(snppipeline.call_consensus, args, os.path.join(dir, 'consensus.fasta'))
+            self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, os.path.join(dir, 'consensus.fasta'))
             args.vcfFileName = 'consensus.vcf'
-            self.run_function_test(snppipeline.call_consensus, args, os.path.join(dir, 'consensus.vcf'), ignore_lines)
+            self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, os.path.join(dir, 'consensus.vcf'), ignore_lines)
 
 
     def test_4_create_snp_matrix(self):

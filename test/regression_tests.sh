@@ -2506,7 +2506,7 @@ testCreateSnpListMissingVcfRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the call_consensus script traps on corrupt snplist file
+# Verify the cfsan_snp_pipeline call_consensus script traps on corrupt snplist file
 tryCallConsensusCorruptSnplistTrap()
 {
     expectErrorCode=$1
@@ -2521,37 +2521,37 @@ tryCallConsensusCorruptSnplistTrap()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run call_consensus.py -- fail because of corrupt snplist
+    # Run cfsan_snp_pipeline call_consensus -- fail because of corrupt snplist
     echo "Corrupt snplist content" > "$tempDir/snplist.txt"
     echo "Dummy pileup content" > "$tempDir/samples/sample1/reads.all.pileup"
-    call_consensus.py -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
     errorCode=$?
 
     # Verify error handling behavior
-    assertEquals "call_consensus.py returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running call_consensus.py"
-    assertFileNotContains "$logDir/call_consensus.log" "Error detected while running call_consensus.py"
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline call_consensus"
+    assertFileNotContains "$logDir/call_consensus.log" "Error detected while running cfsan_snp_pipeline call_consensus"
     assertFileContains "$tempDir/error.log" "function read_snp_position_list at line"
-    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py finished"
+    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the call_consensus script traps on corrupt snplist file
+# Verify the cfsan_snp_pipeline call_consensus script traps on corrupt snplist file
 testCallConsensusCorruptSnplistTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusCorruptSnplistTrap 100
 }
 
-# Verify the call_consensus script traps on corrupt snplist file
+# Verify the cfsan_snp_pipeline call_consensus script traps on corrupt snplist file
 testCallConsensusCorruptSnplistTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusCorruptSnplistTrap 98
 }
 
-# Verify the call_consensus script traps on corrupt snplist file
+# Verify the cfsan_snp_pipeline call_consensus script traps on corrupt snplist file
 testCallConsensusCorruptSnplistTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2561,7 +2561,7 @@ testCallConsensusCorruptSnplistTrapStopUnset()
 
 
 
-# Verify the call_consensus script detects failure.
+# Verify the cfsan_snp_pipeline call_consensus script detects failure.
 tryCallConsensusMissingSnpListRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -2576,38 +2576,38 @@ tryCallConsensusMissingSnpListRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run call_consensus.py -- fail because of missing snplist
-    call_consensus.py -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    # Run cfsan_snp_pipeline call_consensus -- fail because of missing snplist
+    cfsan_snp_pipeline call_consensus -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
     errorCode=$?
 
-    # Verify call_consensus error handling behavior
-    assertEquals "call_consensus.py returned incorrect error code when snplist was missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline call_consensus error handling behavior
+    assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when snplist was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "call_consensus.py failed."
-    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_consensus failed."
+    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus failed."
     assertFileContains "$tempDir/error.log" "cannot call consensus without the snplist file"
     assertFileContains "$logDir/call_consensus.log" "cannot call consensus without the snplist file"
     assertFileContains "$tempDir/error.log" "Snplist file snplist.txt does not exist"
     assertFileContains "$logDir/call_consensus.log" "Snplist file snplist.txt does not exist"
-    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py finished"
+    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the call_consensus script detects failure.
+# Verify the cfsan_snp_pipeline call_consensus script detects failure.
 testCallConsensusMissingSnpListRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusMissingSnpListRaiseGlobalError 100
 }
 
-# Verify the call_consensus script detects failure.
+# Verify the cfsan_snp_pipeline call_consensus script detects failure.
 testCallConsensusMissingSnpListRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusMissingSnpListRaiseGlobalError 100
 }
 
-# Verify the call_consensus script detects failure.
+# Verify the cfsan_snp_pipeline call_consensus script detects failure.
 testCallConsensusMissingSnpListRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2615,7 +2615,7 @@ testCallConsensusMissingSnpListRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the call_consensus script does not fail merely because the snplist file is empty.
+# Verify the cfsan_snp_pipeline call_consensus script does not fail merely because the snplist file is empty.
 tryCallConsensusEmptySnpList()
 {
     expectErrorCode=$1
@@ -2635,38 +2635,38 @@ tryCallConsensusEmptySnpList()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
-    # Run call_consensus.py with empty snplist
+    # Run cfsan_snp_pipeline call_consensus with empty snplist
     touch "$tempDir/snplist.txt"
-    call_consensus.py -l "$tempDir/snplist.txt" -o "$tempDir/samples/sample1/consensus.fasta"  --vcfFileName "$tempDir/samples/sample1/consensus.vcf" "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/samples/sample1/consensus.fasta"  --vcfFileName "$tempDir/samples/sample1/consensus.vcf" "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
     errorCode=$?
 
-    # Verify call_consensus error handling behavior
-    assertEquals "call_consensus.py returned incorrect error code when snplist was empty." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline call_consensus error handling behavior
+    assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when snplist was empty." $expectErrorCode $errorCode
     verifyNonExistingFile "$tempDir/error.log"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/consensus.fasta"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/consensus.vcf"
-    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py failed."
+    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus failed."
     assertFileNotContains "$logDir/call_consensus.log" "cannot call consensus without the snplist file"
     assertFileNotContains "$logDir/call_consensus.log" "Snplist file $tempDir/snplist.txt is empty"
-    assertFileContains "$logDir/call_consensus.log" "call_consensus.py finished"
+    assertFileContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the call_consensus script does not fail merely because the snplist file is empty.
+# Verify the cfsan_snp_pipeline call_consensus script does not fail merely because the snplist file is empty.
 testCallConsensusEmptySnpListStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusEmptySnpList 0
 }
 
-# Verify the call_consensus script does not fail merely because the snplist file is empty.
+# Verify the cfsan_snp_pipeline call_consensus script does not fail merely because the snplist file is empty.
 testCallConsensusEmptySnpListNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusEmptySnpList 0
 }
 
-# Verify the call_consensus script does not fail merely because the snplist file is empty.
+# Verify the cfsan_snp_pipeline call_consensus script does not fail merely because the snplist file is empty.
 testCallConsensusEmptySnpListStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2674,7 +2674,7 @@ testCallConsensusEmptySnpListStopUnset()
 }
 
 
-# Verify the call_consensus script detects missing pileup file.
+# Verify the cfsan_snp_pipeline call_consensus script detects missing pileup file.
 tryCallConsensusMissingPileupRaiseSampleError()
 {
     expectErrorCode=$1
@@ -2692,39 +2692,39 @@ tryCallConsensusMissingPileupRaiseSampleError()
     # Run prep work
     echo "fake snplist" > $tempDir/snplist.txt
 
-    # Run call_consensus.py -- fail because of missing pileup
+    # Run cfsan_snp_pipeline call_consensus -- fail because of missing pileup
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    call_consensus.py -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
     errorCode=$?
 
     # Verify call_consensus error handling behavior
-    assertEquals "call_consensus.py returned incorrect error code when pileup file was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when pileup file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "call_consensus.py failed."
-    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_consensus failed."
+    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus failed."
     assertFileContains "$tempDir/error.log" "cannot call consensus without the pileup file"
     assertFileContains "$logDir/call_consensus.log" "cannot call consensus without the pileup file"
     assertFileContains "$tempDir/error.log" "Pileup file $tempDir/samples/sample1/reads.all.pileup does not exist"
     assertFileContains "$logDir/call_consensus.log" "Pileup file $tempDir/samples/sample1/reads.all.pileup does not exist"
-    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py finished"
+    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the call_consensus script detects missing pileup file.
+# Verify the cfsan_snp_pipeline call_consensus script detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusMissingPileupRaiseSampleError 100
 }
 
-# Verify the call_consensus script detects missing pileup file.
+# Verify the cfsan_snp_pipeline call_consensus script detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusMissingPileupRaiseSampleError 98
 }
 
-# Verify the call_consensus script detects missing pileup file.
+# Verify the cfsan_snp_pipeline call_consensus script detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2732,7 +2732,7 @@ testCallConsensusMissingPileupRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the call_consensus script detects missing exclude file.
+# Verify the cfsan_snp_pipeline call_consensus script detects missing exclude file.
 tryCallConsensusMissingExcludeRaiseSampleError()
 {
     expectErrorCode=$1
@@ -2752,39 +2752,39 @@ tryCallConsensusMissingExcludeRaiseSampleError()
     mkdir -p "$tempDir/samples/sample1"
     echo "fake pileup" > "$tempDir/samples/sample1/reads.all.pileup"
 
-    # Run call_consensus.py -- fail because of missing pileup
+    # Run cfsan_snp_pipeline call_consensus -- fail because of missing pileup
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    call_consensus.py -e "$tempDir/samples/sample1/excludeFile.vcf" -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    cfsan_snp_pipeline call_consensus -e "$tempDir/samples/sample1/excludeFile.vcf" -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
     errorCode=$?
 
-    # Verify call_consensus error handling behavior
-    assertEquals "call_consensus.py returned incorrect error code when exclude file was missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline call_consensus error handling behavior
+    assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when exclude file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "call_consensus.py failed."
-    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_consensus failed."
+    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus failed."
     assertFileContains "$tempDir/error.log" "cannot call consensus without the file of excluded positions"
     assertFileContains "$logDir/call_consensus.log" "cannot call consensus without the file of excluded positions"
     assertFileContains "$tempDir/error.log" "Exclude file $tempDir/samples/sample1/excludeFile.vcf does not exist"
     assertFileContains "$logDir/call_consensus.log" "Exclude file $tempDir/samples/sample1/excludeFile.vcf does not exist"
-    assertFileNotContains "$logDir/call_consensus.log" "call_consensus.py finished"
+    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the call_consensus script detects missing exclude file.
+# Verify the cfsan_snp_pipeline call_consensus script detects missing exclude file.
 testCallConsensusMissingExcludeRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusMissingExcludeRaiseSampleError 100
 }
 
-# Verify the call_consensus script detects missing exclude file.
+# Verify the cfsan_snp_pipeline call_consensus script detects missing exclude file.
 testCallConsensusMissingExcludeRaiseSampleErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusMissingExcludeRaiseSampleError 98
 }
 
-# Verify the call_consensus script detects missing exclude file.
+# Verify the cfsan_snp_pipeline call_consensus script detects missing exclude file.
 testCallConsensusMissingExcludeRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -5225,10 +5225,10 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/prepSamples.log-3" "cfsan_snp_pipeline call_sites finished"
     assertFileContains "$logDir/prepSamples.log-4" "cfsan_snp_pipeline call_sites finished"
     assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
-    assertFileContains "$logDir/callConsensus.log-2" "call_consensus.py finished"
-    assertFileContains "$logDir/callConsensus.log-3" "call_consensus.py finished"
-    assertFileContains "$logDir/callConsensus.log-4" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
+    assertFileContains "$logDir/callConsensus.log-2" "cfsan_snp_pipeline call_consensus finished"
+    assertFileContains "$logDir/callConsensus.log-3" "cfsan_snp_pipeline call_consensus finished"
+    assertFileContains "$logDir/callConsensus.log-4" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
@@ -5241,10 +5241,10 @@ testRunSnpPipelineLambdaUnpaired()
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
-    assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
-    assertFileContains "$logDir/callConsensus_preserved.log-3" "call_consensus.py finished"
-    assertFileContains "$logDir/callConsensus_preserved.log-4" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-2" "cfsan_snp_pipeline call_consensus finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-3" "cfsan_snp_pipeline call_consensus finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-4" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
@@ -5306,7 +5306,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "cfsan_snp_pipeline call_sites finished"
     assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
@@ -5316,7 +5316,7 @@ testRunSnpPipelineLambdaSingleSample()
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
@@ -5392,7 +5392,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "cfsan_snp_pipeline call_sites finished"
     assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
@@ -5402,7 +5402,7 @@ testRunSnpPipelineZeroSnps()
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
@@ -5473,7 +5473,7 @@ testRunSnpPipelineRerunMissingVCF()
     verifyNonEmptyReadableFile "$logDir/snppipeline.conf"
     assertFileContains "$logDir/prepSamples.log-2" "cfsan_snp_pipeline call_sites finished"
     assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus.log-2" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus.log-2" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
@@ -5483,7 +5483,7 @@ testRunSnpPipelineRerunMissingVCF()
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus_preserved.log-2" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-2" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
@@ -5742,7 +5742,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/alignSamples.log-1" "cfsan_snp_pipeline map_reads finished"
     assertFileContains "$logDir/prepSamples.log-1" "cfsan_snp_pipeline call_sites finished"
     assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
@@ -5752,7 +5752,7 @@ testRunSnpPipelineExcessiveSnps()
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileContains "$logDir/callConsensus_preserved.log-1" "call_consensus.py finished"
+    assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"

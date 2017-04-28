@@ -179,7 +179,7 @@ prepSamples.sh
   usage: cfsan_snp_pipeline call_sites [-h] [-f] [-v 0..5] [--version]
                                        referenceFile sampleDir
   
-  Find the sites with SNPs in a sample.
+  Find the sites with high-confidence SNPs in a sample.
   
   positional arguments:
     referenceFile         Relative or absolute path to the reference fasta file
@@ -283,16 +283,18 @@ call_consensus.py
 
 ::
 
-  usage: call_consensus.py [-h] [-f] [-l FILE] [-e FILE] [-o FILE] [-q INT]
-                           [-c FREQ] [-d INT] [-b FREQ] [--vcfFileName NAME]
-                           [--vcfRefName NAME] [--vcfAllPos]
-                           [--vcfPreserveRefCase] [--vcfFailedSnpGt {.,0,1}]
-                           [-v 0..5] [--version]
-                           allPileupFile
+  usage: cfsan_snp_pipeline call_consensus [-h] [-f] [-l FILE] [-e FILE]
+                                           [-o FILE] [-q INT] [-c FREQ] [-d INT]
+                                           [-b FREQ] [--vcfFileName NAME]
+                                           [--vcfRefName NAME] [--vcfAllPos]
+                                           [--vcfPreserveRefCase]
+                                           [--vcfFailedSnpGt {.,0,1}] [-v 0..5]
+                                           [--version]
+                                           allPileupFile
   
-  Call the consensus base for a sample at the specified positions where SNPs
-  were previously called in any of the samples. Generates a single-sequence
-  fasta file with one base per specified position.
+  Call the consensus base for a sample at the specified positions where high-
+  confidence SNPs were previously called in any of the samples. Generates a
+  single-sequence fasta file with one base per specified position.
   
   positional arguments:
     allPileupFile         Relative or absolute path to the genome-wide pileup
