@@ -197,14 +197,12 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 
 
     def test_4_create_snp_matrix(self):
-        """Run create_snp_matrix and verify snpma.fasta contains expected contents.
+        """Run snp_matrix and verify snpma.fasta contains expected contents.
         """
-        args = argparse.Namespace()
-        args.sampleDirsFile = os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt')
-        args.consFileName = 'consensus.fasta'
-        args.snpmaFile = os.path.join(self.__class__.directory_run_result, 'snpma.fasta')
-        args.forceFlag = True
-        self.run_function_test(snppipeline.create_snp_matrix, args, 'snpma.fasta')
+        command_line = "snp_matrix -f -o " + os.path.join(self.__class__.directory_run_result, 'snpma.fasta') + ' ' + \
+                        os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt')
+        args = cfsan_snp_pipeline.parse_command_line(command_line)
+        self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'snpma.fasta')
 
 
     def test_5_create_snp_reference_seq(self):

@@ -19,6 +19,7 @@ from snppipeline import filter_regions
 from snppipeline import merge_sites
 from snppipeline import call_consensus
 from snppipeline import merge_vcfs
+from snppipeline import snp_matrix
 from snppipeline import collect_metrics
 from snppipeline import combine_metrics
 
@@ -49,7 +50,7 @@ def parse_argument_list(argv):
     formatter_class = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
-    subparsers = parser.add_subparsers(dest="subparser_name", help="Command help:")
+    subparsers = parser.add_subparsers(dest="subparser_name", help=None, metavar="subcommand       ")
 
     # -------------------------------------------------------------------------
     # Create the parser for the "data" command
@@ -254,6 +255,25 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=merge_vcfs.merge_vcfs)
+    subparser.set_defaults(excepthook=utils.handle_global_exception)
+
+    # -------------------------------------------------------------------------
+    # Create the parser for the "snp_matrix" command
+    # -------------------------------------------------------------------------
+    description="""Create the SNP matrix containing the consensus base for each of the samples
+                   at the positions where high-confidence SNPs were found in any of the samples.  The matrix
+                   contains one row per sample and one column per SNP position.  Non-SNP
+                   positions are not included in the matrix.  The matrix is formatted as a fasta
+                   file, with each sequence (all of identical length) corresponding to the SNPs
+                   in the correspondingly named sequence."""
+    subparser = subparsers.add_parser("snp_matrix", help="Create a matrix of SNPs", description=description, formatter_class=formatter_class)
+    subparser.add_argument(                          dest="sampleDirsFile",     type=str,                                               help="Relative or absolute path to file containing a list of directories -- one per sample")
+    subparser.add_argument("-f", "--force",          dest="forceFlag",          action="store_true",                                    help="Force processing even when result file already exists and is newer than inputs")
+    subparser.add_argument("-c", "--consFileName",   dest="consFileName",       type=str,   default="consensus.fasta",  metavar="NAME", help="File name of the previously created consensus SNP call file which must exist in each of the sample directories")
+    subparser.add_argument("-o", "--output",         dest="snpmaFile",          type=str,   default="snpma.fasta",      metavar="FILE", help="Output file.  Relative or absolute path to the SNP matrix file")
+    subparser.add_argument("-v", "--verbose",        dest="verbose",            type=int,   default=1,                  metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=snp_matrix.create_snp_matrix)
     subparser.set_defaults(excepthook=utils.handle_global_exception)
 
     # -------------------------------------------------------------------------

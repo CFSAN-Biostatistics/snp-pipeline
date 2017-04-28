@@ -400,16 +400,16 @@ create_snp_matrix.py
 
 ::
 
-  usage: create_snp_matrix.py [-h] [-f] [-c NAME] [-o FILE] [-v 0..5]
-                              [--version]
-                              sampleDirsFile
+  usage: cfsan_snp_pipeline snp_matrix [-h] [-f] [-c NAME] [-o FILE] [-v 0..5]
+                                       [--version]
+                                       sampleDirsFile
   
   Create the SNP matrix containing the consensus base for each of the samples at
-  the positions where SNPs were called in any of the samples. The matrix
-  contains one row per sample and one column per SNP position. Non-SNP positions
-  are not included in the matrix. The matrix is formatted as a fasta file, with
-  each sequence (all of identical length) corresponding to the SNPs in the
-  correspondingly named sequence.
+  the positions where high-confidence SNPs were found in any of the samples. The
+  matrix contains one row per sample and one column per SNP position. Non-SNP
+  positions are not included in the matrix. The matrix is formatted as a fasta
+  file, with each sequence (all of identical length) corresponding to the SNPs
+  in the correspondingly named sequence.
   
   positional arguments:
     sampleDirsFile        Relative or absolute path to file containing a list of

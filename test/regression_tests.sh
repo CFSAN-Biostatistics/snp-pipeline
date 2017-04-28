@@ -3068,7 +3068,7 @@ testMergeVcfZeroGoodSamplesRaiseGlobalErrorNoStop()
 
 
 
-# Verify the create_snp_matrix.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline snp_matrix script traps attempts to write to unwritable file
 tryCreateSnpMatrixPermissionTrap()
 {
     expectErrorCode=$1
@@ -3093,35 +3093,35 @@ tryCreateSnpMatrixPermissionTrap()
     echo "Dummy content" > "$tempDir/samples/sample2/consensus.fasta"
     echo "Dummy content" > "$tempDir/samples/sample3/consensus.fasta"
     echo "Dummy content" > "$tempDir/samples/sample4/consensus.fasta"
-    create_snp_matrix.py -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
     errorCode=$?
 
-    # Verify create_snp_matrix.py error handling behavior
-    assertEquals "create_snp_matrix.py returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline snp_matrix error handling behavior
+    assertEquals "cfsan_snp_pipeline snp_matrix returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running create_snp_matrix.py"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "Error detected while running create_snp_matrix.py"
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline snp_matrix"
+    assertFileNotContains "$logDir/create_snp_matrix.log" "Error detected while running cfsan_snp_pipeline snp_matrix"
     assertFileContains "$tempDir/error.log" "IOError|PermissionError"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py finished"
+    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/snpma.fasta"
 }
 
-# Verify the create_snp_matrix.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline snp_matrix script traps attempts to write to unwritable file
 testCreateSnpMatrixPermissionTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpMatrixPermissionTrap 100
 }
 
-# Verify the create_snp_matrix.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline snp_matrix script traps attempts to write to unwritable file
 testCreateSnpMatrixPermissionTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCreateSnpMatrixPermissionTrap 100
 }
 
-# Verify the create_snp_matrix.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline snp_matrix script traps attempts to write to unwritable file
 testCreateSnpMatrixPermissionTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -3129,7 +3129,7 @@ testCreateSnpMatrixPermissionTrapStopUnset()
 }
 
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 tryCreateSnpMatrixMissingSampleDirRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -3144,36 +3144,36 @@ tryCreateSnpMatrixMissingSampleDirRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run create_snp_matrix.py with missing sampleDirectories.txt
-    create_snp_matrix.py -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
+    # Run cfsan_snp_pipeline snp_matrix with missing sampleDirectories.txt
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
     errorCode=$?
 
-    # Verify create_snp_matrix error handling behavior
-    assertEquals "create_snp_matrix.py returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline snp_matrix error handling behavior
+    assertEquals "cfsan_snp_pipeline snp_matrix returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_matrix.py failed."
-    assertFileNotContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix failed."
+    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix failed."
     assertFileContains "$tempDir/error.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
     assertFileContains "$logDir/create_snp_matrix.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py finished"
+    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testCreateSnpMatrixMissingSampleDirRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpMatrixMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testCreateSnpMatrixMissingSampleDirRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCreateSnpMatrixMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testCreateSnpMatrixMissingSampleDirRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -3181,7 +3181,7 @@ testCreateSnpMatrixMissingSampleDirRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 tryCreateSnpMatrixMissingConsensusRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -3201,16 +3201,16 @@ tryCreateSnpMatrixMissingConsensusRaiseGlobalError()
     #cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> /dev/null
     #cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta"  "$tempDir/samples/sample1" &> "$logDir/prepSamples.log"
 
-    # Run create_snp_matrix.py -- fail because of missing all VCF files
+    # Run cfsan_snp_pipeline snp_matrix -- fail because of missing all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    create_snp_matrix.py -o "$tempDir/snpmap.fasta"  "$tempDir/sampleDirList.txt" &> "$logDir/create_snp_matrix.log"
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpmap.fasta"  "$tempDir/sampleDirList.txt" &> "$logDir/create_snp_matrix.log"
     errorCode=$?
 
-    # Verify create_snp_matrix error handling behavior
-    assertEquals "create_snp_matrix.py returned incorrect error code when all consensus.fasta missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline snp_matrix error handling behavior
+    assertEquals "cfsan_snp_pipeline snp_matrix returned incorrect error code when all consensus.fasta missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_matrix.py failed."
-    assertFileNotContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix failed."
+    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix failed."
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample2/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample3/consensus.fasta does not exist"
@@ -3221,25 +3221,25 @@ tryCreateSnpMatrixMissingConsensusRaiseGlobalError()
     assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Error: all 4 consensus fasta files were missing or empty"
     assertFileContains "$logDir/create_snp_matrix.log" "Error: all 4 consensus fasta files were missing or empty"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py finished"
+    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testCreateSnpMatrixMissingConsensusRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpMatrixMissingConsensusRaiseGlobalError 100
 }
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testCreateSnpMatrixMissingConsensusRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCreateSnpMatrixMissingConsensusRaiseGlobalError 100
 }
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testCreateSnpMatrixMissingConsensusRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -3247,7 +3247,7 @@ testCreateSnpMatrixMissingConsensusRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 tryCreateSnpMatrixMissingConsensusRaiseSampleError()
 {
     expectErrorCode=$1
@@ -3265,36 +3265,36 @@ tryCreateSnpMatrixMissingConsensusRaiseSampleError()
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
 
-    # Run create_snp_matrix.py -- fail because of missing some, but not all consensus fasta files
+    # Run cfsan_snp_pipeline snp_matrix -- fail because of missing some, but not all consensus fasta files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirectories.txt"
     rm "$tempDir/samples/sample1/consensus.fasta"
     rm "$tempDir/samples/sample4/consensus.fasta"
-    create_snp_matrix.py -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
     errorCode=$?
 
-    # Verify create_snp_matrix error handling behavior
-    assertEquals "create_snp_matrix.py returned incorrect error code when some consensus.fasta missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline snp_matrix error handling behavior
+    assertEquals "cfsan_snp_pipeline snp_matrix returned incorrect error code when some consensus.fasta missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_matrix.py failed."
-    assertFileNotContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix failed."
+    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix failed."
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
     assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
     assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Error: 2 consensus fasta files were missing or empty"
     assertFileContains "$logDir/create_snp_matrix.log" "Error: 2 consensus fasta files were missing or empty"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py finished"
+    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testCreateSnpMatrixMissingConsensusRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpMatrixMissingConsensusRaiseSampleError 100
 }
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testCreateSnpMatrixMissingConsensusRaiseSampleErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -3312,31 +3312,31 @@ testCreateSnpMatrixMissingConsensusRaiseSampleErrorNoStop()
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
 
-    # Run create_snp_matrix.py -- fail because of missing some, but not all consensus fasta files
+    # Run cfsan_snp_pipeline snp_matrix -- fail because of missing some, but not all consensus fasta files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirectories.txt"
     rm "$tempDir/samples/sample1/consensus.fasta"
     rm "$tempDir/samples/sample4/consensus.fasta"
     rm "$tempDir/snpma.fasta"
-    create_snp_matrix.py -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
     errorCode=$?
 
-    # Verify create_snp_matrix error handling behavior
-    assertEquals "create_snp_matrix.py returned incorrect error code when some consensus.fasta missing." 0 $errorCode
+    # Verify cfsan_snp_pipeline snp_matrix error handling behavior
+    assertEquals "cfsan_snp_pipeline snp_matrix returned incorrect error code when some consensus.fasta missing." 0 $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_matrix.py"
-    assertFileNotContains "$tempDir/error.log" "create_snp_matrix.py failed."
-    assertFileNotContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix"
+    assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix failed."
+    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix failed."
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
     assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
     assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Error: 2 consensus fasta files were missing or empty"
     assertFileContains "$logDir/create_snp_matrix.log" "Error: 2 consensus fasta files were missing or empty"
-    assertFileContains "$logDir/create_snp_matrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_matrix script detects failure.
+# Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testCreateSnpMatrixMissingConsensusRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -5230,7 +5230,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/callConsensus.log-3" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/callConsensus.log-4" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/collectSampleMetrics.log-2" "cfsan_snp_pipeline collect_metrics finished"
@@ -5246,7 +5246,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/callConsensus_preserved.log-3" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/callConsensus_preserved.log-4" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 
@@ -5308,7 +5308,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
@@ -5318,7 +5318,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 
@@ -5394,7 +5394,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
@@ -5404,7 +5404,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 }
@@ -5475,7 +5475,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus.log-2" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-2" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
@@ -5485,7 +5485,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus_preserved.log-2" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 }
@@ -5744,7 +5744,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/snpList.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
@@ -5754,7 +5754,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
     assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
-    assertFileContains "$logDir/snpMatrix_preserved.log" "create_snp_matrix.py finished"
+    assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
 

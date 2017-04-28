@@ -805,7 +805,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -j y
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/snpMatrix.log
-    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
+    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -817,11 +817,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -o $logDir/snpMatrix.log
     #PBS -V
-    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
+    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
 else
-    create_snp_matrix.py $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
+    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
 fi
 
 echo -e "\nStep 9.1 - Create the reference base sequence"
@@ -995,7 +995,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -j y
 #$ -hold_jid $callConsensusJobArray2
 #$ -o $logDir/snpMatrix_preserved.log
-    create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -1007,11 +1007,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterokarray:$callConsensusJobArray2
     #PBS -o $logDir/snpMatrix_preserved.log
     #PBS -V
-    create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
 _EOF_
 )
 else
-    create_snp_matrix.py $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpMatrix_preserved.log
+    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpMatrix_preserved.log
 fi
 
 echo -e "\nStep 9.2 - Create the reference base sequence"

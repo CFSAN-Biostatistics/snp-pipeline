@@ -155,7 +155,6 @@ def filter_regions(args):
 
     if not any(need_rebuild_dict.values()):
         utils.verbose_print("All preserved and removed vcf files are already freshly built.  Use the -f option to force a rebuild.")
-        utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
         return
 
     #==========================================================================
