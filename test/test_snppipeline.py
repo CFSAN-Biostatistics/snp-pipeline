@@ -219,24 +219,19 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
     def test_6_calculate_snp_distances(self):
         """Run calculate_snp_distances and verify snp_distance_pairwise.tsv contains expected contents.
         """
-        args = argparse.Namespace()
-        args.inputFile = os.path.join(self.__class__.directory_run_result, 'snpma.fasta')
-        args.pairwiseFile = os.path.join(self.__class__.directory_run_result, 'snp_distance_pairwise.tsv')
-        args.matrixFile = None
-        args.forceFlag = True
-        self.run_function_test(snppipeline.calculate_snp_distances, args, 'snp_distance_pairwise.tsv')
+        command_line = "distance -f " + os.path.join(self.__class__.directory_run_result, 'snpma.fasta') + ' ' + \
+                       "--pairs " + os.path.join(self.__class__.directory_run_result, 'snp_distance_pairwise.tsv')
+        args = cfsan_snp_pipeline.parse_command_line(command_line)
+        self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'snp_distance_pairwise.tsv')
 
 
     def test_7_calculate_snp_distances(self):
         """Run calculate_snp_distances and verify snp_distance_matrix.tsv contains expected contents.
         """
-        args = argparse.Namespace()
-        args.inputFile = os.path.join(self.__class__.directory_run_result, 'snpma.fasta')
-        args.pairwiseFile = None
-        args.matrixFile = os.path.join(self.__class__.directory_run_result, 'snp_distance_matrix.tsv')
-        args.forceFlag = True
-        self.run_function_test(snppipeline.calculate_snp_distances, args, 'snp_distance_matrix.tsv')
-
+        command_line = "distance -f " + os.path.join(self.__class__.directory_run_result, 'snpma.fasta') + ' ' + \
+                       "--matrix " + os.path.join(self.__class__.directory_run_result, 'snp_distance_matrix.tsv')
+        args = cfsan_snp_pipeline.parse_command_line(command_line)
+        self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'snp_distance_matrix.tsv')
 
 
     def test_999(self):

@@ -892,7 +892,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -hold_jid $snpMatrixJobId
 #$ -o $logDir/calcSnpDistances.log
-    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -903,11 +903,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterok:$snpMatrixJobId
     #PBS -o $logDir/calcSnpDistances.log
     #PBS -V
-    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
 _EOF_
 )
 else
-    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta" 2>&1 | tee $logDir/calcSnpDistances.log
+    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta" 2>&1 | tee $logDir/calcSnpDistances.log
 fi
 
 # Step 14.1 - Notify user of any non-fatal errors accumulated during processing
@@ -1082,7 +1082,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -V
 #$ -hold_jid $snpMatrixJobId2
 #$ -o $logDir/calcSnpDistances_preserved.log
-    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
+    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -1093,11 +1093,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterok:$snpMatrixJobId2
     #PBS -o $logDir/calcSnpDistances_preserved.log
     #PBS -V
-    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
+    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
 _EOF_
 )
 else
-    calculate_snp_distances.py $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta" 2>&1 | tee $logDir/calcSnpDistances_preserved.log
+    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta" 2>&1 | tee $logDir/calcSnpDistances_preserved.log
 fi
 
 echo -e "\nStep 12 - Collect metrics for each sample"

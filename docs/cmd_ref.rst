@@ -436,9 +436,9 @@ calculate_snp_distances.py
 
 ::
 
-  usage: calculate_snp_distances.py [-h] [-f] [-p FILE] [-m FILE] [-v 0..5]
-                                    [--version]
-                                    snpMatrixFile
+  usage: cfsan_snp_pipeline distance [-h] [-f] [-p FILE] [-m FILE] [-v 0..5]
+                                     [--version]
+                                     snpMatrixFile
   
   Calculate pairwise SNP distances from the multi-fasta SNP matrix. Generates a
   file of pairwise distances and a file containing a matrix of distances.

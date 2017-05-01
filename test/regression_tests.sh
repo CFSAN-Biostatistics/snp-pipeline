@@ -4060,7 +4060,7 @@ testCombineSampleMetricsPermissionTrapStopUnset()
 }
 
 
-# Verify the calculate_snp_distances.py script detects missing input file
+# Verify the cfsan_snp_pipeline distance script detects missing input file
 tryCalculateSnpDistancesMissingInputRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -4072,38 +4072,38 @@ tryCalculateSnpDistancesMissingInputRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run calculateSnpDistances.py with missing snpma.fasta
-    calculate_snp_distances.py -p pp -m mm "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
+    # Run cfsan_snp_pipeline distance with missing snpma.fasta
+    cfsan_snp_pipeline distance -p pp -m mm "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
     errorCode=$?
 
     # Verify error handling behavior
-    assertEquals "calculate_snp_distances.py returned incorrect error code when input snp matrix file was missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline distance returned incorrect error code when input snp matrix file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "calculate_snp_distances.py failed."
-    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py failed"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline distance failed."
+    assertFileNotContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance failed"
     assertFileContains "$tempDir/error.log" "Error: cannot calculate sequence distances without the snp matrix file"
     assertFileContains "$logDir/calcSnpDistances.log" "Error: cannot calculate sequence distances without the snp matrix file"
     assertFileContains "$tempDir/error.log" "SNP matrix file $tempDir/snpma.fasta does not exist"
     assertFileContains "$logDir/calcSnpDistances.log" "SNP matrix file $tempDir/snpma.fasta does not exist"
-    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
     assertFileNotContains "$logDir/calcSnpDistances.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the calculateSnpDistances.py script detects missing input file
+# Verify the cfsan_snp_pipeline distance script detects missing input file
 testCalculateSnpDistancesMissingInputRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCalculateSnpDistancesMissingInputRaiseGlobalError 100
 }
 
-# Verify the calculateSnpDistances.py script detects missing input file
+# Verify the cfsan_snp_pipeline distance script detects missing input file
 testCalculateSnpDistancesMissingInputRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCalculateSnpDistancesMissingInputRaiseGlobalError 100
 }
 
-# Verify the calculateSnpDistances.py script detects missing input file
+# Verify the cfsan_snp_pipeline distance script detects missing input file
 testCalculateSnpDistancesMissingInputRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -4111,7 +4111,7 @@ testCalculateSnpDistancesMissingInputRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the calculate_snp_distances.py script detects no output file options
+# Verify the cfsan_snp_pipeline distance script detects no output file options
 tryCalculateSnpDistancesMissingOutputOptionsRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -4126,36 +4126,36 @@ tryCalculateSnpDistancesMissingOutputOptionsRaiseGlobalError()
     # Create dummpy input file
     touch "$tempDir/snpma.fasta"
 
-    # Run calculateSnpDistances.py with no output options
-    calculate_snp_distances.py "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
+    # Run cfsan_snp_pipeline distance with no output options
+    cfsan_snp_pipeline distance "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
     errorCode=$?
 
     # Verify error handling behavior
-    assertEquals "calculate_snp_distances.py returned incorrect error code when both output options were missing." $expectErrorCode $errorCode
+    assertEquals "cfsan_snp_pipeline distance returned incorrect error code when both output options were missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "calculate_snp_distances.py failed."
-    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py failed"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline distance failed."
+    assertFileNotContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance failed"
     assertFileContains "$tempDir/error.log" "Error: no output file specified"
     assertFileContains "$logDir/calcSnpDistances.log" "Error: no output file specified"
-    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
     assertFileNotContains "$logDir/calcSnpDistances.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the calculate_snp_distances.py script detects no output file options
+# Verify the cfsan_snp_pipeline distance script detects no output file options
 testCalculateSnpDistancesMissingOutputOptionsRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCalculateSnpDistancesMissingOutputOptionsRaiseGlobalError 100
 }
 
-# Verify the calculate_snp_distances.py script detects no output file options
+# Verify the cfsan_snp_pipeline distance script detects no output file options
 testCalculateSnpDistancesMissingOutputOptionsRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCalculateSnpDistancesMissingOutputOptionsRaiseGlobalError 100
 }
 
-# Verify the calculate_snp_distances.py script detects no output file options
+# Verify the cfsan_snp_pipeline distance script detects no output file options
 testCalculateSnpDistancesMissingOutputOptionsRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -4163,7 +4163,7 @@ testCalculateSnpDistancesMissingOutputOptionsRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the calculate_snp_distances.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline distance script traps attempts to write to unwritable file
 tryCalculateSnpDistancesPermissionTrap()
 {
     expectErrorCode=$1
@@ -4182,36 +4182,36 @@ tryCalculateSnpDistancesPermissionTrap()
     # Try to create snp distances
     echo "> Sequence" > "$tempDir/snpma.fasta"
     echo "ACGT" >> "$tempDir/snpma.fasta"
-    calculate_snp_distances.py -p "$tempDir/pairwise" "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
+    cfsan_snp_pipeline distance -p "$tempDir/pairwise" "$tempDir/snpma.fasta" &> "$logDir/calcSnpDistances.log"
     errorCode=$?
 
-    # Verify calculate_snp_distances.py error handling behavior
-    assertEquals "calculate_snp_distances.py returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline distance error handling behavior
+    assertEquals "cfsan_snp_pipeline distance returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running calculate_snp_distances.py"
-    assertFileNotContains "$logDir/calcSnpDistances.log" "Error detected while running calculate_snp_distances.py"
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline distance"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "Error detected while running cfsan_snp_pipeline distance"
     assertFileContains "$tempDir/error.log" "IOError|PermissionError"
     assertFileContains "$logDir/calcSnpDistances.log" "IOError|PermissionError"
-    assertFileNotContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileNotContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
     assertFileNotContains "$logDir/calcSnpDistances.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/pairwise"
 }
 
-# Verify the calculate_snp_distances.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline distance script traps attempts to write to unwritable file
 testCalculateSnpDistancesPermissionTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCalculateSnpDistancesPermissionTrap 100
 }
 
-# Verify the calculate_snp_distances.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline distance script traps attempts to write to unwritable file
 testCalculateSnpDistancesPermissionTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCalculateSnpDistancesPermissionTrap 100
 }
 
-# Verify the calculate_snp_distances.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline distance script traps attempts to write to unwritable file
 testCalculateSnpDistancesPermissionTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -5237,7 +5237,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/collectSampleMetrics.log-4" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/collectSampleMetrics.log-3" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
-    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
@@ -5248,7 +5248,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 
 }
 
@@ -5312,7 +5312,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
-    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
@@ -5320,7 +5320,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 
     # Verify correct results
     cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir/expectedResults
@@ -5398,7 +5398,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
-    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
@@ -5406,7 +5406,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 }
 
 
@@ -5479,7 +5479,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-2" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
-    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
@@ -5487,7 +5487,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 }
 
 
@@ -5748,7 +5748,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
-    assertFileContains "$logDir/calcSnpDistances.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
 
     assertFileContains "$logDir/filterAbnormalSNP.log" "cfsan_snp_pipeline filter_regions finished"
     assertFileContains "$logDir/snpList_preserved.log" "cfsan_snp_pipeline merge_sites finished"
@@ -5756,7 +5756,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
     assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
-    assertFileContains "$logDir/calcSnpDistances_preserved.log" "calculate_snp_distances.py finished"
+    assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 
     # Verify output
     # After removing the abnormal high-density snps, sample1 has more than 40 snps, so it is included in the analysis - non-preserved only
