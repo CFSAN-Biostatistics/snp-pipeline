@@ -10,9 +10,8 @@ import subprocess
 from testfixtures import TempDirectory
 from pkg_resources import resource_filename
 from snppipeline import cfsan_snp_pipeline
-from snppipeline import snppipeline
 
-data_directory = resource_filename(snppipeline.__name__, 'data')
+data_directory = resource_filename(cfsan_snp_pipeline.__name__, 'data')
 
 # various directories of test files
 compare_agona_directory = os.path.join(data_directory, 'agonaExpectedResults')
@@ -208,12 +207,11 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
     def test_5_create_snp_reference_seq(self):
         """Run create_snp_reference_seq and verify referenceSNP.fasta contains expected contents.
         """
-        args = argparse.Namespace()
-        args.referenceFile = os.path.join(self.__class__.directory_run_result, 'reference/lambda_virus.fasta')
-        args.snpListFile = os.path.join(self.__class__.directory_run_result, 'snplist.txt')
-        args.snpRefFile = os.path.join(self.__class__.directory_run_result, 'referenceSNP.fasta')
-        args.forceFlag = True
-        self.run_function_test(snppipeline.create_snp_reference_seq, args, 'referenceSNP.fasta')
+        command_line = "snp_reference -f -l " + os.path.join(self.__class__.directory_run_result, 'snplist.txt') + \
+                       " -o " + os.path.join(self.__class__.directory_run_result, 'referenceSNP.fasta') + ' ' + \
+                       os.path.join(self.__class__.directory_run_result, 'reference/lambda_virus.fasta')
+        args = cfsan_snp_pipeline.parse_command_line(command_line)
+        self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'referenceSNP.fasta')
 
 
     def test_6_calculate_snp_distances(self):

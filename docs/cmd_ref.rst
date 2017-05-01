@@ -466,9 +466,9 @@ create_snp_reference_seq.py
 
 ::
 
-  usage: create_snp_reference_seq.py [-h] [-f] [-l FILE] [-o FILE] [-v 0..5]
-                                     [--version]
-                                     referenceFile
+  usage: cfsan_snp_pipeline snp_reference [-h] [-f] [-l FILE] [-o FILE]
+                                          [-v 0..5] [--version]
+                                          referenceFile
   
   Write reference sequence bases at SNP locations to a fasta file.
   

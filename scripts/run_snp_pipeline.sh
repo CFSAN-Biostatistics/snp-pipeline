@@ -833,7 +833,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -j y
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/snpReference.log
-    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -844,11 +844,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -o $logDir/snpReference.log
     #PBS -V
-    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
 _EOF_
 )
 else
-    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
+    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
 fi
 
 
@@ -1023,7 +1023,7 @@ if [[ "$platform" == "grid" ]]; then
 #$ -j y
 #$ -hold_jid $callConsensusJobArray2
 #$ -o $logDir/snpReference_preserved.log
-    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
 _EOF_
 )
 elif [[ "$platform" == "torque" ]]; then
@@ -1034,11 +1034,11 @@ elif [[ "$platform" == "torque" ]]; then
     #PBS -W depend=afterokarray:$callConsensusJobArray2
     #PBS -o $logDir/snpReference_preserved.log
     #PBS -V
-    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
 _EOF_
 )
 else
-    create_snp_reference_seq.py $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference_preserved.log
+    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference_preserved.log
 fi
 
 

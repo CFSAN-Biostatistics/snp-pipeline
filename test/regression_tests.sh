@@ -3344,7 +3344,7 @@ testCreateSnpMatrixMissingConsensusRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the create_snp_reference_seq.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline snp_reference script traps attempts to write to unwritable file
 tryCreateSnpReferenceSeqPermissionTrap()
 {
     expectErrorCode=$1
@@ -3366,35 +3366,35 @@ tryCreateSnpReferenceSeqPermissionTrap()
     # Try to create snplist.txt
     printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
     echo "Dummy content" > "$tempDir/snplist.txt"
-    create_snp_reference_seq.py -l "$tempDir/snplist.txt" -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
+    cfsan_snp_pipeline snp_reference -l "$tempDir/snplist.txt" -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
     errorCode=$?
 
-    # Verify create_snp_reference_seq.py error handling behavior
-    assertEquals "create_snp_reference_seq.py returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline snp_reference error handling behavior
+    assertEquals "cfsan_snp_pipeline snp_reference returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running create_snp_reference_seq.py"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "Error detected while running create_snp_reference_seq.py"
+    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline snp_reference"
+    assertFileNotContains "$logDir/create_snp_reference_seq.log" "Error detected while running cfsan_snp_pipeline snp_reference"
     assertFileContains "$tempDir/error.log" "IOError|PermissionError"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "create_snp_reference_seq.py finished"
+    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileNotContains "$logDir/create_snp_reference_seq.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/referenceSNP.fasta"
 }
 
-# Verify the create_snp_reference_seq.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline snp_reference script traps attempts to write to unwritable file
 testCreateSnpReferenceSeqPermissionTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpReferenceSeqPermissionTrap 100
 }
 
-# Verify the create_snp_reference_seq.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline snp_reference script traps attempts to write to unwritable file
 testCreateSnpReferenceSeqPermissionTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCreateSnpReferenceSeqPermissionTrap 100
 }
 
-# Verify the create_snp_reference_seq.py script traps attempts to write to unwritable file
+# Verify the cfsan_snp_pipeline snp_reference script traps attempts to write to unwritable file
 testCreateSnpReferenceSeqPermissionTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -3402,7 +3402,7 @@ testCreateSnpReferenceSeqPermissionTrapStopUnset()
 }
 
 
-# Verify the create_snp_reference_seq.py script detects failure.
+# Verify the cfsan_snp_pipeline snp_reference script detects failure.
 tryCreateSnpReferenceSeqMissingSnpListRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -3417,38 +3417,38 @@ tryCreateSnpReferenceSeqMissingSnpListRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run create_snp_reference_seq.py -- fail because of missing snplist
-    create_snp_reference_seq.py -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
+    # Run cfsan_snp_pipeline snp_reference -- fail because of missing snplist
+    cfsan_snp_pipeline snp_reference -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
     errorCode=$?
 
-    # Verify create_snp_reference_seq.py error handling behavior
-    assertEquals "create_snp_reference_seq.py returned incorrect error code when snplist was missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline snp_reference error handling behavior
+    assertEquals "cfsan_snp_pipeline snp_reference returned incorrect error code when snplist was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_reference_seq.py failed."
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "create_snp_reference_seq.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_reference failed."
+    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference failed."
     assertFileContains "$tempDir/error.log" "Snplist file snplist.txt does not exist"
     assertFileContains "$logDir/create_snp_reference_seq.log" "Snplist file snplist.txt does not exist"
     assertFileContains "$tempDir/error.log" "cannot create the snp reference sequence without the snplist file"
     assertFileContains "$logDir/create_snp_reference_seq.log" "cannot create the snp reference sequence without the snplist file"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "create_snp_reference_seq.py finished"
+    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileNotContains "$logDir/create_snp_reference_seq.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_reference_seq.py script detects failure.
+# Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testCreateSnpReferenceSeqMissingSnpListRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpReferenceSeqMissingSnpListRaiseGlobalError 100
 }
 
-# Verify the create_snp_reference_seq.py script detects failure.
+# Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testCreateSnpReferenceSeqMissingSnpListRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCreateSnpReferenceSeqMissingSnpListRaiseGlobalError 100
 }
 
-# Verify the create_snp_reference_seq.py script detects failure.
+# Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testCreateSnpReferenceSeqMissingSnpListRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -3456,7 +3456,7 @@ testCreateSnpReferenceSeqMissingSnpListRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the create_snp_reference_seq.py script detects failure.
+# Verify the cfsan_snp_pipeline snp_reference script detects failure.
 tryCreateSnpReferenceSeqMissingReferenceRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -3471,40 +3471,40 @@ tryCreateSnpReferenceSeqMissingReferenceRaiseGlobalError()
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
 
-    # Run create_snp_reference_seq.py -- fail because of missing reference
+    # Run cfsan_snp_pipeline snp_reference -- fail because of missing reference
     echo "Dummy snplist content" > "$tempDir/snplist"
     rm "$tempDir/reference/lambda_virus.fasta"
-    create_snp_reference_seq.py -l "$tempDir/snplist" -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
+    cfsan_snp_pipeline snp_reference -l "$tempDir/snplist" -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
     errorCode=$?
 
-    # Verify create_snp_reference_seq.py error handling behavior
-    assertEquals "create_snp_reference_seq.py returned incorrect error code when reference fasta file was missing." $expectErrorCode $errorCode
+    # Verify cfsan_snp_pipeline snp_reference error handling behavior
+    assertEquals "cfsan_snp_pipeline snp_reference returned incorrect error code when reference fasta file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "create_snp_reference_seq.py failed."
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "create_snp_reference_seq.py failed."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_reference failed."
+    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference failed."
     assertFileContains "$tempDir/error.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
     assertFileContains "$logDir/create_snp_reference_seq.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "cannot create the snp reference sequence without the reference fasta file"
     assertFileContains "$logDir/create_snp_reference_seq.log" "cannot create the snp reference sequence without the reference fasta file"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "create_snp_reference_seq.py finished"
+    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileNotContains "$logDir/create_snp_reference_seq.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_reference_seq.py script detects failure.
+# Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testCreateSnpReferenceSeqMissingReferenceRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpReferenceSeqMissingReferenceRaiseGlobalError 100
 }
 
-# Verify the create_snp_reference_seq.py script detects failure.
+# Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testCreateSnpReferenceSeqMissingReferenceRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCreateSnpReferenceSeqMissingReferenceRaiseGlobalError 100
 }
 
-# Verify the create_snp_reference_seq.py script detects failure.
+# Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testCreateSnpReferenceSeqMissingReferenceRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -5231,7 +5231,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/callConsensus.log-4" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/collectSampleMetrics.log-2" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/collectSampleMetrics.log-4" "cfsan_snp_pipeline collect_metrics finished"
@@ -5247,7 +5247,7 @@ testRunSnpPipelineLambdaUnpaired()
     assertFileContains "$logDir/callConsensus_preserved.log-4" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 
 }
@@ -5309,7 +5309,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
@@ -5319,7 +5319,7 @@ testRunSnpPipelineLambdaSingleSample()
     assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 
     # Verify correct results
@@ -5395,7 +5395,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
@@ -5405,7 +5405,7 @@ testRunSnpPipelineZeroSnps()
     assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 }
 
@@ -5476,7 +5476,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/callConsensus.log-2" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/collectSampleMetrics.log-2" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
@@ -5486,7 +5486,7 @@ testRunSnpPipelineRerunMissingVCF()
     assertFileContains "$logDir/callConsensus_preserved.log-2" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 }
 
@@ -5745,7 +5745,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/callConsensus.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/collectSampleMetrics.log-1" "cfsan_snp_pipeline collect_metrics finished"
     assertFileContains "$logDir/combineSampleMetrics.log" "cfsan_snp_pipeline combine_metrics finished"
     assertFileContains "$logDir/calcSnpDistances.log" "cfsan_snp_pipeline distance finished"
@@ -5755,7 +5755,7 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/callConsensus_preserved.log-1" "cfsan_snp_pipeline call_consensus finished"
     assertFileContains "$logDir/mergeVcf_preserved.log" "cfsan_snp_pipeline merge_vcfs finished"
     assertFileContains "$logDir/snpMatrix_preserved.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileContains "$logDir/snpReference_preserved.log" "create_snp_reference_seq.py finished"
+    assertFileContains "$logDir/snpReference_preserved.log" "cfsan_snp_pipeline snp_reference finished"
     assertFileContains "$logDir/calcSnpDistances_preserved.log" "cfsan_snp_pipeline distance finished"
 
     # Verify output

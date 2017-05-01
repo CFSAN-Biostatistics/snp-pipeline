@@ -21,6 +21,7 @@ from snppipeline import call_consensus
 from snppipeline import merge_vcfs
 from snppipeline import snp_matrix
 from snppipeline import distance
+from snppipeline import snp_reference
 from snppipeline import collect_metrics
 from snppipeline import combine_metrics
 
@@ -289,6 +290,20 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.add_argument("-v", "--verbose", dest="verbose",     type=int, default=1,                metavar="0..5",          help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=distance.calculate_snp_distances)
+    subparser.set_defaults(excepthook=utils.handle_global_exception)
+
+    # -------------------------------------------------------------------------
+    # Create the parser for the "snp_reference" command
+    # -------------------------------------------------------------------------
+    description = "Write reference sequence bases at SNP locations to a fasta file."
+    subparser = subparsers.add_parser("snp_reference", help="Write reference bases at SNP locations to a fasta file", description=description, formatter_class=formatter_class)
+    subparser.add_argument(                          dest="referenceFile", type=str,                                               help="Relative or absolute path to the reference bases file in fasta format")
+    subparser.add_argument("-f", "--force",          dest="forceFlag",     action="store_true",                                    help="Force processing even when result file already exists and is newer than inputs")
+    subparser.add_argument("-l", "--snpListFile",    dest="snpListFile",   type=str, default="snplist.txt",        metavar="FILE", help="Relative or absolute path to the SNP list file")
+    subparser.add_argument("-o", "--output",         dest="snpRefFile",    type=str, default="referenceSNP.fasta", metavar="FILE", help="Output file.  Relative or absolute path to the SNP reference sequence file")
+    subparser.add_argument("-v", "--verbose",        dest="verbose",       type=int, default=1,                    metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=snp_reference.create_snp_reference_seq)
     subparser.set_defaults(excepthook=utils.handle_global_exception)
 
     # -------------------------------------------------------------------------

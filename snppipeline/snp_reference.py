@@ -1,13 +1,17 @@
+"""This module is part of the CFSAN SNP Pipeline. It contains the code to
+write reference sequence bases at SNP locations to a fasta file.
+"""
+
 from __future__ import print_function
 from __future__ import absolute_import
 
 from snppipeline import utils
+from snppipeline.utils import verbose_print
 
 
 def create_snp_reference_seq(args):
     """Write reference sequence bases at SNP locations to a fasta file.
 
-    Description:
     Write reference sequence bases at SNP locations to a fasta file.
     This function expects, or creates '(*)', the following files:
             reference.fasta
@@ -26,13 +30,12 @@ def create_snp_reference_seq(args):
         documentation provides an example of creating this file based on the
         lambda_virus sequence that is used as one test for this package.
 
-    Args:
-        referenceFile: File path (not just file name) for reference sequence
-            (in fasta format
-        snpListFile: File path (not just file name) of text format list of SNP
-            positions
-        snpRefFile: File path (not just file name) for the SNP reference
-            sequence file.
+    Parameters
+    ----------
+    args : Namespace
+        referenceFile: File path (not just file name) for reference sequence in fasta format
+        snpListFile: File path (not just file name) of text format list of SNP positions
+        snpRefFile: File path (not just file name) for the SNP reference sequence file.
 
     Raises:
 
@@ -70,8 +73,5 @@ def create_snp_reference_seq(args):
     source_files = [reference_file, snp_list_file_path]
     if args.forceFlag or utils.target_needs_rebuild(source_files, snp_ref_seq_path):
         utils.write_reference_snp_file(reference_file, snp_list_file_path, snp_ref_seq_path)
-        utils.verbose_print("")
     else:
-        utils.verbose_print("SNP reference sequence %s has already been freshly built.  Use the -f option to force a rebuild." % snp_ref_seq_path)
-
-    utils.verbose_print("# %s %s finished" % (utils.timestamp(), utils.program_name()))
+        verbose_print("SNP reference sequence %s has already been freshly built.  Use the -f option to force a rebuild." % snp_ref_seq_path)

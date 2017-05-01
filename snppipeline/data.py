@@ -8,7 +8,6 @@ from __future__ import absolute_import
 import os
 import subprocess
 from pkg_resources import resource_filename
-from snppipeline import snppipeline
 
 
 def copy_data(args):
@@ -47,7 +46,7 @@ def copy_data(args):
     if return_code != 0:
         exit(return_code)
 
-    data_directory = resource_filename(snppipeline.__name__, 'data')
+    data_directory = resource_filename(__name__, 'data')
 
     if args.whichData == 'configurationFile':
         source_file = os.path.join(data_directory, 'configuration', 'snppipeline.conf')
