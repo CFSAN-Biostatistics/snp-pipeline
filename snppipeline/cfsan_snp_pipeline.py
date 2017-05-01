@@ -53,6 +53,7 @@ def parse_argument_list(argv):
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparsers = parser.add_subparsers(dest="subparser_name", help=None, metavar="subcommand       ")
+    subparsers.required = True
 
     # -------------------------------------------------------------------------
     # Create the parser for the "data" command
