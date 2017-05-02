@@ -333,8 +333,8 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
                      The output is a tab-separated-values file with a row for each sample and a column
                      for each metric.
 
-                     Before running this command, the metrics for each sample must be created by the
-                     collectSampleMetrics.sh script."""
+                     Before running this command, the metrics for each sample must be created with the
+                     collect_metrics command."""
 
     subparser = subparsers.add_parser("combine_metrics", help="Merge the per-sample metrics", description=description, formatter_class=formatter_class)
     subparser.add_argument(dest="sampleDirsFile", type=str, help="Relative or absolute path to file containing a list of directories -- one per sample")

@@ -15,39 +15,41 @@ of shell scripts and python scripts.
 +-----------------------------+--------------------------------------------------------------------+
 | Script                      | | Description                                                      |
 +=============================+====================================================================+
-| copy_snppipeline_data.py    | | Copies supplied example data to a work directory                 |
-+-----------------------------+--------------------------------------------------------------------+
-| run_snp_pipeline.sh         | | This do-it-all script runs all the other scripts listed below,   |
+| run_snp_pipeline.sh         | | This do-it-all script runs the other scripts listed below,       |
 |                             | | comprising all the pipeline steps                                |
 +-----------------------------+--------------------------------------------------------------------+
-| prepReference.sh            | | Indexes the reference genome                                     |
+| cfsan_snp_pipeline          | | This is the main command line tool with subcommands listed below |
 +-----------------------------+--------------------------------------------------------------------+
-| alignSampleToReference.sh   | | Aligns samples to the reference genome                           |
+| | data                      | | Copies supplied example data to a work directory                 |
 +-----------------------------+--------------------------------------------------------------------+
-| prepSamples.sh              | | Finds variants in each sample                                    |
+| | index_ref                 | | Indexes the reference genome                                     |
 +-----------------------------+--------------------------------------------------------------------+
-| snp_filter.py               | | Remove SNPs in abnormal regions.                                 |
+| | map_reads                 | | Aligns samples to the reference genome                           |
 +-----------------------------+--------------------------------------------------------------------+
-| create_snp_list.py          | | Combines the SNP positions across all samples into a single      |
+| | call_sites                | | Finds high-confidence SNPs in each sample                        |
++-----------------------------+--------------------------------------------------------------------+
+| | filter_regions            | | Remove SNPs in abnormal regions.                                 |
++-----------------------------+--------------------------------------------------------------------+
+| | merge_sites               | | Combines the SNP positions across all samples into a single      |
 |                             | | unified SNP list file                                            |
 +-----------------------------+--------------------------------------------------------------------+
-| call_consensus.py           | | Calls the consensus SNPs for each sample                         |
+| | call_consensus            | | Calls the consensus SNPs for each sample                         |
 +-----------------------------+--------------------------------------------------------------------+
-| create_snp_matrix.py        | | Creates a matrix of SNPs across all samples                      |
+| | merge_vcfs                | | Creates a multi-sample VCF file with the SNPs found in all       |
+|                             | | samples                                                          |
 +-----------------------------+--------------------------------------------------------------------+
-| calculate_snp_distances.py  | | Computes the SNP distances between all pairs of samples          |
+| | snp_matrix                | | Creates a matrix of SNPs across all samples                      |
 +-----------------------------+--------------------------------------------------------------------+
-| create_snp_reference_seq.py | | Writes the reference sequence bases at SNP locations to          |
+| | distance                  | | Computes the SNP distances between all pairs of samples          |
++-----------------------------+--------------------------------------------------------------------+
+| | snp_reference             | | Writes the reference sequence bases at SNP locations to          |
 |                             | | a fasta file                                                     |
 +-----------------------------+--------------------------------------------------------------------+
-| collectSampleMetrics.sh     | | Collects useful coverage and variant statistics about            |
+| | collect_metrics           | | Collects useful coverage and variant statistics about            |
 |                             | | each sample                                                      |
 +-----------------------------+--------------------------------------------------------------------+
-| combineSampleMetrics.sh     | | Creates a table of coverage and variant statistics for           |
+| | combine_metrics           | | Creates a table of coverage and variant statistics for           |
 |                             | | all samples                                                      |
-+-----------------------------+--------------------------------------------------------------------+
-| mergeVcf.sh                 | | Creates a multi-sample VCF file with the snps found in all       |
-|                             | | samples                                                          |
 +-----------------------------+--------------------------------------------------------------------+
 
 
@@ -273,7 +275,7 @@ the name of your parallel environment.
 
 Grab the default configuration file::
 
-    copy_snppipeline_data.py configurationFile
+    cfsan_snp_pipeline data configurationFile
 
 
 Edit the snppipeline.conf file and make the following change::
@@ -304,7 +306,7 @@ SNP Pipeline configuration file.
 
 Grab the default configuration file::
 
-    copy_snppipeline_data.py configurationFile
+    cfsan_snp_pipeline data configurationFile
 
 To run the SNP Pipeline with Bowtie2, edit ``snppipeline.conf`` with these settings::
 
@@ -359,7 +361,7 @@ Step 1 - Gather data::
 
     # Copy the supplied test data to a work area:
     cd test
-    copy_snppipeline_data.py lambdaVirusInputs testLambdaVirus
+    cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     cd testLambdaVirus
 
 Step 2 - Run the SNP Pipeline::
@@ -391,7 +393,7 @@ and referenceSNP_preserved.fasta::
     ls -l snp_distance_matrix_preserved.tsv
 
     # Verify correct results
-    copy_snppipeline_data.py lambdaVirusExpectedResults expectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults expectedResults
     diff -q -s snplist.txt             expectedResults/snplist.txt
     diff -q -s snpma.fasta             expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta      expectedResults/referenceSNP.fasta
@@ -426,7 +428,7 @@ Step 1 - Gather data::
     # Copy the supplied test data to a work area:
     mkdir testAgona
     cd testAgona
-    copy_snppipeline_data.py agonaInputs cleanInputs
+    cfsan_snp_pipeline data agonaInputs cleanInputs
     cd cleanInputs
 
     # Create sample directories and download sample data from SRA at NCBI. Note that
@@ -473,7 +475,7 @@ referenceSNP.fasta and referenceSNP_preserved.fasta::
     ls -l outputDirectory/snp_distance_matrix_preserved.tsv
 
     # Verify correct results
-    copy_snppipeline_data.py agonaExpectedResults expectedResults
+    cfsan_snp_pipeline data agonaExpectedResults expectedResults
     diff -q -s outputDirectory/snplist.txt             expectedResults/snplist.txt
     diff -q -s outputDirectory/snpma.fasta             expectedResults/snpma.fasta
     diff -q -s outputDirectory/referenceSNP.fasta      expectedResults/referenceSNP.fasta
@@ -518,7 +520,7 @@ Step 1 - Create dataset::
     # Copy the supplied test data to a work area:
     mkdir testDir
     cd testDir
-    copy_snppipeline_data.py listeriaInputs cleanInputs
+    cfsan_snp_pipeline data listeriaInputs cleanInputs
     cd cleanInputs
 
     # Create sample directories and download sample data from SRA at NCBI. Note that
@@ -575,7 +577,7 @@ bases are in the referenceSNP.fasta and referenceSNP_preserved.fasta::
     ls -l outputDirectory/snp_distance_matrix_preserved.tsv
 
     # Verify correct results
-    copy_snppipeline_data.py listeriaExpectedResults expectedResults
+    cfsan_snp_pipeline data listeriaExpectedResults expectedResults
     diff -q -s outputDirectory/snplist.txt             expectedResults/snplist.txt
     diff -q -s outputDirectory/snpma.fasta             expectedResults/snpma.fasta
     diff -q -s outputDirectory/referenceSNP.fasta      expectedResults/referenceSNP.fasta
@@ -630,7 +632,7 @@ Step 1 - Gather data::
 
     # Copy the supplied test data to a work area:
     cd test
-    copy_snppipeline_data.py lambdaVirusInputs testLambdaVirus
+    cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     cd testLambdaVirus
 
 Step 2 - Prep work::
@@ -644,62 +646,62 @@ Step 2 - Prep work::
 
 Step 3 - Prep the reference::
 
-    prepReference.sh reference/lambda_virus.fasta
+    cfsan_snp_pipeline index_ref reference/lambda_virus.fasta
 
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/lambda_virus.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/lambda_virus.fasta
 
-Step 5 - Prep the samples::
+Step 5 - Find the sites having high-confidence SNPs::
 
     # Process the samples in parallel using all CPU cores
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/lambda_virus.fasta
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores cfsan_snp_pipeline call_sites reference/lambda_virus.fasta
 
 Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-    snp_filter.py -n var.flt.vcf sampleDirectories.txt reference/lambda_virus.fasta
+    cfsan_snp_pipeline filter_regions -n var.flt.vcf sampleDirectories.txt reference/lambda_virus.fasta
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
-    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt sampleDirectories.txt.OrigVCF.filtered
-    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt sampleDirectories.txt.PresVCF.filtered
+    cfsan_snp_pipeline merge_sites -n var.flt.vcf -o snplist.txt sampleDirectories.txt sampleDirectories.txt.OrigVCF.filtered
+    cfsan_snp_pipeline merge_sites -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt sampleDirectories.txt.PresVCF.filtered
 
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
-    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt.OrigVCF.filtered
-    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt.PresVCF.filtered
+    cfsan_snp_pipeline snp_matrix -c consensus.fasta -o snpma.fasta sampleDirectories.txt.OrigVCF.filtered
+    cfsan_snp_pipeline snp_matrix -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt.PresVCF.filtered
 
 Step 10 - Create the reference base sequence::
 
-    create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/lambda_virus.fasta
-    create_snp_reference_seq.py -l snplist_preserved.txt -o referenceSNP_preserved.fasta reference/lambda_virus.fasta
+    cfsan_snp_pipeline snp_reference -l snplist.txt -o referenceSNP.fasta reference/lambda_virus.fasta
+    cfsan_snp_pipeline snp_reference -l snplist_preserved.txt -o referenceSNP_preserved.fasta reference/lambda_virus.fasta
 
 Step 11 - Collect metrics for each sample::
 
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -o XX/metrics XX reference/lambda_virus.fasta
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline collect_metrics -o XX/metrics XX reference/lambda_virus.fasta
 
 Step 12 - Tabulate the metrics for all samples::
 
-    combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
+    cfsan_snp_pipeline combine_metrics -n metrics -o metrics.tsv sampleDirectories.txt
 
 Step 13 - Merge the VCF files for all samples into a multi-sample VCF file::
 
-    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt.OrigVCF.filtered
-    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt.PresVCF.filtered
+    cfsan_snp_pipeline merge_vcfs -n consensus.vcf -o snpma.vcf sampleDirectories.txt.OrigVCF.filtered
+    cfsan_snp_pipeline merge_vcfs -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt.PresVCF.filtered
 
 Step 14 - Compute the SNP distances between samples::
 
-    calculate_snp_distances.py -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
-    calculate_snp_distances.py -p snp_distance_pairwise_preserved.tsv -m snp_distance_matrix_preserved.tsv snpma_preserved.fasta
+    cfsan_snp_pipeline distance -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
+    cfsan_snp_pipeline distance -p snp_distance_pairwise_preserved.tsv -m snp_distance_matrix_preserved.tsv snpma_preserved.fasta
 
 Step 15 - View and verify the results:
 
@@ -719,7 +721,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snp_distance_matrix_preserved.tsv
 
     # Verify correct results
-    copy_snppipeline_data.py lambdaVirusExpectedResults expectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults expectedResults
     diff -q -s snplist.txt             expectedResults/snplist.txt
     diff -q -s snpma.fasta             expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta      expectedResults/referenceSNP.fasta
@@ -755,7 +757,7 @@ Step 1 - Gather data::
     # Copy the supplied test data to a work area:
     mkdir testAgona
     cd testAgona
-    copy_snppipeline_data.py agonaInputs .
+    cfsan_snp_pipeline data agonaInputs .
 
     # Create sample directories and download sample data from SRA at NCBI. Note that
     #   we use the fastq-dump command from the NCBI SRA-toolkit to fetch sample
@@ -783,62 +785,62 @@ Step 2 - Prep work::
 
 Step 3 - Prep the reference::
 
-    prepReference.sh reference/NC_011149.fasta
+    cfsan_snp_pipeline index_ref reference/NC_011149.fasta
 
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/NC_011149.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/NC_011149.fasta
 
-Step 5 - Prep the samples::
+Step 5 - Find the sites having high-confidence SNPs::
 
     # Process the samples in parallel using all CPU cores
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/NC_011149.fasta
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores cfsan_snp_pipeline call_sites reference/NC_011149.fasta
 
 Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-    snp_filter.py -n var.flt.vcf sampleDirectories.txt reference/NC_011149.fasta
+    cfsan_snp_pipeline filter_regions -n var.flt.vcf sampleDirectories.txt reference/NC_011149.fasta
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
-    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt sampleDirectories.txt.OrigVCF.filtered
-    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt sampleDirectories.txt.PresVCF.filtered
+    cfsan_snp_pipeline merge_sites -n var.flt.vcf -o snplist.txt sampleDirectories.txt sampleDirectories.txt.OrigVCF.filtered
+    cfsan_snp_pipeline merge_sites -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt sampleDirectories.txt.PresVCF.filtered
 
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
-    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt.OrigVCF.filtered
-    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt.PresVCF.filtered
+    cfsan_snp_pipeline snp_matrix -c consensus.fasta -o snpma.fasta sampleDirectories.txt.OrigVCF.filtered
+    cfsan_snp_pipeline snp_matrix -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt.PresVCF.filtered
 
 Step 10 - Create the reference base sequence::
 
-    create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/NC_011149.fasta
-    create_snp_reference_seq.py -l snplist_preserved.txt -o referenceSNP_preserved.fasta reference/NC_011149.fasta
+    cfsan_snp_pipeline snp_reference -l snplist.txt -o referenceSNP.fasta reference/NC_011149.fasta
+    cfsan_snp_pipeline snp_reference -l snplist_preserved.txt -o referenceSNP_preserved.fasta reference/NC_011149.fasta
 
 Step 11 - Collect metrics for each sample::
 
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -o XX/metrics XX reference/NC_011149.fasta
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline collect_metrics -o XX/metrics XX reference/NC_011149.fasta
 
 Step 12 - Tabulate the metrics for all samples::
 
-    combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
+    cfsan_snp_pipeline combine_metrics -n metrics -o metrics.tsv sampleDirectories.txt
 
 Step 13 - Merge the VCF files for all samples into a multi-sample VCF file::
 
-    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt.OrigVCF.filtered
-    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt.PresVCF.filtered
+    cfsan_snp_pipeline merge_vcfs -n consensus.vcf -o snpma.vcf sampleDirectories.txt.OrigVCF.filtered
+    cfsan_snp_pipeline merge_vcfs -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt.PresVCF.filtered
 
 Step 14 - Compute the SNP distances between samples::
 
-    calculate_snp_distances.py -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
-    calculate_snp_distances.py -p snp_distance_pairwise_preserved.tsv -m snp_distance_matrix_preserved.tsv snpma_preserved.fasta
+    cfsan_snp_pipeline distance -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
+    cfsan_snp_pipeline distance -p snp_distance_pairwise_preserved.tsv -m snp_distance_matrix_preserved.tsv snpma_preserved.fasta
 
 Step 15 - View and verify the results:
 
@@ -858,7 +860,7 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
     ls -l snp_distance_matrix_preserved.tsv
 
     # Verify correct results
-    copy_snppipeline_data.py agonaExpectedResults expectedResults
+    cfsan_snp_pipeline data agonaExpectedResults expectedResults
     diff -q -s snplist.txt             expectedResults/snplist.txt
     diff -q -s snpma.fasta             expectedResults/snpma.fasta
     diff -q -s referenceSNP.fasta      expectedResults/referenceSNP.fasta
@@ -915,63 +917,63 @@ Step 2 - Prep work::
 
 Step 3 - Prep the reference::
 
-    prepReference.sh reference/my_reference.fasta
+    cfsan_snp_pipeline index_ref reference/my_reference.fasta
 
 Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 alignSampleToReference.sh reference/my_reference.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/my_reference.fasta
 
-Step 5 - Prep the samples::
+Step 5 - Find the sites having high-confidence SNPs::
 
     # Process the samples in parallel using all CPU cores
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores prepSamples.sh reference/my_reference.fasta
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores cfsan_snp_pipeline call_sites reference/my_reference.fasta
 
 Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-    snp_filter.py -n var.flt.vcf sampleDirectories.txt reference/my_reference.fasta
+    cfsan_snp_pipeline filter_regions -n var.flt.vcf sampleDirectories.txt reference/my_reference.fasta
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
-    create_snp_list.py -n var.flt.vcf -o snplist.txt sampleDirectories.txt sampleDirectories.txt.OrigVCF.filtered
-    create_snp_list.py -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt sampleDirectories.txt.PresVCF.filtered
+    cfsan_snp_pipeline merge_sites -n var.flt.vcf -o snplist.txt sampleDirectories.txt sampleDirectories.txt.OrigVCF.filtered
+    cfsan_snp_pipeline merge_sites -n var.flt_preserved.vcf -o snplist_preserved.txt sampleDirectories.txt sampleDirectories.txt.PresVCF.filtered
 
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX call_consensus.py -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
-    create_snp_matrix.py -c consensus.fasta -o snpma.fasta sampleDirectories.txt.OrigVCF.filtered
-    create_snp_matrix.py -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt.PresVCF.filtered
+    cfsan_snp_pipeline snp_matrix -c consensus.fasta -o snpma.fasta sampleDirectories.txt.OrigVCF.filtered
+    cfsan_snp_pipeline snp_matrix -c consensus_preserved.fasta -o snpma_preserved.fasta sampleDirectories.txt.PresVCF.filtered
 
 Step 10 - Create the reference base sequence::
 
     # Note the .fasta file extension
-    create_snp_reference_seq.py -l snplist.txt -o referenceSNP.fasta reference/my_reference.fasta
-    create_snp_reference_seq.py -l snplist_preserved.txt -o referenceSNP_preserved.fasta reference/my_reference.fasta
+    cfsan_snp_pipeline snp_reference -l snplist.txt -o referenceSNP.fasta reference/my_reference.fasta
+    cfsan_snp_pipeline snp_reference -l snplist_preserved.txt -o referenceSNP_preserved.fasta reference/my_reference.fasta
 
 Step 11 - Collect metrics for each sample::
 
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX collectSampleMetrics.sh -o XX/metrics XX reference/my_reference.fasta
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline collect_metrics -o XX/metrics XX reference/my_reference.fasta
 
 Step 12 - Tabulate the metrics for all samples::
 
-    combineSampleMetrics.sh -n metrics -o metrics.tsv sampleDirectories.txt
+    cfsan_snp_pipeline combine_metrics -n metrics -o metrics.tsv sampleDirectories.txt
 
 Step 13 - Merge the VCF files for all samples into a multi-sample VCF file::
 
-    mergeVcf.sh -n consensus.vcf -o snpma.vcf sampleDirectories.txt.OrigVCF.filtered
-    mergeVcf.sh -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt.PresVCF.filtered
+    cfsan_snp_pipeline merge_vcfs -n consensus.vcf -o snpma.vcf sampleDirectories.txt.OrigVCF.filtered
+    cfsan_snp_pipeline merge_vcfs -n consensus_preserved.vcf -o snpma_preserved.vcf sampleDirectories.txt.PresVCF.filtered
 
 Step 14 - Compute the SNP distances between samples::
 
-    calculate_snp_distances.py -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
-    calculate_snp_distances.py -p snp_distance_pairwise_preserved.tsv -m snp_distance_matrix_preserved.tsv snpma.fasta
+    cfsan_snp_pipeline distance -p snp_distance_pairwise.tsv -m snp_distance_matrix.tsv snpma.fasta
+    cfsan_snp_pipeline distance -p snp_distance_pairwise_preserved.tsv -m snp_distance_matrix_preserved.tsv snpma.fasta
 
 Step 15 - View the results:
 
@@ -1043,7 +1045,7 @@ files are named with the ``_preserved`` suffix, for example:
 
 Other output files are named similarly.
 
-The SNP filtering is performed by a script named ``snp_filter.py``.  It runs after the phase 1 SNP detection and impacts
+The SNP filtering is performed by the ``filter_regions`` command.  It runs after the phase 1 SNP detection and impacts
 all subsequent processing steps.  Abnormal regions are identified in each sample individually, and then SNPs in those
 regions are removed from *all* samples.  Therefore, if you add or remove a sample from your analysis it may affect the
 final SNPs detected in all other samples.  See :ref:`cmd-ref-snp-filter`.
@@ -1066,7 +1068,7 @@ the name of the last subdirectory in the path to the sample::
 
 Grab the default configuration file::
 
-    copy_snppipeline_data.py configurationFile
+    cfsan_snp_pipeline data configurationFile
 
 Edit ``snppipeline.conf``, and change the ``RemoveAbnormalSnp_ExtraParams`` parameter::
 
@@ -1096,7 +1098,7 @@ To exclude samples with excessive SNPs:
 
 Grab the default configuration file::
 
-    copy_snppipeline_data.py configurationFile
+    cfsan_snp_pipeline data configurationFile
 
 Edit ``snppipeline.conf``, and change this setting::
 
@@ -1166,7 +1168,8 @@ The metrics are:
 +-------------------------+------------------------------------------------------------------+
 | Phase1 Preserved SNPs   | | The number of phase 1 SNPs found by VarScan and preserved by   |
 |                         | | SNP Filtering.  The count is computed as the number of SNP     |
-|                         | | records in the preserved VCF file generated by snp_filter.py.  |
+|                         | | records in the preserved VCF file generated by the             |
+|                         | | ``filter_regions`` command.                                    |
 +-------------------------+------------------------------------------------------------------+
 | Phase2 SNPs             | | The number of phase 2 SNPs found for this sample.  The count   |
 |                         | | is computed as the number of SNP records in the VCF file       |

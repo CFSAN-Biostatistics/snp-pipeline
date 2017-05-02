@@ -322,7 +322,7 @@ testRunSnpPipelineDependencyPicardNotRequiredRaiseFatalErrorStop()
     assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
 }
 
-# Verify the prepReference script detects a misconfigured environment variable
+# Verify the index_ref command detects a misconfigured environment variable
 tryPrepReferenceEnvironmentRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -331,8 +331,8 @@ tryPrepReferenceEnvironmentRaiseGlobalError()
     # Extract test data to temp dir
     cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
-    # Setup directories and env variables prepReference will use.
-    # This simulates what run_snp_pipeline does before running prepReference.
+    # Setup directories and env variables cfsan_snp_pipeline index_ref will use.
+    # This simulates what run_snp_pipeline does before running cfsan_snp_pipeline index_ref.
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
@@ -340,7 +340,7 @@ tryPrepReferenceEnvironmentRaiseGlobalError()
     # Deliberately misconfigure the environment
     export SnpPipeline_Aligner=garbage
 
-    # Run prepReference
+    # Run cfsan_snp_pipeline index_ref
     cfsan_snp_pipeline index_ref "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     errorCode=$?
 
@@ -358,28 +358,28 @@ tryPrepReferenceEnvironmentRaiseGlobalError()
     export SnpPipeline_Aligner=bowtie2
 }
 
-# Verify the prepReference script detects a misconfigured environment variable
+# Verify the index_ref command detects a misconfigured environment variable
 testPrepReferenceEnvironmentRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryPrepReferenceEnvironmentRaiseGlobalError 100
 }
 
-# Verify the prepReference script detects a misconfigured environment variable
+# Verify the index_ref command detects a misconfigured environment variable
 testPrepReferenceEnvironmentRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryPrepReferenceEnvironmentRaiseGlobalError 100
 }
 
-# Verify the prepReference script detects a misconfigured environment variable
+# Verify the index_ref command detects a misconfigured environment variable
 testPrepReferenceEnvironmentRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
     tryPrepReferenceEnvironmentRaiseGlobalError 100
 }
 
-# Verify the prepReference script detects a misconfigured environment variable
+# Verify the index_ref command detects a misconfigured environment variable
 tryPrepReferenceEmptyFastaFileRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -388,8 +388,8 @@ tryPrepReferenceEmptyFastaFileRaiseGlobalError()
     # Extract test data to temp dir
     cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
-    # Setup directories and env variables prepReference will use.
-    # This simulates what run_snp_pipeline does before running prepReference.
+    # Setup directories and env variables cfsan_snp_pipeline index_ref will use.
+    # This simulates what run_snp_pipeline does before running cfsan_snp_pipeline index_ref.
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
@@ -398,7 +398,7 @@ tryPrepReferenceEmptyFastaFileRaiseGlobalError()
     rm "$tempDir/reference/lambda_virus.fasta"
     touch "$tempDir/reference/lambda_virus.fasta"
 
-    # Run prepReference
+    # Run cfsan_snp_pipeline index_ref
     cfsan_snp_pipeline index_ref "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     errorCode=$?
 
@@ -413,21 +413,21 @@ tryPrepReferenceEmptyFastaFileRaiseGlobalError()
     assertFileNotContains "$logDir/prepReference.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the prepReference script detects a misconfigured environment variable
+# Verify the index_ref command detects a misconfigured environment variable
 testPrepReferenceEmptyFastaFileRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryPrepReferenceEmptyFastaFileRaiseGlobalError 100
 }
 
-# Verify the prepReference script detects a misconfigured environment variable
+# Verify the index_ref command detects a misconfigured environment variable
 testPrepReferenceEmptyFastaFileRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryPrepReferenceEmptyFastaFileRaiseGlobalError 100
 }
 
-# Verify the prepReference script detects a misconfigured environment variable
+# Verify the index_ref command detects a misconfigured environment variable
 testPrepReferenceEmptyFastaFileRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -435,7 +435,7 @@ testPrepReferenceEmptyFastaFileRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the prepReference script detects bowtie error and emits the global error marker file.
+# Verify the index_ref command detects bowtie error and emits the global error marker file.
 tryPrepReferenceBowtieIndexTrap()
 {
     expectErrorCode=$1
@@ -444,8 +444,8 @@ tryPrepReferenceBowtieIndexTrap()
     # Extract test data to temp dir
     cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
-    # Setup directories and env variables prepReference will use.
-    # This simulates what run_snp_pipeline does before running prepReference.
+    # Setup directories and env variables cfsan_snp_pipeline index_ref will use.
+    # This simulates what run_snp_pipeline does before running cfsan_snp_pipeline index_ref.
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
@@ -453,7 +453,7 @@ tryPrepReferenceBowtieIndexTrap()
     # Deliberately corrupt the fasta file
     sed -i 's/>/@@@/g' "$tempDir/reference/lambda_virus.fasta"
 
-    # Run prepReference
+    # Run cfsan_snp_pipeline index_ref
     cfsan_snp_pipeline index_ref "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     errorCode=$?
 
@@ -467,21 +467,21 @@ tryPrepReferenceBowtieIndexTrap()
     assertFileNotContains "$logDir/prepReference.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the prepReference script detects bowtie error and emits the global error marker file.
+# Verify the index_ref command detects bowtie error and emits the global error marker file.
 testPrepReferenceBowtieIndexTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryPrepReferenceBowtieIndexTrap 100
 }
 
-# Verify the prepReference script detects bowtie error and emits the global error marker file.
+# Verify the index_ref command detects bowtie error and emits the global error marker file.
 testPrepReferenceBowtieIndexTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryPrepReferenceBowtieIndexTrap 100
 }
 
-# Verify the prepReference script detects bowtie error and emits the global error marker file.
+# Verify the index_ref command detects bowtie error and emits the global error marker file.
 testPrepReferenceBowtieIndexTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -489,7 +489,7 @@ testPrepReferenceBowtieIndexTrapStopUnset()
 }
 
 
-# Verify the prepReference script detects smalt error and emits the global error marker file.
+# Verify the index_ref command detects smalt error and emits the global error marker file.
 tryPrepReferenceSmaltIndexTrap()
 {
     expectErrorCode=$1
@@ -498,8 +498,8 @@ tryPrepReferenceSmaltIndexTrap()
     # Extract test data to temp dir
     cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
-    # Setup directories and env variables prepReference will use.
-    # This simulates what run_snp_pipeline does before running prepReference.
+    # Setup directories and env variables cfsan_snp_pipeline index_ref will use.
+    # This simulates what run_snp_pipeline does before running cfsan_snp_pipeline index_ref.
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
@@ -508,7 +508,7 @@ tryPrepReferenceSmaltIndexTrap()
     sed -i 's/>/@@@/g' "$tempDir/reference/lambda_virus.fasta"
     sed -i 's/A/>\n/g' "$tempDir/reference/lambda_virus.fasta"
 
-    # Run prepReference
+    # Run cfsan_snp_pipeline index_ref
     export SnpPipeline_Aligner=smalt
     cfsan_snp_pipeline index_ref "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     errorCode=$?
@@ -526,28 +526,28 @@ tryPrepReferenceSmaltIndexTrap()
     export SnpPipeline_Aligner=bowtie2
 }
 
-# Verify the prepReference script detects smalt error and emits the global error marker file.
+# Verify the index_ref command detects smalt error and emits the global error marker file.
 testPrepReferenceSmaltIndexTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryPrepReferenceSmaltIndexTrap 100
 }
 
-# Verify the prepReference script detects smalt error and emits the global error marker file.
+# Verify the index_ref command detects smalt error and emits the global error marker file.
 testPrepReferenceSmaltIndexTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryPrepReferenceSmaltIndexTrap 100
 }
 
-# Verify the prepReference script detects smalt error and emits the global error marker file.
+# Verify the index_ref command detects smalt error and emits the global error marker file.
 testPrepReferenceSmaltIndexTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
     tryPrepReferenceSmaltIndexTrap 100
 }
 
-# Verify the prepReference script detects samtools error and emits the global error marker file.
+# Verify the index_ref command detects samtools error and emits the global error marker file.
 tryPrepReferenceSamtoolsFaidxTrap()
 {
     expectErrorCode=$1
@@ -556,8 +556,8 @@ tryPrepReferenceSamtoolsFaidxTrap()
     # Extract test data to temp dir
     cfsan_snp_pipeline data lambdaVirusInputs $tempDir
 
-    # Setup directories and env variables prepReference will use.
-    # This simulates what run_snp_pipeline does before running prepReference.
+    # Setup directories and env variables cfsan_snp_pipeline index_ref will use.
+    # This simulates what run_snp_pipeline does before running cfsan_snp_pipeline index_ref.
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
     export errorOutputFile="$tempDir/error.log"
@@ -565,7 +565,7 @@ tryPrepReferenceSamtoolsFaidxTrap()
     # Deliberately corrupt the fasta file, changing line lengths
     sed -i 's/A/AA/g' "$tempDir/reference/lambda_virus.fasta"
 
-    # Run prepReference
+    # Run cfsan_snp_pipeline index_ref
     cfsan_snp_pipeline index_ref "$tempDir/reference/lambda_virus.fasta" &> "$logDir/prepReference.log"
     errorCode=$?
 
@@ -610,21 +610,21 @@ tryPrepReferenceSamtoolsFaidxTrap()
     assertFileNotContains "$logDir/prepReference.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the prepReference script detects samtools error and emits the global error marker file.
+# Verify the index_ref command detects samtools error and emits the global error marker file.
 testPrepReferenceSamtoolsFaidxTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryPrepReferenceSamtoolsFaidxTrap 100
 }
 
-# Verify the prepReference script detects samtools error and emits the global error marker file.
+# Verify the index_ref command detects samtools error and emits the global error marker file.
 testPrepReferenceSamtoolsFaidxTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryPrepReferenceSamtoolsFaidxTrap 100
 }
 
-# Verify the prepReference script detects samtools error and emits the global error marker file.
+# Verify the index_ref command detects samtools error and emits the global error marker file.
 testPrepReferenceSamtoolsFaidxTrapUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -633,7 +633,7 @@ testPrepReferenceSamtoolsFaidxTrapUnset()
 
 
 
-# Verify the alignSampleToReference script detects a misconfigured environment variable.
+# Verify the map_reads command detects a misconfigured environment variable.
 tryAlignSampleToReferenceEnvironmentRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -658,8 +658,8 @@ tryAlignSampleToReferenceEnvironmentRaiseGlobalError()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
     errorCode=$?
 
-    # Verify alignSampleToReference error handling behavior
-    assertEquals "alignSampleToReference returned incorrect error code when the SnpPipeline_Aligner environment variable was misconfigured." $expectErrorCode $errorCode
+    # Verify the map_reads command error handling behavior
+    assertEquals "cfsan_snp_pipeline map_reads returned incorrect error code when the SnpPipeline_Aligner environment variable was misconfigured." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
     assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
@@ -672,21 +672,21 @@ tryAlignSampleToReferenceEnvironmentRaiseGlobalError()
     export SnpPipeline_Aligner=bowtie2
 }
 
-# Verify the alignSampleToReference script detects a misconfigured environment variable.
+# Verify the map_reads command detects a misconfigured environment variable.
 testAlignSampleToReferenceEnvironmentRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryAlignSampleToReferenceEnvironmentRaiseGlobalError 100
 }
 
-# Verify the alignSampleToReference script detects a misconfigured environment variable.
+# Verify the map_reads command detects a misconfigured environment variable.
 testAlignSampleToReferenceEnvironmentRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryAlignSampleToReferenceEnvironmentRaiseGlobalError 100
 }
 
-# Verify the alignSampleToReference script detects a misconfigured environment variable.
+# Verify the map_reads command detects a misconfigured environment variable.
 testAlignSampleToReferenceEnvironmentRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -694,7 +694,7 @@ testAlignSampleToReferenceEnvironmentRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the alignSampleToReference script detects an Missing reference file
+# Verify the map_reads command detects an Missing reference file
 tryAlignSampleToReferenceMissingReferenceRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -716,8 +716,8 @@ tryAlignSampleToReferenceMissingReferenceRaiseGlobalError()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
     errorCode=$?
 
-    # Verify alignSampleToReference error handling behavior
-    assertEquals "alignSampleToReference returned incorrect error code when the reference file was missing." $expectErrorCode $errorCode
+    # Verify the map_reads command error handling behavior
+    assertEquals "cfsan_snp_pipeline map_reads returned incorrect error code when the reference file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
     assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
@@ -727,21 +727,21 @@ tryAlignSampleToReferenceMissingReferenceRaiseGlobalError()
     assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the alignSampleToReference script detects a missing reference file
+# Verify the map_reads command detects a missing reference file
 testAlignSampleToReferenceMissingReferenceRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryAlignSampleToReferenceMissingReferenceRaiseGlobalError 100
 }
 
-# Verify the alignSampleToReference script detects a missing reference file
+# Verify the map_reads command detects a missing reference file
 testAlignSampleToReferenceMissingReferenceRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryAlignSampleToReferenceMissingReferenceRaiseGlobalError 100
 }
 
-# Verify the alignSampleToReference script detects a missing reference file
+# Verify the map_reads command detects a missing reference file
 testAlignSampleToReferenceMissingReferenceRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -749,7 +749,7 @@ testAlignSampleToReferenceMissingReferenceRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the alignSampleToReference script detects a missing sample file
+# Verify the map_reads command detects a missing sample file
 tryAlignSampleToReferenceMissingSample1RaiseSampleError()
 {
     expectErrorCode=$1
@@ -771,8 +771,8 @@ tryAlignSampleToReferenceMissingSample1RaiseSampleError()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
     errorCode=$?
 
-    # Verify alignSampleToReference error handling behavior
-    assertEquals "alignSampleToReference returned incorrect error code when the sample file 1 was missing." $expectErrorCode $errorCode
+    # Verify the map_reads command error handling behavior
+    assertEquals "cfsan_snp_pipeline map_reads returned incorrect error code when the sample file 1 was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
     assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
@@ -782,21 +782,21 @@ tryAlignSampleToReferenceMissingSample1RaiseSampleError()
     assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the alignSampleToReference script detects a misconfigured MissingSample1 variable.
+# Verify the map_reads command detects a misconfigured MissingSample1 variable.
 testAlignSampleToReferenceMissingSample1RaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryAlignSampleToReferenceMissingSample1RaiseSampleError 100
 }
 
-# Verify the alignSampleToReference script detects a misconfigured MissingSample1 variable.
+# Verify the map_reads command detects a misconfigured MissingSample1 variable.
 testAlignSampleToReferenceMissingSample1RaiseSampleErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryAlignSampleToReferenceMissingSample1RaiseSampleError 98
 }
 
-# Verify the alignSampleToReference script detects a misconfigured MissingSample1 variable.
+# Verify the map_reads command detects a misconfigured MissingSample1 variable.
 testAlignSampleToReferenceMissingSample1RaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -804,7 +804,7 @@ testAlignSampleToReferenceMissingSample1RaiseSampleErrorStopUnset()
 }
 
 
-# Verify the alignSampleToReference script detects a missing sample file
+# Verify the map_reads command detects a missing sample file
 tryAlignSampleToReferenceMissingSample2RaiseSampleError()
 {
     expectErrorCode=$1
@@ -826,8 +826,8 @@ tryAlignSampleToReferenceMissingSample2RaiseSampleError()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
     errorCode=$?
 
-    # Verify alignSampleToReference error handling behavior
-    assertEquals "alignSampleToReference returned incorrect error code when the sample file 1 was missing." $expectErrorCode $errorCode
+    # Verify the map_reads command error handling behavior
+    assertEquals "cfsan_snp_pipeline map_reads returned incorrect error code when the sample file 1 was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
     assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
@@ -840,21 +840,21 @@ tryAlignSampleToReferenceMissingSample2RaiseSampleError()
     export SnpPipeline_Aligner=bowtie2
 }
 
-# Verify the alignSampleToReference script detects a misconfigured MissingSample2 variable.
+# Verify the map_reads command detects a misconfigured MissingSample2 variable.
 testAlignSampleToReferenceMissingSample2RaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryAlignSampleToReferenceMissingSample2RaiseSampleError 100
 }
 
-# Verify the alignSampleToReference script detects a misconfigured MissingSample2 variable.
+# Verify the map_reads command detects a misconfigured MissingSample2 variable.
 testAlignSampleToReferenceMissingSample2RaiseSampleErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryAlignSampleToReferenceMissingSample2RaiseSampleError 98
 }
 
-# Verify the alignSampleToReference script detects a misconfigured MissingSample2 variable.
+# Verify the map_reads command detects a misconfigured MissingSample2 variable.
 testAlignSampleToReferenceMissingSample2RaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -862,7 +862,7 @@ testAlignSampleToReferenceMissingSample2RaiseSampleErrorStopUnset()
 }
 
 
-# Verify the alignSampleToReference script detects bowtie alignment error.
+# Verify the map_reads command detects bowtie alignment error.
 tryAlignSampleToReferenceBowtieAlignTrap()
 {
     expectErrorCode=$1
@@ -888,8 +888,8 @@ tryAlignSampleToReferenceBowtieAlignTrap()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log-1"
     errorCode=$?
 
-    # Verify alignSampleToReference error handling behavior
-    assertEquals "alignSampleToReference with bowtie2 returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
+    # Verify the map_reads command error handling behavior
+    assertEquals "cfsan_snp_pipeline map_reads with bowtie2 returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileNotContains "$logDir/alignSampleToReference.log-1" "Error detected while running cfsan_snp_pipeline map_reads."
@@ -904,8 +904,8 @@ tryAlignSampleToReferenceBowtieAlignTrap()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/alignSampleToReference.log-3"
     errorCode=$?
 
-    # Verify alignSampleToReference error handling behavior
-    assertEquals "alignSampleToReference with bowtie2 returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
+    # Verify the map_reads command error handling behavior
+    assertEquals "cfsan_snp_pipeline map_reads with bowtie2 returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileNotContains "$logDir/alignSampleToReference.log-3" "Error detected while running cfsan_snp_pipeline map_reads."
@@ -916,21 +916,21 @@ tryAlignSampleToReferenceBowtieAlignTrap()
 }
 
 
-# Verify the alignSampleToReference script detects bowtie alignment error.
+# Verify the map_reads command detects bowtie alignment error.
 testAlignSampleToReferenceBowtieAlignTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryAlignSampleToReferenceBowtieAlignTrap 100
 }
 
-# Verify the alignSampleToReference script detects bowtie alignment error.
+# Verify the map_reads command detects bowtie alignment error.
 testAlignSampleToReferenceBowtieAlignTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryAlignSampleToReferenceBowtieAlignTrap 98
 }
 
-# Verify the alignSampleToReference script detects bowtie alignment error.
+# Verify the map_reads command detects bowtie alignment error.
 testAlignSampleToReferenceBowtieAlignTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -938,7 +938,7 @@ testAlignSampleToReferenceBowtieAlignTrapStopUnset()
 }
 
 
-# Verify the alignSampleToReference script detects smalt alignment error.
+# Verify the map_reads command detects smalt alignment error.
 tryAlignSampleToReferenceSmaltAlignTrap()
 {
     expectErrorCode=$1
@@ -964,8 +964,8 @@ tryAlignSampleToReferenceSmaltAlignTrap()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log-1"
     errorCode=$?
 
-    # Verify alignSampleToReference error handling behavior
-    assertEquals "alignSampleToReference with smalt returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
+    # Verify the map_reads command error handling behavior
+    assertEquals "cfsan_snp_pipeline map_reads with smalt returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileNotContains "$logDir/alignSampleToReference.log-1" "Error detected while running cfsan_snp_pipeline map_reads."
@@ -980,8 +980,8 @@ tryAlignSampleToReferenceSmaltAlignTrap()
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/alignSampleToReference.log-3"
     errorCode=$?
 
-    # Verify alignSampleToReference error handling behavior
-    assertEquals "alignSampleToReference with smalt returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
+    # Verify the map_reads command error handling behavior
+    assertEquals "cfsan_snp_pipeline map_reads with smalt returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileNotContains "$logDir/alignSampleToReference.log-3" "Error detected while running cfsan_snp_pipeline map_reads."
@@ -995,21 +995,21 @@ tryAlignSampleToReferenceSmaltAlignTrap()
 }
 
 
-# Verify the alignSampleToReference script detects smalt alignment error.
+# Verify the map_reads command detects smalt alignment error.
 testAlignSampleToReferenceSmaltAlignTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryAlignSampleToReferenceSmaltAlignTrap 100
 }
 
-# Verify the alignSampleToReference script detects smalt alignment error.
+# Verify the map_reads command detects smalt alignment error.
 testAlignSampleToReferenceSmaltAlignTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryAlignSampleToReferenceSmaltAlignTrap 98
 }
 
-# Verify the alignSampleToReference script detects smalt alignment error.
+# Verify the map_reads command detects smalt alignment error.
 testAlignSampleToReferenceSmaltAlignTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -1803,7 +1803,7 @@ trySnpFilterMissingSampleDirRaiseGlobalError()
     cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter error handling behavior
+    # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
@@ -1860,7 +1860,7 @@ trySnpFilterMissingReferenceRaiseGlobalError()
     cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/non-exist-reference" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter error handling behavior
+    # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when reference file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
@@ -1917,7 +1917,7 @@ trySnpFilterMissingOutgroupRaiseGlobalError()
     cfsan_snp_pipeline filter_regions -g "$tempDir/outgroup" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter error handling behavior
+    # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when file of outgroup samples file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
@@ -1970,7 +1970,7 @@ trySnpFilterMissingVcfRaiseGlobalError()
     cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter error handling behavior
+    # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when all var.flt.vcf were missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
@@ -2011,7 +2011,7 @@ testSnpFilterMissingVcfRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the snp_filter script detects missing some VCF files, but not all
+# Verify the filter_regions command detects missing some VCF files, but not all
 trySnpFilterMissingVcfRaiseSampleError()
 {
     expectErrorCode=$1
@@ -2036,7 +2036,7 @@ trySnpFilterMissingVcfRaiseSampleError()
     cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter error handling behavior
+    # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when some var.flt.vcf were missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
@@ -2053,14 +2053,14 @@ trySnpFilterMissingVcfRaiseSampleError()
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the snp_filter script detects missing some VCF files, but not all
+# Verify the filter_regions command detects missing some VCF files, but not all
 testSnpFilterMissingVcfRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     trySnpFilterMissingVcfRaiseSampleError 100
 }
 
-# Verify the snp_filter script detects missing some VCF files, but not all
+# Verify the filter_regions command detects missing some VCF files, but not all
 testSnpFilterMissingVcfRaiseSampleErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -2085,7 +2085,7 @@ testSnpFilterMissingVcfRaiseSampleErrorNoStop()
     cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
     errorCode=$?
 
-    # Verify snp_filter error handling behavior
+    # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when some var.flt.vcf were missing." 0 $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions"
@@ -2103,7 +2103,7 @@ testSnpFilterMissingVcfRaiseSampleErrorNoStop()
     assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the snp_filter script detects missing some VCF files, but not all
+# Verify the filter_regions command detects missing some VCF files, but not all
 testSnpFilterMissingVcfRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2111,7 +2111,7 @@ testSnpFilterMissingVcfRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the snp_filter script uses all the input vcf files to produce the outputs
+# Verify the filter_regions command uses all the input vcf files to produce the outputs
 # even when some of the samples are already fresh.
 testSnpFilterPartialRebuild()
 {
@@ -2167,7 +2167,7 @@ testSnpFilterPartialRebuild()
     assertIdenticalFiles "$tempDir/samples/sample4/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample4/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
 }
 
-# Verify the snp_filter script produces different results when one of the samples is an outgroup.
+# Verify the filter_regions command produces different results when one of the samples is an outgroup.
 testSnpFilterOutgroup()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -2293,7 +2293,7 @@ testCreateSnpListPermissionTrapStopUnset()
 
 
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 tryCreateSnpListMissingSampleDirRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -2312,7 +2312,7 @@ tryCreateSnpListMissingSampleDirRaiseGlobalError()
     cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
-    # Verify create_snp_list error handling behavior
+    # Verify merge_sites error handling behavior
     assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
@@ -2323,21 +2323,21 @@ tryCreateSnpListMissingSampleDirRaiseGlobalError()
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 testCreateSnpListMissingSampleDirRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpListMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 testCreateSnpListMissingSampleDirRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCreateSnpListMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 testCreateSnpListMissingSampleDirRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2345,7 +2345,7 @@ testCreateSnpListMissingSampleDirRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 tryCreateSnpListMissingVcfRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -2365,7 +2365,7 @@ tryCreateSnpListMissingVcfRaiseGlobalError()
     cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
-    # Verify create_snp_list error handling behavior
+    # Verify merge_sites error handling behavior
     assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when var.flt.vcf was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
@@ -2384,21 +2384,21 @@ tryCreateSnpListMissingVcfRaiseGlobalError()
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 testCreateSnpListMissingVcfRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpListMissingVcfRaiseGlobalError 100
 }
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 testCreateSnpListMissingVcfRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCreateSnpListMissingVcfRaiseGlobalError 100
 }
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 testCreateSnpListMissingVcfRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2406,7 +2406,7 @@ testCreateSnpListMissingVcfRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 tryCreateSnpListMissingVcfRaiseSampleError()
 {
     expectErrorCode=$1
@@ -2431,7 +2431,7 @@ tryCreateSnpListMissingVcfRaiseSampleError()
     cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
-    # Verify create_snp_list error handling behavior
+    # Verify merge_sites error handling behavior
     assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when var.flt.vcf was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
@@ -2448,14 +2448,14 @@ tryCreateSnpListMissingVcfRaiseSampleError()
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 testCreateSnpListMissingVcfRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCreateSnpListMissingVcfRaiseSampleError 100
 }
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 testCreateSnpListMissingVcfRaiseSampleErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -2480,7 +2480,7 @@ testCreateSnpListMissingVcfRaiseSampleErrorNoStop()
     cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
     errorCode=$?
 
-    # Verify create_snp_list error handling behavior
+    # Verify merge_sites error handling behavior
     assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when var.flt.vcf was missing." 0 $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites"
@@ -2498,7 +2498,7 @@ testCreateSnpListMissingVcfRaiseSampleErrorNoStop()
     assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the create_snp_list script detects failure.
+# Verify the merge_sites command detects failure.
 testCreateSnpListMissingVcfRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2506,7 +2506,7 @@ testCreateSnpListMissingVcfRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the cfsan_snp_pipeline call_consensus script traps on corrupt snplist file
+# Verify the call_consensus command traps on corrupt snplist file
 tryCallConsensusCorruptSnplistTrap()
 {
     expectErrorCode=$1
@@ -2537,21 +2537,21 @@ tryCallConsensusCorruptSnplistTrap()
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script traps on corrupt snplist file
+# Verify the call_consensus command traps on corrupt snplist file
 testCallConsensusCorruptSnplistTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusCorruptSnplistTrap 100
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script traps on corrupt snplist file
+# Verify the call_consensus command traps on corrupt snplist file
 testCallConsensusCorruptSnplistTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusCorruptSnplistTrap 98
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script traps on corrupt snplist file
+# Verify the call_consensus command traps on corrupt snplist file
 testCallConsensusCorruptSnplistTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2561,7 +2561,7 @@ testCallConsensusCorruptSnplistTrapStopUnset()
 
 
 
-# Verify the cfsan_snp_pipeline call_consensus script detects failure.
+# Verify the call_consensus command detects failure.
 tryCallConsensusMissingSnpListRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -2580,7 +2580,7 @@ tryCallConsensusMissingSnpListRaiseGlobalError()
     cfsan_snp_pipeline call_consensus -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
     errorCode=$?
 
-    # Verify cfsan_snp_pipeline call_consensus error handling behavior
+    # Verify the call_consensus command error handling behavior
     assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when snplist was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_consensus failed."
@@ -2593,21 +2593,21 @@ tryCallConsensusMissingSnpListRaiseGlobalError()
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script detects failure.
+# Verify the call_consensus command detects failure.
 testCallConsensusMissingSnpListRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusMissingSnpListRaiseGlobalError 100
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script detects failure.
+# Verify the call_consensus command detects failure.
 testCallConsensusMissingSnpListRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusMissingSnpListRaiseGlobalError 100
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script detects failure.
+# Verify the call_consensus command detects failure.
 testCallConsensusMissingSnpListRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2615,7 +2615,7 @@ testCallConsensusMissingSnpListRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the cfsan_snp_pipeline call_consensus script does not fail merely because the snplist file is empty.
+# Verify the call_consensus command does not fail merely because the snplist file is empty.
 tryCallConsensusEmptySnpList()
 {
     expectErrorCode=$1
@@ -2640,7 +2640,7 @@ tryCallConsensusEmptySnpList()
     cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/samples/sample1/consensus.fasta"  --vcfFileName "$tempDir/samples/sample1/consensus.vcf" "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
     errorCode=$?
 
-    # Verify cfsan_snp_pipeline call_consensus error handling behavior
+    # Verify the call_consensus command error handling behavior
     assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when snplist was empty." $expectErrorCode $errorCode
     verifyNonExistingFile "$tempDir/error.log"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/consensus.fasta"
@@ -2652,21 +2652,21 @@ tryCallConsensusEmptySnpList()
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script does not fail merely because the snplist file is empty.
+# Verify the call_consensus command does not fail merely because the snplist file is empty.
 testCallConsensusEmptySnpListStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusEmptySnpList 0
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script does not fail merely because the snplist file is empty.
+# Verify the call_consensus command does not fail merely because the snplist file is empty.
 testCallConsensusEmptySnpListNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusEmptySnpList 0
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script does not fail merely because the snplist file is empty.
+# Verify the call_consensus command does not fail merely because the snplist file is empty.
 testCallConsensusEmptySnpListStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2674,7 +2674,7 @@ testCallConsensusEmptySnpListStopUnset()
 }
 
 
-# Verify the cfsan_snp_pipeline call_consensus script detects missing pileup file.
+# Verify the call_consensus command detects missing pileup file.
 tryCallConsensusMissingPileupRaiseSampleError()
 {
     expectErrorCode=$1
@@ -2697,7 +2697,7 @@ tryCallConsensusMissingPileupRaiseSampleError()
     cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
     errorCode=$?
 
-    # Verify call_consensus error handling behavior
+    # Verify the call_consensus command error handling behavior
     assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when pileup file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_consensus failed."
@@ -2710,21 +2710,21 @@ tryCallConsensusMissingPileupRaiseSampleError()
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script detects missing pileup file.
+# Verify the call_consensus command detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusMissingPileupRaiseSampleError 100
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script detects missing pileup file.
+# Verify the call_consensus command detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusMissingPileupRaiseSampleError 98
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script detects missing pileup file.
+# Verify the call_consensus command detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2732,7 +2732,7 @@ testCallConsensusMissingPileupRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the cfsan_snp_pipeline call_consensus script detects missing exclude file.
+# Verify the call_consensus command detects missing exclude file.
 tryCallConsensusMissingExcludeRaiseSampleError()
 {
     expectErrorCode=$1
@@ -2757,7 +2757,7 @@ tryCallConsensusMissingExcludeRaiseSampleError()
     cfsan_snp_pipeline call_consensus -e "$tempDir/samples/sample1/excludeFile.vcf" -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
     errorCode=$?
 
-    # Verify cfsan_snp_pipeline call_consensus error handling behavior
+    # Verify the call_consensus command error handling behavior
     assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when exclude file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_consensus failed."
@@ -2770,21 +2770,21 @@ tryCallConsensusMissingExcludeRaiseSampleError()
     assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script detects missing exclude file.
+# Verify the call_consensus command detects missing exclude file.
 testCallConsensusMissingExcludeRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryCallConsensusMissingExcludeRaiseSampleError 100
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script detects missing exclude file.
+# Verify the call_consensus command detects missing exclude file.
 testCallConsensusMissingExcludeRaiseSampleErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryCallConsensusMissingExcludeRaiseSampleError 98
 }
 
-# Verify the cfsan_snp_pipeline call_consensus script detects missing exclude file.
+# Verify the call_consensus command detects missing exclude file.
 testCallConsensusMissingExcludeRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2792,7 +2792,7 @@ testCallConsensusMissingExcludeRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 tryMergeVcfCorruptVcfTrap()
 {
     expectErrorCode=$1
@@ -2816,7 +2816,7 @@ tryMergeVcfCorruptVcfTrap()
     cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
-    # Verify mergeVcf error handling behavior
+    # Verify the merge_vcfs command error handling behavior
     assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when consensus.vcf was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline merge_vcfs."
@@ -2825,21 +2825,21 @@ tryMergeVcfCorruptVcfTrap()
     assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 testMergeVcfCorruptVcfTrapStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryMergeVcfCorruptVcfTrap 100
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 testMergeVcfCorruptVcfTrapNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryMergeVcfCorruptVcfTrap 100
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 testMergeVcfCorruptVcfTrapStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2847,7 +2847,7 @@ testMergeVcfCorruptVcfTrapStopUnset()
 }
 
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 tryMergeVcfMissingSampleDirRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -2866,7 +2866,7 @@ tryMergeVcfMissingSampleDirRaiseGlobalError()
     cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
-    # Verify mergeVcf error handling behavior
+    # Verify the merge_vcfs command error handling behavior
     assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_vcfs failed."
@@ -2877,21 +2877,21 @@ tryMergeVcfMissingSampleDirRaiseGlobalError()
     assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 testMergeVcfMissingSampleDirRaiseGlobalErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryMergeVcfMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 testMergeVcfMissingSampleDirRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryMergeVcfMissingSampleDirRaiseGlobalError 100
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 testMergeVcfMissingSampleDirRaiseGlobalErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2899,7 +2899,7 @@ testMergeVcfMissingSampleDirRaiseGlobalErrorStopUnset()
 }
 
 
-# Verify the mergeVcf script detects a missing consensus VCF file.
+# Verify the merge_vcfs command detects a missing consensus VCF file.
 tryMergeVcfMissingVcfRaiseSampleError()
 {
     expectErrorCode=$1
@@ -2919,7 +2919,7 @@ tryMergeVcfMissingVcfRaiseSampleError()
     cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
-    # Verify mergeVcf error handling behavior
+    # Verify the merge_vcfs command error handling behavior
     assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when vcf file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_vcfs failed."
@@ -2930,14 +2930,14 @@ tryMergeVcfMissingVcfRaiseSampleError()
     assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the mergeVcf script detects a missing consensus VCF file.
+# Verify the merge_vcfs command detects a missing consensus VCF file.
 testMergeVcfMissingVcfRaiseSampleErrorStop()
 {
     export SnpPipeline_StopOnSampleError=true
     tryMergeVcfMissingVcfRaiseSampleError 100
 }
 
-# Verify the mergeVcf script detects a missing consensus VCF file - but continues running.
+# Verify the merge_vcfs command detects a missing consensus VCF file - but continues running.
 testMergeVcfMissingVcfRaiseSampleErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -2961,7 +2961,7 @@ testMergeVcfMissingVcfRaiseSampleErrorNoStop()
     cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
-    # Verify mergeVcf keeps running when only one vcf file is missing
+    # Verify the merge_vcfs command keeps running when only one vcf file is missing
     assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when vcf file was missing." 0 $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_vcfs"
@@ -2974,7 +2974,7 @@ testMergeVcfMissingVcfRaiseSampleErrorNoStop()
     verifyNonEmptyReadableFile "$tempDir/snpma.vcf"
 }
 
-# Verify the mergeVcf script detects a missing consensus VCF file.
+# Verify the merge_vcfs command detects a missing consensus VCF file.
 testMergeVcfMissingVcfRaiseSampleErrorStopUnset()
 {
     unset SnpPipeline_StopOnSampleError
@@ -2982,7 +2982,7 @@ testMergeVcfMissingVcfRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the mergeVcf script simply copies the input consensus VCF file when there is only one sample
+# Verify the merge_vcfs command simply copies the input consensus VCF file when there is only one sample
 testMergeVcfOnlyOneSample()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -3001,7 +3001,7 @@ testMergeVcfOnlyOneSample()
     cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
-    # Verify mergeVcf copies the input consensus VCF file when there is only one sample
+    # Verify the merge_vcfs command copies the input consensus VCF file when there is only one sample
     assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when there was only one vcf file." 0 $errorCode
     verifyNonExistingFile "$tempDir/error.log"
     assertFileNotContains "$logDir/mergeVcf.log" "cfsan_snp_pipeline merge_vcfs failed."
@@ -3013,7 +3013,7 @@ testMergeVcfOnlyOneSample()
 }
 
 
-# Verify the mergeVcf script detects all the consensus VCF files missing
+# Verify the merge_vcfs command detects all the consensus VCF files missing
 tryMergeVcfZeroGoodSamplesRaiseGlobalError()
 {
     expectErrorCode=$1
@@ -3034,7 +3034,7 @@ tryMergeVcfZeroGoodSamplesRaiseGlobalError()
     cfsan_snp_pipeline merge_vcfs -o "$tempDir/snpma.vcf"  "$tempDir/sampleDirectories.txt" &> "$logDir/mergeVcf.log"
     errorCode=$?
 
-    # Verify mergeVcf error handling behavior
+    # Verify the merge_vcfs command error handling behavior
     assertEquals "cfsan_snp_pipeline merge_vcfs returned incorrect error code when no good VCF files." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_vcfs failed."
@@ -3045,21 +3045,21 @@ tryMergeVcfZeroGoodSamplesRaiseGlobalError()
     assertFileNotContains "$logDir/mergeVcf.log" "Use the -f option to force a rebuild"
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 #testMergeVcfZeroGoodSamplesRaiseGlobalErrorStop()
 #{
 #    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path.
 #    # Otherwise, the first missing VCF file will trigger stop upon sample error -- already tested.
 #}
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 testMergeVcfZeroGoodSamplesRaiseGlobalErrorNoStop()
 {
     export SnpPipeline_StopOnSampleError=false
     tryMergeVcfZeroGoodSamplesRaiseGlobalError 100
 }
 
-# Verify the mergeVcf script detects failure.
+# Verify the merge_vcfs command detects failure.
 #testMergeVcfZeroGoodSamplesRaiseGlobalErrorStopUnset()
 #{
 #    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path.
@@ -5711,7 +5711,7 @@ testRunSnpPipelineMetricsColumnHeadingsUnderscores()
 
     # Verify output metrics have no underscores
     head -n 1 "$tempDir/metrics.tsv" | grep "_" > /dev/null
-    assertFalse "Underscores should not be found in the metrics column headings when using -s combineSampleMetrics option"  $?
+    assertFalse "Underscores should not be found in the metrics column headings when using -s combine_metrics option"  $?
 }
 
 

@@ -25,6 +25,10 @@ History
 
 **Other Changes:**
 
+* Sweeping changes under the hood replacing most shell scripts with equivalent python code.
+  Repackaged the SNP Pipeline as a single executable with multiple sub-commands.  The old scripts
+  still exist for backwards compatibility and are rewritten as one-liners calling the new
+  replacement commands.  The main executable program is called :ref:`cmd-ref-cfsan-snp-pipeline`.
 * Check for ``bc`` on the path when the pipeline is launched.  Complain if it is missing.
 * Added a new configuration parameter, ``BcftoolsMerge_ExtraParams`` to allow customizing the
   snpma.vcf files created when merging the consensus VCF files.  See :ref:`configuration-label`.

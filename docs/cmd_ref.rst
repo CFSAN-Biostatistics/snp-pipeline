@@ -8,44 +8,6 @@
 Command Reference
 =================
 
-copy_snppipeline_data.py
-------------------------
-
-::
-
-  usage: cfsan_snp_pipeline data [-h] [--version] whichData [destDirectory]
-  
-  Copy data included with the CFSAN SNP Pipeline to a specified directory.
-  
-  positional arguments:
-    whichData          Which of the supplied data sets to copy.  The choices are:
-                           lambdaVirusInputs          : Input reference and fastq files
-                           lambdaVirusExpectedResults : Expected results files
-                           agonaInputs                : Input reference file
-                           agonaExpectedResults       : Expected results files
-                           listeriaInputs             : Input reference file
-                           listeriaExpectedResults    : Expected results files
-                           configurationFile          : File of parameters to customize the
-                                                        SNP pipeline
-                   
-                       Note: the lambda virus data set is complete with input data and expected
-                       results.  The agona and listeria data sets have the reference genome and
-                       the expected results, but not the input fastq files, because the files are
-                       too large to include with the package.
-                       
-    destDirectory      Destination directory into which the SNP pipeline data files will be copied.
-                       The data files are copied into the destination directory if the directory
-                       already exists.  Otherwise the destination directory is created and the
-                       data files are copied there.  (default: current directory)
-  
-  optional arguments:
-    -h, --help     show this help message and exit
-    --version      show program's version number and exit
-  
-  Example:
-  # create a new directory "testLambdaVirus" and copy the Lambda virus input data there
-  $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
-
 .. _cmd-ref-run-snp-pipeline:
 
 run_snp_pipeline.sh
@@ -122,7 +84,77 @@ run_snp_pipeline.sh
                            of the SNP Pipeline
   
 
-prepReference.sh
+.. _cmd-ref-cfsan-snp-pipeline:
+
+cfsan_snp_pipeline
+------------------------
+
+::
+
+  usage: cfsan_snp_pipeline [-h] [--version] subcommand        ...
+  
+  The CFSAN SNP Pipeline is a collection of tools using reference-based
+  alignments to call SNPs for a set of samples.
+  
+  positional arguments:
+    subcommand       
+      data             Copy included data to a specified directory
+      index_ref        Index the reference
+      map_reads        Align reads to the reference
+      call_sites       Find the sites with high-confidence SNPs in a sample
+      filter_regions   Remove abnormally dense SNPs from all samples
+      merge_sites      Prepare the list of sites having SNPs
+      call_consensus   Call the consensus base at high-confidence sites
+      merge_vcfs       Merge the per-sample VCF files
+      snp_matrix       Create a matrix of SNPs
+      distance         Calculate the SNP distances between samples
+      snp_reference    Write reference bases at SNP locations to a fasta file
+      collect_metrics  Collect quality and SNP metrics for a sample
+      combine_metrics  Merge the per-sample metrics
+  
+  optional arguments:
+    -h, --help         show this help message and exit
+    --version          show program's version number and exit
+
+data
+------------------------
+
+::
+
+  usage: cfsan_snp_pipeline data [-h] [--version] whichData [destDirectory]
+  
+  Copy data included with the CFSAN SNP Pipeline to a specified directory.
+  
+  positional arguments:
+    whichData          Which of the supplied data sets to copy.  The choices are:
+                           lambdaVirusInputs          : Input reference and fastq files
+                           lambdaVirusExpectedResults : Expected results files
+                           agonaInputs                : Input reference file
+                           agonaExpectedResults       : Expected results files
+                           listeriaInputs             : Input reference file
+                           listeriaExpectedResults    : Expected results files
+                           configurationFile          : File of parameters to customize the
+                                                        SNP pipeline
+                   
+                       Note: the lambda virus data set is complete with input data and expected
+                       results.  The agona and listeria data sets have the reference genome and
+                       the expected results, but not the input fastq files, because the files are
+                       too large to include with the package.
+                       
+    destDirectory      Destination directory into which the SNP pipeline data files will be copied.
+                       The data files are copied into the destination directory if the directory
+                       already exists.  Otherwise the destination directory is created and the
+                       data files are copied there.  (default: current directory)
+  
+  optional arguments:
+    -h, --help     show this help message and exit
+    --version      show program's version number and exit
+  
+  Example:
+  # create a new directory "testLambdaVirus" and copy the Lambda virus input data there
+  $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
+
+index_ref
 ------------------------
 
 ::
@@ -145,7 +177,7 @@ prepReference.sh
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
-alignSampleToReference.sh
+map_reads
 -------------------------
 
 ::
@@ -171,7 +203,7 @@ alignSampleToReference.sh
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
-prepSamples.sh
+call_sites
 ------------------------
 
 ::
@@ -195,7 +227,7 @@ prepSamples.sh
 
 .. _cmd-ref-snp-filter:
 
-snp_filter.py
+filter_regions
 ------------------------
 
 ::
@@ -237,7 +269,7 @@ snp_filter.py
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
-create_snp_list.py
+merge_sites
 ------------------------
 
 ::
@@ -278,7 +310,7 @@ create_snp_list.py
 
 .. _cmd-ref-call-consensus:
 
-call_consensus.py
+call_consensus
 ------------------------
 
 ::
@@ -365,7 +397,7 @@ call_consensus.py
     --version             show program's version number and exit
 
 
-mergeVcf.sh
+merge_vcfs
 ---------------------------
 
 ::
@@ -395,7 +427,8 @@ mergeVcf.sh
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
-create_snp_matrix.py
+
+snp_matrix
 ------------------------
 
 ::
@@ -431,7 +464,7 @@ create_snp_matrix.py
     --version             show program's version number and exit
 
 
-calculate_snp_distances.py
+distance
 ---------------------------
 
 ::
@@ -461,7 +494,7 @@ calculate_snp_distances.py
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
-create_snp_reference_seq.py
+snp_reference
 ---------------------------
 
 ::
@@ -490,7 +523,7 @@ create_snp_reference_seq.py
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
-collectSampleMetrics.sh
+collect_metrics
 ---------------------------
 
 ::
@@ -531,7 +564,7 @@ collectSampleMetrics.sh
     --verbose 0..5        Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
 
-combineSampleMetrics.sh
+combine_metrics
 ---------------------------
 
 ::
@@ -543,7 +576,7 @@ combineSampleMetrics.sh
   Combine the metrics from all samples into a single table of metrics for all
   samples. The output is a tab-separated-values file with a row for each sample
   and a column for each metric. Before running this command, the metrics for
-  each sample must be created by the collectSampleMetrics.sh script.
+  each sample must be created with the collect_metrics command.
   
   positional arguments:
     sampleDirsFile        Relative or absolute path to file containing a list of

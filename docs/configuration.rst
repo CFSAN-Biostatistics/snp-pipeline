@@ -18,7 +18,7 @@ default supplied configuration file.
 To get a copy of the default configuration file, run the following command.  This
 will create a file called ``snppipeline.conf``::
 
-    copy_snppipeline_data.py configurationFile
+    cfsan_snp_pipeline data configurationFile
 
 To customize the pipeline behavior, edit the configuration file and pass the file to
 the run_snp_pipeline.sh script::
@@ -54,7 +54,7 @@ samples.
 MaxConcurrentPrepSamples
 ------------------------
 
-Controls the number of prepSamples.sh (SAMtools and Varscan) processes running concurrently
+Controls the number of call_sites processes (SAMtools and Varscan) running concurrently
 on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
 This parameter is used by run_snp_pipeline.sh only.
 
@@ -71,7 +71,7 @@ This parameter is used by run_snp_pipeline.sh only.
 MaxConcurrentCallConsensus
 --------------------------
 
-Controls the number of call_consensus.py processes running concurrently
+Controls the number of call_consensus processes running concurrently
 on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
 This parameter is used by run_snp_pipeline.sh only.
 
@@ -88,7 +88,7 @@ This parameter is used by run_snp_pipeline.sh only.
 MaxConcurrentCollectSampleMetrics
 ----------------------------------
 
-Controls the number of collectSampleMetrics.sh processes running concurrently
+Controls the number of collect_metrics processes running concurrently
 on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
 This parameter is used by run_snp_pipeline.sh only.
 
@@ -357,7 +357,7 @@ Any of the JVM options can be specified.
 
 RemoveAbnormalSnp_ExtraParams
 ------------------------------
-Specifies options passed to the snp_filter.py script.
+Specifies options passed to the filter_regions command.
 
 **Default**: None
 
@@ -379,7 +379,7 @@ Specifies options passed to the snp_filter.py script.
 
 CreateSnpList_ExtraParams
 -------------------------
-Specifies options passed to create_snp_list.py.
+Specifies options passed to the merge_sites command.
 
 **Default**: None
 
@@ -390,7 +390,7 @@ Specifies options passed to create_snp_list.py.
 
 CallConsensus_ExtraParams
 -------------------------
-Specifies options passed to call_consensus.py.
+Specifies options passed to the call_consensus command.
 
 **Default**: None
 
@@ -427,7 +427,7 @@ Specifies options passed to call_consensus.py.
 
 CreateSnpMatrix_ExtraParams
 ---------------------------
-Specifies options passed to create_snp_matrix.py.
+Specifies options passed to the snp_matrix command.
 
 **Default**: None
 
@@ -438,7 +438,7 @@ Specifies options passed to create_snp_matrix.py.
 
 CreateSnpReferenceSeq_ExtraParams
 ---------------------------------
-Specifies options passed to create_snp_reference_seq.py.
+Specifies options passed to the snp_reference command.
 
 **Default**: None
 
@@ -449,7 +449,7 @@ Specifies options passed to create_snp_reference_seq.py.
 
 MergeVcf_ExtraParams
 --------------------
-Specifies options passed to mergeVcf.sh
+Specifies options passed to the merge_vcfs command.
 
 **Default**: none
 
@@ -494,7 +494,7 @@ Specifies options passed to the bcftools merge tool.
 
 CollectSampleMetrics_ExtraParams
 --------------------------------
-Specifies options passed to collectSampleMetrics.sh
+Specifies options passed to the collect_metrics command.
 
 **Default**: none
 
@@ -505,7 +505,7 @@ Specifies options passed to collectSampleMetrics.sh
 
 CombineSampleMetrics_ExtraParams
 --------------------------------
-Specifies options passed to combineSampleMetrics.sh
+Specifies options passed to the combine_metrics command.
 
 **Default**: none
 

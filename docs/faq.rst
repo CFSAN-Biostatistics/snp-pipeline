@@ -84,14 +84,14 @@ can be found in snpma.fasta.  It should have the following contents::
 
 Note: the expected pipeline results are also included in the distribution.  To fetch the expected result files::
 
-    copy_snppipeline_data.py lambdaVirusExpectedResults myDirectoryForExpectedResults
+    cfsan_snp_pipeline data lambdaVirusExpectedResults myDirectoryForExpectedResults
 
 After verifying correct results on the lambda data set, you can follow the workflow steps for the agona data
 set, :ref:`all-in-one-workflow-agona` or the listeria data set, :ref:`all-in-one-workflow-listeria`.
 To fetch the expected result files::
 
-    copy_snppipeline_data.py agonaExpectedResults myDirectoryForExpectedResults
-    copy_snppipeline_data.py listeriaExpectedResults myDirectoryForExpectedResults
+    cfsan_snp_pipeline data agonaExpectedResults myDirectoryForExpectedResults
+    cfsan_snp_pipeline data listeriaExpectedResults myDirectoryForExpectedResults
 
 **Q: My results for the included test data do not match the expected results. What is the cause?**
 
@@ -104,15 +104,15 @@ these versions:
 
 **Q: How can I run the SNP Pipeline with a mix of paired and unpaired samples?**
 
-A: This is handled automatically if you use the run_snp_pipeline.sh script.  If you are running alignSampleToReference.sh,
+A: This is handled automatically if you use the run_snp_pipeline.sh script.  If you are running the map_reads command,
 run the script once per sample with either 1 fastq file or 2 fastq files.
 For example::
 
-    alignSampleToReference.sh  reference/NC_011149  samples/CFSAN000448/G0H235M04.RL10.fastq
-    alignSampleToReference.sh  reference/NC_011149  samples/CFSAN000449/G00JH2D03.RL11.fastq
-    alignSampleToReference.sh  reference/NC_011149  samples/CFSAN000450/HB4DJL101.RL1.fastq
-    alignSampleToReference.sh  reference/NC_011149  samples/ERR178930/ERR178930_1.fastq  samples/ERR178930/ERR178930_2.fastq
-    alignSampleToReference.sh  reference/NC_011149  samples/ERR178931/ERR178931_1.fastq  samples/ERR178931/ERR178931_2.fastq
+    cfsan_snp_pipeline map_reads  reference/NC_011149  samples/CFSAN000448/G0H235M04.RL10.fastq
+    cfsan_snp_pipeline map_reads  reference/NC_011149  samples/CFSAN000449/G00JH2D03.RL11.fastq
+    cfsan_snp_pipeline map_reads  reference/NC_011149  samples/CFSAN000450/HB4DJL101.RL1.fastq
+    cfsan_snp_pipeline map_reads  reference/NC_011149  samples/ERR178930/ERR178930_1.fastq  samples/ERR178930/ERR178930_2.fastq
+    cfsan_snp_pipeline map_reads  reference/NC_011149  samples/ERR178931/ERR178931_1.fastq  samples/ERR178931/ERR178931_2.fastq
 
 
 **Q: How can I re-run some of the SNP Pipeline processing steps when I see a message that the results are already freshly built?**
@@ -167,13 +167,13 @@ processes are launched on a workstation.  You can control the number of processe
 following parameters in the configuration file.  These parameters are used only by the
 run_snp_pipeline.sh script::
 
-    # Maximum concurrent prepSamples.sh processes (SAMtools and Varscan)
+    # Maximum concurrent call_sites processes (SAMtools and Varscan)
     MaxConcurrentPrepSamples=
 
-    # Maximum concurrent call_consensus.py processes
+    # Maximum concurrent call_consensus processes
     MaxConcurrentCallConsensus=
 
-    # Maximum concurrent collectSampleMetrics.sh processes
+    # Maximum concurrent collect_metrics processes
     MaxConcurrentCollectSampleMetrics=
 
 **Q: How can I control the number of CPU cores used by the bowtie2 aligner?**
@@ -181,7 +181,7 @@ run_snp_pipeline.sh script::
 A: By default, the SNP Pipeline will give bowtie2 all available CPU cores on a workstation and 8 CPU cores per
 sample on a high performance computing cluster.  You can override the defaults with the ``-p`` bowtie2 option.  Set
 the option either in the configuration file if you are running run_snp_pipeline.sh, or in the Bowtie2Align_ExtraParams
-environment variable if you are running alignSampleToReference.sh directly.  For example, to run alignments with
+environment variable if you are running the map_reads command directly.  For example, to run alignments with
 16 concurrent threads::
 
     Bowtie2Align_ExtraParams="--reorder -p 16"
@@ -193,7 +193,7 @@ a job queue, multiple alignments are run concurrently, each with multiple thread
 
 A: The amount of memory used by the java VM can be set by using the ``-Xmx`` java VM option.  Set the
 option either in the configuration file if you are running run_snp_pipeline.sh, or in the VarscanJvm_ExtraParams
-environment variable if you are running prepSamples.sh directly. For example, to set maximum java heap
+environment variable if you are running the call_sites command directly. For example, to set maximum java heap
 size to 3000 MB::
 
     PicardJvm_ExtraParams="-Xmx3000m"

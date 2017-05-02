@@ -364,7 +364,7 @@ if [[ "$opt_c_set" = "1" ]]; then
     source "$configFilePath"
 else
     # true below is to ignore preserve timestamp error
-    copy_snppipeline_data.py configurationFile "$logDir" || true
+    cfsan_snp_pipeline data configurationFile "$logDir" || true
     source "$logDir/snppipeline.conf"
 fi
 

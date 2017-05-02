@@ -26,12 +26,6 @@ echo Command Reference >> x.txt
 echo ================= >> x.txt
 echo >> x.txt
 
-echo copy_snppipeline_data.py >> x.txt
-echo ------------------------ >> x.txt
-echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-copy_snppipeline_data.py  -h | sed 's/^/  /' >> x.txt
-echo >> x.txt
-
 echo '.. _cmd-ref-run-snp-pipeline:' >> x.txt
 echo >> x.txt
 echo run_snp_pipeline.sh      >> x.txt
@@ -40,82 +34,97 @@ echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 run_snp_pipeline.sh       -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
-echo prepReference.sh         >> x.txt
+echo '.. _cmd-ref-cfsan-snp-pipeline:' >> x.txt
+echo >> x.txt
+echo cfsan_snp_pipeline       >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-prepReference.sh          -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline           -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
-echo alignSampleToReference.sh >> x.txt
+echo data                     >> x.txt
+echo ------------------------ >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+cfsan_snp_pipeline data      -h | sed 's/^/  /' >> x.txt
+echo >> x.txt
+
+echo index_ref                >> x.txt
+echo ------------------------ >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+cfsan_snp_pipeline index_ref -h | sed 's/^/  /' >> x.txt
+echo >> x.txt
+
+echo map_reads                 >> x.txt
 echo ------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-alignSampleToReference.sh -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline map_reads -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
-echo prepSamples.sh           >> x.txt
+echo call_sites               >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-prepSamples.sh            -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline call_sites -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
 echo '.. _cmd-ref-snp-filter:' >> x.txt
 echo >> x.txt
-echo snp_filter.py            >> x.txt
+echo filter_regions           >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-snp_filter.py             -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline filter_regions -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
-echo create_snp_list.py          >> x.txt
+echo merge_sites              >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-create_snp_list.py        -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline merge_sites -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
 echo '.. _cmd-ref-call-consensus:' >> x.txt
 echo >> x.txt
-echo call_consensus.py        >> x.txt
+echo call_consensus           >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-call_consensus.py      -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline call_consensus -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
 echo >> x.txt
-echo mergeVcf.sh >> x.txt
+echo merge_vcfs                  >> x.txt
 echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-mergeVcf.sh -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline merge_vcfs -h | sed 's/^/  /' >> x.txt
+echo >> x.txt
 
 echo >> x.txt
-echo create_snp_matrix.py     >> x.txt
+echo snp_matrix               >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-create_snp_matrix.py      -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline snp_matrix -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
 echo >> x.txt
-echo calculate_snp_distances.py >> x.txt
+echo distance                    >> x.txt
 echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-calculate_snp_distances.py -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline distance -h | sed 's/^/  /' >> x.txt
 
 echo >> x.txt
-echo create_snp_reference_seq.py >> x.txt
+echo snp_reference               >> x.txt
 echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-create_snp_reference_seq.py -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline snp_reference -h | sed 's/^/  /' >> x.txt
 
 echo >> x.txt
-echo collectSampleMetrics.sh >> x.txt
+echo collect_metrics             >> x.txt
 echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-collectSampleMetrics.sh -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline collect_metrics -h | sed 's/^/  /' >> x.txt
 
 echo >> x.txt
-echo combineSampleMetrics.sh >> x.txt
+echo combine_metrics >> x.txt
 echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-combineSampleMetrics.sh -h | sed 's/^/  /' >> x.txt
+cfsan_snp_pipeline combine_metrics -h | sed 's/^/  /' >> x.txt
 
 cat x.txt | 
 sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-2.7/bin/~~' | \
