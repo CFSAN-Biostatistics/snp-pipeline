@@ -3,7 +3,7 @@
 History
 -------
 
-0.7.1 (2017-04-??)
+0.8.0 (2017-05-??)
 ~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
@@ -14,6 +14,7 @@ History
 * Leading zeros are stripped from Miseq flowcell identifiers in the metrics files.
 * Added a dependency on Picard.  You need to install Picard and change your CLASSPATH.
   See :ref:`installation-label`.
+* Removed the unused create_snp_pileup.py script.
 
 **Bug fixes:**
 
@@ -29,22 +30,20 @@ History
   Repackaged the SNP Pipeline as a single executable with multiple sub-commands.  The old scripts
   still exist for backwards compatibility and are rewritten as one-liners calling the new
   replacement commands.  The main executable program is called :ref:`cmd-ref-cfsan-snp-pipeline`.
-* Check for ``bc`` on the path when the pipeline is launched.  Complain if it is missing.
-* Added a new configuration parameter, ``BcftoolsMerge_ExtraParams`` to allow customizing the
-  snpma.vcf files created when merging the consensus VCF files.  See :ref:`configuration-label`.
-* Removed the hard-coded wall-clock run-time limits for Torque and Sun Grid Engine jobs.  Added
-  default limits (12 hours) to the configuration file.  You can change the runtime limits for
-  all SNP Pipeline job steps with the ``Torque_QsubExtraParams`` or ``GridEngine_QsubExtraParams``
-  configuration parameters.
 * Added the capability to remove duplicate reads from BAM files prior to creating the pileup and
   calling snps.  See :ref:`remove-duplicate-reads-label`.  This change introduces a dependency on
   ``Picard`` and will require changing your CLASSPATH.  See :ref:`installation-label`. You can
   disable this step and keep the duplicate reads by configuring ``SnpPipeline_RemoveDuplicateReads=false``
   in the configuration file.
 * Added a new metric to count the number of duplicate reads in each sample.
-* Log the SNP Pipeline version in the header of all the log files.
-* Removed the unused create_snp_pileup.py script.
 * Capture read-group metadata in the SAM/BAM files during the read mapping step.
+* Added a new configuration parameter, ``BcftoolsMerge_ExtraParams`` to allow customizing the
+  snpma.vcf files created when merging the consensus VCF files.  See :ref:`configuration-label`.
+* Removed the hard-coded wall-clock run-time limits for Torque and Sun Grid Engine jobs.  Added
+  default limits (12 hours) to the configuration file.  You can change the runtime limits for
+  all SNP Pipeline job steps with the ``Torque_QsubExtraParams`` or ``GridEngine_QsubExtraParams``
+  configuration parameters.
+* Log the SNP Pipeline version in the header of all the log files.
 * Changed the composition of the included Salmonella Agona data set to remove the excessively large
   sample ERR178930 and include a more diverse set of isolates from different geographic locations,
   different environmental sources, and different types of sequencing instruments.
