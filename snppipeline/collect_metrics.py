@@ -192,6 +192,7 @@ def collect_metrics(args):
     machine = ""
     flowcell = ""
     fastq_files = fastq.list_fastq_files(sample_dir)
+    fastq_files = [f for f in fastq_files if os.path.isfile(f)] # Exclude broken symlinks
     if not fastq_files:
         handle_error("No fastq files were found.")
     else:

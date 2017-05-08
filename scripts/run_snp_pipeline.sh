@@ -512,6 +512,7 @@ persistSortedSampleDirs()
 }
 
 
+# TODO: detect broken fastq symlinks
 if [[ "$opt_s_set" = "1" ]]; then
     samplesDir="${opt_s_arg%/}"  # strip trailing slash
     if [[ ! -d "$samplesDir" ]]; then fatalError "Samples directory $samplesDir does not exist."; fi
