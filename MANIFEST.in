@@ -6,6 +6,7 @@ include snppipeline/data/lambdaVirusInputs/samples/*/*
 include snppipeline/data/lambdaVirusExpectedResults/samples/*/*
 include snppipeline/data/lambdaVirusExpectedResults/*.*
 include snppipeline/data/agonaInputs/reference/*
+include snppipeline/data/agonaInputs/sampleList
 include snppipeline/data/agonaInputs/sha256sumCheck
 include snppipeline/data/agonaExpectedResults/*.*
 include snppipeline/data/agonaExpectedResults/samples/*/*

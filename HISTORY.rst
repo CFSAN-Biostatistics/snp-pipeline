@@ -3,7 +3,7 @@
 History
 -------
 
-0.8.0 (2017-05-??)
+0.8.0 (2017-05-09)
 ~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
@@ -16,7 +16,7 @@ History
   See :ref:`installation-label`.
 * Removed the unused create_snp_pileup.py script.
 
-**Bug fixes:**
+**Bug Fixes:**
 
 * Fixed the machine and flow cell reporting in the metrics file when the fastq read names are not
   in the original Illumina format.

@@ -47,7 +47,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='0.8.0b1',
+    version='0.8.0',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -98,6 +98,7 @@ setup(
                          'data/lambdaVirusExpectedResults/samples/*/*',
                          'data/lambdaVirusExpectedResults/*.*',
                          'data/agonaInputs/reference/*',
+                         'data/agonaInputs/sampleList',
                          'data/agonaInputs/sha256sumCheck',
                          'data/agonaExpectedResults/*.*',
                          'data/agonaExpectedResults/samples/*/*',
