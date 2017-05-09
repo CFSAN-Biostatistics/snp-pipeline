@@ -127,7 +127,9 @@ def call_sites(args):
                 version_str = utils.extract_version_str("Picard", "java picard.cmdline.PicardCommandLine MarkDuplicates --version 2>&1")
                 picard_jvm_extra_params = os.environ.get("PicardJvm_ExtraParams") or ""
                 picard_mark_duplicates_extra_params = os.environ.get("PicardMarkDuplicates_ExtraParams") or ""
-                command_line = "java " + picard_jvm_extra_params + ' ' + "picard.cmdline.PicardCommandLine MarkDuplicates INPUT=" + sorted_bam_file + " OUTPUT=" + deduped_bam_file + " METRICS_FILE=" + os.path.join(sample_dir, "duplicate_reads_metrics.txt") + ' ' + picard_mark_duplicates_extra_params
+                tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+                tmp_option = " TMP_DIR=" + tmpdir if tmpdir else ""
+                command_line = "java " + picard_jvm_extra_params + ' ' + "picard.cmdline.PicardCommandLine MarkDuplicates INPUT=" + sorted_bam_file + " OUTPUT=" + deduped_bam_file + " METRICS_FILE=" + os.path.join(sample_dir, "duplicate_reads_metrics.txt") + tmp_option + ' ' + picard_mark_duplicates_extra_params
                 verbose_print("# Remove duplicate reads from bam file.")
                 verbose_print("# %s %s" % (utils.timestamp(), command_line))
                 verbose_print("# %s" % version_str)

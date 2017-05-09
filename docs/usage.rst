@@ -1019,6 +1019,11 @@ Duplicate read removal works best when the read names in the fastq files are in 
 When downloading fastq files from NCBI with ``fastq-dump``, you should use the ``--origfmt`` command line option.
 See :ref:`Why are there no optical duplicates? <optical-dup-read-label>`
 
+If you see ``No space left on device`` errors, you should set either the ``TMPDIR`` or ``TMP_DIR`` environment
+variable to a directory with plenty of space for temp files::
+
+  export TMPDIR=/scratch/tmp
+
 More information about the Picard MarkDuplicates tool can be found here:
 
 * https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates
