@@ -3,8 +3,8 @@
 History
 -------
 
-0.8.0 (2017-05-09)
-~~~~~~~~~~~~~~~~~~
+0.8.0 (2017-05-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_ 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
 
@@ -48,8 +48,9 @@ History
   sample ERR178930 and include a more diverse set of isolates from different geographic locations,
   different environmental sources, and different types of sequencing instruments.
 
-0.7.0 (2016-11-30)
-~~~~~~~~~~~~~~~~~~
+
+0.7.0 (2016-11-30) - `docs <http://snp-pipeline.readthedocs.io/en/0.7-branch/history.html>`_ 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Added a new script to the pipeline: ``snp_filter.py`` removes snps from the ends of contigs and
   from regions where the snp density is abnormally high.  This is an important change to the
