@@ -10,10 +10,6 @@ CFSAN SNP Pipeline
 .. .. image:: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline.png?branch=master
 ..        :target: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline
 
-.. Image showing the PyPi download per month count  - links to PyPI
-.. image:: https://img.shields.io/pypi/dm/snp-pipeline.svg
-        :target: https://pypi.python.org/pypi/snp-pipeline
-
 
 The CFSAN SNP Pipeline is a Python-based system for the production of SNP 
 matrices from sequence data used in the phylogenetic analysis of pathogenic 
@@ -23,7 +19,7 @@ The SNP Pipeline was developed by the United States Food
 and Drug Administration, Center for Food Safety and Applied Nutrition.
 
 * Free software: See license below. 
-* Documentation: http://snp-pipeline.rtfd.org
+* Documentation: http://snp-pipeline.readthedocs.io/en/latest/readme.html
 * Source Code: https://github.com/CFSAN-Biostatistics/snp-pipeline
 * PyPI Distribution: https://pypi.python.org/pypi/snp-pipeline
 
