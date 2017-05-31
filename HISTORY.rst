@@ -3,7 +3,16 @@
 History
 -------
 
-0.8.0 (2017-05-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_ 
+1.0.0 (2017-06-??) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Other Changes:**
+
+* Added a new helper utility, ``qarrayrun`` to simplify creating and running array jobs on Grid
+  Engine or Torque.
+
+
+0.8.0 (2017-05-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
@@ -49,7 +58,7 @@ History
   different environmental sources, and different types of sequencing instruments.
 
 
-0.7.0 (2016-11-30) - `docs <http://snp-pipeline.readthedocs.io/en/0.7-branch/history.html>`_ 
+0.7.0 (2016-11-30) - `docs <http://snp-pipeline.readthedocs.io/en/0.7-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Added a new script to the pipeline: ``snp_filter.py`` removes snps from the ends of contigs and
