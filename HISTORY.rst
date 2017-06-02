@@ -3,7 +3,13 @@
 History
 -------
 
-0.8.0 (2017-05-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_ 
+0.8.1 (2017-06-02) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Fix collect metrics failure when the fastq sequence id line is missing the machine or flowcell.
+
+
+0.8.0 (2017-05-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
