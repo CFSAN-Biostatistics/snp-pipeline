@@ -198,8 +198,8 @@ def collect_metrics(args):
     else:
         tags = fastq.extract_metadata_tags(fastq_files[0])
         if tags:
-            machine = tags.instrument
-            flowcell = tags.flow_cell
+            machine = tags.instrument or ""
+            flowcell = tags.flow_cell or ""
 
     #-------------------------
     verbose_print("# %s %s" % (utils.timestamp(), "Sum file sizes of paired fastq files"))
