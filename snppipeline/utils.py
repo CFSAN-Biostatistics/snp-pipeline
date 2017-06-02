@@ -345,6 +345,59 @@ def sample_id_from_file(file_path):
     return sample_id
 
 
+def log_error(message):
+    """Write an error message to the error log if enabled.
+    """
+    # Log to error file if it is defined, which happens automatically if running run_snp_pipeline.sh.
+    # The errorOutputFile may also be defined manually if running scripts without run_snp_pipeline.sh.
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            print(message, file=err_log)
+
+
+def report_error(message):
+    """Send an error message to the error log and to stderr.
+    """
+    log_error(message)
+
+    # send the detail error message to stderr -- this will put the error
+    # message in the process-specific log file.
+    sys.stdout.flush() # make sure stdout is flushed before printing the error
+    if message:
+        print(message, file=sys.stderr)
+
+
+def fatal_error(message):
+    """Log a fatal error message to the error summary file and to stderr and then exit.
+    """
+    report_error(message)
+    sys.exit(1)
+
+
+def sample_warning(message):
+    """Log a warning to the error summary file with special formatting and also print the warning to stderr.
+    Do not exit regardless of the SnpPipeline_StopOnSampleError setting.
+
+    Parameters
+    ----------
+    message : str
+        Warning message text.
+    """
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            print("%s warning:" % program_name_with_command(), file=err_log)
+            print(message, file=err_log)
+            print("================================================================================", file=err_log)
+
+    # Also send the detail error message to stderr -- this will put the error message in the
+    # process-specific log file.
+    sys.stdout.flush() # make sure stdout is flushed before printing the error
+    if message:
+        print(message, file=sys.stderr)
+
+
 def global_error(message):
     """
     Log a fatal error to the error summary file and exit with error code 100
@@ -530,44 +583,6 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
         # run_snp_pipeline.sh will know this error has already been reported,
         # but it should not stop execution
         sys.exit(98)
-
-
-def report_error(message):
-    """Send an error message to the error log and to stderr.
-    """
-    error_output_file = os.environ.get("errorOutputFile")
-    if error_output_file:
-        with open(error_output_file, "a") as err_log:
-            print(message, file=err_log)
-
-    # send the detail error message to stderr -- this will put the error
-    # message in the process-specific log file.
-    sys.stdout.flush() # make sure stdout is flushed before printing the error
-    if message:
-        print(message, file=sys.stderr)
-
-
-def sample_warning(message):
-    """Log a warning to the error summary file with special formatting and also print the warning to stderr.
-    Do not exit regardless of the SnpPipeline_StopOnSampleError setting.
-
-    Parameters
-    ----------
-    message : str
-        Warning message text.
-    """
-    error_output_file = os.environ.get("errorOutputFile")
-    if error_output_file:
-        with open(error_output_file, "a") as err_log:
-            print("%s warning:" % program_name_with_command(), file=err_log)
-            print(message, file=err_log)
-            print("================================================================================", file=err_log)
-
-    # Also send the detail error message to stderr -- this will put the error message in the
-    # process-specific log file.
-    sys.stdout.flush() # make sure stdout is flushed before printing the error
-    if message:
-        print(message, file=sys.stderr)
 
 
 def verify_existing_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):
