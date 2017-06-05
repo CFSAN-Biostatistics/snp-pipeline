@@ -72,6 +72,7 @@ def parse_argument_list(argv):
     description = """The CFSAN SNP Pipeline is a collection of tools using reference-based
                      alignments to call SNPs for a set of samples."""
 
+    # Override the default help width
     formatter_class = lambda prog: RawArgumentDefaultsHelpFormatter(prog, width=HELP_WIDTH)
 
     parser = argparse.ArgumentParser(description=description)

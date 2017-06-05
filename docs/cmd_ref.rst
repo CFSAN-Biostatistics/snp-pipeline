@@ -98,6 +98,7 @@ cfsan_snp_pipeline
   
   positional arguments:
     subcommand       
+      run              This do-it-all script runs all the pipeline steps
       data             Copy included data to a specified directory
       index_ref        Index the reference
       map_reads        Align reads to the reference
