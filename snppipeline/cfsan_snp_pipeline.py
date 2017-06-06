@@ -122,7 +122,7 @@ def parse_argument_list(argv):
                 Currently "torque" and "grid" are supported.  If not specified, the pipeline
                 will execute locally.""")
 
-    subparser.add_argument("-o", "--out_dir", dest="workDir", type=str, metavar="DIR",
+    subparser.add_argument("-o", "--out_dir", dest="workDir", type=str, default=".", metavar="DIR",
         help="""Output directory for the result files.
                 Additional subdirectories are automatically created under the output
                 directory for logs files and the mirrored samples and reference files

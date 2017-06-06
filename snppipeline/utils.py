@@ -217,6 +217,23 @@ def extract_version_str(program_name, command_line):
     return "Unrecognized " + program_name + " version"
 
 
+def mkdir_p(path):
+    """Python equivalent of bash mkdir -p.
+
+    Parameters
+    ----------
+    path : str
+        Directory path to create.
+    """
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
 def read_properties(prop_file_path):
     """Read a file of name=value pairs and load them into a dictionary.
 
