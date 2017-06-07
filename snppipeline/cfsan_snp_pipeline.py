@@ -35,8 +35,16 @@ from snppipeline import combine_metrics
 
 HELP_WIDTH = 78 # 78 is the default argparse setting
 
+class HelpParser(argparse.ArgumentParser):
+    """Class to provide custom argparse error formatting."""
+
+    def error(self, message):
+        """Don't print the name of the program."""
+        sys.stderr.write("Error: %s\n" % message)
+        sys.exit(2)
+
 class RawArgumentDefaultsHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
-    ###Class to provide custom argparse functionality."""
+    """Class to provide custom argparse option help formatting."""
 
     def _split_lines(self, text, width):
         """Allow the special 'Raw:' prefix to help descriptions to
@@ -75,7 +83,7 @@ def parse_argument_list(argv):
     # Override the default help width
     formatter_class = lambda prog: RawArgumentDefaultsHelpFormatter(prog, width=HELP_WIDTH)
 
-    parser = argparse.ArgumentParser(description=description)
+    parser = HelpParser(description=description)
     parser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparsers = parser.add_subparsers(dest="subparser_name", help=None, metavar="subcommand       ")
     subparsers.required = True
@@ -149,7 +157,9 @@ def parse_argument_list(argv):
                 pipeline will not rebuild everything unless you either force a rebuild
                 (see the -f option) or you request mirrored inputs (see the -m option).""")
 
-    subparser.add_argument("-s", "--samples_dir", dest="samplesDir", type=str, metavar="DIR",
+    samples_group = subparser.add_mutually_exclusive_group(required=True)
+
+    samples_group.add_argument("-s", "--samples_dir", dest="samplesDir", type=str, metavar="DIR",
         help="""
             Raw:Relative or absolute path to the parent directory of
                 all the sample directories.  The -s option should be
@@ -164,7 +174,7 @@ def parse_argument_list(argv):
                       each of the sample directories during the
                       execution of the SNP Pipeline""")
 
-    subparser.add_argument("-S", "--samples_file", dest="samplesFile", type=str, metavar="FILE",
+    samples_group.add_argument("-S", "--samples_file", dest="samplesFile", type=str, metavar="FILE",
         help="""
             Raw:Relative or absolute path to a file listing all of the
                 sample directories.  The -S option should be used when
