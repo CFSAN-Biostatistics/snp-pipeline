@@ -9,6 +9,7 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
+import errno
 import locale
 import os
 import platform
@@ -215,6 +216,22 @@ def extract_version_str(program_name, command_line):
             return program_name + " version " + tokens[0]
 
     return "Unrecognized " + program_name + " version"
+
+
+def is_directory_writeable(path):
+    """Returns true if the specified directory is writeable.
+
+    Parameters
+    ----------
+    path : str
+        Directory path to create.
+
+    Returns
+    -------
+    writeable : bool
+        True if the path is a writeable directory
+    """
+    return os.path.isdir(path) and os.access(path, os.W_OK | os.X_OK) 
 
 
 def mkdir_p(path):

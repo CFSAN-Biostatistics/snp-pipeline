@@ -11,6 +11,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 import traceback
 
 from snppipeline.job_runner import JobRunner
@@ -95,8 +96,17 @@ def handle_internal_exception(exc_type, exc_value, exc_traceback):
     """
     if exc_type == JobRunnerException:
         utils.report_error(str(exc_value))
-    else:
-        #r = default_exception_handler(exc_type, exc_value, exc_traceback)
+
+    elif True: # Send the exception traceback to stderr and to the error.log file
+
+        # Format a stack trace and the exception information into a list of new-line terminated strings
+        trace_lines = traceback.format_exception(exc_type, exc_value, exc_traceback, limit=None)
+
+        # Format the exception report
+        exc_string = ''.join(trace_lines)
+        utils.report_error(exc_string)
+
+    else:  # TODO: this block of code can probably be deleted
         trace_entries = traceback.extract_tb(exc_traceback)
         file_name, line_number, function_name, code_text = trace_entries[-1]
         exc_type_name = exc_type.__name__
@@ -146,102 +156,52 @@ def run(args):
             Relative or absolute path to a file listing all of the sample directories.
     """
 
-    error_output_file = os.environ.get("errorOutputFile")
+    #stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
+    #stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
 
-    stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
-    stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
-
-
-"""
+    # Erase any left-over error log environment variable from a previous run
+    del os.environ["errorOutputFile"]
 
     # Handle output working directory.  Create the directory if it does not exist.
-    if "$opt_o_set" = "1":
-        export workDir="$opt_o_arg"
+    # Any errors creating the work_dir will not be logged to the error log because
+    # the error log belongs in the work_dir.
+    work_dir = args.workDir
+    try:
         utils.mkdir_p(work_dir)
-        if ! mkdir -p "$workDir"; then echo "Could not create the output directory $workDir"; exit 50; fi
-        if ! -w "$workDir": echo "Output directory $workDir is not writable."; exit 50; fi
-    else
-        export workDir="$(pwd)"
-    fi
+    except OSError as exc:
+        utils.fatal_error("Error: could not create the output directory %s" % work_dir)
+    if not utils.is_directory_writeable(work_dir):
+        utils.fatal_error("Error: output directory % is not writable." % work_dir)
 
-# The error log is in the main workdir
-export errorOutputFile="$workDir/error.log"
-rm  "$errorOutputFile" 2> /dev/null || true
+    # The error log is in the main workdir
+    error_output_file = os.path.join(work_dir, "error.log")
+    os.environ["errorOutputFile"] = error_output_file
+    # TODO: copy old error log to old logs directory, because otherwise it will be removed and lost forever
+    if os.path.isfile(error_output_file):
+        os.remove(error_output_file)
 
+    # Validate reference fasta file
+    reference_file_path = args.referenceFile
+    if not os.path.isfile(reference_file_path):
+        utils.fatal_error("Error: reference file %s does not exist." % reference_file_path)
+    if os.path.getsize(reference_file_path) == 0:
+        utils.fatal_error("Error: reference file %s is empty." % reference_file_path)
+    reference_file_name = os.path.basename(reference_file_path)
 
-# --------------------------------------------------------
-# get the arguments
-shift $((OPTIND-1))
+    # Force rebuild flag is passed to all the subtask commands below
+    force_flag = " -f " if args.forceFlag else ""
 
-# Reference fasta file
-export referenceFilePath="$1"
-if [ "$referenceFilePath" = "" ]; then
-    echo "Missing reference file."
-    echo
-    usageshort
-    exit 10
-fi
-if ! -f "$referenceFilePath": fatalError "Reference file $referenceFilePath does not exist."; fi
-if ! -s "$referenceFilePath": fatalError "Reference file $referenceFilePath is empty."; fi
-export referenceFileName=${referenceFilePath##*/} # strip directories
+    # Create the logs directory with name like "logs-20170215.144253"
+    run_time_stamp = time.strftime('%Y%m%d.%H%M%S', time.localtime())
+    log_dir = os.path.join(work_dir, "logs-"+run_time_stamp)
+    try:
+        utils.mkdir_p(log_dir)
+    except OSError as exc:
+        utils.fatal_error("Error: could not create the logs directory %s" % log_dir)
+    if not utils.is_directory_writeable(work_dir):
+        utils.fatal_error("Error: logs directory % is not writable." % log_dir)
 
-# Extra arguments not allowed
-if "$2" != "":
-    echo "Unexpected argument \"$2\" specified after the reference file."
-    echo
-    usageshort
-    exit 20
-fi
-
-# Force rebuild flag
-if "$opt_f_set" = "1":
-    export forceFlag="-f"
-else
-    unset forceFlag
-fi
-
-# Mirror copy input files flag
-if "$opt_m_set" = "1":
-    mirrorMode="$opt_m_arg"
-    mirrorMode=$(echo "$mirrorMode" | tr [:upper:] [:lower:])
-    if "$mirrorMode" != "soft" && "$mirrorMode" != "hard" && "$mirrorMode" != "copy":
-        echo "Invalid mirror mode: $mirrorMode"
-        echo
-        usageshort
-        exit 30
-    fi
-fi
-
-# Job queue manager for remote parallel job execution
-if "$opt_Q_set" = "1":
-    platform=$(echo "$opt_Q_arg" | tr '[:upper:]' '[:lower:]')
-    if platform != "torque"  &&  platform != "grid":
-        echo "Only the torque and grid job queues are currently supported."
-        echo
-        usageshort
-        exit 40
-    fi
-fi
-
-# Handle sample directories
-if "$opt_s_set" = "1" && "$opt_S_set" = "1":
-    echo "Options -s and -S are mutually exclusive."
-    echo
-    usageshort
-    exit 60
-fi
-if "$opt_s_set" != "1" && "$opt_S_set" != "1":
-    echo "You must specify one of the -s or -S options to identify the samples."
-    echo
-    usageshort
-    exit 60
-fi
-
-
-# Create the logs directory
-runTimeStamp=$(date +"%Y%m%d.%H%M%S")
-export logDir="$workDir/logs-$runTimeStamp"
-mkdir -p "$logDir"
+"""
 
 # Handle configuration file, use the specified file, or create a default file
 if "$opt_c_set" = "1":
@@ -436,7 +396,7 @@ if "$opt_m_set" = "1":
 
     # Mirror/link the reference
     mkdir -p "$workDir/reference"
-    absoluteReferenceFilePath=$(get_abs_filename "$referenceFilePath")
+    absoluteReferenceFilePath=$(get_abs_filename reference_file_path)
     cp -v -u -f $mirrorFlag "$absoluteReferenceFilePath" "$workDir/reference"
     # since we mirrored the reference, we need to update our reference location
     referenceFileName=${referenceFilePath##*/} # strip directories
@@ -476,7 +436,7 @@ if platform == "grid":
 #$ -j y
 #$ -cwd
 #$ -o $logDir/prepReference.log
-    cfsan_snp_pipeline index_ref $forceFlag "$referenceFilePath"
+    cfsan_snp_pipeline index_ref + force_flag + reference_file_path
 _EOF_
 )
 elif platform == "torque":
@@ -486,11 +446,11 @@ elif platform == "torque":
     #PBS -d $(pwd)
     #PBS -o $logDir/prepReference.log
     #PBS -V
-    cfsan_snp_pipeline index_ref $forceFlag "$referenceFilePath"
+    cfsan_snp_pipeline index_ref + force_flag + reference_file_path
 _EOF_
 )
 else
-    cfsan_snp_pipeline index_ref $forceFlag "$referenceFilePath" 2>&1 | tee $logDir/prepReference.log
+    cfsan_snp_pipeline index_ref + force_flag + reference_file_path 2>&1 | tee $logDir/prepReference.log
 fi
 
 echo -e "\nStep 3 - Align the samples to the reference"
@@ -525,7 +485,7 @@ if platform == "grid":
 #$   -pe $GridEngine_PEname $numAlignThreads
 #$   -hold_jid $prepReferenceJobId
 #$   -o $logDir/alignSamples.log-\$TASK_ID
-    cfsan_snp_pipeline map_reads $forceFlag "$referenceFilePath" \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
+    cfsan_snp_pipeline map_reads + force_flag + reference_file_path \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
 _EOF_
 )
 elif platform == "torque":
@@ -538,11 +498,11 @@ elif platform == "torque":
     #PBS -o $logDir/alignSamples.log
     #PBS -V
     samplesToAlign=\$(cat "$workDir/sampleFullPathNames.txt" | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline map_reads $forceFlag "$referenceFilePath" \$samplesToAlign
+    cfsan_snp_pipeline map_reads + force_flag + reference_file_path \$samplesToAlign
 _EOF_
 )
 else
-    nl "$workDir/sampleFullPathNames.txt" | xargs -n 3 -L 1 bash -c 'set -o pipefail; cfsan_snp_pipeline map_reads $forceFlag "$referenceFilePath" $1 $2 2>&1 | tee $logDir/alignSamples.log-$0'
+    nl "$workDir/sampleFullPathNames.txt" | xargs -n 3 -L 1 bash -c 'set -o pipefail; cfsan_snp_pipeline map_reads + force_flag + reference_file_path $1 $2 2>&1 | tee $logDir/alignSamples.log-$0'
 fi
 
 echo -e "\nStep 4 - Prep the samples"
@@ -556,7 +516,7 @@ if platform == "grid":
 #$   -j y
 #$   -hold_jid_ad $alignSamplesJobArray
 #$   -o $logDir/prepSamples.log-\$TASK_ID
-    cfsan_snp_pipeline call_sites $forceFlag "$referenceFilePath" "\$(cat sample_dirs_file | head -n \$SGE_TASK_ID | tail -n 1)"
+    cfsan_snp_pipeline call_sites + force_flag + reference_file_path "\$(cat sample_dirs_file | head -n \$SGE_TASK_ID | tail -n 1)"
 _EOF_
 )
 elif platform == "torque":
@@ -570,7 +530,7 @@ elif platform == "torque":
     #PBS -o $logDir/prepSamples.log
     #PBS -V
     sampleDir=\$(cat sample_dirs_file | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline call_sites $forceFlag "$referenceFilePath" "\$sampleDir"
+    cfsan_snp_pipeline call_sites + force_flag + reference_file_path "\$sampleDir"
 _EOF_
 )
 else
@@ -579,7 +539,7 @@ else
     else
         numPrepSamplesCores=$numCores
     fi
-    nl sample_dirs_file | xargs -n 2 -P $numPrepSamplesCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_sites $forceFlag "$referenceFilePath" $1 2>&1 | tee $logDir/prepSamples.log-$0'
+    nl sample_dirs_file | xargs -n 2 -P $numPrepSamplesCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_sites + force_flag + reference_file_path $1 2>&1 | tee $logDir/prepSamples.log-$0'
 fi
 
 #Filter abnormal SNPs if needed
@@ -593,7 +553,7 @@ if platform == "grid":
 #$ -V
 #$ -hold_jid $prepSamplesJobArray
 #$ -o $logDir/filterAbnormalSNP.log
-cfsan_snp_pipeline filter_regions -n var.flt.vcf sample_dirs_file "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
+cfsan_snp_pipeline filter_regions -n var.flt.vcf sample_dirs_file reference_file_path $RemoveAbnormalSnp_ExtraParams
 _EOF_
 )
 elif platform == "torque":
@@ -605,11 +565,11 @@ elif platform == "torque":
 	#PBS -W depend=afterokarray:$prepSamplesJobArray
 	#PBS -o $logDir/filterAbnormalSNP.log
 	#PBS -V
-	cfsan_snp_pipeline filter_regions -n var.flt.vcf sample_dirs_file "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams
+	cfsan_snp_pipeline filter_regions -n var.flt.vcf sample_dirs_file reference_file_path $RemoveAbnormalSnp_ExtraParams
 _EOF_
 )
 else
-	cfsan_snp_pipeline filter_regions -n var.flt.vcf sample_dirs_file "$referenceFilePath" $RemoveAbnormalSnp_ExtraParams 2>&1 | tee $logDir/filterAbnormalSNP.log
+	cfsan_snp_pipeline filter_regions -n var.flt.vcf sample_dirs_file reference_file_path $RemoveAbnormalSnp_ExtraParams 2>&1 | tee $logDir/filterAbnormalSNP.log
 fi
 
 #Starting from here, there are 2 threads:
@@ -632,7 +592,7 @@ if platform == "grid":
 #$ -V
 #$ -hold_jid $filterAbnSNPJobId
 #$ -o $logDir/snpList.log
-cfsan_snp_pipeline merge_sites $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile"
+cfsan_snp_pipeline merge_sites + force_flag + -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile"
 _EOF_
 )
 elif platform == "torque":
@@ -643,11 +603,11 @@ elif platform == "torque":
     #PBS -W depend=afterok:$filterAbnSNPJobId
     #PBS -o $logDir/snpList.log
     #PBS -V
-    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile"
+    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile"
 _EOF_
 )
 else
-    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpList.log
+    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpList.log
 fi
 
 echo -e "\nStep 7.1 - Call the consensus SNPs for each sample"
@@ -660,7 +620,7 @@ if platform == "grid":
 #$ -hold_jid $snpListJobId
 #$ -o $logDir/callConsensus.log-\$TASK_ID
     sampleDir=\$(cat sample_dirs_file | head -n \$SGE_TASK_ID | tail -n 1)
-    cfsan_snp_pipeline call_consensus $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "\$sampleDir/reads.all.pileup"
+    cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 elif platform == "torque":
@@ -672,7 +632,7 @@ elif platform == "torque":
     #PBS -o $logDir/callConsensus.log
     #PBS -V
     sampleDir=\$(cat sample_dirs_file | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline call_consensus $forceFlag -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "\$sampleDir/reads.all.pileup"
+    cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 else
@@ -681,7 +641,7 @@ else
     else
         numCallConsensusCores=$numCores
     fi
-    nl sample_dirs_file | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_consensus $forceFlag -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
+    nl sample_dirs_file | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
 fi
 
 echo -e "\nStep 8.1 - Create the SNP matrix"
@@ -694,7 +654,7 @@ if platform == "grid":
 #$ -j y
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/snpMatrix.log
-    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
 elif platform == "torque":
@@ -706,11 +666,11 @@ elif platform == "torque":
     #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -o $logDir/snpMatrix.log
     #PBS -V
-    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
 else
-    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
 fi
 
 echo -e "\nStep 9.1 - Create the reference base sequence"
@@ -722,7 +682,7 @@ if platform == "grid":
 #$ -j y
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/snpReference.log
-    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path
 _EOF_
 )
 elif platform == "torque":
@@ -733,11 +693,11 @@ elif platform == "torque":
     #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -o $logDir/snpReference.log
     #PBS -V
-    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path
 _EOF_
 )
 else
-    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference.log
+    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path 2>&1 | tee $logDir/snpReference.log
 fi
 
 
@@ -751,7 +711,7 @@ if $CallConsensus_ExtraParams =~ .*vcfFileName.*:
 #$ -V
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/mergeVcf.log
-        cfsan_snp_pipeline merge_vcfs $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
+        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
     elif platform == "torque":
@@ -762,11 +722,11 @@ _EOF_
         #PBS -W depend=afterokarray:$callConsensusJobArray
         #PBS -o $logDir/mergeVcf.log
         #PBS -V
-        cfsan_snp_pipeline merge_vcfs $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
+        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
 _EOF_
 )
     else
-        cfsan_snp_pipeline merge_vcfs $forceFlag -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
+        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
     fi
 else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
@@ -781,7 +741,7 @@ if platform == "grid":
 #$ -V
 #$ -hold_jid $snpMatrixJobId
 #$ -o $logDir/calcSnpDistances.log
-    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
 _EOF_
 )
 elif platform == "torque":
@@ -792,11 +752,11 @@ elif platform == "torque":
     #PBS -W depend=afterok:$snpMatrixJobId
     #PBS -o $logDir/calcSnpDistances.log
     #PBS -V
-    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
+    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
 _EOF_
 )
 else
-    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta" 2>&1 | tee $logDir/calcSnpDistances.log
+    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta" 2>&1 | tee $logDir/calcSnpDistances.log
 fi
 
 # Step 14.1 - Notify user of any non-fatal errors accumulated during processing
@@ -821,7 +781,7 @@ if platform == "grid":
 #$ -V
 #$ -hold_jid $filterAbnSNPJobId
 #$ -o $logDir/snpList_preserved.log
-    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile2"
 _EOF_
 )
 elif platform == "torque":
@@ -832,11 +792,11 @@ elif platform == "torque":
     #PBS -W depend=afterok:$filterAbnSNPJobId
     #PBS -o $logDir/snpList_preserved.log
     #PBS -V
-    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile2"
 _EOF_
 )
 else
-    cfsan_snp_pipeline merge_sites $forceFlag -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpList_preserved.log
+    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpList_preserved.log
 fi
 
 
@@ -850,7 +810,7 @@ if platform == "grid":
 #$ -hold_jid $snpListJobId2
 #$ -o $logDir/callConsensus_preserved.log-\$TASK_ID
     sampleDir=\$(cat sample_dirs_file | head -n \$SGE_TASK_ID | tail -n 1)
-    cfsan_snp_pipeline call_consensus $forceFlag -l "$workDir/snplist_preserved.txt" -o "\$sampleDir/consensus_preserved.fasta" -e "\$sampleDir/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "\$sampleDir/reads.all.pileup"
+    cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist_preserved.txt" -o "\$sampleDir/consensus_preserved.fasta" -e "\$sampleDir/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 elif platform == "torque":
@@ -862,7 +822,7 @@ elif platform == "torque":
     #PBS -o $logDir/callConsensus_preserved.log
     #PBS -V
     sampleDir=\$(cat sample_dirs_file | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline call_consensus $forceFlag -l "$workDir/snplist_preserved.txt" -o "\$sampleDir/consensus_preserved.fasta" -e "\$sampleDir/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "\$sampleDir/reads.all.pileup"
+    cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist_preserved.txt" -o "\$sampleDir/consensus_preserved.fasta" -e "\$sampleDir/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "\$sampleDir/reads.all.pileup"
 _EOF_
 )
 else
@@ -871,7 +831,7 @@ else
     else
         numCallConsensusCores=$numCores
     fi
-    nl sample_dirs_file | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_consensus $forceFlag -l "$workDir/snplist_preserved.txt" -o "$1/consensus_preserved.fasta" -e "$1/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus_preserved.log-$0'
+    nl sample_dirs_file | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist_preserved.txt" -o "$1/consensus_preserved.fasta" -e "$1/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus_preserved.log-$0'
 fi
 
 echo -e "\nStep 8.2 - Create the SNP matrix"
@@ -884,7 +844,7 @@ if platform == "grid":
 #$ -j y
 #$ -hold_jid $callConsensusJobArray2
 #$ -o $logDir/snpMatrix_preserved.log
-    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
 _EOF_
 )
 elif platform == "torque":
@@ -896,11 +856,11 @@ elif platform == "torque":
     #PBS -W depend=afterokarray:$callConsensusJobArray2
     #PBS -o $logDir/snpMatrix_preserved.log
     #PBS -V
-    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
 _EOF_
 )
 else
-    cfsan_snp_pipeline snp_matrix $forceFlag -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpMatrix_preserved.log
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpMatrix_preserved.log
 fi
 
 echo -e "\nStep 9.2 - Create the reference base sequence"
@@ -912,7 +872,7 @@ if platform == "grid":
 #$ -j y
 #$ -hold_jid $callConsensusJobArray2
 #$ -o $logDir/snpReference_preserved.log
-    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path
 _EOF_
 )
 elif platform == "torque":
@@ -923,11 +883,11 @@ elif platform == "torque":
     #PBS -W depend=afterokarray:$callConsensusJobArray2
     #PBS -o $logDir/snpReference_preserved.log
     #PBS -V
-    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath"
+    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path
 _EOF_
 )
 else
-    cfsan_snp_pipeline snp_reference $forceFlag -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams "$referenceFilePath" 2>&1 | tee $logDir/snpReference_preserved.log
+    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path 2>&1 | tee $logDir/snpReference_preserved.log
 fi
 
 
@@ -941,7 +901,7 @@ if $CallConsensus_ExtraParams =~ .*vcfFileName.*:
 #$ -V
 #$ -hold_jid $callConsensusJobArray2
 #$ -o $logDir/mergeVcf_preserved.log
-        cfsan_snp_pipeline merge_vcfs $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
+        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
 _EOF_
 )
 elif platform == "torque":
@@ -952,11 +912,11 @@ elif platform == "torque":
         #PBS -W depend=afterokarray:$callConsensusJobArray2
         #PBS -o $logDir/mergeVcf_preserved.log
         #PBS -V
-        cfsan_snp_pipeline merge_vcfs $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
+        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
 _EOF_
 )
     else
-        cfsan_snp_pipeline merge_vcfs $forceFlag -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/mergeVcf_preserved.log
+        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/mergeVcf_preserved.log
     fi
 else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
@@ -971,7 +931,7 @@ if platform == "grid":
 #$ -V
 #$ -hold_jid $snpMatrixJobId2
 #$ -o $logDir/calcSnpDistances_preserved.log
-    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
+    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
 _EOF_
 )
 elif platform == "torque":
@@ -982,11 +942,11 @@ elif platform == "torque":
     #PBS -W depend=afterok:$snpMatrixJobId2
     #PBS -o $logDir/calcSnpDistances_preserved.log
     #PBS -V
-    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
+    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
 _EOF_
 )
 else
-    cfsan_snp_pipeline distance $forceFlag -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta" 2>&1 | tee $logDir/calcSnpDistances_preserved.log
+    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta" 2>&1 | tee $logDir/calcSnpDistances_preserved.log
 fi
 
 echo -e "\nStep 12 - Collect metrics for each sample"
@@ -999,7 +959,7 @@ if platform == "grid":
 #$ -hold_jid_ad $callConsensusJobArray,$callConsensusJobArray2
 #$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
     sampleDir=\$(cat sample_dirs_file | head -n \$SGE_TASK_ID | tail -n 1)
-    cfsan_snp_pipeline collect_metrics -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    cfsan_snp_pipeline collect_metrics -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  reference_file_path
 _EOF_
 )
 elif platform == "torque":
@@ -1011,7 +971,7 @@ elif platform == "torque":
     #PBS -o $logDir/collectSampleMetrics.log
     #PBS -V
     sampleDir=\$(cat sample_dirs_file | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline collect_metrics -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  "$referenceFilePath"
+    cfsan_snp_pipeline collect_metrics -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  reference_file_path
 _EOF_
 )
 else
@@ -1020,7 +980,7 @@ else
     else
         numCollectSampleMetricsCores=$numCores
     fi
-    nl sample_dirs_file | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; cfsan_snp_pipeline collect_metrics -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" "$referenceFilePath" 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
+    nl sample_dirs_file | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; cfsan_snp_pipeline collect_metrics -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" reference_file_path 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
 fi
 
 
