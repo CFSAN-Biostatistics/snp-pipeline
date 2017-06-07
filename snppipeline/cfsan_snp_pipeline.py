@@ -103,7 +103,8 @@ def parse_argument_list(argv):
                             files instead of copying
                   -m hard : creates hard links to the fasta and fastq
                             files instead of copying
-                  -m copy : copies the fasta and fastq files""")
+                  -m copy : copies the fasta and fastq files
+               """)
 
     subparser.add_argument("-c", "--conf", dest="configFile", type=str, metavar="FILE",
         help="""
@@ -135,29 +136,37 @@ def parse_argument_list(argv):
 
     subparser.add_argument("-s", "--samples_dir", dest="samplesDir", type=str, metavar="DIR",
         help="""
-                Raw:Relative or absolute path to the parent directory of all the sample
-                directories.  The -s option should be used when all the sample directories
-                are in subdirectories immediately below a parent directory.
-                Note: You must specify either the -s or -S option, but not both.
-                Note: The specified directory should contain only a collection of sample
-                      directories, nothing else.
-                Note: Unless you request mirrored inputs, see the -m option, additional files
-                      will be written to each of the sample directories during the execution
-                      of the SNP Pipeline""")
+                Raw:Relative or absolute path to the parent directory
+                of all the sample directories.  The -s option should
+                be used when all the sample directories are in
+                subdirectories immediately below a parent directory.
+                Note: You must specify either the -s or -S option, but
+                      not both.
+                Note: The specified directory should contain only a
+                      collection of sample directories, nothing else.
+                Note: Unless you request mirrored inputs, see the
+                      -m option, additional files will be written to
+                      each of the sample directories during the
+                      execution of the SNP Pipeline""")
 
     subparser.add_argument("-S", "--samples_file", dest="samplesFile", type=str, metavar="FILE",
         help="""
-                Raw:Relative or absolute path to a file listing all of the sample directories.
-                The -S option should be used when the samples are not under a common parent
+                Raw:Relative or absolute path to a file listing all of
+                the sample directories.  The -S option should be used
+                when the samples are not under a common parent
                 directory.
-                Note: If you are not mirroring the samples (see the -m option), you can
-                      improve parallel processing performance by sorting the the list of
-                      directories descending by size, largest first.  The -m option
-                      automatically generates a sorted directory list.
-                Note: You must specify either the -s or -S option, but not both.
-                Note: Unless you request mirrored inputs, see the -m option, additional files
-                      will be written to each of the sample directories during the execution
-                      of the SNP Pipeline""")
+                Note: If you are not mirroring the samples (see the
+                      -m option), you can improve parallel processing
+                      performance by sorting the the list of
+                      directories descending by size, largest first.
+                      The -m option automatically generates a sorted
+                      directory list.
+                Note: You must specify either the -s or -S option, but
+                      not both.
+                Note: Unless you request mirrored inputs, see the
+                      -m option, additional files will be written to
+                      each of the sample directories during the
+                      execution of the SNP Pipeline""")
 
     subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
