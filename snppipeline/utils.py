@@ -231,7 +231,7 @@ def is_directory_writeable(path):
     writeable : bool
         True if the path is a writeable directory
     """
-    return os.path.isdir(path) and os.access(path, os.W_OK | os.X_OK) 
+    return os.path.isdir(path) and os.access(path, os.W_OK | os.X_OK)
 
 
 def mkdir_p(path):
@@ -251,7 +251,7 @@ def mkdir_p(path):
             raise
 
 
-def read_properties(prop_file_path):
+def read_properties(prop_file_path, recognize_vars=False):
     """Read a file of name=value pairs and load them into a dictionary.
 
     Name and value must be separated by =.
@@ -263,6 +263,10 @@ def read_properties(prop_file_path):
     ----------
     prop_file_path : str
         Path to the property file.
+    recognize_vars : bool, optional
+        If True, values containing dollar prefixed tokens are expanded to
+        previously read property values or environment variable values if
+        possible.
 
     Returns
     -------
@@ -284,11 +288,28 @@ def read_properties(prop_file_path):
     >>> print("Ddd=", file=f)               # no value
     >>> print("Eee='5\\"'", file=f)         # double quote within single-quoted value
     >>> print("Fff=\\"6'\\"", file=f)       # single quote within double-quoted value
+    >>> print("Ggg=$Aaa", file=f)           # ignore other parameter when recognize_vars=False
     >>> f.close()
 
     # Read the properties
     >>> read_properties(filepath)
-    OrderedDict([('Aaa', 'bbb'), ('Bbb', '2'), ('Ccc', '33'), ('Ddd', ''), ('Eee', '5"'), ('Fff', "6'")])
+    OrderedDict([('Aaa', 'bbb'), ('Bbb', '2'), ('Ccc', '33'), ('Ddd', ''), ('Eee', '5"'), ('Fff', "6'"), ('Ggg', '$Aaa')])
+    >>> os.unlink(filepath)
+
+    # Create a property file
+    >>> os.environ["DUMMY_ENV_VAR"] = "D ummy"
+    >>> f = NamedTemporaryFile(delete=False, mode='w')
+    >>> filepath = f.name
+    >>> print("Aaa = bbb", file=f)                          # define Aaa property
+    >>> print("Bbb = $Aaa ", file=f)                        # substitute property
+    >>> print("Ccc=$DUMMY_ENV_VAR", file=f)                 # substitute environment variable
+    >>> print("Ddd=$DUMMY_ENV_VAR $more", file=f)           # substitute environment variable, ignore something that cannot be resolved
+    >>> print("Eee=$DUMMY_ENV_VAR$Aaa $Bbb", file=f)        # substitute two properties and one environment variable
+    >>> f.close()
+
+    # Read the properties
+    >>> read_properties(filepath, recognize_vars=True)
+    OrderedDict([('Aaa', 'bbb'), ('Bbb', 'bbb'), ('Ccc', 'D ummy'), ('Ddd', 'D ummy $more'), ('Eee', 'D ummybbb bbb')])
     >>> os.unlink(filepath)
     """
     properties = OrderedDict()
@@ -308,6 +329,23 @@ def read_properties(prop_file_path):
                 value = value.strip('"')
             elif value.startswith("'") and value.endswith("'"):
                 value = value.strip("'")
+
+            # expand known tokens
+            if recognize_vars:
+                old_value = None
+                token_regex = "[$][a-zA-Z_]+[a-zA-Z0-9_]*"
+                while value != old_value:
+                    old_value = value
+                    match = re.search(token_regex, value)
+                    if match:
+                        token = match.group(0)[1:] # drop the leading $
+                        if token in properties:
+                            token_value = properties[token]
+                            value = re.sub(token_regex, token_value, value, count=1)
+                        elif token in os.environ:
+                            token_value = os.environ[token]
+                            value = re.sub(token_regex, token_value, value, count=1)
+
             properties[key] = value
 
     return properties

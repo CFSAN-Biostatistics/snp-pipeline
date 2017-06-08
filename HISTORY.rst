@@ -6,6 +6,11 @@ History
 1.0.0 (2017-06-??) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+**Changes Impacting Backwards Compatibility:**
+
+* The configuration file is not an executable bash script anymore.  However, you can still
+  substitute environment variables with the $VAR_NAME notation.
+
 **Other Changes:**
 
 * Added a new helper utility, ``qarrayrun`` to simplify creating and running array jobs on Grid

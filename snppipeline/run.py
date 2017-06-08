@@ -14,14 +14,11 @@ import sys
 import time
 import traceback
 
+from snppipeline import command
 from snppipeline.job_runner import JobRunner
 from snppipeline.job_runner import JobRunnerException
 from snppipeline import utils
 from snppipeline.utils import log_error
-
-
-# Module globals
-log_dir = None
 
 
 def handle_called_process_exception(exc_type, exc_value, exc_traceback):
@@ -160,7 +157,7 @@ def run(args):
     #stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
 
     # Erase any left-over error log environment variable from a previous run
-    del os.environ["errorOutputFile"]
+    os.environ.pop("errorOutputFile", None) # the 2nd arg avoids an exception when not in dict
 
     # Handle output working directory.  Create the directory if it does not exist.
     # Any errors creating the work_dir will not be logged to the error log because
@@ -201,20 +198,23 @@ def run(args):
     if not utils.is_directory_writeable(work_dir):
         utils.fatal_error("Error: logs directory % is not writable." % log_dir)
 
+    # Handle configuration file, use the specified file, or create a default file
+    if args.configFile:
+        config_file_path = args.configFile
+        if not os.path.isfile(reference_file_path):
+            utils.fatal_error("Error: configuration file %s does not exist." % config_file_path)
+        if os.path.getsize(reference_file_path) == 0:
+            utils.fatal_error("Error: configuration file %s is empty." % config_file_path)
+
+        shutil.copy2(config_file_path, log_dir)  # copy2 tries to preserve timestamps
+        config_params = utils.read_properties(config_file_path, recognize_vars=True)
+    else:
+        command.run("cfsan_snp_pipeline data configurationFile " + log_dir, outfile=sys.stdout)
+        config_file_path = os.path.join(log_dir, "snppipeline.conf")
+        config_params = utils.read_properties(config_file_path, recognize_vars=True)
+
 """
 
-# Handle configuration file, use the specified file, or create a default file
-if "$opt_c_set" = "1":
-    configFilePath="$opt_c_arg"
-    if ! -f "$configFilePath": fatalError "Configuration file $configFilePath does not exist."; fi
-    if ! -s "$configFilePath": fatalError "Configuration file $configFilePath is empty."; fi
-    cp -p "$configFilePath" "$logDir"
-    source "$configFilePath"
-else
-    # true below is to ignore preserve timestamp error
-    cfsan_snp_pipeline data configurationFile "$logDir" || true
-    source "$logDir/snppipeline.conf"
-fi
 
 # Validate the configured aligner choice
 if "$SnpPipeline_Aligner" == "":
