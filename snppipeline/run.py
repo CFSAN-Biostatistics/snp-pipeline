@@ -214,14 +214,17 @@ def run(args):
         config_params = utils.read_properties(config_file_path, recognize_vars=True)
 
     # Validate the configured aligner choice
-    snp_pipeline_aligner = config_params.get("SnpPipeline_Aligner", "bowtie2").lower()
+    snp_pipeline_aligner = config_params.get("SnpPipeline_Aligner", "").lower() or "bowtie2"
     if snp_pipeline_aligner not in ["bowtie2", "smalt"]:
         utils.fatal_error("Config file error in SnpPipeline_Aligner parameter: only bowtie2 and smalt aligners are supported.")
     os.environ["SnpPipeline_Aligner"] = snp_pipeline_aligner
 
     # Stop the pipeline by default upon single sample errors if not configured either way
-    stop_on_error = config_params.get("SnpPipeline_StopOnSampleError", "true").lower()
+    stop_on_error = config_params.get("SnpPipeline_StopOnSampleError", "").lower() or "true"
     os.environ["SnpPipeline_StopOnSampleError"] = stop_on_error
+
+    command.run("echo $SnpPipeline_Aligner", sys.stdout)
+    command.run("echo $SnpPipeline_StopOnSampleError", sys.stdout)
 
     # Put the configuration parameters into the process environment variables
     os.environ["Bowtie2Build_ExtraParams"] = config_params.get("Bowtie2Build_ExtraParams", "")
@@ -231,7 +234,7 @@ def run(args):
     os.environ["SmaltAlign_ExtraParams"] = config_params.get("SmaltAlign_ExtraParams", "")
     os.environ["SamtoolsSamFilter_ExtraParams"] = config_params.get("SamtoolsSamFilter_ExtraParams", "")
     os.environ["SamtoolsSort_ExtraParams"] = config_params.get("SamtoolsSort_ExtraParams", "")
-    os.environ["SnpPipeline_RemoveDuplicateReads"] = config_params.get("SnpPipeline_RemoveDuplicateReads", "true").lower()
+    os.environ["SnpPipeline_RemoveDuplicateReads"] = config_params.get("SnpPipeline_RemoveDuplicateReads", "").lower() or "true"
     os.environ["PicardMarkDuplicates_ExtraParams"] = config_params.get("PicardMarkDuplicates_ExtraParams", "")
     os.environ["PicardJvm_ExtraParams"] = config_params.get("PicardJvm_ExtraParams", "")
     os.environ["SamtoolsMpileup_ExtraParams"] = config_params.get("SamtoolsMpileup_ExtraParams", "")
@@ -246,7 +249,6 @@ def run(args):
     os.environ["CollectSampleMetrics_ExtraParams"] = config_params.get("CollectSampleMetrics_ExtraParams", "")
     os.environ["CombineSampleMetrics_ExtraParams"] = config_params.get("CombineSampleMetrics_ExtraParams", "")
     os.environ["GridEngine_PEname"] = config_params.get("GridEngine_PEname", "")
-
 
     # Verify the dependencies are available on the path
     dependencies = ["cfsan_snp_pipeline", snp_pipeline_aligner, "samtools", "java", "tabix", "bgzip", "bcftools"]
