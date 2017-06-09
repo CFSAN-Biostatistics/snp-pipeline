@@ -3,6 +3,12 @@
 History
 -------
 
+0.8.2 (2017-06-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Fix samtools sort compatibility with samtools 0.1.19.
+
+
 0.8.1 (2017-06-02) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

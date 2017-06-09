@@ -96,7 +96,7 @@ def call_sites(args):
         # Use the -o FILE command line option with SAMtools 1.3 and higher
         samtools_version = version_str.split()[-1] # just the number
         if samtools_version < "1.3":
-            command_line = "samtools sort " + samtools_sort_extra_params + ' ' + unsorted_bam_file + ' ' + sorted_bam_file
+            command_line = "samtools sort " + samtools_sort_extra_params + ' ' + unsorted_bam_file + ' ' + os.path.join(sample_dir, "reads.sorted")
         else:
             command_line = "samtools sort " + samtools_sort_extra_params + " -o " + sorted_bam_file + ' ' + unsorted_bam_file
 
