@@ -213,86 +213,64 @@ def run(args):
         config_file_path = os.path.join(log_dir, "snppipeline.conf")
         config_params = utils.read_properties(config_file_path, recognize_vars=True)
 
+    # Validate the configured aligner choice
+    snp_pipeline_aligner = config_params.get("SnpPipeline_Aligner", "bowtie2").lower()
+    if snp_pipeline_aligner not in ["bowtie2", "smalt"]:
+        utils.fatal_error("Config file error in SnpPipeline_Aligner parameter: only bowtie2 and smalt aligners are supported.")
+    os.environ["SnpPipeline_Aligner"] = snp_pipeline_aligner
+
+    # Stop the pipeline by default upon single sample errors if not configured either way
+    stop_on_error = config_params.get("SnpPipeline_StopOnSampleError", "true").lower()
+    os.environ["SnpPipeline_StopOnSampleError"] = stop_on_error
+
+    # Put the configuration parameters into the process environment variables
+    os.environ["Bowtie2Build_ExtraParams"] = config_params.get("Bowtie2Build_ExtraParams", "")
+    os.environ["SmaltIndex_ExtraParams"] = config_params.get("SmaltIndex_ExtraParams", "")
+    os.environ["SamtoolsFaidx_ExtraParams"] = config_params.get("SamtoolsFaidx_ExtraParams", "")
+    os.environ["Bowtie2Align_ExtraParams"] = config_params.get("Bowtie2Align_ExtraParams", "")
+    os.environ["SmaltAlign_ExtraParams"] = config_params.get("SmaltAlign_ExtraParams", "")
+    os.environ["SamtoolsSamFilter_ExtraParams"] = config_params.get("SamtoolsSamFilter_ExtraParams", "")
+    os.environ["SamtoolsSort_ExtraParams"] = config_params.get("SamtoolsSort_ExtraParams", "")
+    os.environ["SnpPipeline_RemoveDuplicateReads"] = config_params.get("SnpPipeline_RemoveDuplicateReads", "true").lower()
+    os.environ["PicardMarkDuplicates_ExtraParams"] = config_params.get("PicardMarkDuplicates_ExtraParams", "")
+    os.environ["PicardJvm_ExtraParams"] = config_params.get("PicardJvm_ExtraParams", "")
+    os.environ["SamtoolsMpileup_ExtraParams"] = config_params.get("SamtoolsMpileup_ExtraParams", "")
+    os.environ["VarscanMpileup2snp_ExtraParams"] = config_params.get("VarscanMpileup2snp_ExtraParams", "")
+    os.environ["VarscanJvm_ExtraParams"] = config_params.get("VarscanJvm_ExtraParams", "")
+    os.environ["RemoveAbnormalSnp_ExtraParams"] = config_params.get("RemoveAbnormalSnp_ExtraParams", "")
+    os.environ["CreateSnpList_ExtraParams"] = config_params.get("CreateSnpList_ExtraParams", "")
+    os.environ["CallConsensus_ExtraParams"] = config_params.get("CallConsensus_ExtraParams", "")
+    os.environ["CreateSnpMatrix_ExtraParams"] = config_params.get("CreateSnpMatrix_ExtraParams", "")
+    os.environ["BcftoolsMerge_ExtraParams"] = config_params.get("BcftoolsMerge_ExtraParams", "")
+    os.environ["CreateSnpReferenceSeq_ExtraParams"] = config_params.get("CreateSnpReferenceSeq_ExtraParams", "")
+    os.environ["CollectSampleMetrics_ExtraParams"] = config_params.get("CollectSampleMetrics_ExtraParams", "")
+    os.environ["CombineSampleMetrics_ExtraParams"] = config_params.get("CombineSampleMetrics_ExtraParams", "")
+    os.environ["GridEngine_PEname"] = config_params.get("GridEngine_PEname", "")
+
+
+    # Verify the dependencies are available on the path
+    dependencies = ["cfsan_snp_pipeline", snp_pipeline_aligner, "samtools", "java", "tabix", "bgzip", "bcftools"]
+    found_all_dependencies = True
+    for executable in dependencies:
+        if not utils.which(executable):
+            utils.report_error(executable + " is not on the path")
+            found_all_dependencies = False
+
+    stdout = command.run("java net.sf.varscan.VarScan 2>&1")
+    if "Error" in stdout:
+        utils.report_error("CLASSPATH is not configured with the path to VarScan")
+        found_all_dependencies = False
+
+    if os.environ["SnpPipeline_RemoveDuplicateReads"] == "true":
+        stdout = command.run("java picard.cmdline.PicardCommandLine 2>&1")
+        if "Error" in stdout:
+            utils.report_error("CLASSPATH is not configured with the path to Picard")
+            found_all_dependencies = False
+
+    if not found_all_dependencies:
+        utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")
+
 """
-
-
-# Validate the configured aligner choice
-if "$SnpPipeline_Aligner" == "":
-    SnpPipeline_Aligner="bowtie2"
-else
-    # make lowercase
-    SnpPipeline_Aligner=$(echo "$SnpPipeline_Aligner" | tr '[:upper:]' '[:lower:]')
-    if "$SnpPipeline_Aligner" != "bowtie2" && "$SnpPipeline_Aligner" != "smalt":
-        fatalError "Config file error in SnpPipeline_Aligner parameter: only bowtie2 and smalt aligners are supported."
-    fi
-fi
-
-# Stop the pipeline by default upon single sample errors if not configured either way
-if [ -z $SnpPipeline_StopOnSampleError ]; then
-    SnpPipeline_StopOnSampleError=true
-fi
-
-export SnpPipeline_StopOnSampleError
-export SnpPipeline_Aligner
-export Bowtie2Build_ExtraParams
-export SmaltIndex_ExtraParams
-export SamtoolsFaidx_ExtraParams
-export Bowtie2Align_ExtraParams
-export SmaltAlign_ExtraParams
-export SamtoolsSamFilter_ExtraParams
-export SamtoolsSort_ExtraParams
-export SnpPipeline_RemoveDuplicateReads
-export PicardMarkDuplicates_ExtraParams
-export PicardJvm_ExtraParams
-export SamtoolsMpileup_ExtraParams
-export VarscanMpileup2snp_ExtraParams
-export VarscanJvm_ExtraParams
-export RemoveAbnormalSnp_ExtraParams
-export CreateSnpList_ExtraParams
-export CallConsensus_ExtraParams
-export CreateSnpMatrix_ExtraParams
-export BcftoolsMerge_ExtraParams
-export CreateSnpReferenceSeq_ExtraParams
-export CollectSampleMetrics_ExtraParams
-export CombineSampleMetrics_ExtraParams
-export GridEngine_PEname
-
-
-# Verify the scripts and needed tools were properly installed on the path
-(( dependencyErrors = 0 )) || true
-onPath=$(verifyOnPath "cfsan_snp_pipeline"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "prepReference.sh"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "prepSamples.sh"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "snp_filter.py"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "create_snp_list.py"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "call_consensus.py"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "create_snp_matrix.py"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "create_snp_reference_seq.py"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "collectSampleMetrics.sh"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "combineSampleMetrics.sh"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "calculate_snp_distances.py"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "$SnpPipeline_Aligner"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "samtools"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "java"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "tabix"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "bgzip"); if $onPath != true: (( dependencyErrors += 1 )); fi
-onPath=$(verifyOnPath "bcftools"); if $onPath != true: (( dependencyErrors += 1 )); fi
-result=$(java net.sf.varscan.VarScan 2>&1) || true
-if $result =~ .*Error.*:
-    reportError "CLASSPATH is not configured with the path to VarScan"
-    (( dependencyErrors += 1 ))
-fi
-if -z $SnpPipeline_RemoveDuplicateReads || $SnpPipeline_RemoveDuplicateReads = true:
-    result=$(java picard.cmdline.PicardCommandLine 2>&1) || true
-    if $result =~ .*Error.*:
-        reportError "CLASSPATH is not configured with the path to Picard"
-        (( dependencyErrors += 1 ))
-    fi
-fi
-if (( $dependencyErrors > 0 )); then
-    fatalError 'Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html'
-fi
-
 
 # Rewrite the file of sample directories, removing trailing slashes and blank lines.
 rewriteCleansedFileOfSampleDirs()

@@ -241,6 +241,10 @@ def mkdir_p(path):
     ----------
     path : str
         Directory path to create.
+
+    Raises
+    ------
+    OSError if the directory does not already exist and cannot be created
     """
     try:
         os.makedirs(path)
@@ -655,6 +659,31 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
         # run_snp_pipeline.sh will know this error has already been reported,
         # but it should not stop execution
         sys.exit(98)
+
+
+def which(executable):
+    """Search the PATH for the specified executable file.
+
+    Parameters
+    ----------
+    executable : str
+        Name of executable
+
+    Returns
+    -------
+    path : str, or None
+        Path to the executable or None if not found on the PATH.
+        If the excutable is available at more than one location,
+        Only the first path is returned.
+    """
+    path = os.environ.get('PATH', "")
+
+    for p in path.split(os.pathsep):
+        p = os.path.join(p, executable)
+        if os.access(p, os.X_OK): # Can the file be executed?
+            return p
+
+    return None
 
 
 def verify_existing_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):
