@@ -809,6 +809,11 @@ def verify_non_empty_directory(error_prefix, directory, error_handler=None, cont
         Only used when error_handler is "sample".  Indicates if it is possible
         to continue execution.  Setting this flag true may allow the code
         to continue without exiting if configured to do so.
+
+    Returns
+    -------
+    okay : bool
+        If the function does not exit the program, it returns true if directory exists and is not empty
     """
     if error_handler not in ["global", "sample", None]:
         raise ValueError("Invalid error_handler: %s" % repr(error_handler))
@@ -821,9 +826,8 @@ def verify_non_empty_directory(error_prefix, directory, error_handler=None, cont
         message = error_prefix + directory + " is not a directory."
     elif len(os.listdir(directory)) == 0:
         message = error_prefix + directory + " is empty."
-
-    if not message:
-        return
+    else:
+        return True
 
     if error_handler == "global":
         global_error(message)
@@ -831,6 +835,7 @@ def verify_non_empty_directory(error_prefix, directory, error_handler=None, cont
         sample_error(message, continue_possible=continue_possible)
     else:
         report_error(message)
+    return False
 
 
 def global_error_on_missing_file(file_path, program):

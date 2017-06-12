@@ -15,6 +15,7 @@ import time
 import traceback
 
 from snppipeline import command
+from snppipeline import fastq
 from snppipeline.job_runner import JobRunner
 from snppipeline.job_runner import JobRunnerException
 from snppipeline import utils
@@ -223,9 +224,6 @@ def run(args):
     stop_on_error = config_params.get("SnpPipeline_StopOnSampleError", "").lower() or "true"
     os.environ["SnpPipeline_StopOnSampleError"] = stop_on_error
 
-    command.run("echo $SnpPipeline_Aligner", sys.stdout)
-    command.run("echo $SnpPipeline_StopOnSampleError", sys.stdout)
-
     # Put the configuration parameters into the process environment variables
     os.environ["Bowtie2Build_ExtraParams"] = config_params.get("Bowtie2Build_ExtraParams", "")
     os.environ["SmaltIndex_ExtraParams"] = config_params.get("SmaltIndex_ExtraParams", "")
@@ -272,92 +270,98 @@ def run(args):
     if not found_all_dependencies:
         utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")
 
+
+    def rewrite_cleansed_file_of_sample_dirs(inpath, outpath):
+        """Rewrite the file of sample directories, removing trailing slashes and blank lines.
+
+        Parameters
+        ----------
+        inpath : str
+            Path to the input file of sample directories
+        outpath : str
+            Path to the input file of sample directories
+        """
+        with open(inpath) as f:
+            lines = f.read().splitlines()
+        lines = [line.rstrip('/') for line in lines] # strip trailing slash
+        lines = [line.strip() for line in lines] # strip leading and trailing spaces
+        lines = [line for line in lines if line] # discard blank lines
+
+        with open(outpath, 'w') as f:
+            for line in lines:
+                print(line, file=f)
+
+
+    def validate_file_of_sample_dirs(sample_dirs_file):
+        """Verify each of the sample directories in the sample directory file is not empty and contains fastq's.
+
+        Parameters
+        ----------
+        sample_dirs_file : str
+            Path to the file of sample directories
+        """
+        found_error = False
+
+        with open(sample_dirs_file) as f:
+            for directory in f:
+                directory = directory.strip()
+                if not utils.verify_non_empty_directory("Sample directory", directory):
+                    found_error = True
+                else:
+                    files = fastq.list_fastq_files(directory)
+                    if len(files) == 0:
+                        utils.report_error("Sample directory %s does not contain any fastq files." % directory)
+                        found_error = True
+
+        if found_error:
+            if os.environ.get("SnpPipeline_StopOnSampleError") == "true":
+                sys.exit(1)
+            else:
+                log_error("================================================================================")
+
+
+    # --------------------------------------------------------
+    # get sample directories sorted by size, largest first
+
+    # persistSortedSampleDirs()
+    # {
+    #     local samplesDir=$1
+    #     local workDir=$2
+
+    #     tmpFile=$(mktemp -p "$workDir" tmp.sampleDirs.XXXXXXXX)
+    #     du -b -L "$samplesDir"/*/*.fastq* 2> /dev/null > "$tmpFile" || true
+    #     du -b -L "$samplesDir"/*/*.fq* 2> /dev/null >> "$tmpFile" || true
+    #     < "$tmpFile" xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | \
+    #     awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | \
+    #     sort -k 2 -n -r | \
+    #     cut -f 1 -d" " > "$workDir/sampleDirectories.txt"
+    #     rm "$tmpFile"
+    # }
+
+
+    # TODO: detect broken fastq symlinks
+    if args.samplesDir:
+        pass
+    #     samplesDir="${opt_s_arg%/}"  # strip trailing slash
+    #     if ! -d "$samplesDir": fatalError "Samples directory $samplesDir does not exist."; fi
+    #     if   -z $(ls -A "$samplesDir"): fatalError "Samples directory $samplesDir is empty."; fi
+    #     fastqFiles=$({ find "$samplesDir" -path "$samplesDir"'/*/*.fastq*'; find "$samplesDir" -path "$samplesDir"'/*/*.fq*'; })
+    #     if   -z "$fastqFiles": fatalError "Samples directory $samplesDir does not contain subdirectories with fastq files."; fi
+    #     persistSortedSampleDirs "$samplesDir" "$workDir"
+    #     sampleDirsFile="$workDir/sampleDirectories.txt"
+
+    if args.samplesFile:
+        sample_dirs_file = args.samplesFile
+        if not os.path.isfile(sample_dirs_file):
+            utils.fatal_error("Error: the file of samples directories, %s does not exist." % sample_dirs_file)
+        if os.path.getsize(sample_dirs_file) == 0:
+            utils.fatal_error("Error: the file of samples directories, %s is empty." % sample_dirs_file)
+        rewrite_cleansed_file_of_sample_dirs(sample_dirs_file, os.path.join(work_dir, "sampleDirectories.txt"))
+        sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt")
+        validate_file_of_sample_dirs(sample_dirs_file)
+
 """
 
-# Rewrite the file of sample directories, removing trailing slashes and blank lines.
-rewriteCleansedFileOfSampleDirs()
-{
-    local inSampleDirsFile=$1
-    local outSampleDirsFile=$2
-
-    # Is the file of sample dirs the same as the file to be created?
-    if [ "$inSampleDirsFile" -ef "$outSampleDirsFile" ]; then
-        # Remove trailing slashes and blank lines
-        sed --in-place -e "s,/\+$,," -e '/^[[:space:]]*$/d' "$inSampleDirsFile"
-    else
-        sed            -e "s,/\+$,," -e '/^[[:space:]]*$/d' "$inSampleDirsFile" > "$outSampleDirsFile"
-    fi
-}
-
-# Verify each of the sample directories in the sample directory file is not empty and contains fastq's
-validateFileOfSampleDirs()
-{
-    local sampleDirsFile=$1
-    local foundError=false
-
-    while IFS=$'\n' read -r dir || [[ -n "$dir" ]]
-    do
-        if ! -d "$dir":
-            reportError "Sample directory $dir does not exist."
-            foundError=true
-        elif -z $(ls -A "$dir"):
-            reportError "Sample directory $dir is empty."
-            foundError=true
-        else
-            fastqFiles=$({ find "$dir" -path "$dir"'/*.fastq*'; find "$dir" -path "$dir"'/*.fq*'; })
-            if -z "$fastqFiles":
-                reportError "Sample directory $dir does not contain any fastq files."
-                foundError=true
-            fi
-        fi
-    done  < sample_dirs_file
-    if "$foundError" == true:
-        if -z $SnpPipeline_StopOnSampleError || $SnpPipeline_StopOnSampleError == true:
-            exit 1
-        else
-            logError "================================================================================"
-        fi
-    fi
-}
-
-
-# --------------------------------------------------------
-# get sample directories sorted by size, largest first
-
-persistSortedSampleDirs()
-{
-    local samplesDir=$1
-    local workDir=$2
-
-    tmpFile=$(mktemp -p "$workDir" tmp.sampleDirs.XXXXXXXX)
-    du -b -L "$samplesDir"/*/*.fastq* 2> /dev/null > "$tmpFile" || true
-    du -b -L "$samplesDir"/*/*.fq* 2> /dev/null >> "$tmpFile" || true
-    < "$tmpFile" xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | \
-    awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | \
-    sort -k 2 -n -r | \
-    cut -f 1 -d" " > "$workDir/sampleDirectories.txt"
-    rm "$tmpFile"
-}
-
-
-# TODO: detect broken fastq symlinks
-if "$opt_s_set" = "1":
-    samplesDir="${opt_s_arg%/}"  # strip trailing slash
-    if ! -d "$samplesDir": fatalError "Samples directory $samplesDir does not exist."; fi
-    if   -z $(ls -A "$samplesDir"): fatalError "Samples directory $samplesDir is empty."; fi
-    fastqFiles=$({ find "$samplesDir" -path "$samplesDir"'/*/*.fastq*'; find "$samplesDir" -path "$samplesDir"'/*/*.fq*'; })
-    if   -z "$fastqFiles": fatalError "Samples directory $samplesDir does not contain subdirectories with fastq files."; fi
-    persistSortedSampleDirs "$samplesDir" "$workDir"
-    sampleDirsFile="$workDir/sampleDirectories.txt"
-fi
-if "$opt_S_set" = "1":
-    sampleDirsFile="$opt_S_arg"
-    if ! -f sample_dirs_file: fatalError "The file of samples directories, $sampleDirsFile, does not exist."; fi
-    if ! -s sample_dirs_file: fatalError "The file of samples directories, $sampleDirsFile, is empty."; fi
-    rewriteCleansedFileOfSampleDirs sample_dirs_file "$workDir/sampleDirectories.txt"
-    sampleDirsFile="$workDir/sampleDirectories.txt"
-    validateFileOfSampleDirs sample_dirs_file
-fi
 sampleCount=$(cat sample_dirs_file | wc -l)
 
 # --------------------------------------------------------
