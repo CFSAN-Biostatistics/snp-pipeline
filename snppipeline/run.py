@@ -320,35 +320,49 @@ def run(args):
                 log_error("================================================================================")
 
 
-    # --------------------------------------------------------
-    # get sample directories sorted by size, largest first
 
-    # persistSortedSampleDirs()
-    # {
-    #     local samplesDir=$1
-    #     local workDir=$2
+    def persist_sorted_sample_dirs_file(samples_parent_dir, sample_dirs_file):
+        """Given a parent directory containing multiple sample directories, create
+        a file listing the sample directories sorted by fastq file size, largest first.
 
-    #     tmpFile=$(mktemp -p "$workDir" tmp.sampleDirs.XXXXXXXX)
-    #     du -b -L "$samplesDir"/*/*.fastq* 2> /dev/null > "$tmpFile" || true
-    #     du -b -L "$samplesDir"/*/*.fq* 2> /dev/null >> "$tmpFile" || true
-    #     < "$tmpFile" xargs -n 2 sh -c 'echo $0 $(dirname "$1")' | \
-    #     awk '{sizes[$2]+=$1} END {for (dir in sizes) {printf "%s %.0f\n", dir, sizes[dir]}}' | \
-    #     sort -k 2 -n -r | \
-    #     cut -f 1 -d" " > "$workDir/sampleDirectories.txt"
-    #     rm "$tmpFile"
-    # }
+        Subdirectories without fastq files are ignored.
+
+        Parameters
+        ----------
+        samples_parent_dir : str
+            Path to the parent directory containing multiple sample directories
+        sample_dirs_file : str
+            Path to the file of sample directories which will be created
+        """
+        sub_dirs = [os.path.join(samples_parent_dir, d) for d in os.listdir(samples_parent_dir) if os.path.isdir(os.path.join(samples_parent_dir, d))]
+        dir_sizes = []
+        for d in sub_dirs:
+            size = sum(map(os.path.getsize, fastq.list_fastq_files(d)))
+            if size:
+                dir_sizes.append((size, d))
+        dir_sizes.sort(reverse=True)
+
+        with open(sample_dirs_file, 'w') as f:
+            for size, directory in dir_sizes:
+                print(directory, file=f)
 
 
     # TODO: detect broken fastq symlinks
     if args.samplesDir:
-        pass
-    #     samplesDir="${opt_s_arg%/}"  # strip trailing slash
-    #     if ! -d "$samplesDir": fatalError "Samples directory $samplesDir does not exist."; fi
-    #     if   -z $(ls -A "$samplesDir"): fatalError "Samples directory $samplesDir is empty."; fi
-    #     fastqFiles=$({ find "$samplesDir" -path "$samplesDir"'/*/*.fastq*'; find "$samplesDir" -path "$samplesDir"'/*/*.fq*'; })
-    #     if   -z "$fastqFiles": fatalError "Samples directory $samplesDir does not contain subdirectories with fastq files."; fi
-    #     persistSortedSampleDirs "$samplesDir" "$workDir"
-    #     sampleDirsFile="$workDir/sampleDirectories.txt"
+        samples_parent_dir = args.samplesDir.rstrip('/') # strip trailing slash
+        if not utils.verify_non_empty_directory("Samples directory", samples_parent_dir):
+            sys.exit(1)
+
+        # verify at least one of the subdirectories contains fastq files.
+        sub_dirs = [os.path.join(samples_parent_dir, d) for d in os.listdir(samples_parent_dir) if os.path.isdir(os.path.join(samples_parent_dir, d))]
+        fastq_files = []
+        for d in sub_dirs:
+            fastq_files.extend(fastq.list_fastq_files(d))
+        if len(fastq_files) == 0:
+            utils.fatal_error("Samples directory %s does not contain subdirectories with fastq files." % samples_parent_dir)
+
+        sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt")
+        persist_sorted_sample_dirs_file(samples_parent_dir, sample_dirs_file)
 
     if args.samplesFile:
         sample_dirs_file = args.samplesFile
@@ -398,7 +412,7 @@ if "$opt_m_set" = "1":
     done
     # since we mirrored the samples, we need to update our samples location and sorted list of samples
     samplesDir="$workDir/samples"
-    persistSortedSampleDirs "$samplesDir" "$workDir"
+    persist_sorted_sample_dirs_file "$samplesDir" "$workDir"
     sampleDirsFile="$workDir/sampleDirectories.txt"
 fi
 
