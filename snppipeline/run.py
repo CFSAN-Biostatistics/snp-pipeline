@@ -248,10 +248,6 @@ def run(args):
         samplesFile : str
             Relative or absolute path to a file listing all of the sample directories.
     """
-
-    #stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
-    #stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
-
     # Erase any left-over error log environment variable from a previous run
     os.environ.pop("errorOutputFile", None) # the 2nd arg avoids an exception when not in dict
 
@@ -393,9 +389,27 @@ def run(args):
         sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt")
         validate_file_of_sample_dirs(sample_dirs_file)
 
+    # TODO : is this needed?
+    def line_count(file_name):
+        """Count the number of lines in a file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of input file
+
+        Returns
+        -------
+        count : int
+            Number of lines in the file
+        """
+        with open(file_name) as f:
+            return sum(1 for line in f)
+
+
+    sample_count = utils.line_count(sample_dirs_file)
 """
 
-sampleCount=$(cat sample_dirs_file | wc -l)
 
 # --------------------------------------------------------
 # Mirror the input reference and samples if requested
@@ -494,7 +508,7 @@ if platform == "grid" || platform == "torque":
 fi
 
 if platform == "grid":
-    alignSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
+    alignSamplesJobId=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
 #$   -N alignSamples
 #$   -cwd
 #$   -V
@@ -506,7 +520,7 @@ if platform == "grid":
 _EOF_
 )
 elif platform == "torque":
-    alignSamplesJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
+    alignSamplesJobId=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
     #PBS -N alignSamples
     #PBS -d $(pwd)
     #PBS -j oe
@@ -524,9 +538,9 @@ fi
 
 echo -e "\nStep 4 - Prep the samples"
 if platform == "grid":
-    sleep $((1 + sampleCount / 150)) # workaround potential bug when submitting two large consecutive array jobs
+    sleep $((1 + sample_count / 150)) # workaround potential bug when submitting two large consecutive array jobs
     alignSamplesJobArray=$(stripGridEngineJobArraySuffix $alignSamplesJobId)
-    prepSamplesJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
+    prepSamplesJobId=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
 #$   -N prepSamples
 #$   -cwd
 #$   -V
@@ -537,9 +551,9 @@ if platform == "grid":
 _EOF_
 )
 elif platform == "torque":
-    sleep $((1 + sampleCount / 150)) # workaround torque bug when submitting two large consecutive array jobs
+    sleep $((1 + sample_count / 150)) # workaround torque bug when submitting two large consecutive array jobs
     alignSamplesJobArray=$(stripTorqueJobArraySuffix $alignSamplesJobId)
-    prepSamplesJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
+    prepSamplesJobId=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
     #PBS -N prepSamples
     #PBS -d $(pwd)
     #PBS -j oe
@@ -629,7 +643,7 @@ fi
 
 echo -e "\nStep 7.1 - Call the consensus SNPs for each sample"
 if platform == "grid":
-    callConsensusJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
+    callConsensusJobId=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
 #$ -N callConsensus
 #$ -cwd
 #$ -V
@@ -641,7 +655,7 @@ if platform == "grid":
 _EOF_
 )
 elif platform == "torque":
-    callConsensusJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
+    callConsensusJobId=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
     #PBS -N callConsensus
     #PBS -d $(pwd)
     #PBS -j oe
@@ -819,7 +833,7 @@ fi
 
 echo -e "\nStep 7.2 - Call the consensus SNPs for each sample"
 if platform == "grid":
-    callConsensusJobId2=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
+    callConsensusJobId2=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
 #$ -N callConsensus_preserved
 #$ -cwd
 #$ -V
@@ -831,7 +845,7 @@ if platform == "grid":
 _EOF_
 )
 elif platform == "torque":
-    callConsensusJobId2=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
+    callConsensusJobId2=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
     #PBS -N callConsensus_preserved
     #PBS -d $(pwd)
     #PBS -j oe
@@ -968,7 +982,7 @@ fi
 
 echo -e "\nStep 12 - Collect metrics for each sample"
 if platform == "grid":
-    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sampleCount $GridEngine_QsubExtraParams << _EOF_
+    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
 #$ -N collectMetrics
 #$ -cwd
 #$ -V
@@ -980,7 +994,7 @@ if platform == "grid":
 _EOF_
 )
 elif platform == "torque":
-    collectSampleMetricsJobId=$(echo | qsub -t 1-$sampleCount $Torque_QsubExtraParams << _EOF_
+    collectSampleMetricsJobId=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
     #PBS -N collectMetrics
     #PBS -d $(pwd)
     #PBS -j oe
