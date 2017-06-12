@@ -127,6 +127,101 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         handle_internal_exception(exc_type, exc_value, exc_traceback)
 
 
+def rewrite_cleansed_file_of_sample_dirs(inpath, outpath):
+    """Rewrite the file of sample directories, removing trailing slashes and blank lines.
+
+    Parameters
+    ----------
+    inpath : str
+        Path to the input file of sample directories
+    outpath : str
+        Path to the input file of sample directories
+    """
+    with open(inpath) as f:
+        lines = f.read().splitlines()
+    lines = [line.rstrip('/') for line in lines] # strip trailing slash
+    lines = [line.strip() for line in lines] # strip leading and trailing spaces
+    lines = [line for line in lines if line] # discard blank lines
+
+    with open(outpath, 'w') as f:
+        for line in lines:
+            print(line, file=f)
+
+
+def validate_file_of_sample_dirs(sample_dirs_file):
+    """Verify each of the sample directories in the sample directory file is not empty and contains fastq's.
+
+    Parameters
+    ----------
+    sample_dirs_file : str
+        Path to the file of sample directories
+    """
+    found_error = False
+
+    with open(sample_dirs_file) as f:
+        for directory in f:
+            directory = directory.strip()
+            if not utils.verify_non_empty_directory("Sample directory", directory):
+                found_error = True
+            else:
+                files = fastq.list_fastq_files(directory)
+                if len(files) == 0:
+                    utils.report_error("Sample directory %s does not contain any fastq files." % directory)
+                    found_error = True
+
+    if found_error:
+        if os.environ.get("SnpPipeline_StopOnSampleError") == "true":
+            sys.exit(1)
+        else:
+            log_error("================================================================================")
+
+
+def get_sorted_sample_dirs_fastq_sizes(samples_parent_dir):
+    """Given a parent directory containing multiple sample directories, return a list
+    of the sample subdirectories with the size of the fastq files in each.
+
+    Parameters
+    ----------
+    samples_parent_dir : str
+        Path to the parent directory containing multiple sample directories
+
+    Returns
+    -------
+    dir_sizes : list of tuples
+        Sorted list of (size, path) tuples, largest first.
+    """
+    sub_dirs = [os.path.join(samples_parent_dir, d) for d in os.listdir(samples_parent_dir) if os.path.isdir(os.path.join(samples_parent_dir, d))]
+    dir_sizes = []
+    for d in sub_dirs:
+        size = sum(map(os.path.getsize, fastq.list_fastq_files(d)))
+        dir_sizes.append((size, d))
+    dir_sizes.sort(reverse=True)
+    return dir_sizes
+
+
+def persist_sorted_sample_dirs_file(samples_parent_dir, sample_dirs_file):
+    """Given a parent directory containing multiple sample directories, create
+    a file listing the sample directories sorted by fastq file size, largest first.
+
+    Subdirectories without fastq files are ignored.
+
+    Parameters
+    ----------
+    samples_parent_dir : str
+        Path to the parent directory containing multiple sample directories
+    sample_dirs_file : str
+        Path to the file of sample directories which will be created
+    """
+    dir_sizes = get_sorted_sample_dirs_fastq_sizes(samples_parent_dir)
+
+    # ignore subdirectories with no fastq files
+    dir_sizes = [(size, path) for size, path in dir_sizes if size > 0]
+
+    with open(sample_dirs_file, 'w') as f:
+        for size, directory in dir_sizes:
+            print(directory, file=f)
+
+
 def run(args):
     """Run all the steps of the snp pipeline in th correct order.
 
@@ -270,83 +365,7 @@ def run(args):
     if not found_all_dependencies:
         utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")
 
-
-    def rewrite_cleansed_file_of_sample_dirs(inpath, outpath):
-        """Rewrite the file of sample directories, removing trailing slashes and blank lines.
-
-        Parameters
-        ----------
-        inpath : str
-            Path to the input file of sample directories
-        outpath : str
-            Path to the input file of sample directories
-        """
-        with open(inpath) as f:
-            lines = f.read().splitlines()
-        lines = [line.rstrip('/') for line in lines] # strip trailing slash
-        lines = [line.strip() for line in lines] # strip leading and trailing spaces
-        lines = [line for line in lines if line] # discard blank lines
-
-        with open(outpath, 'w') as f:
-            for line in lines:
-                print(line, file=f)
-
-
-    def validate_file_of_sample_dirs(sample_dirs_file):
-        """Verify each of the sample directories in the sample directory file is not empty and contains fastq's.
-
-        Parameters
-        ----------
-        sample_dirs_file : str
-            Path to the file of sample directories
-        """
-        found_error = False
-
-        with open(sample_dirs_file) as f:
-            for directory in f:
-                directory = directory.strip()
-                if not utils.verify_non_empty_directory("Sample directory", directory):
-                    found_error = True
-                else:
-                    files = fastq.list_fastq_files(directory)
-                    if len(files) == 0:
-                        utils.report_error("Sample directory %s does not contain any fastq files." % directory)
-                        found_error = True
-
-        if found_error:
-            if os.environ.get("SnpPipeline_StopOnSampleError") == "true":
-                sys.exit(1)
-            else:
-                log_error("================================================================================")
-
-
-
-    def persist_sorted_sample_dirs_file(samples_parent_dir, sample_dirs_file):
-        """Given a parent directory containing multiple sample directories, create
-        a file listing the sample directories sorted by fastq file size, largest first.
-
-        Subdirectories without fastq files are ignored.
-
-        Parameters
-        ----------
-        samples_parent_dir : str
-            Path to the parent directory containing multiple sample directories
-        sample_dirs_file : str
-            Path to the file of sample directories which will be created
-        """
-        sub_dirs = [os.path.join(samples_parent_dir, d) for d in os.listdir(samples_parent_dir) if os.path.isdir(os.path.join(samples_parent_dir, d))]
-        dir_sizes = []
-        for d in sub_dirs:
-            size = sum(map(os.path.getsize, fastq.list_fastq_files(d)))
-            if size:
-                dir_sizes.append((size, d))
-        dir_sizes.sort(reverse=True)
-
-        with open(sample_dirs_file, 'w') as f:
-            for size, directory in dir_sizes:
-                print(directory, file=f)
-
-
+    # Process the sample directory command line option
     # TODO: detect broken fastq symlinks
     if args.samplesDir:
         samples_parent_dir = args.samplesDir.rstrip('/') # strip trailing slash
@@ -354,16 +373,16 @@ def run(args):
             sys.exit(1)
 
         # verify at least one of the subdirectories contains fastq files.
-        sub_dirs = [os.path.join(samples_parent_dir, d) for d in os.listdir(samples_parent_dir) if os.path.isdir(os.path.join(samples_parent_dir, d))]
-        fastq_files = []
-        for d in sub_dirs:
-            fastq_files.extend(fastq.list_fastq_files(d))
-        if len(fastq_files) == 0:
+        dir_sizes = get_sorted_sample_dirs_fastq_sizes(samples_parent_dir)
+        dir_sizes = [(size, path) for size, path in dir_sizes if size > 0]
+        if len(dir_sizes) == 0:
             utils.fatal_error("Samples directory %s does not contain subdirectories with fastq files." % samples_parent_dir)
 
         sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt")
         persist_sorted_sample_dirs_file(samples_parent_dir, sample_dirs_file)
 
+    # Process the file of sample directories command line option
+    # TODO: detect broken fastq symlinks
     if args.samplesFile:
         sample_dirs_file = args.samplesFile
         if not os.path.isfile(sample_dirs_file):
