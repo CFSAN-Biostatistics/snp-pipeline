@@ -389,65 +389,53 @@ def run(args):
         sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt")
         validate_file_of_sample_dirs(sample_dirs_file)
 
-    # TODO : is this needed?
-    def line_count(file_name):
-        """Count the number of lines in a file.
+    with open(sample_dirs_file) as f:
+       sample_dirs_list = f.read().splitlines()
+    sample_count = len(sample_dirs_list) # TODO: is this used anywhere?
 
-        Parameters
-        ----------
-        file_name : str
-            Name of input file
+    # --------------------------------------------------------
+    # Mirror the input reference and samples if requested
+    # TODO: make this a pure python solution
+    if args.mirror:
+        if args.mirror == "soft":
+            # soft link, subsequent freshness checks use the timestamp of original file, not the soft link
+            mirror_flag = " -s "
+        elif args.mirror == "hard":
+            # hard link, automatically preserves attributes of the original file
+            mirror_flag = " -l "
+        else:
+            # regular copy, -p explicitly preserves attributes of the original file
+            mirror_flag = " -p "
+    
+        # Mirror/link the reference
+        work_reference_dir = os.path.join(work_dir, "reference")
+        utils.mkdir_p(work_reference_dir)
+        src_reference_file = os.path.abspath(reference_file_path)
+        cmd = "cp -v -u -f" + mirror_flag + src_reference_file + ' ' + work_reference_dir
+        subprocess.check_call(cmd, shell=True)
 
-        Returns
-        -------
-        count : int
-            Number of lines in the file
-        """
-        with open(file_name) as f:
-            return sum(1 for line in f)
+        # since we mirrored the reference, we need to update our reference location
+        reference_file_path = os.path.join(work_reference_dir, reference_file_name)
+    
+        # Mirror/link the samples
+        work_samples_parent_dir = os.path.join(work_dir, "samples")
+        for directory in sample_dirs_list:
+            basedir = os.path.basename(directory)
+            work_sample_dir = os.path.join(work_samples_parent_dir, basedir)
+            utils.mkdir_p(work_sample_dir)
+            src_sample_dir = os.path.abspath(directory)
+            # copy without stderr message and without exit error code because the fastq or fq files might not exist
+            cmd = "cp -r -v -u -f" + mirror_flag + src_sample_dir + "/*.fastq* " + work_sample_dir + " 2> /dev/null || true"
+            subprocess.check_call(cmd, shell=True)
+            cmd = "cp -r -v -u -f" + mirror_flag + src_sample_dir + "/*.fq* " + work_sample_dir + " 2> /dev/null || true"
+            subprocess.check_call(cmd, shell=True)
 
+        # since we mirrored the samples, we need to update our sorted list of samples
+        sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt") 
+        persist_sorted_sample_dirs_file(work_samples_parent_dir, sample_dirs_file)
+       
 
-    sample_count = utils.line_count(sample_dirs_file)
 """
-
-
-# --------------------------------------------------------
-# Mirror the input reference and samples if requested
-if "$opt_m_set" = "1":
-    if "$mirrorMode" == "soft":
-        # soft link, subsequent freshness checks use the timestamp of original file, not the soft link
-        mirrorFlag="-s"
-    elif "$mirrorMode" == "hard":
-        # hard link, automatically preserves attributes of the original file
-        mirrorFlag="-l"
-    else
-        # regular copy, -p explicitly preserves attributes of the original file
-        mirrorFlag="-p"
-    fi
-
-    # Mirror/link the reference
-    mkdir -p "$workDir/reference"
-    absoluteReferenceFilePath=$(get_abs_filename reference_file_path)
-    cp -v -u -f $mirrorFlag "$absoluteReferenceFilePath" "$workDir/reference"
-    # since we mirrored the reference, we need to update our reference location
-    referenceFileName=${referenceFilePath##*/} # strip directories
-    referenceFilePath="$workDir/reference/$referenceFileName"
-
-    # Mirror/link the samples
-    cat sample_dirs_file | while IFS=$'\n' read -r dir || [[ -n "$dir" ]]
-    do
-        baseDir=${dir##*/} # strip the parent directories
-        mkdir -p "$workDir/samples/$baseDir"
-        # copy without stderr message and without exit error code because the fastq or fq files might not exist
-        absoluteSampleDir=$(get_abs_filename "$dir")
-        cp -r -v -u -f $mirrorFlag "$absoluteSampleDir"/*.fastq* "$workDir/samples/$baseDir" 2> /dev/null || true
-        cp -r -v -u -f $mirrorFlag "$absoluteSampleDir"/*.fq* "$workDir/samples/$baseDir" 2> /dev/null || true
-    done
-    # since we mirrored the samples, we need to update our samples location and sorted list of samples
-    samplesDir="$workDir/samples"
-    persist_sorted_sample_dirs_file "$samplesDir" "$workDir"
-    sampleDirsFile="$workDir/sampleDirectories.txt"
-fi
 
 
 # --------------------------------------------------------
