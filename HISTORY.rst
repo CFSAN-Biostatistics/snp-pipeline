@@ -10,6 +10,8 @@ History
 
 * The configuration file is not an executable bash script anymore.  However, you can still
   substitute environment variables with the $VAR_NAME notation.
+* Log file names are changed to match cfsan_snp_pipeline sub-command names.
+* Grid and Torque job names are changed to match cfsan_snp_pipeline sub-command names.
 
 **Other Changes:**
 

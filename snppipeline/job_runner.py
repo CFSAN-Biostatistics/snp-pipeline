@@ -229,6 +229,9 @@ class JobRunner(object):
         if self.hpc_type == "local":
             command_line = "set -o pipefail; " + command_line + " 2>&1 | tee " + log_file
 
+            # flush stdout to keep the unbuffered stderr in chronological order with stdout
+            sys.stdout.flush()
+
             # Run command. Wait for command to complete. If the return code was zero then return, otherwise raise CalledProcessError
             subprocess.check_call(command_line, shell=True, executable="bash")
             return '0'

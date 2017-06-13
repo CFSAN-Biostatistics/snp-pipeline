@@ -22,6 +22,8 @@ from snppipeline.job_runner import JobRunnerException
 from snppipeline import utils
 from snppipeline.utils import log_error
 
+# Global
+log_dir = ""
 
 def handle_called_process_exception(exc_type, exc_value, exc_traceback):
     """This function handles exceptions in the child processes executed by
@@ -249,6 +251,8 @@ def run(args):
         samplesFile : str
             Relative or absolute path to a file listing all of the sample directories.
     """
+    global log_dir
+
     # Erase any left-over error log environment variable from a previous run
     os.environ.pop("errorOutputFile", None) # the 2nd arg avoids an exception when not in dict
 
@@ -450,32 +454,18 @@ def run(args):
             file_list = fastq.list_fastq_files(directory)
             print(' '.join(file_list), file=f)
 
-"""
+    # Initialize the job runner
+    if args.jobQueueMgr is None:
+        runner = JobRunner("local")
+    else:
+        runner = JobRunner(args.jobQueueMgr)
 
-echo -e "\nStep 2 - Prep the reference"
-if platform == "grid":
-    prepReferenceJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N prepReference
-#$ -V
-#$ -j y
-#$ -cwd
-#$ -o $logDir/prepReference.log
-    cfsan_snp_pipeline index_ref + force_flag + reference_file_path
-_EOF_
-)
-elif platform == "torque":
-    prepReferenceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N prepReference
-    #PBS -j oe
-    #PBS -d $(pwd)
-    #PBS -o $logDir/prepReference.log
-    #PBS -V
-    cfsan_snp_pipeline index_ref + force_flag + reference_file_path
-_EOF_
-)
-else
-    cfsan_snp_pipeline index_ref + force_flag + reference_file_path 2>&1 | tee $logDir/prepReference.log
-fi
+    print("\nStep 2 - Prep the reference")
+    command_line = "cfsan_snp_pipeline index_ref" + force_flag + ' ' + reference_file_path
+    log_file = os.path.join(log_dir, "indexRef.log")
+    runner.run(command_line, "indexRef", log_file)
+
+"""
 
 echo -e "\nStep 3 - Align the samples to the reference"
 # Parse the user-specified aligner parameters to find the number of CPU cores requested, for example, "-p 16" or "-n 16"
