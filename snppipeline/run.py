@@ -7,6 +7,7 @@ run all the sequential steps of the pipeline in the correct order.
 from __future__ import print_function
 from __future__ import absolute_import
 
+import psutil
 import os
 import shutil
 import subprocess
@@ -433,19 +434,23 @@ def run(args):
         # since we mirrored the samples, we need to update our sorted list of samples
         sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt") 
         persist_sorted_sample_dirs_file(work_samples_parent_dir, sample_dirs_file)
+
+        # refresh the list of sample dirs -- now in sorted order
+        with open(sample_dirs_file) as f:
+           sample_dirs_list = f.read().splitlines()
        
+    # --------------------------------------------------------
+    print("\nStep 1 - Prep work")
+    num_cores = psutil.cpu_count()
+
+    # get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
+    sample_full_path_names_file = os.path.join(work_dir, "sampleFullPathNames.txt")
+    with open(sample_full_path_names_file, 'w') as f:
+        for directory in sample_dirs_list:
+            file_list = fastq.list_fastq_files(directory)
+            print(' '.join(file_list), file=f)
 
 """
-
-
-# --------------------------------------------------------
-echo -e "\nStep 1 - Prep work"
-export numCores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
-# get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
-tmpFile=$(mktemp -p "$workDir" tmp.fastqs.XXXXXXXX)
-cat sample_dirs_file | while IFS=$'\n' read -r dir || [[ -n "$dir" ]]; do echo $dir/*.fastq* >> "$tmpFile"; echo "$dir"/*.fq* >> "$tmpFile"; done
-grep -v '*.fq*' "$tmpFile" | grep -v '*.fastq*' > "$workDir/sampleFullPathNames.txt"
-rm "$tmpFile"
 
 echo -e "\nStep 2 - Prep the reference"
 if platform == "grid":
