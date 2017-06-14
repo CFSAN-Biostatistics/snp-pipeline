@@ -51,55 +51,21 @@ samples.
     SnpPipeline_StopOnSampleError=false
 
 
-MaxConcurrentPrepSamples
-------------------------
-
-Controls the number of call_sites processes (SAMtools and Varscan) running concurrently
-on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
-This parameter is used by run_snp_pipeline.sh only.
-
-**Default**:
-
-    When this parameter is not set to a value, the pipeline will launch multiple concurrent
-    processes using all available CPU cores on a workstation.
-
-**Example**::
-
-    MaxConcurrentPrepSamples=2
-
-
-MaxConcurrentCallConsensus
---------------------------
-
-Controls the number of call_consensus processes running concurrently
-on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
-This parameter is used by run_snp_pipeline.sh only.
+MaxCpuCores
+-----------
+Controls the number of CPU cores used by the SNP Pipeline.  This parameter controls
+CPU resources on both your workstation and on an HPC cluster.  By limiting the
+number of CPU cores used, you are also limiting the number of concurrently executing
+processes.
 
 **Default**:
 
     When this parameter is not set to a value, the pipeline will launch multiple concurrent
-    processes using all available CPU cores on a workstation.
+    processes using all available CPU cores.
 
 **Example**::
 
-    MaxConcurrentCallConsensus=4
-
-
-MaxConcurrentCollectSampleMetrics
-----------------------------------
-
-Controls the number of collect_metrics processes running concurrently
-on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
-This parameter is used by run_snp_pipeline.sh only.
-
-**Default**:
-
-    When this parameter is not set to a value, the pipeline will launch multiple concurrent
-    processes using all available CPU cores on a workstation.
-
-**Example**::
-
-    MaxConcurrentCollectSampleMetrics=4
+    MaxCpuCores=2
 
 
 SnpPipeline_MaxSnps
@@ -116,7 +82,6 @@ parameter is disabled.
 **Example**::
 
     SnpPipeline_MaxSnps=1000
-
 
 
 SnpPipeline_Aligner

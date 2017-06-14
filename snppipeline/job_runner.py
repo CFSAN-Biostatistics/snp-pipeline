@@ -256,7 +256,7 @@ class JobRunner(object):
         job_name : str
             Job name that will appear in the job scheduler queue.
         log_file : str
-            Path to the combined stdout / stderr log file.
+            Path to the combined stdout / stderr log file.  The sub-task number will be automatically appended.
         array_file : str
             Name of the file containing the arguments for each sub-task with one line
             per sub-task.  The arguments for each sub-task are found at the line number
@@ -297,6 +297,9 @@ class JobRunner(object):
 
             with open(array_file) as f:
                 num_tasks = sum(1 for line in f)
+
+        if self.hpc_type == "grid":
+            log_file += "-$TASK_ID" # TODO: verify this works properly
 
         if self.hpc_type == "local":
             # Change parameter placeholder into bash variables ready to feed to bash through xargs

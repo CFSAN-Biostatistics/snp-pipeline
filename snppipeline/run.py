@@ -7,8 +7,9 @@ run all the sequential steps of the pipeline in the correct order.
 from __future__ import print_function
 from __future__ import absolute_import
 
-import psutil
 import os
+import psutil
+import re
 import shutil
 import subprocess
 import sys
@@ -225,6 +226,140 @@ def persist_sorted_sample_dirs_file(samples_parent_dir, sample_dirs_file):
             print(directory, file=f)
 
 
+def configure_process_threads(extra_params_env_var, threads_option, default_threads_per_process, max_cpu_cores):
+    """Detect the user-configured number of allowed threads for a process and compute the
+    corresponding number of allowed processes given the maximum allowed number of CPUs.
+
+    The named environment variable is parsed to detect a user-setting for the number of threads per process.
+    If not found, the environment variable is modified with a default setting.
+
+    If the user requests a number of threads that is greater than the max_cpu_cores, the number of allowed
+    threads will be set to the max_cpu_cores.
+
+    Parameters
+    ----------
+    extra_params_env_var : str
+        Name of an environment variable the user can set with embedded command line options
+        to configure the number of threads for a process.
+    threads_option : str
+        The exact spelling of a command line option to set the number of threads, for example "-n".
+    default_threads_per_process : int
+        The number of threads to use if the user did not set a preferred value in the named
+        environment variable.
+    max_cpu_cores : int or None
+        The maximum allowed number of CPU cores to consume by all instances of the process.
+        If set the None, it implies no limit to the number of CPU cores that can be used.
+
+    Returns
+    -------
+    max_processes : int or None
+        The computed maximum number of allowed concurrent processes, or None to allow unlimited.
+    threads_per_process : int
+        The number of threads per process instance.  This will either be the value previously
+        configured by the user in the named environment variable, or the default value passed
+        as an argument.
+
+    Examples
+    --------
+    # env var not set, max CPU not set
+    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, None)
+    (None, 8)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 8'
+
+    # env var not set, max CPU set, not multiple of threads
+    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 20)
+    (2, 8)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 8'
+
+    # env var not set, max CPU set, multiple of threads
+    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 24)
+    (3, 8)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 8'
+
+    # env var exists but option not set, max CPU not set
+    >>> os.environ["SmaltAlign_ExtraParams"] = "--version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 9, None)
+    (None, 9)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '--version -n 9'
+
+    # env var exists, option set, max CPU not set
+    >>> os.environ["SmaltAlign_ExtraParams"] = "--version -n 10"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, None)
+    (None, 10)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '--version -n 10'
+
+    # env var exists, option set, max CPU set, not multiple of threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 22)
+    (2, 10)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 10 --version'
+
+    # env var exists, option set, max CPU set, multiple of threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 30)
+    (3, 10)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 10 --version'
+
+    # env var exists, option set, max CPU set, max CPU == desired threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 4 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 4)
+    (1, 4)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 4 --version'
+
+    # env var exists, option set, max CPU set, max CPU less than desired threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 2)
+    (1, 2)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 2 --version'
+
+    # env var exists but option not set, max CPU less than default number of threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "--version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 9, 7)
+    (1, 7)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '--version -n 7'
+    """
+    regex_str = threads_option + "[ \t]*([0-9]+)"
+    extra_params = os.environ.get(extra_params_env_var, "")
+    match = re.search(regex_str, extra_params)
+    if match:
+        configured_threads_per_process = int(match.group(1))
+        threads_per_process = configured_threads_per_process
+    else:
+        threads_per_process = default_threads_per_process
+
+    if max_cpu_cores is None:
+        max_processes = None
+    elif max_cpu_cores >= threads_per_process:
+        max_processes = int(max_cpu_cores / threads_per_process)
+    else:
+        max_processes = 1
+        threads_per_process = max_cpu_cores
+
+    threads_option += ' ' + str(threads_per_process)
+    if match and threads_per_process != configured_threads_per_process:
+        extra_params = re.sub(regex_str, threads_option, extra_params)
+        os.environ[extra_params_env_var] = extra_params
+    elif not match:
+        if extra_params:
+            extra_params += ' '
+        os.environ[extra_params_env_var] = extra_params + threads_option
+
+    return max_processes, threads_per_process
+
+
 def run(args):
     """Run all the steps of the snp pipeline in th correct order.
 
@@ -283,7 +418,7 @@ def run(args):
     reference_file_name = os.path.basename(reference_file_path)
 
     # Force rebuild flag is passed to all the subtask commands below
-    force_flag = " -f " if args.forceFlag else ""
+    force_flag = " -f " if args.forceFlag else " "
 
     # Create the logs directory with name like "logs-20170215.144253"
     run_time_stamp = time.strftime('%Y%m%d.%H%M%S', time.localtime())
@@ -320,6 +455,22 @@ def run(args):
     stop_on_error = config_params.get("SnpPipeline_StopOnSampleError", "").lower() or "true"
     os.environ["SnpPipeline_StopOnSampleError"] = stop_on_error
 
+    # How many CPU cores can we use?
+    max_cpu_cores = config_params.get("MaxCpuCores", None)
+    if max_cpu_cores == "":
+        max_cpu_cores = None
+    if max_cpu_cores:
+        try:
+            max_cpu_cores = int(max_cpu_cores)
+            if max_cpu_cores < 1:
+                utils.fatal_error("Config file error in MaxCpuCores parameter: %s is less than one." % max_cpu_cores)
+        except ValueError:
+            utils.fatal_error("Config file error in MaxCpuCores parameter: %s is not a valid number." % max_cpu_cores)
+
+    if args.jobQueueMgr is None: # workstation
+        num_local_cpu_cores = psutil.cpu_count()
+        max_cpu_cores = min(num_local_cpu_cores, max_cpu_cores) if max_cpu_cores else num_local_cpu_cores
+
     # Put the configuration parameters into the process environment variables
     os.environ["Bowtie2Build_ExtraParams"] = config_params.get("Bowtie2Build_ExtraParams", "")
     os.environ["SmaltIndex_ExtraParams"] = config_params.get("SmaltIndex_ExtraParams", "")
@@ -342,7 +493,7 @@ def run(args):
     os.environ["CreateSnpReferenceSeq_ExtraParams"] = config_params.get("CreateSnpReferenceSeq_ExtraParams", "")
     os.environ["CollectSampleMetrics_ExtraParams"] = config_params.get("CollectSampleMetrics_ExtraParams", "")
     os.environ["CombineSampleMetrics_ExtraParams"] = config_params.get("CombineSampleMetrics_ExtraParams", "")
-    os.environ["GridEngine_PEname"] = config_params.get("GridEngine_PEname", "")
+    #os.environ["GridEngine_PEname"] = config_params.get("GridEngine_PEname", "")
 
     # Verify the dependencies are available on the path
     dependencies = ["cfsan_snp_pipeline", snp_pipeline_aligner, "samtools", "java", "tabix", "bgzip", "bcftools"]
@@ -411,7 +562,7 @@ def run(args):
         else:
             # regular copy, -p explicitly preserves attributes of the original file
             mirror_flag = " -p "
-    
+
         # Mirror/link the reference
         work_reference_dir = os.path.join(work_dir, "reference")
         utils.mkdir_p(work_reference_dir)
@@ -421,7 +572,7 @@ def run(args):
 
         # since we mirrored the reference, we need to update our reference location
         reference_file_path = os.path.join(work_reference_dir, reference_file_name)
-    
+
         # Mirror/link the samples
         work_samples_parent_dir = os.path.join(work_dir, "samples")
         for directory in sample_dirs_list:
@@ -436,17 +587,15 @@ def run(args):
             subprocess.check_call(cmd, shell=True)
 
         # since we mirrored the samples, we need to update our sorted list of samples
-        sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt") 
+        sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt")
         persist_sorted_sample_dirs_file(work_samples_parent_dir, sample_dirs_file)
 
         # refresh the list of sample dirs -- now in sorted order
         with open(sample_dirs_file) as f:
            sample_dirs_list = f.read().splitlines()
-       
+
     # --------------------------------------------------------
     print("\nStep 1 - Prep work")
-    num_cores = psutil.cpu_count()
-
     # get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
     sample_full_path_names_file = os.path.join(work_dir, "sampleFullPathNames.txt")
     with open(sample_full_path_names_file, 'w') as f:
@@ -457,67 +606,36 @@ def run(args):
     # Initialize the job runner
     if args.jobQueueMgr is None:
         runner = JobRunner("local")
+    elif args.jobQueueMgr == "grid":
+        strip_job_array_suffix = config_params.get("GridEngine_StripJobArraySuffix", "true").lower()
+        runner = JobRunner(args.jobQueueMgr, strip_job_array_suffix == "true")
     else:
-        runner = JobRunner(args.jobQueueMgr)
+        strip_job_array_suffix = config_params.get("Torque_StripJobArraySuffix", "false").lower()
+        runner = JobRunner(args.jobQueueMgr, strip_job_array_suffix == "true")
 
     print("\nStep 2 - Prep the reference")
-    command_line = "cfsan_snp_pipeline index_ref" + force_flag + ' ' + reference_file_path
     log_file = os.path.join(log_dir, "indexRef.log")
-    runner.run(command_line, "indexRef", log_file)
+    command_line = "cfsan_snp_pipeline index_ref" + force_flag + reference_file_path
+    job_id_index_ref = runner.run(command_line, "indexRef", log_file)
+
+    print("\nStep 3 - Align the samples to the reference")
+    # Parse the user-specified aligner parameters to find the number of CPU cores requested, for example, "-p 16" or "-n 16"
+    # Set the default number of CPU cores if the user did not configure a value.
+    if snp_pipeline_aligner == "smalt":
+        extra_params_env_var = "SmaltAlign_ExtraParams"
+        threads_option = "-n"
+    else:
+        extra_params_env_var = "Bowtie2Align_ExtraParams"
+        threads_option = "-p"
+
+    max_processes, threads_per_process = configure_process_threads(extra_params_env_var, threads_option, 8, max_cpu_cores)
+
+    parallel_environment = config_params.get("GridEngine_PEname", None)
+    log_file = os.path.join(log_dir, "mapReads.log")
+    command_line = "cfsan_snp_pipeline map_reads" + force_flag + reference_file_path + " {1} {2}"
+    job_id_map_reads = runner.run_array(command_line, "mapReads", log_file, sample_full_path_names_file, max_processes=max_processes, wait_for=[job_id_index_ref], threads=threads_per_process, parallel_environment=parallel_environment)
 
 """
-
-echo -e "\nStep 3 - Align the samples to the reference"
-# Parse the user-specified aligner parameters to find the number of CPU cores requested, for example, "-p 16" or "-n 16"
-# Set the default number of  CPU cores if the user did not configure a value.
-if platform == "grid" || platform == "torque":
-    if "$SnpPipeline_Aligner" == "smalt":
-        regex="(-n[[:blank:]]*)([[:digit:]]+)"
-        if "$SmaltAlign_ExtraParams" =~ $regex:
-            numAlignThreads=${BASH_REMATCH[2]}
-        else
-            numAlignThreads=8
-            SmaltAlign_ExtraParams="$SmaltAlign_ExtraParams -n $numAlignThreads"
-        fi
-    else
-        regex="(-p[[:blank:]]*)([[:digit:]]+)"
-        if "$Bowtie2Align_ExtraParams" =~ $regex:
-            numAlignThreads=${BASH_REMATCH[2]}
-        else
-            numAlignThreads=8
-            Bowtie2Align_ExtraParams="$Bowtie2Align_ExtraParams -p $numAlignThreads"
-        fi
-    fi
-fi
-
-if platform == "grid":
-    alignSamplesJobId=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
-#$   -N alignSamples
-#$   -cwd
-#$   -V
-#$   -j y
-#$   -pe $GridEngine_PEname $numAlignThreads
-#$   -hold_jid $prepReferenceJobId
-#$   -o $logDir/alignSamples.log-\$TASK_ID
-    cfsan_snp_pipeline map_reads + force_flag + reference_file_path \$(cat "$workDir/sampleFullPathNames.txt" | head -n \$SGE_TASK_ID | tail -n 1)
-_EOF_
-)
-elif platform == "torque":
-    alignSamplesJobId=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
-    #PBS -N alignSamples
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -l nodes=1:ppn=$numAlignThreads
-    #PBS -W depend=afterok:$prepReferenceJobId
-    #PBS -o $logDir/alignSamples.log
-    #PBS -V
-    samplesToAlign=\$(cat "$workDir/sampleFullPathNames.txt" | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline map_reads + force_flag + reference_file_path \$samplesToAlign
-_EOF_
-)
-else
-    nl "$workDir/sampleFullPathNames.txt" | xargs -n 3 -L 1 bash -c 'set -o pipefail; cfsan_snp_pipeline map_reads + force_flag + reference_file_path $1 $2 2>&1 | tee $logDir/alignSamples.log-$0'
-fi
 
 echo -e "\nStep 4 - Prep the samples"
 if platform == "grid":

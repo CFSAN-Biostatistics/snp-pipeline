@@ -10,8 +10,11 @@ History
 
 * The configuration file is not an executable bash script anymore.  However, you can still
   substitute environment variables with the $VAR_NAME notation.
-* Log file names are changed to match cfsan_snp_pipeline sub-command names.
+* Log file names are changed to harmonize with cfsan_snp_pipeline sub-command names.
 * Grid and Torque job names are changed to match cfsan_snp_pipeline sub-command names.
+* Simplified the configuration of multi-threading.  Replaced the configuration parameters
+  MaxConcurrentCollectSampleMetrics, MaxConcurrentCallConsensus, and MaxConcurrentPrepSamples
+  with a single new configuration parameter ``MaxCpuCores``.  See also :ref:`faq-performance-label`.
 
 **Other Changes:**
 
