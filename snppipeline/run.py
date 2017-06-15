@@ -507,7 +507,7 @@ def run(args):
     os.environ["SamtoolsMpileup_ExtraParams"] = config_params.get("SamtoolsMpileup_ExtraParams", "")
     os.environ["VarscanMpileup2snp_ExtraParams"] = config_params.get("VarscanMpileup2snp_ExtraParams", "")
     os.environ["VarscanJvm_ExtraParams"] = config_params.get("VarscanJvm_ExtraParams", "")
-    os.environ["RemoveAbnormalSnp_ExtraParams"] = config_params.get("RemoveAbnormalSnp_ExtraParams", "")
+    os.environ["FilterRegions_ExtraParams"] = config_params.get("FilterRegions_ExtraParams", "")
     os.environ["CreateSnpList_ExtraParams"] = config_params.get("CreateSnpList_ExtraParams", "")
     os.environ["CallConsensus_ExtraParams"] = config_params.get("CallConsensus_ExtraParams", "")
     os.environ["CreateSnpMatrix_ExtraParams"] = config_params.get("CreateSnpMatrix_ExtraParams", "")
@@ -664,7 +664,7 @@ def run(args):
     command_line = "cfsan_snp_pipeline map_reads" + force_flag + reference_file_path + " {1} {2}"
     job_id_map_reads = runner.run_array(command_line, "mapReads", log_file, sample_full_path_names_file, max_processes=max_processes, wait_for=[job_id_index_ref], threads=threads_per_process, parallel_environment=parallel_environment)
 
-    progress("Step 4 - Find sites with snps in each sample")
+    progress("Step 4 - Find sites with SNPs in each sample")
     if job_queue_mgr in ["grid", "torque"]:
         time.sleep(1.0 + float(sample_count) / 150) # workaround torque bug when submitting two large consecutive array jobs, potential bug for grid
 
@@ -672,41 +672,17 @@ def run(args):
     command_line = "cfsan_snp_pipeline call_sites" + force_flag + reference_file_path + " {1}"
     job_id_call_sites = runner.run_array(command_line, "callSites", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for_array=[job_id_map_reads], slot_dependency=True)
 
+    progress("Step 5 - Filter abnormal SNP regions")
+    log_file = os.path.join(log_dir, "filterRegions.log")
+    extra_params = os.environ.get("FilterRegions_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline filter_regions -n var.flt.vcf " + sample_dirs_file + ' ' + reference_file_path + ' ' + extra_params
+    job_id_filter_regions = runner.run(command_line, "filterRegions", log_file, wait_for_array=[job_id_call_sites])
+
 """
 
-#Filter abnormal SNPs if needed
-echo -e "\nStep 5 - Remove abnormal SNPs"
-if platform == "grid":
-	prepSamplesJobArray=$(stripGridEngineJobArraySuffix $prepSamplesJobId)
-	filterAbnSNPJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N snpFiltering
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $prepSamplesJobArray
-#$ -o $logDir/filterAbnormalSNP.log
-cfsan_snp_pipeline filter_regions -n var.flt.vcf sample_dirs_file reference_file_path $RemoveAbnormalSnp_ExtraParams
-_EOF_
-)
-elif platform == "torque":
-	prepSamplesJobArray=$(stripTorqueJobArraySuffix $prepSamplesJobId)
-	filterAbnSNPJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-	#PBS -N snpFiltering
-	#PBS -d $(pwd)
-	#PBS -j oe
-	#PBS -W depend=afterokarray:$prepSamplesJobArray
-	#PBS -o $logDir/filterAbnormalSNP.log
-	#PBS -V
-	cfsan_snp_pipeline filter_regions -n var.flt.vcf sample_dirs_file reference_file_path $RemoveAbnormalSnp_ExtraParams
-_EOF_
-)
-else
-	cfsan_snp_pipeline filter_regions -n var.flt.vcf sample_dirs_file reference_file_path $RemoveAbnormalSnp_ExtraParams 2>&1 | tee $logDir/filterAbnormalSNP.log
-fi
-
-#Starting from here, there are 2 threads:
-#Thread X.1: the thread processing the original VCF files and corresponding downstream results
-#Thread X.2: the thread processing the preserved VCF files and corresponding downstream results
+    # Starting from here, there are 2 threads:
+    # Thread X.1: the thread processing the original VCF files and corresponding downstream results
+    # Thread X.2: the thread processing the preserved VCF files and corresponding downstream results
 
 
 echo -e "\nStep 6.1 - Combine the SNP positions across all samples into the SNP list file"

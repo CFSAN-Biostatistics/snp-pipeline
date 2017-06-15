@@ -84,8 +84,8 @@ named the way the pipeline expects.  Follow these guidelines:
 * If there is an outgroup among samples, a file containing the sample ids
   of the outgroup samples must be created in advance, and
   the relative or absolute path of this file should be specified in the parameter
-  "RemoveAbnormalSnp_ExtraParams" in the configuration file "snppipeline.conf" (see
-  the description of the parameter "RemoveAbnormalSnp_ExtraParams").
+  "FilterRegions_ExtraParams" in the configuration file "snppipeline.conf" (see
+  the description of the parameter "FilterRegions_ExtraParams").
 
 Outputs
 -------
@@ -1056,7 +1056,7 @@ regions are removed from *all* samples.  Therefore, if you add or remove a sampl
 final SNPs detected in all other samples.  See :ref:`cmd-ref-snp-filter`.
 
 The sensitivity of the SNP filtering can be controlled with parameters in the configuration file by setting values in
-``RemoveAbnormalSnp_ExtraParams``.  You can control the length of end-of-contig trimming, dense region window size, and
+``FilterRegions_ExtraParams``.  You can control the length of end-of-contig trimming, dense region window size, and
 maximum snps allowed within the window.  See :ref:`configuration-label`.
 
 
@@ -1075,7 +1075,7 @@ Grab the default configuration file::
 
     cfsan_snp_pipeline data configurationFile
 
-Edit ``snppipeline.conf``, and change the ``RemoveAbnormalSnp_ExtraParams`` parameter::
+Edit ``snppipeline.conf``, and change the ``FilterRegions_ExtraParams`` parameter::
 
     Add the --out_group option with the path to the file containing the outgroup sample ids.
 

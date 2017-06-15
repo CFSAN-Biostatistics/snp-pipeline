@@ -320,7 +320,7 @@ Any of the JVM options can be specified.
     VarscanJvm_ExtraParams="-Xmx300m"
 
 
-RemoveAbnormalSnp_ExtraParams
+FilterRegions_ExtraParams
 ------------------------------
 Specifies options passed to the filter_regions command.
 
@@ -339,7 +339,7 @@ Specifies options passed to the filter_regions command.
 
 **Example**::
 
-    RemoveAbnormalSnp_ExtraParams="--edge_length 500 --window_size 1000 --max_snp 3 --out_group /path/to/outgroupSamples.txt"
+    FilterRegions_ExtraParams="--edge_length 500 --window_size 1000 --max_snp 3 --out_group /path/to/outgroupSamples.txt"
 
 
 CreateSnpList_ExtraParams
