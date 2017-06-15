@@ -299,7 +299,7 @@ class JobRunner(object):
                 num_tasks = sum(1 for line in f)
 
         if self.hpc_type == "grid":
-            log_file += "-$TASK_ID" # TODO: verify this works properly
+            log_file += "-\$TASK_ID" # TODO: verify this works properly
 
         if self.hpc_type == "local":
             # Change parameter placeholder into bash variables ready to feed to bash through xargs
