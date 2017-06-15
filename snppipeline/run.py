@@ -23,8 +23,26 @@ from snppipeline.job_runner import JobRunnerException
 from snppipeline import utils
 from snppipeline.utils import log_error
 
-# Global
+# Globals
 log_dir = ""
+job_queue_mgr = None
+
+def progress(message):
+    """Print a progress message.
+
+    Parameters
+    ----------
+    message : str
+        The text of the progress message.
+    """
+    if job_queue_mgr is None: # local
+        print("*" * 80)
+        print(message)
+        print("*" * 80)
+    else:
+        print("Submitting " + message)
+
+
 
 def handle_called_process_exception(exc_type, exc_value, exc_traceback):
     """This function handles exceptions in the child processes executed by
@@ -387,6 +405,10 @@ def run(args):
             Relative or absolute path to a file listing all of the sample directories.
     """
     global log_dir
+    global job_queue_mgr
+
+    # Where are we running: grid, torque, or None (local)
+    job_queue_mgr = args.jobQueueMgr
 
     # Erase any left-over error log environment variable from a previous run
     os.environ.pop("errorOutputFile", None) # the 2nd arg avoids an exception when not in dict
@@ -467,7 +489,7 @@ def run(args):
         except ValueError:
             utils.fatal_error("Config file error in MaxCpuCores parameter: %s is not a valid number." % max_cpu_cores)
 
-    if args.jobQueueMgr is None: # workstation
+    if job_queue_mgr is None: # workstation
         num_local_cpu_cores = psutil.cpu_count()
         max_cpu_cores = min(num_local_cpu_cores, max_cpu_cores) if max_cpu_cores else num_local_cpu_cores
 
@@ -547,7 +569,13 @@ def run(args):
 
     with open(sample_dirs_file) as f:
        sample_dirs_list = f.read().splitlines()
-    sample_count = len(sample_dirs_list) # TODO: is this used anywhere?
+    sample_count = len(sample_dirs_list)
+
+    # --------------------------------------------------------
+    if job_queue_mgr is None:
+        progress("Step 1 - Prep work")
+    else:
+        print("Step 1 - Prep work")
 
     # --------------------------------------------------------
     # Mirror the input reference and samples if requested
@@ -562,6 +590,9 @@ def run(args):
         else:
             # regular copy, -p explicitly preserves attributes of the original file
             mirror_flag = " -p "
+
+        # flush stdout to keep the unbuffered stderr in chronological order with stdout
+        sys.stdout.flush()
 
         # Mirror/link the reference
         work_reference_dir = os.path.join(work_dir, "reference")
@@ -594,8 +625,6 @@ def run(args):
         with open(sample_dirs_file) as f:
            sample_dirs_list = f.read().splitlines()
 
-    # --------------------------------------------------------
-    print("\nStep 1 - Prep work")
     # get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
     sample_full_path_names_file = os.path.join(work_dir, "sampleFullPathNames.txt")
     with open(sample_full_path_names_file, 'w') as f:
@@ -604,21 +633,21 @@ def run(args):
             print(' '.join(file_list), file=f)
 
     # Initialize the job runner
-    if args.jobQueueMgr is None:
+    if job_queue_mgr is None:
         runner = JobRunner("local")
-    elif args.jobQueueMgr == "grid":
+    elif job_queue_mgr == "grid":
         strip_job_array_suffix = config_params.get("GridEngine_StripJobArraySuffix", "true").lower()
-        runner = JobRunner(args.jobQueueMgr, strip_job_array_suffix == "true")
+        runner = JobRunner(job_queue_mgr, strip_job_array_suffix == "true")
     else:
         strip_job_array_suffix = config_params.get("Torque_StripJobArraySuffix", "false").lower()
-        runner = JobRunner(args.jobQueueMgr, strip_job_array_suffix == "true")
+        runner = JobRunner(job_queue_mgr, strip_job_array_suffix == "true")
 
-    print("\nStep 2 - Prep the reference")
+    progress("Step 2 - Index the reference")
     log_file = os.path.join(log_dir, "indexRef.log")
     command_line = "cfsan_snp_pipeline index_ref" + force_flag + reference_file_path
     job_id_index_ref = runner.run(command_line, "indexRef", log_file)
 
-    print("\nStep 3 - Align the samples to the reference")
+    progress("Step 3 - Map the sample reads to the reference")
     # Parse the user-specified aligner parameters to find the number of CPU cores requested, for example, "-p 16" or "-n 16"
     # Set the default number of CPU cores if the user did not configure a value.
     if snp_pipeline_aligner == "smalt":
@@ -635,44 +664,15 @@ def run(args):
     command_line = "cfsan_snp_pipeline map_reads" + force_flag + reference_file_path + " {1} {2}"
     job_id_map_reads = runner.run_array(command_line, "mapReads", log_file, sample_full_path_names_file, max_processes=max_processes, wait_for=[job_id_index_ref], threads=threads_per_process, parallel_environment=parallel_environment)
 
-"""
+    progress("Step 4 - Find sites with snps in each sample")
+    if job_queue_mgr in ["grid", "torque"]:
+        time.sleep(1.0 + float(sample_count) / 150) # workaround torque bug when submitting two large consecutive array jobs, potential bug for grid
 
-echo -e "\nStep 4 - Prep the samples"
-if platform == "grid":
-    sleep $((1 + sample_count / 150)) # workaround potential bug when submitting two large consecutive array jobs
-    alignSamplesJobArray=$(stripGridEngineJobArraySuffix $alignSamplesJobId)
-    prepSamplesJobId=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
-#$   -N prepSamples
-#$   -cwd
-#$   -V
-#$   -j y
-#$   -hold_jid_ad $alignSamplesJobArray
-#$   -o $logDir/prepSamples.log-\$TASK_ID
-    cfsan_snp_pipeline call_sites + force_flag + reference_file_path "\$(cat sample_dirs_file | head -n \$SGE_TASK_ID | tail -n 1)"
-_EOF_
-)
-elif platform == "torque":
-    sleep $((1 + sample_count / 150)) # workaround torque bug when submitting two large consecutive array jobs
-    alignSamplesJobArray=$(stripTorqueJobArraySuffix $alignSamplesJobId)
-    prepSamplesJobId=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
-    #PBS -N prepSamples
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$alignSamplesJobArray
-    #PBS -o $logDir/prepSamples.log
-    #PBS -V
-    sampleDir=\$(cat sample_dirs_file | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline call_sites + force_flag + reference_file_path "\$sampleDir"
-_EOF_
-)
-else
-    if "$MaxConcurrentPrepSamples" != "":
-        numPrepSamplesCores=$MaxConcurrentPrepSamples
-    else
-        numPrepSamplesCores=$numCores
-    fi
-    nl sample_dirs_file | xargs -n 2 -P $numPrepSamplesCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_sites + force_flag + reference_file_path $1 2>&1 | tee $logDir/prepSamples.log-$0'
-fi
+    log_file = os.path.join(log_dir, "callSites.log")
+    command_line = "cfsan_snp_pipeline call_sites" + force_flag + reference_file_path + " {1}"
+    job_id_call_sites = runner.run_array(command_line, "callSites", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for_array=[job_id_map_reads], slot_dependency=True)
+
+"""
 
 #Filter abnormal SNPs if needed
 echo -e "\nStep 5 - Remove abnormal SNPs"

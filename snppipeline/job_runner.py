@@ -315,6 +315,9 @@ class JobRunner(object):
             # Allow up to 9 parameters per command.
             command_line = "nl " + array_file + " | xargs -P " + str(max_processes) + " -n 9 -L 1 bash -c + 'set -o pipefail; " + command_line + " 2>&1 | tee " + log_file + "-$0'"
 
+            # flush stdout to keep the unbuffered stderr in chronological order with stdout
+            sys.stdout.flush()
+
             # Run command. Wait for command to complete
             subprocess.check_call(command_line, shell=True, executable="bash") # If the return code is non-zero it raises a CalledProcessError
             return '0'
