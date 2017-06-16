@@ -401,7 +401,7 @@ Specifies options passed to the snp_matrix command.
     SnpMatrix_ExtraParams="--verbose 1"
 
 
-CreateSnpReferenceSeq_ExtraParams
+SnpReference_ExtraParams
 ---------------------------------
 Specifies options passed to the snp_reference command.
 
@@ -409,7 +409,7 @@ Specifies options passed to the snp_reference command.
 
 **Example**::
 
-    CreateSnpReferenceSeq_ExtraParams="--verbose 1"
+    SnpReference_ExtraParams="--verbose 1"
 
 
 MergeVcf_ExtraParams

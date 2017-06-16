@@ -513,7 +513,7 @@ def run(args):
     os.environ["CallConsensus_ExtraParams"] = config_params.get("CallConsensus_ExtraParams", "")
     os.environ["SnpMatrix_ExtraParams"] = config_params.get("SnpMatrix_ExtraParams", "")
     os.environ["BcftoolsMerge_ExtraParams"] = config_params.get("BcftoolsMerge_ExtraParams", "")
-    os.environ["CreateSnpReferenceSeq_ExtraParams"] = config_params.get("CreateSnpReferenceSeq_ExtraParams", "")
+    os.environ["SnpReference_ExtraParams"] = config_params.get("SnpReference_ExtraParams", "")
     os.environ["CollectSampleMetrics_ExtraParams"] = config_params.get("CollectSampleMetrics_ExtraParams", "")
     os.environ["CombineSampleMetrics_ExtraParams"] = config_params.get("CombineSampleMetrics_ExtraParams", "")
     #os.environ["GridEngine_PEname"] = config_params.get("GridEngine_PEname", "")
@@ -725,46 +725,33 @@ def run(args):
     log_file = os.path.join(log_dir, "snpMatrix.log")
     output_file = os.path.join(work_dir, "snpma.fasta")
     extra_params = os.environ.get("SnpMatrix_ExtraParams", "")
-    command_line = "cfsan_snp_pipeline snp_matrix" + force_flag + " -c consensus.fasta -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file
+    command_line = "cfsan_snp_pipeline snp_matrix" + force_flag + "-c consensus.fasta -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file
     job_id_snp_matrix = runner.run(command_line, "snpMatrix", log_file, wait_for=[job_id_call_consensus])
 
     progress("Step 8.2 - Create the SNP matrix")
     log_file = os.path.join(log_dir, "snpMatrix_preserved.log")
     output_file = os.path.join(work_dir, "snpma_preserved.fasta")
     extra_params = os.environ.get("SnpMatrix_ExtraParams", "")
-    command_line = "cfsan_snp_pipeline snp_matrix" + force_flag + " -c consensus_preserved.fasta -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
+    command_line = "cfsan_snp_pipeline snp_matrix" + force_flag + "-c consensus_preserved.fasta -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
     job_id_snp_matrix2 = runner.run(command_line, "snpMatrix_preserved", log_file, wait_for=[job_id_call_consensus2])
 
+    progress("Step 9.1 - Create the reference sequence at SNP sites")
+    log_file = os.path.join(log_dir, "snpReference.log")
+    list_file = os.path.join(work_dir, "snplist.txt")
+    output_file = os.path.join(work_dir, "referenceSNP.fasta")
+    extra_params = os.environ.get("SnpReference_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline snp_reference" + force_flag + "-l " + list_file + " -o " + output_file + ' ' + extra_params + ' ' + reference_file_path
+    job_id_snp_reference = runner.run(command_line, "snpReference", log_file, wait_for=[job_id_call_consensus])
+
+    progress("Step 9.2 - Create the reference sequence at SNP sites")
+    log_file = os.path.join(log_dir, "snpReference_preserved.log")
+    list_file = os.path.join(work_dir, "snplist_preserved.txt")
+    output_file = os.path.join(work_dir, "referenceSNP_preserved.fasta")
+    extra_params = os.environ.get("SnpReference_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline snp_reference" + force_flag + "-l " + list_file + " -o " + output_file + ' ' + extra_params + ' ' + reference_file_path
+    job_id_snp_reference2 = runner.run(command_line, "snpReference", log_file, wait_for=[job_id_call_consensus2])
 
 """
-
-echo -e "\nStep 9.1 - Create the reference base sequence"
-if platform == "grid":
-    snpReferenceJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -V
-#$ -N snpReference
-#$ -cwd
-#$ -j y
-#$ -hold_jid $callConsensusJobArray
-#$ -o $logDir/snpReference.log
-    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path
-_EOF_
-)
-elif platform == "torque":
-    snpReferenceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpReference
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$callConsensusJobArray
-    #PBS -o $logDir/snpReference.log
-    #PBS -V
-    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path
-_EOF_
-)
-else
-    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist.txt" -o "$workDir/referenceSNP.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path 2>&1 | tee $logDir/snpReference.log
-fi
-
 
 echo -e "\nStep 10.1 - Create the Multi-VCF file"
 if $CallConsensus_ExtraParams =~ .*vcfFileName.*:
@@ -832,34 +819,6 @@ if -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true:
 fi
 
 #Starting now are codes processing preserved SNPs after SNP filtering.
-
-
-echo -e "\nStep 9.2 - Create the reference base sequence"
-if platform == "grid":
-    snpReferenceJobId2=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -V
-#$ -N snpReference_preserved
-#$ -cwd
-#$ -j y
-#$ -hold_jid $callConsensusJobArray2
-#$ -o $logDir/snpReference_preserved.log
-    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path
-_EOF_
-)
-elif platform == "torque":
-    snpReferenceJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpReference_preserved
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$callConsensusJobArray2
-    #PBS -o $logDir/snpReference_preserved.log
-    #PBS -V
-    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path
-_EOF_
-)
-else
-    cfsan_snp_pipeline snp_reference + force_flag + -l "$workDir/snplist_preserved.txt" -o "$workDir/referenceSNP_preserved.fasta" $CreateSnpReferenceSeq_ExtraParams reference_file_path 2>&1 | tee $logDir/snpReference_preserved.log
-fi
 
 
 echo -e "\nStep 10.2 - Create the Multi-VCF file"
