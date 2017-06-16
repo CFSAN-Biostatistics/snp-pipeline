@@ -511,7 +511,7 @@ def run(args):
     os.environ["FilterRegions_ExtraParams"] = config_params.get("FilterRegions_ExtraParams", "")
     os.environ["MergeSites_ExtraParams"] = config_params.get("MergeSites_ExtraParams", "")
     os.environ["CallConsensus_ExtraParams"] = config_params.get("CallConsensus_ExtraParams", "")
-    os.environ["CreateSnpMatrix_ExtraParams"] = config_params.get("CreateSnpMatrix_ExtraParams", "")
+    os.environ["SnpMatrix_ExtraParams"] = config_params.get("SnpMatrix_ExtraParams", "")
     os.environ["BcftoolsMerge_ExtraParams"] = config_params.get("BcftoolsMerge_ExtraParams", "")
     os.environ["CreateSnpReferenceSeq_ExtraParams"] = config_params.get("CreateSnpReferenceSeq_ExtraParams", "")
     os.environ["CollectSampleMetrics_ExtraParams"] = config_params.get("CollectSampleMetrics_ExtraParams", "")
@@ -711,7 +711,7 @@ def run(args):
     output_file = "{1}/consensus.fasta"
     extra_params = os.environ.get("CallConsensus_ExtraParams", "")
     command_line = "cfsan_snp_pipeline call_consensus" + force_flag + "-l " + list_file + " -o " + output_file + " --vcfRefName " + reference_file_name + ' ' + extra_params + " --vcfFileName consensus.vcf {1}/reads.all.pileup"
-    job_id_call_sites = runner.run_array(command_line, "callConsensus", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for=[job_id_merge_sites])
+    job_id_call_consensus = runner.run_array(command_line, "callConsensus", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for=[job_id_merge_sites])
 
     progress("Step 7.2 - Call the consensus SNPs for each sample")
     log_file = os.path.join(log_dir, "callConsensus_preserved.log")
@@ -719,38 +719,24 @@ def run(args):
     output_file = "{1}/consensus_preserved.fasta"
     extra_params = os.environ.get("CallConsensus_ExtraParams", "")
     command_line = "cfsan_snp_pipeline call_consensus" + force_flag + "-l " + list_file + " -o " + output_file + " -e {1}/var.flt_removed.vcf --vcfRefName " + reference_file_name + ' ' + extra_params + " --vcfFileName consensus_preserved.vcf {1}/reads.all.pileup"
-    job_id_call_sites2 = runner.run_array(command_line, "callConsensus", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for=[job_id_merge_sites2])
+    job_id_call_consensus2 = runner.run_array(command_line, "callConsensus_preserved", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for=[job_id_merge_sites2])
+
+    progress("Step 8.1 - Create the SNP matrix")
+    log_file = os.path.join(log_dir, "snpMatrix.log")
+    output_file = os.path.join(work_dir, "snpma.fasta")
+    extra_params = os.environ.get("SnpMatrix_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline snp_matrix" + force_flag + " -c consensus.fasta -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file
+    job_id_snp_matrix = runner.run(command_line, "snpMatrix", log_file, wait_for=[job_id_call_consensus])
+
+    progress("Step 8.2 - Create the SNP matrix")
+    log_file = os.path.join(log_dir, "snpMatrix_preserved.log")
+    output_file = os.path.join(work_dir, "snpma_preserved.fasta")
+    extra_params = os.environ.get("SnpMatrix_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline snp_matrix" + force_flag + " -c consensus_preserved.fasta -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
+    job_id_snp_matrix2 = runner.run(command_line, "snpMatrix_preserved", log_file, wait_for=[job_id_call_consensus2])
+
 
 """
-
-echo -e "\nStep 8.1 - Create the SNP matrix"
-if platform == "grid":
-    callConsensusJobArray=$(stripGridEngineJobArraySuffix $callConsensusJobId)
-    snpMatrixJobId=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N snpMatrix
-#$ -cwd
-#$ -V
-#$ -j y
-#$ -hold_jid $callConsensusJobArray
-#$ -o $logDir/snpMatrix.log
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file"
-_EOF_
-)
-elif platform == "torque":
-    callConsensusJobArray=$(stripTorqueJobArraySuffix $callConsensusJobId)
-    snpMatrixJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpMatrix
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$callConsensusJobArray
-    #PBS -o $logDir/snpMatrix.log
-    #PBS -V
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file"
-_EOF_
-)
-else
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file" 2>&1 | tee $logDir/snpMatrix.log
-fi
 
 echo -e "\nStep 9.1 - Create the reference base sequence"
 if platform == "grid":
@@ -847,35 +833,6 @@ fi
 
 #Starting now are codes processing preserved SNPs after SNP filtering.
 
-
-echo -e "\nStep 8.2 - Create the SNP matrix"
-if platform == "grid":
-    callConsensusJobArray2=$(stripGridEngineJobArraySuffix $callConsensusJobId2)
-    snpMatrixJobId2=$(echo | qsub -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N snpMatrix_preserved
-#$ -cwd
-#$ -V
-#$ -j y
-#$ -hold_jid $callConsensusJobArray2
-#$ -o $logDir/snpMatrix_preserved.log
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file2"
-_EOF_
-)
-elif platform == "torque":
-    callConsensusJobArray2=$(stripTorqueJobArraySuffix $callConsensusJobId2)
-    snpMatrixJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpMatrix_preserved
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$callConsensusJobArray2
-    #PBS -o $logDir/snpMatrix_preserved.log
-    #PBS -V
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file2"
-_EOF_
-)
-else
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file2" 2>&1 | tee $logDir/snpMatrix_preserved.log
-fi
 
 echo -e "\nStep 9.2 - Create the reference base sequence"
 if platform == "grid":

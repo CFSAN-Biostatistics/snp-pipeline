@@ -390,7 +390,7 @@ Specifies options passed to the call_consensus command.
     CallConsensus_ExtraParams="--verbose 1 --minBaseQual 15 --vcfFileName consensus.vcf"
 
 
-CreateSnpMatrix_ExtraParams
+SnpMatrix_ExtraParams
 ---------------------------
 Specifies options passed to the snp_matrix command.
 
@@ -398,7 +398,7 @@ Specifies options passed to the snp_matrix command.
 
 **Example**::
 
-    CreateSnpMatrix_ExtraParams="--verbose 1"
+    SnpMatrix_ExtraParams="--verbose 1"
 
 
 CreateSnpReferenceSeq_ExtraParams
