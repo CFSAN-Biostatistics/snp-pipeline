@@ -703,44 +703,25 @@ def run(args):
     output_file = os.path.join(work_dir, "snplist_preserved.txt")
     extra_params = os.environ.get("MergeSites_ExtraParams", "")
     command_line = "cfsan_snp_pipeline merge_sites" + force_flag + "-n var.flt_preserved.vcf -o " + output_file + ' ' + extra_params + ' ' + sample_dirs_file + ' ' + filtered_sample_dirs_file2
-    job_id_merge_sites = runner.run(command_line, "mergeSites_preserved", log_file, wait_for=[job_id_filter_regions])
+    job_id_merge_sites2 = runner.run(command_line, "mergeSites_preserved", log_file, wait_for=[job_id_filter_regions])
 
+    progress("Step 7.1 - Call the consensus SNPs for each sample")
+    log_file = os.path.join(log_dir, "callConsensus.log")
+    list_file = os.path.join(work_dir, "snplist.txt")
+    output_file = "{1}/consensus.fasta"
+    extra_params = os.environ.get("CallConsensus_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline call_consensus" + force_flag + "-l " + list_file + " -o " + output_file + " --vcfRefName " + reference_file_name + ' ' + extra_params + " --vcfFileName consensus.vcf {1}/reads.all.pileup"
+    job_id_call_sites = runner.run_array(command_line, "callConsensus", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for=[job_id_merge_sites])
+
+    progress("Step 7.2 - Call the consensus SNPs for each sample")
+    log_file = os.path.join(log_dir, "callConsensus_preserved.log")
+    list_file = os.path.join(work_dir, "snplist_preserved.txt")
+    output_file = "{1}/consensus_preserved.fasta"
+    extra_params = os.environ.get("CallConsensus_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline call_consensus" + force_flag + "-l " + list_file + " -o " + output_file + " -e {1}/var.flt_removed.vcf --vcfRefName " + reference_file_name + ' ' + extra_params + " --vcfFileName consensus_preserved.vcf {1}/reads.all.pileup"
+    job_id_call_sites2 = runner.run_array(command_line, "callConsensus", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for=[job_id_merge_sites2])
 
 """
-
-echo -e "\nStep 7.1 - Call the consensus SNPs for each sample"
-if platform == "grid":
-    callConsensusJobId=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
-#$ -N callConsensus
-#$ -cwd
-#$ -V
-#$ -j y
-#$ -hold_jid $snpListJobId
-#$ -o $logDir/callConsensus.log-\$TASK_ID
-    sampleDir=\$(cat sample_dirs_file | head -n \$SGE_TASK_ID | tail -n 1)
-    cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "\$sampleDir/reads.all.pileup"
-_EOF_
-)
-elif platform == "torque":
-    callConsensusJobId=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
-    #PBS -N callConsensus
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterok:$snpListJobId
-    #PBS -o $logDir/callConsensus.log
-    #PBS -V
-    sampleDir=\$(cat sample_dirs_file | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist.txt" -o "\$sampleDir/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "\$sampleDir/reads.all.pileup"
-_EOF_
-)
-else
-    if "$MaxConcurrentCallConsensus" != "":
-        numCallConsensusCores=$MaxConcurrentCallConsensus
-    else
-        numCallConsensusCores=$numCores
-    fi
-    nl sample_dirs_file | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist.txt" -o "$1/consensus.fasta" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus.log-$0'
-fi
 
 echo -e "\nStep 8.1 - Create the SNP matrix"
 if platform == "grid":
@@ -866,40 +847,6 @@ fi
 
 #Starting now are codes processing preserved SNPs after SNP filtering.
 
-
-echo -e "\nStep 7.2 - Call the consensus SNPs for each sample"
-if platform == "grid":
-    callConsensusJobId2=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
-#$ -N callConsensus_preserved
-#$ -cwd
-#$ -V
-#$ -j y
-#$ -hold_jid $snpListJobId2
-#$ -o $logDir/callConsensus_preserved.log-\$TASK_ID
-    sampleDir=\$(cat sample_dirs_file | head -n \$SGE_TASK_ID | tail -n 1)
-    cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist_preserved.txt" -o "\$sampleDir/consensus_preserved.fasta" -e "\$sampleDir/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "\$sampleDir/reads.all.pileup"
-_EOF_
-)
-elif platform == "torque":
-    callConsensusJobId2=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
-    #PBS -N callConsensus_preserved
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterok:$snpListJobId2
-    #PBS -o $logDir/callConsensus_preserved.log
-    #PBS -V
-    sampleDir=\$(cat sample_dirs_file | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist_preserved.txt" -o "\$sampleDir/consensus_preserved.fasta" -e "\$sampleDir/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "\$sampleDir/reads.all.pileup"
-_EOF_
-)
-else
-    if "$MaxConcurrentCallConsensus" != "":
-        numCallConsensusCores=$MaxConcurrentCallConsensus
-    else
-        numCallConsensusCores=$numCores
-    fi
-    nl sample_dirs_file | xargs -n 2 -P $numCallConsensusCores bash -c 'set -o pipefail; cfsan_snp_pipeline call_consensus + force_flag + -l "$workDir/snplist_preserved.txt" -o "$1/consensus_preserved.fasta" -e "$1/var.flt_removed.vcf" --vcfRefName "$referenceFileName" $CallConsensus_ExtraParams  --vcfFileName consensus_preserved.vcf "$1/reads.all.pileup" 2>&1 | tee $logDir/callConsensus_preserved.log-$0'
-fi
 
 echo -e "\nStep 8.2 - Create the SNP matrix"
 if platform == "grid":
