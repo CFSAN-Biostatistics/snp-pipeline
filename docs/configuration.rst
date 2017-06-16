@@ -412,15 +412,15 @@ Specifies options passed to the snp_reference command.
     SnpReference_ExtraParams="--verbose 1"
 
 
-MergeVcf_ExtraParams
---------------------
+MergeVcfs_ExtraParams
+---------------------
 Specifies options passed to the merge_vcfs command.
 
 **Default**: none
 
 **Example**::
 
-    MergeVcf_ExtraParams="-n sample.vcf"
+    MergeVcfs_ExtraParams="-n sample.vcf"
 
 
 BcftoolsMerge_ExtraParams

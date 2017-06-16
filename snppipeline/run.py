@@ -514,9 +514,10 @@ def run(args):
     os.environ["SnpMatrix_ExtraParams"] = config_params.get("SnpMatrix_ExtraParams", "")
     os.environ["BcftoolsMerge_ExtraParams"] = config_params.get("BcftoolsMerge_ExtraParams", "")
     os.environ["SnpReference_ExtraParams"] = config_params.get("SnpReference_ExtraParams", "")
+    os.environ["MergeVcfs_ExtraParams"] = config_params.get("MergeVcfs_ExtraParams", "")
     os.environ["CollectSampleMetrics_ExtraParams"] = config_params.get("CollectSampleMetrics_ExtraParams", "")
     os.environ["CombineSampleMetrics_ExtraParams"] = config_params.get("CombineSampleMetrics_ExtraParams", "")
-    #os.environ["GridEngine_PEname"] = config_params.get("GridEngine_PEname", "")
+    os.environ["GridEngine_PEname"] = config_params.get("GridEngine_PEname", "")
 
     # Verify the dependencies are available on the path
     dependencies = ["cfsan_snp_pipeline", snp_pipeline_aligner, "samtools", "java", "tabix", "bgzip", "bcftools"]
@@ -751,38 +752,27 @@ def run(args):
     command_line = "cfsan_snp_pipeline snp_reference" + force_flag + "-l " + list_file + " -o " + output_file + ' ' + extra_params + ' ' + reference_file_path
     job_id_snp_reference2 = runner.run(command_line, "snpReference", log_file, wait_for=[job_id_call_consensus2])
 
-"""
+    progress("Step 10.1 - Merge sample VCFs to create the multi-VCF file")
+    if "--vcfFileName" in os.environ.get("CallConsensus_ExtraParams", ""):
+        log_file = os.path.join(log_dir, "mergeVcf.log")
+        output_file = os.path.join(work_dir, "snpma.vcf")
+        extra_params = os.environ.get("MergeVcfs_ExtraParams", "")
+        command_line = "cfsan_snp_pipeline merge_vcfs" + force_flag + "-o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file
+        job_id_merge_vcfs = runner.run(command_line, "mergeVcfs", log_file, wait_for=[job_id_call_consensus])
+    else:
+        print("Skipped per CallConsensus_ExtraParams configuration")
 
-echo -e "\nStep 10.1 - Create the Multi-VCF file"
-if $CallConsensus_ExtraParams =~ .*vcfFileName.*:
-    if platform == "grid":
-        mergeVcfJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N mergeVcf
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $callConsensusJobArray
-#$ -o $logDir/mergeVcf.log
-        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file"
-_EOF_
-)
-    elif platform == "torque":
-        mergeVcfJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-        #PBS -N mergeVcf
-        #PBS -d $(pwd)
-        #PBS -j oe
-        #PBS -W depend=afterokarray:$callConsensusJobArray
-        #PBS -o $logDir/mergeVcf.log
-        #PBS -V
-        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file"
-_EOF_
-)
-    else
-        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file" 2>&1 | tee $logDir/mergeVcf.log
-    fi
-else
-    echo -e "Skipped per CallConsensus_ExtraParams configuration"
-fi
+    progress("Step 10.2 - Merge sample VCFs to create the multi-VCF file")
+    if "--vcfFileName" in os.environ.get("CallConsensus_ExtraParams", ""):
+        log_file = os.path.join(log_dir, "mergeVcf_preserved.log")
+        output_file = os.path.join(work_dir, "snpma_preserved.vcf")
+        extra_params = os.environ.get("MergeVcfs_ExtraParams", "")
+        command_line = "cfsan_snp_pipeline merge_vcfs" + force_flag + "-o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
+        job_id_merge_vcfs2 = runner.run(command_line, "mergeVcfs", log_file, wait_for=[job_id_call_consensus2])
+    else:
+        print("Skipped per CallConsensus_ExtraParams configuration")
+
+    """
 
 echo -e "\nStep 11.1 - Calculate SNP distance matrix"
 if platform == "grid":
@@ -820,37 +810,6 @@ fi
 
 #Starting now are codes processing preserved SNPs after SNP filtering.
 
-
-echo -e "\nStep 10.2 - Create the Multi-VCF file"
-if $CallConsensus_ExtraParams =~ .*vcfFileName.*:
-    if platform == "grid":
-        mergeVcfJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N mergeVcf_preserved
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $callConsensusJobArray2
-#$ -o $logDir/mergeVcf_preserved.log
-        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file2"
-_EOF_
-)
-elif platform == "torque":
-        mergeVcfJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-        #PBS -N mergeVcf_preserved
-        #PBS -d $(pwd)
-        #PBS -j oe
-        #PBS -W depend=afterokarray:$callConsensusJobArray2
-        #PBS -o $logDir/mergeVcf_preserved.log
-        #PBS -V
-        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file2"
-_EOF_
-)
-    else
-        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file2" 2>&1 | tee $logDir/mergeVcf_preserved.log
-    fi
-else
-    echo -e "Skipped per CallConsensus_ExtraParams configuration"
-fi
 
 echo -e "\nStep 11.2 - Calculate SNP distance matrix"
 if platform == "grid":
