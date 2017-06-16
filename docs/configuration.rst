@@ -342,7 +342,7 @@ Specifies options passed to the filter_regions command.
     FilterRegions_ExtraParams="--edge_length 500 --window_size 1000 --max_snp 3 --out_group /path/to/outgroupSamples.txt"
 
 
-CreateSnpList_ExtraParams
+MergeSites_ExtraParams
 -------------------------
 Specifies options passed to the merge_sites command.
 
@@ -350,7 +350,7 @@ Specifies options passed to the merge_sites command.
 
 **Example**::
 
-    CreateSnpList_ExtraParams="--verbose 1"
+    MergeSites_ExtraParams="--verbose 1"
 
 
 CallConsensus_ExtraParams

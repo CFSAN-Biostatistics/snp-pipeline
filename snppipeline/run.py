@@ -36,6 +36,7 @@ def progress(message):
         The text of the progress message.
     """
     if job_queue_mgr is None: # local
+        print("")
         print("*" * 80)
         print(message)
         print("*" * 80)
@@ -508,7 +509,7 @@ def run(args):
     os.environ["VarscanMpileup2snp_ExtraParams"] = config_params.get("VarscanMpileup2snp_ExtraParams", "")
     os.environ["VarscanJvm_ExtraParams"] = config_params.get("VarscanJvm_ExtraParams", "")
     os.environ["FilterRegions_ExtraParams"] = config_params.get("FilterRegions_ExtraParams", "")
-    os.environ["CreateSnpList_ExtraParams"] = config_params.get("CreateSnpList_ExtraParams", "")
+    os.environ["MergeSites_ExtraParams"] = config_params.get("MergeSites_ExtraParams", "")
     os.environ["CallConsensus_ExtraParams"] = config_params.get("CallConsensus_ExtraParams", "")
     os.environ["CreateSnpMatrix_ExtraParams"] = config_params.get("CreateSnpMatrix_ExtraParams", "")
     os.environ["BcftoolsMerge_ExtraParams"] = config_params.get("BcftoolsMerge_ExtraParams", "")
@@ -675,48 +676,37 @@ def run(args):
     progress("Step 5 - Filter abnormal SNP regions")
     log_file = os.path.join(log_dir, "filterRegions.log")
     extra_params = os.environ.get("FilterRegions_ExtraParams", "")
-    command_line = "cfsan_snp_pipeline filter_regions -n var.flt.vcf " + sample_dirs_file + ' ' + reference_file_path + ' ' + extra_params
+    command_line = "cfsan_snp_pipeline filter_regions" + force_flag + "-n var.flt.vcf " + sample_dirs_file + ' ' + reference_file_path + ' ' + extra_params
     job_id_filter_regions = runner.run(command_line, "filterRegions", log_file, wait_for_array=[job_id_call_sites])
-
-"""
 
     # Starting from here, there are 2 threads:
     # Thread X.1: the thread processing the original VCF files and corresponding downstream results
     # Thread X.2: the thread processing the preserved VCF files and corresponding downstream results
 
+    progress("Step 6.1 - Merge the SNP sites across all samples into the SNP list file")
+    # The create_snp_list process creates the filtered list of sample directories.  It is the list of samples not having excessive snps.
+    # When running on a workstation, the file exists at this point during the script execution, but on grid or torque, it has not yet been created. However,
+    # we know the path to the file regardless of whether it exists yet.
+    filtered_sample_dirs_file = sample_dirs_file + ".OrigVCF.filtered"
+    # touch $filtered_sample_dirs_file # TODO: why was this touch here in the old run_snp_pipeline.sh script?
+    log_file = os.path.join(log_dir, "mergeSites.log")
+    output_file = os.path.join(work_dir, "snplist.txt")
+    extra_params = os.environ.get("MergeSites_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline merge_sites" + force_flag + "-n var.flt.vcf -o " + output_file + ' ' + extra_params + ' ' + sample_dirs_file + ' ' + filtered_sample_dirs_file
+    job_id_merge_sites = runner.run(command_line, "mergeSites", log_file, wait_for=[job_id_filter_regions])
 
-echo -e "\nStep 6.1 - Combine the SNP positions across all samples into the SNP list file"
-# The create_snp_list process creates the filtered list of sample directories.  It is the list of samples having removed the samples with excessive snps.
-# When running on a workstation, the file exists at this point during the script execution, but on grid or torque, it has not yet been created. However,
-# we know the path to the file regardless of whether it exists yet.
-filteredSampleDirsFile="${sampleDirsFile}.OrigVCF.filtered"
-touch $filteredSampleDirsFile
+    progress("Step 6.2 - Merge the SNP sites across all samples into the SNP list file")
+    # Create another copy of sample directories file, for the thread processing preserved snp files.
+    filtered_sample_dirs_file2 = sample_dirs_file + ".PresVCF.filtered"
+    # touch $filtered_sample_dirs_file2 # TODO: why was this touch here in the old run_snp_pipeline.sh script?
+    log_file = os.path.join(log_dir, "mergeSites_preserved.log")
+    output_file = os.path.join(work_dir, "snplist_preserved.txt")
+    extra_params = os.environ.get("MergeSites_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline merge_sites" + force_flag + "-n var.flt_preserved.vcf -o " + output_file + ' ' + extra_params + ' ' + sample_dirs_file + ' ' + filtered_sample_dirs_file2
+    job_id_merge_sites = runner.run(command_line, "mergeSites_preserved", log_file, wait_for=[job_id_filter_regions])
 
-if platform == "grid":
-    snpListJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N snpList
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $filterAbnSNPJobId
-#$ -o $logDir/snpList.log
-cfsan_snp_pipeline merge_sites + force_flag + -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile"
-_EOF_
-)
-elif platform == "torque":
-    snpListJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpList
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterok:$filterAbnSNPJobId
-    #PBS -o $logDir/snpList.log
-    #PBS -V
-    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile"
-_EOF_
-)
-else
-    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt.vcf -o "$workDir/snplist.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpList.log
-fi
+
+"""
 
 echo -e "\nStep 7.1 - Call the consensus SNPs for each sample"
 if platform == "grid":
@@ -762,7 +752,7 @@ if platform == "grid":
 #$ -j y
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/snpMatrix.log
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file"
 _EOF_
 )
 elif platform == "torque":
@@ -774,11 +764,11 @@ elif platform == "torque":
     #PBS -W depend=afterokarray:$callConsensusJobArray
     #PBS -o $logDir/snpMatrix.log
     #PBS -V
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile"
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file"
 _EOF_
 )
 else
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/snpMatrix.log
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus.fasta -o "$workDir/snpma.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file" 2>&1 | tee $logDir/snpMatrix.log
 fi
 
 echo -e "\nStep 9.1 - Create the reference base sequence"
@@ -819,7 +809,7 @@ if $CallConsensus_ExtraParams =~ .*vcfFileName.*:
 #$ -V
 #$ -hold_jid $callConsensusJobArray
 #$ -o $logDir/mergeVcf.log
-        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
+        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file"
 _EOF_
 )
     elif platform == "torque":
@@ -830,11 +820,11 @@ _EOF_
         #PBS -W depend=afterokarray:$callConsensusJobArray
         #PBS -o $logDir/mergeVcf.log
         #PBS -V
-        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile"
+        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file"
 _EOF_
 )
     else
-        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile" 2>&1 | tee $logDir/mergeVcf.log
+        cfsan_snp_pipeline merge_vcfs + force_flag + -o "$workDir/snpma.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file" 2>&1 | tee $logDir/mergeVcf.log
     fi
 else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
@@ -875,37 +865,6 @@ if -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true:
 fi
 
 #Starting now are codes processing preserved SNPs after SNP filtering.
-echo -e "\nStep 6.2 - Combine the SNP positions across all samples into the SNP list file"
-###Create another copy of sample directories file, for the thread processing preserved snp files.
-filteredSampleDirsFile2="${sampleDirsFile}.PresVCF.filtered"
-touch $filteredSampleDirsFile2
-
-#cp $sampleDirsFile $sampleDirsFile_Preserved
-if platform == "grid":
-    snpListJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N snpList_preserved
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $filterAbnSNPJobId
-#$ -o $logDir/snpList_preserved.log
-    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile2"
-_EOF_
-)
-elif platform == "torque":
-    snpListJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpList_preserved
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterok:$filterAbnSNPJobId
-    #PBS -o $logDir/snpList_preserved.log
-    #PBS -V
-    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile2"
-_EOF_
-)
-else
-    cfsan_snp_pipeline merge_sites + force_flag + -n var.flt_preserved.vcf -o "$workDir/snplist_preserved.txt" $CreateSnpList_ExtraParams sample_dirs_file "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpList_preserved.log
-fi
 
 
 echo -e "\nStep 7.2 - Call the consensus SNPs for each sample"
@@ -952,7 +911,7 @@ if platform == "grid":
 #$ -j y
 #$ -hold_jid $callConsensusJobArray2
 #$ -o $logDir/snpMatrix_preserved.log
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file2"
 _EOF_
 )
 elif platform == "torque":
@@ -964,11 +923,11 @@ elif platform == "torque":
     #PBS -W depend=afterokarray:$callConsensusJobArray2
     #PBS -o $logDir/snpMatrix_preserved.log
     #PBS -V
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2"
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file2"
 _EOF_
 )
 else
-    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/snpMatrix_preserved.log
+    cfsan_snp_pipeline snp_matrix + force_flag + -c consensus_preserved.fasta -o "$workDir/snpma_preserved.fasta" $CreateSnpMatrix_ExtraParams "$filtered_sample_dirs_file2" 2>&1 | tee $logDir/snpMatrix_preserved.log
 fi
 
 echo -e "\nStep 9.2 - Create the reference base sequence"
@@ -1009,7 +968,7 @@ if $CallConsensus_ExtraParams =~ .*vcfFileName.*:
 #$ -V
 #$ -hold_jid $callConsensusJobArray2
 #$ -o $logDir/mergeVcf_preserved.log
-        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
+        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file2"
 _EOF_
 )
 elif platform == "torque":
@@ -1020,11 +979,11 @@ elif platform == "torque":
         #PBS -W depend=afterokarray:$callConsensusJobArray2
         #PBS -o $logDir/mergeVcf_preserved.log
         #PBS -V
-        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2"
+        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file2"
 _EOF_
 )
     else
-        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filteredSampleDirsFile2" 2>&1 | tee $logDir/mergeVcf_preserved.log
+        cfsan_snp_pipeline merge_vcfs + force_flag + -n consensus_preserved.vcf -o "$workDir/snpma_preserved.vcf" $MergeVcf_ExtraParams "$filtered_sample_dirs_file2" 2>&1 | tee $logDir/mergeVcf_preserved.log
     fi
 else
     echo -e "Skipped per CallConsensus_ExtraParams configuration"
