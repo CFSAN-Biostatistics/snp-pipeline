@@ -750,7 +750,7 @@ def run(args):
     output_file = os.path.join(work_dir, "referenceSNP_preserved.fasta")
     extra_params = os.environ.get("SnpReference_ExtraParams", "")
     command_line = "cfsan_snp_pipeline snp_reference" + force_flag + "-l " + list_file + " -o " + output_file + ' ' + extra_params + ' ' + reference_file_path
-    job_id_snp_reference2 = runner.run(command_line, "snpReference", log_file, wait_for=[job_id_call_consensus2])
+    job_id_snp_reference2 = runner.run(command_line, "snpReference_preserved", log_file, wait_for=[job_id_call_consensus2])
 
     progress("Step 10.1 - Merge sample VCFs to create the multi-VCF file")
     if "--vcfFileName" in os.environ.get("CallConsensus_ExtraParams", ""):
@@ -768,38 +768,27 @@ def run(args):
         output_file = os.path.join(work_dir, "snpma_preserved.vcf")
         extra_params = os.environ.get("MergeVcfs_ExtraParams", "")
         command_line = "cfsan_snp_pipeline merge_vcfs" + force_flag + "-o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
-        job_id_merge_vcfs2 = runner.run(command_line, "mergeVcfs", log_file, wait_for=[job_id_call_consensus2])
+        job_id_merge_vcfs2 = runner.run(command_line, "mergeVcfs_preserved", log_file, wait_for=[job_id_call_consensus2])
     else:
         print("Skipped per CallConsensus_ExtraParams configuration")
 
-    """
+    progress("Step 11.1 - Calculate SNP distance matrix")
+    log_file = os.path.join(log_dir, "distance.log")
+    input_file = os.path.join(work_dir, "snpma.fasta")
+    pair_output_file = os.path.join(work_dir, "snp_distance_pairwise.tsv")
+    matrix_output_file = os.path.join(work_dir, "snp_distance_matrix.tsv")
+    command_line = "cfsan_snp_pipeline distance" + force_flag + "-p " + pair_output_file + " -m " + matrix_output_file + ' ' + input_file
+    job_id_distance = runner.run(command_line, "distance", log_file, wait_for=[job_id_snp_matrix])
 
-echo -e "\nStep 11.1 - Calculate SNP distance matrix"
-if platform == "grid":
-    calcSnpDistanceJobId=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N snpDistance
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $snpMatrixJobId
-#$ -o $logDir/calcSnpDistances.log
-    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
-_EOF_
-)
-elif platform == "torque":
-    calcSnpDistanceJobId=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpDistance
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterok:$snpMatrixJobId
-    #PBS -o $logDir/calcSnpDistances.log
-    #PBS -V
-    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta"
-_EOF_
-)
-else
-    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise.tsv" -m "$workDir/snp_distance_matrix.tsv" "$workDir/snpma.fasta" 2>&1 | tee $logDir/calcSnpDistances.log
-fi
+    progress("Step 11.2 - Calculate SNP distance matrix")
+    log_file = os.path.join(log_dir, "distance_preserved.log")
+    input_file = os.path.join(work_dir, "snpma_preserved.fasta")
+    pair_output_file = os.path.join(work_dir, "snp_distance_pairwise_preserved.tsv")
+    matrix_output_file = os.path.join(work_dir, "snp_distance_matrix_preserved.tsv")
+    command_line = "cfsan_snp_pipeline distance" + force_flag + "-p " + pair_output_file + " -m " + matrix_output_file + ' ' + input_file
+    job_id_distance2 = runner.run(command_line, "distance_preserved", log_file, wait_for=[job_id_snp_matrix2])
+
+    """
 
 # Step 14.1 - Notify user of any non-fatal errors accumulated during processing
 if -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true:
@@ -810,33 +799,6 @@ fi
 
 #Starting now are codes processing preserved SNPs after SNP filtering.
 
-
-echo -e "\nStep 11.2 - Calculate SNP distance matrix"
-if platform == "grid":
-    calcSnpDistanceJobId2=$(echo | qsub  -terse $GridEngine_QsubExtraParams << _EOF_
-#$ -N snpDistance_preserved
-#$ -cwd
-#$ -j y
-#$ -V
-#$ -hold_jid $snpMatrixJobId2
-#$ -o $logDir/calcSnpDistances_preserved.log
-    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
-_EOF_
-)
-elif platform == "torque":
-    calcSnpDistanceJobId2=$(echo | qsub $Torque_QsubExtraParams << _EOF_
-    #PBS -N snpDistance_preserved
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterok:$snpMatrixJobId2
-    #PBS -o $logDir/calcSnpDistances_preserved.log
-    #PBS -V
-    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta"
-_EOF_
-)
-else
-    cfsan_snp_pipeline distance + force_flag + -p "$workDir/snp_distance_pairwise_preserved.tsv" -m "$workDir/snp_distance_matrix_preserved.tsv" "$workDir/snpma_preserved.fasta" 2>&1 | tee $logDir/calcSnpDistances_preserved.log
-fi
 
 echo -e "\nStep 12 - Collect metrics for each sample"
 if platform == "grid":
