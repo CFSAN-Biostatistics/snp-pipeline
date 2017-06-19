@@ -788,7 +788,19 @@ def run(args):
     command_line = "cfsan_snp_pipeline distance" + force_flag + "-p " + pair_output_file + " -m " + matrix_output_file + ' ' + input_file
     job_id_distance2 = runner.run(command_line, "distance_preserved", log_file, wait_for=[job_id_snp_matrix2])
 
+    progress("Step 12 - Collect metrics for each sample")
+    log_file = os.path.join(log_dir, "collectMetrics.log")
+    output_file = "{1}/metrics"
+    extra_params = os.environ.get("CollectSampleMetrics_ExtraParams", "")
+    command_line = "cfsan_snp_pipeline collect_metrics" + force_flag + " -o " + output_file + ' ' + extra_params + " {1} " + reference_file_path
+    job_id_call_consensus2 = runner.run_array(command_line, "collectMetrics", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for_array=[job_id_call_consensus, job_id_call_consensus2])
+
     """
+
+print("\nStep 13 - Combine the metrics across all samples into the metrics table")
+command_line = 'cfsan_snp_pipeline combine_metrics -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams sample_dirs_file'
+log_file = '$logDir/combineSampleMetrics.log'
+combine_metrics_job_id = runner.run(command_line, "combineMetrics", log_file, wait_for_array=[collectSampleMetricsJobArray])
 
 # Step 14.1 - Notify user of any non-fatal errors accumulated during processing
 if -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true:
@@ -798,47 +810,6 @@ if -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true:
 fi
 
 #Starting now are codes processing preserved SNPs after SNP filtering.
-
-
-echo -e "\nStep 12 - Collect metrics for each sample"
-if platform == "grid":
-    collectSampleMetricsJobId=$(echo | qsub -terse -t 1-$sample_count $GridEngine_QsubExtraParams << _EOF_
-#$ -N collectMetrics
-#$ -cwd
-#$ -V
-#$ -j y
-#$ -hold_jid_ad $callConsensusJobArray,$callConsensusJobArray2
-#$ -o $logDir/collectSampleMetrics.log-\$TASK_ID
-    sampleDir=\$(cat sample_dirs_file | head -n \$SGE_TASK_ID | tail -n 1)
-    cfsan_snp_pipeline collect_metrics -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  reference_file_path
-_EOF_
-)
-elif platform == "torque":
-    collectSampleMetricsJobId=$(echo | qsub -t 1-$sample_count $Torque_QsubExtraParams << _EOF_
-    #PBS -N collectMetrics
-    #PBS -d $(pwd)
-    #PBS -j oe
-    #PBS -W depend=afterokarray:$callConsensusJobArray:$callConsensusJobArray2
-    #PBS -o $logDir/collectSampleMetrics.log
-    #PBS -V
-    sampleDir=\$(cat sample_dirs_file | head -n \$PBS_ARRAYID | tail -n 1)
-    cfsan_snp_pipeline collect_metrics -o "\$sampleDir/metrics" $CollectSampleMetrics_ExtraParams "\$sampleDir"  reference_file_path
-_EOF_
-)
-else
-    if "$MaxConcurrentCollectSampleMetrics" != "":
-        numCollectSampleMetricsCores=$MaxConcurrentCollectSampleMetrics
-    else
-        numCollectSampleMetricsCores=$numCores
-    fi
-    nl sample_dirs_file | xargs -n 2 -P $numCollectSampleMetricsCores bash -c 'set -o pipefail; cfsan_snp_pipeline collect_metrics -o "$1/metrics" $CollectSampleMetrics_ExtraParams "$1" reference_file_path 2>&1 | tee $logDir/collectSampleMetrics.log-$0'
-fi
-
-
-print("\nStep 13 - Combine the metrics across all samples into the metrics table")
-command_line = 'cfsan_snp_pipeline combine_metrics -n metrics -o "$workDir/metrics.tsv" $CombineSampleMetrics_ExtraParams sample_dirs_file'
-log_file = '$logDir/combineSampleMetrics.log'
-combine_metrics_job_id = runner.run(command_line, "combineMetrics", log_file, wait_for_array=[collectSampleMetricsJobArray])
 
 # Step 14.2 - Notify user of any non-fatal errors accumulated during processing
 if os.path.getsize(error_output_file) > 0 and not stop_on_error:
