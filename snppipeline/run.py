@@ -779,7 +779,7 @@ def run(args):
         log_file = os.path.join(log_dir, "mergeVcf_preserved.log")
         output_file = os.path.join(work_dir, "snpma_preserved.vcf")
         extra_params = os.environ.get("MergeVcfs_ExtraParams", "")
-        command_line = "cfsan_snp_pipeline merge_vcfs" + force_flag + "-o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
+        command_line = "cfsan_snp_pipeline merge_vcfs" + force_flag + "-n consensus_preserved.vcf -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
         job_id_merge_vcfs2 = runner.run(command_line, "mergeVcfs_preserved", log_file, wait_for=[job_id_call_consensus2])
     else:
         print("Skipped per CallConsensus_ExtraParams configuration")
