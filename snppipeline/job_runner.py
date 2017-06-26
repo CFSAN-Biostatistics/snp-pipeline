@@ -16,7 +16,7 @@ class JobRunnerException(Exception):
     """Raised for fatal JobRunner errors"""
 
 class JobRunner(object):
-    def __init__(self, hpc_type, strip_job_array_suffix=True):
+    def __init__(self, hpc_type, strip_job_array_suffix=True, exception_handler=None):
         """Initialize an hpc job runner object.
 
         Parameters
@@ -25,6 +25,9 @@ class JobRunner(object):
             Type of job runner.  Possible values are "grid", "torque", and "local".
         strip_job_array_suffix : bool, optional defaults to True
             When true, the dot and array suffix in the job id is removed before returning the job id.
+        exception_handler : function
+            Function to be called in local mode only when an exception occurs while attempting to run an
+            external process. The function will be called with the arguments (exc_type, exc_value, exc_traceback).
 
         Examples
         --------
@@ -38,6 +41,7 @@ class JobRunner(object):
 
         self.hpc_type = hpc_type
         self.strip_job_array_suffix = strip_job_array_suffix
+        self.exception_handler = exception_handler
 
         if hpc_type == 'grid':
             self.subtask_env_var_name = "SGE_TASK_ID"
@@ -202,7 +206,9 @@ class JobRunner(object):
 
         Raises
         ------
-        CalledProcessError on non-zero exitcode
+        In local mode, non-zero exit codes will raise CalledProcessError and the exception will
+        be routed to the exception handler installed during JobRunner initialization, if any.
+        If no exception handler was specified, the exception is re-raised.
 
         Examples
         --------
@@ -233,7 +239,14 @@ class JobRunner(object):
             sys.stdout.flush()
 
             # Run command. Wait for command to complete. If the return code was zero then return, otherwise raise CalledProcessError
-            subprocess.check_call(command_line, shell=True, executable="bash")
+            try:
+                subprocess.check_call(command_line, shell=True, executable="bash")
+            except subprocess.CalledProcessError:
+                if self.exception_handler:
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    self.exception_handler(exc_type, exc_value, exc_traceback)
+                else:
+                    raise
             return '0'
 
         else: # grid or torque
@@ -287,6 +300,15 @@ class JobRunner(object):
         parallel_environment : str, optional defaults to None
             Name of the grid engine parallel execution environment.
             Ununsed for any other job scheduler.
+
+        Raises
+        ------
+        If the array_file is missing or empty, and num_tasks is not specified, JobRunnerException
+        is raised.
+
+        In local mode, non-zero exit codes will raise CalledProcessError and the exception will
+        be routed to the exception handler installed during JobRunner initialization, if any.
+        If no exception handler was specified, the exception is re-raised.
         """
         # Determine the number of array slots
         if not num_tasks:
@@ -299,7 +321,7 @@ class JobRunner(object):
                 num_tasks = sum(1 for line in f)
 
         if self.hpc_type == "grid":
-            log_file += "-\$TASK_ID" # TODO: verify this works properly
+            log_file += "-\$TASK_ID"
 
         if self.hpc_type == "local":
             # Change parameter placeholder into bash variables ready to feed to bash through xargs
@@ -319,7 +341,14 @@ class JobRunner(object):
             sys.stdout.flush()
 
             # Run command. Wait for command to complete
-            subprocess.check_call(command_line, shell=True, executable="bash") # If the return code is non-zero it raises a CalledProcessError
+            try:
+                subprocess.check_call(command_line, shell=True, executable="bash") # If the return code is non-zero it raises a CalledProcessError
+            except subprocess.CalledProcessError:
+                if self.exception_handler:
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    self.exception_handler(exc_type, exc_value, exc_traceback)
+                else:
+                    raise
             return '0'
 
         else: # grid or torque

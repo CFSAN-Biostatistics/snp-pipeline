@@ -55,7 +55,6 @@ def handle_called_process_exception(exc_type, exc_value, exc_traceback):
 
     external_program_command = exc_value.cmd
     error_code = exc_value.returncode
-    #print("error_code =", error_code)
 
     trace_entries = traceback.extract_tb(exc_traceback)
     file_name, line_number, function_name, code_text = trace_entries[-1]
@@ -74,7 +73,7 @@ def handle_called_process_exception(exc_type, exc_value, exc_traceback):
     # When configured to ignore single-sample errors, try to continue execution if
     # xargs returns 123 when executing an array of jobs, one per sample
     if error_code == 123 and not stop_on_error:
-        return # TODO: where does execution continue after returning?
+        return
 
     # A subprocess failed and was already trapped.
     # Actually, we cannot be 100% certain the error was trapped if the error code is 123.  This
@@ -142,7 +141,16 @@ def handle_internal_exception(exc_type, exc_value, exc_traceback):
 def handle_exception(exc_type, exc_value, exc_traceback):
     """This function replaces the default python unhandled exception handler.
     It distinguishes between exceptions in child processes and exceptions
-    in the snp-pipeline driver itself.
+    in the snp-pipeline driver itself.  This function is installed to
+    replace the default system exception handler with sys.excepthook.
+
+    This function is installed as the JobRunner exception handler
+    to handle CalledProcessError exceptions.  In this case, the handler can
+    return and try to continue execution if the handler decides to do so.
+
+    When this function is executed by the Python as the sys.excepthook,
+    there is no hope of continuing execition.  The stack has already
+    been unwound and this function is called immediately before exit.
     """
     if exc_type == subprocess.CalledProcessError:
         handle_called_process_exception(exc_type, exc_value, exc_traceback)
@@ -475,8 +483,12 @@ def run(args):
     os.environ["SnpPipeline_Aligner"] = snp_pipeline_aligner
 
     # Stop the pipeline by default upon single sample errors if not configured either way
+    # The environment variable is used by called processes
     stop_on_error = config_params.get("SnpPipeline_StopOnSampleError", "").lower() or "true"
     os.environ["SnpPipeline_StopOnSampleError"] = stop_on_error
+
+    # Convert the stop_on_error flag to boolean for internal use in this function
+    stop_on_error = stop_on_error == "true"
 
     # How many CPU cores can we use?
     max_cpu_cores = config_params.get("MaxCpuCores", None)
@@ -515,8 +527,8 @@ def run(args):
     os.environ["BcftoolsMerge_ExtraParams"] = config_params.get("BcftoolsMerge_ExtraParams", "")
     os.environ["SnpReference_ExtraParams"] = config_params.get("SnpReference_ExtraParams", "")
     os.environ["MergeVcfs_ExtraParams"] = config_params.get("MergeVcfs_ExtraParams", "")
-    os.environ["CollectSampleMetrics_ExtraParams"] = config_params.get("CollectSampleMetrics_ExtraParams", "")
-    os.environ["CombineSampleMetrics_ExtraParams"] = config_params.get("CombineSampleMetrics_ExtraParams", "")
+    os.environ["CollectMetrics_ExtraParams"] = config_params.get("CollectMetrics_ExtraParams", "")
+    os.environ["CombineMetrics_ExtraParams"] = config_params.get("CombineMetrics_ExtraParams", "")
     os.environ["GridEngine_PEname"] = config_params.get("GridEngine_PEname", "")
 
     # Verify the dependencies are available on the path
@@ -636,7 +648,7 @@ def run(args):
 
     # Initialize the job runner
     if job_queue_mgr is None:
-        runner = JobRunner("local")
+        runner = JobRunner("local", exception_handler=handle_exception)
     elif job_queue_mgr == "grid":
         strip_job_array_suffix = config_params.get("GridEngine_StripJobArraySuffix", "true").lower()
         runner = JobRunner(job_queue_mgr, strip_job_array_suffix == "true")
@@ -791,30 +803,17 @@ def run(args):
     progress("Step 12 - Collect metrics for each sample")
     log_file = os.path.join(log_dir, "collectMetrics.log")
     output_file = "{1}/metrics"
-    extra_params = os.environ.get("CollectSampleMetrics_ExtraParams", "")
+    extra_params = os.environ.get("CollectMetrics_ExtraParams", "")
     command_line = "cfsan_snp_pipeline collect_metrics" + force_flag + "-o " + output_file + ' ' + extra_params + " {1} " + reference_file_path
     job_id_collect_metrics = runner.run_array(command_line, "collectMetrics", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for_array=[job_id_call_consensus, job_id_call_consensus2])
 
     progress("Step 13 - Combine the metrics across all samples into the metrics table")
     log_file = os.path.join(log_dir, "combineMetrics.log")
     output_file = os.path.join(work_dir, "metrics.tsv")
-    extra_params = os.environ.get("CombineSampleMetrics_ExtraParams", "")
+    extra_params = os.environ.get("CombineMetrics_ExtraParams", "")
     command_line = "cfsan_snp_pipeline combine_metrics" + force_flag + "-n metrics -o " + output_file + ' ' + extra_params + ' ' + sample_dirs_file
     combine_metrics_job_id = runner.run(command_line, "combineMetrics", log_file, wait_for_array=[job_id_collect_metrics])
 
-    """
-
-# Step 14.1 - Notify user of any non-fatal errors accumulated during processing
-if -s "$errorOutputFile" && $SnpPipeline_StopOnSampleError != true:
-    echo "" 1>&2
-    echo "There were errors processing some samples." 1>&2
-    echo "See the log file $errorOutputFile for a summary of errors." 1>&2
-fi
-
-#Starting now are codes processing preserved SNPs after SNP filtering.
-
-# Step 14.2 - Notify user of any non-fatal errors accumulated during processing
-if os.path.getsize(error_output_file) > 0 and not stop_on_error:
-    print("\nThere were errors processing some samples.\nSee the log file %s for a summary of errors." % error_output_file, file=sys.stderr)
-
-"""
+    # Step 14 - Notify user of any non-fatal errors accumulated during processing
+    if os.path.isfile(error_output_file) and os.path.getsize(error_output_file) > 0 and not stop_on_error:
+        print("\nThere were errors processing some samples.\nSee the log file %s for a summary of errors." % error_output_file, file=sys.stderr)
