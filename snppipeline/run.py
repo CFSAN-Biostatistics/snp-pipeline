@@ -766,7 +766,7 @@ def run(args):
 
     progress("Step 10.1 - Merge sample VCFs to create the multi-VCF file")
     if "--vcfFileName" in os.environ.get("CallConsensus_ExtraParams", ""):
-        log_file = os.path.join(log_dir, "mergeVcf.log")
+        log_file = os.path.join(log_dir, "mergeVcfs.log")
         output_file = os.path.join(work_dir, "snpma.vcf")
         extra_params = os.environ.get("MergeVcfs_ExtraParams", "")
         command_line = "cfsan_snp_pipeline merge_vcfs" + force_flag + "-o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file
@@ -776,7 +776,7 @@ def run(args):
 
     progress("Step 10.2 - Merge sample VCFs to create the multi-VCF file")
     if "--vcfFileName" in os.environ.get("CallConsensus_ExtraParams", ""):
-        log_file = os.path.join(log_dir, "mergeVcf_preserved.log")
+        log_file = os.path.join(log_dir, "mergeVcfs_preserved.log")
         output_file = os.path.join(work_dir, "snpma_preserved.vcf")
         extra_params = os.environ.get("MergeVcfs_ExtraParams", "")
         command_line = "cfsan_snp_pipeline merge_vcfs" + force_flag + "-n consensus_preserved.vcf -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
