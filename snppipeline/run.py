@@ -79,7 +79,7 @@ def handle_called_process_exception(exc_type, exc_value, exc_traceback):
     # Actually, we cannot be 100% certain the error was trapped if the error code is 123.  This
     # indicates an error in an array of sample jobs launched in parallel by xargs; but since
     # SnpPipeline_StopOnSampleError is true, we will assume the error was already trapped.
-    if stop_on_error and (error_code == 100 or error_code == 123):
+    if error_code == 100 or (stop_on_error and error_code == 123):
         log_error("See also the log files in directory " + log_dir)
         log_error("Shutting down the SNP Pipeline.")
         log_error("================================================================================")
@@ -464,9 +464,9 @@ def run(args):
     # Handle configuration file, use the specified file, or create a default file
     if args.configFile:
         config_file_path = args.configFile
-        if not os.path.isfile(reference_file_path):
+        if not os.path.isfile(config_file_path):
             utils.fatal_error("Error: configuration file %s does not exist." % config_file_path)
-        if os.path.getsize(reference_file_path) == 0:
+        if os.path.getsize(config_file_path) == 0:
             utils.fatal_error("Error: configuration file %s is empty." % config_file_path)
 
         shutil.copy2(config_file_path, log_dir)  # copy2 tries to preserve timestamps
@@ -574,9 +574,9 @@ def run(args):
     if args.samplesFile:
         sample_dirs_file = args.samplesFile
         if not os.path.isfile(sample_dirs_file):
-            utils.fatal_error("Error: the file of samples directories, %s does not exist." % sample_dirs_file)
+            utils.fatal_error("Error: the file of samples directories, %s, does not exist." % sample_dirs_file)
         if os.path.getsize(sample_dirs_file) == 0:
-            utils.fatal_error("Error: the file of samples directories, %s is empty." % sample_dirs_file)
+            utils.fatal_error("Error: the file of samples directories, %s, is empty." % sample_dirs_file)
         rewrite_cleansed_file_of_sample_dirs(sample_dirs_file, os.path.join(work_dir, "sampleDirectories.txt"))
         sample_dirs_file = os.path.join(work_dir, "sampleDirectories.txt")
         validate_file_of_sample_dirs(sample_dirs_file)
