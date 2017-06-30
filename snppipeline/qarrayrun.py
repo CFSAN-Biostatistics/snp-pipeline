@@ -29,17 +29,17 @@ Examples
 --------
 # Sort some txt files, writing the sorted output to new files
 ls *.txt > files.txt
-echo 'qarrayrun.py -e SGE_TASK_ID files.txt sort -o sorted.{1} {1}' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
+echo 'qarrayrun.py SGE_TASK_ID files.txt sort -o sorted.{1} {1}' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
 
 # Your input file might have multiple columns, use {2} for the 2nd column
 # Sort the largest files first
 ls *.txt | xargs -n 1 wc -c | sort -n -r > files.txt
-echo 'qarrayrun.py -e SGE_TASK_ID files.txt sort -o sorted.{2} {2}' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
+echo 'qarrayrun.py SGE_TASK_ID files.txt sort -o sorted.{2} {2}' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
 
 # Use the --shell option and quote your pipeline when you need shell redirection
 # Remove blanks before sorting files
 ls *.txt > files.txt
-echo 'qarrayrun.py --shell -e SGE_TASK_ID files.txt "cat {1} | tr -d [:blank:] | sort > sorted.{1}"' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
+echo 'qarrayrun.py --shell SGE_TASK_ID files.txt "cat {1} | tr -d [:blank:] | sort > sorted.{1}"' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
 
 """
 
@@ -155,7 +155,7 @@ def run(argv):
     >>> cmd += 'f = open("%s", "w");' % out_file
     >>> cmd += 'f.write("{3} {2} {1}"); f.close()'
     >>> cmd += "'"
-    >>> run(["-e", "SGE_TASK_ID", arg_file, cmd])
+    >>> run(["SGE_TASK_ID", arg_file, cmd])
     0
 
     # Read the file just created to verify reverse order
@@ -165,7 +165,7 @@ def run(argv):
     'Argument3 Argument2 Argument1'
 
     # Verify non-zero exit code is returned
-    >>> run(["--shell", "-e", "SGE_TASK_ID", arg_file, "exit 100"])
+    >>> run(["--shell", "SGE_TASK_ID", arg_file, "exit 100"])
     100
 
     # Clean up temp files
@@ -184,26 +184,25 @@ def run(argv):
         --------
         # Sort some txt files, writing the sorted output to new files
         ls *.txt > files.txt
-        echo 'qarrayrun files.txt sort -o sorted.{1} {1}' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
+        echo 'qarrayrun SGE_TASK_ID files.txt sort -o sorted.{1} {1}' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
 
         # Your input file might have multiple columns, use {2} for the 2nd column
         # Sort the largest files first
         ls *.txt | xargs -n 1 wc -c | sort -n -r > files.txt
-        echo 'qarrayrun files.txt sort -o sorted.{2} {2}' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
+        echo 'qarrayrun SGE_TASK_ID files.txt sort -o sorted.{2} {2}' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
 
         # Use the --shell option and quote your pipeline when you need shell redirection
         # Remove blanks before sorting files
         ls *.txt > files.txt
-        echo 'qarrayrun --shell files.txt "cat {1} | tr -d [:blank:] | sort > sorted.{1}"' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
+        echo 'qarrayrun --shell SGE_TASK_ID files.txt "cat {1} | tr -d [:blank:] | sort > sorted.{1}"' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
         """)
 
 
     formatter_class = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(description=description, epilog=epilog, formatter_class=formatter_class)
 
-    parser.add_argument("-e", "--env", dest="subtask_var", type=str, default="SGE_TASK_ID", metavar="NAME",
-                        help="""Name of the environment variable that contains the sub-task number.
-                                You should use SGE_TASK_ID with Grid Engine and PBS_ARRAYID with Torque. (default: SGE_TASK_ID)""")
+    parser.add_argument(dest="subtask_var", type=str, metavar="NAME", help="""Name of the environment variable that contains the sub-task number.
+                                                                              You should use SGE_TASK_ID with Grid Engine and PBS_ARRAYID with Torque.""")
     parser.add_argument(dest="array_file", type=str, help="""Name of the file containing the arguments for each sub-task with one line
                                                              per sub-task.  This script will extract the arguments for this sub-task
                                                              at the line number identified by the sub-task environment variable

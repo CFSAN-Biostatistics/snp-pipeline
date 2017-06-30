@@ -16,7 +16,7 @@ class JobRunnerException(Exception):
     """Raised for fatal JobRunner errors"""
 
 class JobRunner(object):
-    def __init__(self, hpc_type, strip_job_array_suffix=True, exception_handler=None):
+    def __init__(self, hpc_type, strip_job_array_suffix=True, exception_handler=None, verbose=False):
         """Initialize an hpc job runner object.
 
         Parameters
@@ -28,6 +28,8 @@ class JobRunner(object):
         exception_handler : function
             Function to be called in local mode only when an exception occurs while attempting to run an
             external process. The function will be called with the arguments (exc_type, exc_value, exc_traceback).
+        verbose : bool
+            When true, the job command lines are logged.
 
         Examples
         --------
@@ -42,6 +44,7 @@ class JobRunner(object):
         self.hpc_type = hpc_type
         self.strip_job_array_suffix = strip_job_array_suffix
         self.exception_handler = exception_handler
+        self.verbose = verbose
 
         if hpc_type == 'grid':
             self.subtask_env_var_name = "SGE_TASK_ID"
@@ -234,6 +237,8 @@ class JobRunner(object):
         """
         if self.hpc_type == "local":
             command_line = "set -o pipefail; " + command_line + " 2>&1 | tee " + log_file
+            if self.verbose:
+                print(command_line)
 
             # flush stdout to keep the unbuffered stderr in chronological order with stdout
             sys.stdout.flush()
@@ -250,11 +255,13 @@ class JobRunner(object):
             return '0'
 
         else: # grid or torque
-            qsub_command_line = self._make_qsub_command(job_name, log_file, wait_for, wait_for_array, threads, parallel_environment)
+            qsub_command_line = self._make_qsub_command(job_name, log_file, wait_for, wait_for_array, threads=threads, parallel_environment=parallel_environment)
 
             # Run command and return its stdout output as a byte string.
             # If the return code was non-zero it raises a CalledProcessError.
             shell_command_line = "echo " + command_line + " | " + qsub_command_line
+            if self.verbose:
+                print(shell_command_line)
             job_id = subprocess.check_output(shell_command_line, shell=True)
             return job_id.strip()
 
@@ -336,6 +343,8 @@ class JobRunner(object):
             # Number the tasks with nl to get the task number into the log file suffix.
             # Allow up to 9 parameters per command.
             command_line = "nl " + array_file + " | xargs -P " + str(max_processes) + " -n 9 -L 1 bash -c + 'set -o pipefail; " + command_line + " 2>&1 | tee " + log_file + "-$0'"
+            if self.verbose:
+                print(command_line)
 
             # flush stdout to keep the unbuffered stderr in chronological order with stdout
             sys.stdout.flush()
@@ -354,7 +363,10 @@ class JobRunner(object):
         else: # grid or torque
             qsub_command_line = self._make_qsub_command(job_name, log_file, wait_for, wait_for_array, slot_dependency, threads, parallel_environment, num_tasks, max_processes)
 
-            shell_command_line = "qarrayrun " + self.subtask_env_var_name + ' ' + array_file + ' ' + command_line + " | " + qsub_command_line
+            shell_command_line = "echo qarrayrun " + self.subtask_env_var_name + ' ' + array_file + ' ' + command_line + " | " + qsub_command_line
+            if self.verbose:
+                print(shell_command_line)
+
             job_id = subprocess.check_output(shell_command_line, shell=True) # If the return code is non-zero it raises a CalledProcessError
             if self.strip_job_array_suffix:
                 dot_idx = job_id.find('.')

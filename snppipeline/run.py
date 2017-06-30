@@ -648,13 +648,13 @@ def run(args):
 
     # Initialize the job runner
     if job_queue_mgr is None:
-        runner = JobRunner("local", exception_handler=handle_exception)
+        runner = JobRunner("local", exception_handler=handle_exception, verbose=args.verbose >= 4)
     elif job_queue_mgr == "grid":
         strip_job_array_suffix = config_params.get("GridEngine_StripJobArraySuffix", "true").lower()
-        runner = JobRunner(job_queue_mgr, strip_job_array_suffix == "true")
+        runner = JobRunner(job_queue_mgr, strip_job_array_suffix == "true", verbose=args.verbose >= 4)
     else:
         strip_job_array_suffix = config_params.get("Torque_StripJobArraySuffix", "false").lower()
-        runner = JobRunner(job_queue_mgr, strip_job_array_suffix == "true")
+        runner = JobRunner(job_queue_mgr, strip_job_array_suffix == "true", verbose=args.verbose >= 4)
 
     progress("Step 2 - Index the reference")
     log_file = os.path.join(log_dir, "indexRef.log")
