@@ -805,7 +805,7 @@ def run(args):
     output_file = "{1}/metrics"
     extra_params = os.environ.get("CollectMetrics_ExtraParams", "")
     command_line = "cfsan_snp_pipeline collect_metrics" + force_flag + "-o " + output_file + ' ' + extra_params + " {1} " + reference_file_path
-    job_id_collect_metrics = runner.run_array(command_line, "collectMetrics", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for_array=[job_id_call_consensus, job_id_call_consensus2])
+    job_id_collect_metrics = runner.run_array(command_line, "collectMetrics", log_file, sample_dirs_file, max_processes=max_cpu_cores, wait_for_array=[job_id_call_consensus, job_id_call_consensus2], slot_dependency=True)
 
     progress("Step 13 - Combine the metrics across all samples into the metrics table")
     log_file = os.path.join(log_dir, "combineMetrics.log")
