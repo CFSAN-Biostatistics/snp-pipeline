@@ -5784,11 +5784,30 @@ testRunSnpPipelineExcessiveSnps()
     assertFileNotContains "$tempDir/samples/sample1/metrics" "Consensus.*not found"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "Consensus.*not found"
     assertFileNotContains "$tempDir/metrics.tsv"             "sample1.*Consensus.*not found"
+
     assertFileNotContains "$tempDir/snplist.txt" "sample1"
     assertFileNotContains "$tempDir/snpma.fasta" "sample1"
     assertFileNotContains "$tempDir/snpma.vcf"   "sample1"
     assertFileNotContains "$tempDir/snp_distance_pairwise.tsv" "sample1"
     assertFileNotContains "$tempDir/snp_distance_matrix.tsv" "sample1"
+
+    assertFileNotContains "$tempDir/snplist.txt" "sample2"
+    assertFileNotContains "$tempDir/snpma.fasta" "sample2"
+    assertFileNotContains "$tempDir/snpma.vcf"   "sample2"
+    assertFileNotContains "$tempDir/snp_distance_pairwise.tsv" "sample2"
+    assertFileNotContains "$tempDir/snp_distance_matrix.tsv" "sample2"
+
+    assertFileContains "$tempDir/snplist_preserved.txt" "sample1"
+    assertFileContains "$tempDir/snpma_preserved.fasta" "sample1"
+    assertFileContains "$tempDir/snpma_preserved.vcf"   "sample1"
+    assertFileContains "$tempDir/snp_distance_pairwise_preserved.tsv" "sample1"
+    assertFileContains "$tempDir/snp_distance_matrix_preserved.tsv" "sample1"
+
+    assertFileNotContains "$tempDir/snplist_preserved.txt" "sample2"
+    assertFileNotContains "$tempDir/snpma_preserved.fasta" "sample2"
+    assertFileNotContains "$tempDir/snpma_preserved.vcf"   "sample2"
+    assertFileNotContains "$tempDir/snp_distance_pairwise_preserved.tsv" "sample2"
+    assertFileNotContains "$tempDir/snp_distance_matrix_preserved.tsv" "sample2"
 
     cfsan_snp_pipeline data lambdaVirusExpectedResults $tempDir/expectedResults
     grep -v sample[12] "$tempDir/expectedResults/metrics.tsv" > "$tempDir/expectedResults/metrics.withoutSample1and2.tsv"
