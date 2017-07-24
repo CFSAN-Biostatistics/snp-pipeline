@@ -16,7 +16,7 @@ class JobRunnerException(Exception):
     """Raised for fatal JobRunner errors"""
 
 class JobRunner(object):
-    def __init__(self, hpc_type, strip_job_array_suffix=True, exception_handler=None, verbose=False):
+    def __init__(self, hpc_type, strip_job_array_suffix=True, qsub_extra_params=None, exception_handler=None, verbose=False):
         """Initialize an hpc job runner object.
 
         Parameters
@@ -25,10 +25,12 @@ class JobRunner(object):
             Type of job runner.  Possible values are "grid", "torque", and "local".
         strip_job_array_suffix : bool, optional defaults to True
             When true, the dot and array suffix in the job id is removed before returning the job id.
-        exception_handler : function
+        qsub_extra_params : str, optional defaults to None
+            Extra command line options passed to qsub every time qsub submits a job.
+        exception_handler : function, optional defalts to None
             Function to be called in local mode only when an exception occurs while attempting to run an
             external process. The function will be called with the arguments (exc_type, exc_value, exc_traceback).
-        verbose : bool
+        verbose : bool, optional defaults to False
             When true, the job command lines are logged.
 
         Examples
@@ -43,6 +45,7 @@ class JobRunner(object):
 
         self.hpc_type = hpc_type
         self.strip_job_array_suffix = strip_job_array_suffix
+        self.qsub_extra_params = qsub_extra_params
         self.exception_handler = exception_handler
         self.verbose = verbose
 
@@ -94,8 +97,7 @@ class JobRunner(object):
         ValueError: _make_qsub_command() does not support hpc type local
 
         # grid
-        >>> runner = JobRunner("grid")
-        >>> os.environ["GridEngine_QsubExtraParams"] = "-q service.q"
+        >>> runner = JobRunner("grid", qsub_extra_params="-q service.q")
         >>> runner._make_qsub_command("JobName", "log", "777", "888", threads=8, parallel_environment="mpi")
         'qsub -terse -V -j y -cwd -N JobName -o log -hold_jid 777,888 -pe mpi 8 -q service.q'
 
@@ -110,8 +112,7 @@ class JobRunner(object):
         'qsub -terse -t 1-99 -V -j y -cwd -N JobName -o log -hold_jid 666,777 -hold_jid_ad 888,999 -tc 2 -pe mpi 8 -q service.q'
 
         # torque
-        >>> runner = JobRunner("torque")
-        >>> os.environ["Torque_QsubExtraParams"] = "-q short.q"
+        >>> runner = JobRunner("torque", qsub_extra_params="-q short.q")
         >>> cmd = runner._make_qsub_command("JobName", "log", "777", "888", threads=8)
         >>> cmd == "qsub -V -j oe -d %s -N JobName -o log -W depend=afterok:777,afterokarray:888 -l nodes=1:ppn=8 -q short.q" % os.getcwd()
         True
@@ -150,8 +151,8 @@ class JobRunner(object):
                     raise ValueError("You must use a parallel environment when consuming more than one thread on grid engine")
                 qsub_command_line += " -pe " + parallel_environment + ' ' + str(threads)
 
-            qsub_extra_params = os.environ.get("GridEngine_QsubExtraParams") or ""
-            qsub_command_line += ' ' + qsub_extra_params
+            if self.qsub_extra_params:
+                qsub_command_line += ' ' + self.qsub_extra_params
             return qsub_command_line
 
         if self.hpc_type == "torque":
@@ -174,8 +175,8 @@ class JobRunner(object):
             if threads > 1:
                 qsub_command_line += " -l nodes=1:ppn=" + str(threads)
 
-            qsub_extra_params = os.environ.get("Torque_QsubExtraParams") or ""
-            qsub_command_line += ' ' + qsub_extra_params
+            if self.qsub_extra_params:
+                qsub_command_line += ' ' + self.qsub_extra_params
             return qsub_command_line
 
 
