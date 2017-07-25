@@ -197,7 +197,6 @@ def run(argv):
         echo 'qarrayrun --shell SGE_TASK_ID files.txt "cat {1} | tr -d [:blank:] | sort > sorted.{1}"' | qsub -t 1-$(cat files.txt | wc -l) -cwd -j y -V -o log
         """)
 
-
     formatter_class = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(description=description, epilog=epilog, formatter_class=formatter_class)
 
@@ -266,4 +265,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -27,6 +27,7 @@ from snppipeline.utils import log_error
 log_dir = ""
 job_queue_mgr = None
 
+
 def progress(message):
     """Print a progress message.
 
@@ -42,7 +43,6 @@ def progress(message):
         print("*" * 80)
     else:
         print("Submitting " + message)
-
 
 
 def handle_called_process_exception(exc_type, exc_value, exc_traceback):
@@ -453,7 +453,7 @@ def run(args):
 
     # Create the logs directory with name like "logs-20170215.144253"
     run_time_stamp = time.strftime('%Y%m%d.%H%M%S', time.localtime())
-    log_dir = os.path.join(work_dir, "logs-"+run_time_stamp)
+    log_dir = os.path.join(work_dir, "logs-" + run_time_stamp)
     try:
         utils.mkdir_p(log_dir)
     except OSError as exc:
@@ -582,7 +582,7 @@ def run(args):
         validate_file_of_sample_dirs(sample_dirs_file)
 
     with open(sample_dirs_file) as f:
-       sample_dirs_list = f.read().splitlines()
+        sample_dirs_list = f.read().splitlines()
     sample_count = len(sample_dirs_list)
 
     # --------------------------------------------------------
@@ -637,7 +637,7 @@ def run(args):
 
         # refresh the list of sample dirs -- now in sorted order
         with open(sample_dirs_file) as f:
-           sample_dirs_list = f.read().splitlines()
+            sample_dirs_list = f.read().splitlines()
 
     # get the *.fastq or *.fq files in each sample directory, possibly compresessed, on one line per sample, ready to feed to bowtie
     sample_full_path_names_file = os.path.join(work_dir, "sampleFullPathNames.txt")

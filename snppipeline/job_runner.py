@@ -15,6 +15,7 @@ import sys
 class JobRunnerException(Exception):
     """Raised for fatal JobRunner errors"""
 
+
 class JobRunner(object):
     def __init__(self, hpc_type, strip_job_array_suffix=True, qsub_extra_params=None, exception_handler=None, verbose=False):
         """Initialize an hpc job runner object.

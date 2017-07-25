@@ -35,6 +35,7 @@ from snppipeline import combine_metrics
 
 HELP_WIDTH = 78 # 78 is the default argparse setting
 
+
 class HelpParser(argparse.ArgumentParser):
     """Class to provide custom argparse error formatting."""
 
@@ -42,6 +43,7 @@ class HelpParser(argparse.ArgumentParser):
         """Don't print the name of the program."""
         sys.stderr.write("Error: %s\n" % message)
         sys.exit(2)
+
 
 class RawArgumentDefaultsHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
     """Class to provide custom argparse option help formatting."""
