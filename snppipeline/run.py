@@ -529,7 +529,6 @@ def run(args):
     os.environ["MergeVcfs_ExtraParams"] = config_params.get("MergeVcfs_ExtraParams", "")
     os.environ["CollectMetrics_ExtraParams"] = config_params.get("CollectMetrics_ExtraParams", "")
     os.environ["CombineMetrics_ExtraParams"] = config_params.get("CombineMetrics_ExtraParams", "")
-    os.environ["GridEngine_PEname"] = config_params.get("GridEngine_PEname", "")
 
     # Verify the dependencies are available on the path
     dependencies = ["cfsan_snp_pipeline", snp_pipeline_aligner, "samtools", "java", "tabix", "bgzip", "bcftools"]
