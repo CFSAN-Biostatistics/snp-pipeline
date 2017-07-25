@@ -819,3 +819,7 @@ def run(args):
     # Step 14 - Notify user of any non-fatal errors accumulated during processing
     if os.path.isfile(error_output_file) and os.path.getsize(error_output_file) > 0 and not stop_on_error:
         print("\nThere were errors processing some samples.\nSee the log file %s for a summary of errors." % error_output_file, file=sys.stderr)
+
+    # Exit here to prevent showing the "cfsan_snp_pipeline run finished" message.  The jobs are queued, not finished yet.
+    if job_queue_mgr is not None: # HPC
+        sys.exit(0)
