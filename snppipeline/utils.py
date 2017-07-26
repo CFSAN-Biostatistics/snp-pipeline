@@ -453,7 +453,7 @@ def fatal_error(message):
 
 def sample_warning(message):
     """Log a warning to the error summary file with special formatting and also print the warning to stderr.
-    Do not exit regardless of the SnpPipeline_StopOnSampleError setting.
+    Do not exit regardless of the StopOnSampleError setting.
 
     Parameters
     ----------
@@ -480,7 +480,7 @@ def global_error(message):
     to cause Sun Grid Engine to also detect the error.
 
     This method always stops pipeline execution, it does not care about the
-    SnpPipeline_StopOnSampleError flag.
+    StopOnSampleError flag.
 
     Args:
         message : str
@@ -512,14 +512,14 @@ def sample_error(message, continue_possible=False):
     Log an error to the error summary file and conditionally exit with error
     code 100 to cause Sun Grid Engine to also detect the error.
 
-    The SnpPipeline_StopOnSampleError and continue_possible flags control the
+    The StopOnSampleError and continue_possible flags control the
     pipeline exit / continuation behavior.  Possible behaviors are:
     - Stop this step and all subsequent steps of the pipeline if
-      SnpPipeline_StopOnSampleError is true or unset
+      StopOnSampleError is true or unset
     - Stop execution of this step, but continue subsequent steps if
-      SnpPipeline_StopOnSampleError is false and continue_possible is false
+      StopOnSampleError is false and continue_possible is false
     - Allow this step to continue if
-      SnpPipeline_StopOnSampleError is false and continue_possible is true
+      StopOnSampleError is false and continue_possible is true
 
     Args:
         message : str
@@ -529,7 +529,7 @@ def sample_error(message, continue_possible=False):
             flag true may allow the code to continue without exiting if
             configured to do so.
     """
-    stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
+    stop_on_error_env = os.environ.get("StopOnSampleError")
     stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
 
     # Log the event to the error log
@@ -650,7 +650,7 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
     # Exit 100 does two things:
     # 1. Sun Grid Engine will stop execution of dependent jobs
     # 2. run_snp_pipeline.sh will know this error has already been reported
-    stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
+    stop_on_error_env = os.environ.get("StopOnSampleError")
     stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
     if stop_on_error:
         # run_snp_pipeline.sh will know this error has already been reported

@@ -242,7 +242,7 @@ def collect_metrics(args):
     # Calculate number of duplicate reads from deduped bam file
     #-------------------------
     num_dup_reads = ""
-    remove_duplicate_reads = os.environ.get("SnpPipeline_RemoveDuplicateReads") or "true"
+    remove_duplicate_reads = os.environ.get("RemoveDuplicateReads") or "true"
     remove_duplicate_reads = remove_duplicate_reads.lower()
     if remove_duplicate_reads == "true":
         verbose_print("# %s %s" % (utils.timestamp(), "Calculate number of duplicate reads from deduped bam file"))

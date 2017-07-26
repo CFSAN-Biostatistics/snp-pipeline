@@ -1010,7 +1010,7 @@ depth, and high density snp filtering.
 Duplicate reads are removed with the ``Picard`` software tool which must be installed for this functionality.
 
 You can disable this step and keep the duplicate reads by configuring the
-``SnpPipeline_RemoveDuplicateReads`` parameter in the configuration file.
+``RemoveDuplicateReads`` parameter in the configuration file.
 
 You can customize the picard MarkDuplicates behavior to some extent by configuring the
 ``PicardMarkDuplicates_ExtraParams`` parameter in the configuration file.
@@ -1107,7 +1107,7 @@ Grab the default configuration file::
 
 Edit ``snppipeline.conf``, and change this setting::
 
-    SnpPipeline_MaxSnps=1000  # substitute your threshold value here, or -1 to disable this function
+    MaxSnps=1000  # substitute your threshold value here, or -1 to disable this function
 
 Then run the pipeline with the -c command line option::
 
@@ -1204,13 +1204,12 @@ The metrics are:
 |                         | | ``minConsFreq`` parameter.                                     |
 +-------------------------+------------------------------------------------------------------+
 | Excluded Sample         | | When a sample has an excessive number of snps exceeding the    |
-|                         | | ``SnpPipeline_MaxSnps`` parameter value, this metric will have |
-|                         | | the value ``Excluded``.  Otherwise, this metric is blank.      |
+|                         | | ``MaxSnps`` parameter value, this metric will have the value   |
+|                         | | ``Excluded``.  Otherwise, this metric is blank.                |
 +-------------------------+------------------------------------------------------------------+
 | Excluded Preserved      | | When a sample has an excessive number of preserved snps        |
-| Sample                  | | exceeding the ``SnpPipeline_MaxSnps`` parameter value, this    |
-|                         | | metric will have the value ``Excluded``.  Otherwise, this      |
-|                         | | metric is blank.                                               |
+| Sample                  | | exceeding the ``MaxSnps`` parameter value, this metric will    |
+|                         | | have the value ``Excluded``.  Otherwise, this metric is blank. |
 +-------------------------+------------------------------------------------------------------+
 | Warnings and Errors     | | A list of warnings or errors encountered while collecting the  |
 |                         | | metrics.                                                       |
@@ -1229,17 +1228,17 @@ See :ref:`logging-label`.
 By default, the SNP Pipeline is configured to stop when execution errors occur.  However, it is
 possible some errors may affect only individual samples and other samples can still be
 processed.  If you want the pipeline to continue processing after an error affecting only
-a single sample has occurred, you can try disabling the ``SnpPipeline_StopOnSampleError``
+a single sample has occurred, you can try disabling the ``StopOnSampleError``
 configuration parameter (not recommended).  See :ref:`configuration-label`.
-When ``SnpPipeline_StopOnSampleError`` is ``false``
+When ``StopOnSampleError`` is ``false``
 the pipeline will attempt to continue subsequent processing steps when an error does not
 affect all samples.  Errors are logged in the ``error.log`` file regardless of how the
-``SnpPipeline_StopOnSampleError`` parameter is configured.  You should review the ``error.log``
+``StopOnSampleError`` parameter is configured.  You should review the ``error.log``
 after running the pipeline to see a summary of any errors detected during execution.
 
 
 Note: currently, when using the Torque job queue manager, the pipeline will always stop on
-errors regardless of the ``SnpPipeline_StopOnSampleError`` parameter setting.
+errors regardless of the ``StopOnSampleError`` parameter setting.
 
 When errors stop the execution of the pipeline on Grid Engine or Torque, other non-failing jobs
 in progress will continue until complete.  However, subsequent job steps will not execute and

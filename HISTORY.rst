@@ -10,8 +10,8 @@ History
 
 * The configuration file is not an executable bash script anymore.  However, you can still
   substitute environment variables with the $VAR_NAME notation.
-* Some configuration parameter names are changed to match cfsan_snp_pipeline sub-command names.
-  If you have been using a customized configuration file, you should begin using a new configuration file.
+* Some configuration parameter names are changed.  If you have been using a customized
+  configuration file, you should begin using a new configuration file.
 * Simplified the configuration of multi-threading.  Replaced the configuration parameters
   MaxConcurrentCollectSampleMetrics, MaxConcurrentCallConsensus, and MaxConcurrentPrepSamples
   with a single new configuration parameter ``MaxCpuCores``.  See also :ref:`faq-performance-label`.
@@ -54,7 +54,7 @@ History
 * Added the capability to remove duplicate reads from BAM files prior to creating the pileup and
   calling snps.  See :ref:`remove-duplicate-reads-label`.  This change introduces a dependency on
   ``Picard`` and will require changing your CLASSPATH.  See :ref:`installation-label`. You can
-  disable this step and keep the duplicate reads by configuring ``SnpPipeline_RemoveDuplicateReads=false``
+  disable this step and keep the duplicate reads by configuring ``RemoveDuplicateReads=false``
   in the configuration file.
 * Added a new metric to count the number of duplicate reads in each sample.
 * Capture read-group metadata in the SAM/BAM files during the read mapping step.
@@ -105,7 +105,7 @@ History
 
 **Other Changes:**
 
-* A new configuration parameter, ``SnpPipeline_MaxSnps``, controls the maximum number of snps
+* A new configuration parameter, ``MaxSnps``, controls the maximum number of snps
   allowed for each sample.  Samples with excessive snps exceeding this limit are excluded
   from the snp list and snp matrix.
   See :ref:`excessive-snps-label`.

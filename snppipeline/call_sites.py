@@ -111,7 +111,7 @@ def call_sites(args):
     # Mark duplicate reads, so they will be ignored in subsequent steps
     #==========================================================================
 
-    remove_duplicate_reads = os.environ.get("SnpPipeline_RemoveDuplicateReads") or "true"
+    remove_duplicate_reads = os.environ.get("RemoveDuplicateReads") or "true"
     remove_duplicate_reads = remove_duplicate_reads.lower()
     if remove_duplicate_reads == "true":
         # Check for fresh deduped bam file; if not, remove duplicate reads

@@ -158,7 +158,7 @@ globalError()
     logError "$errorMsg"
     logError "================================================================================"
 
-    # Also send the detail error message to stderr -- this will put the error message in the 
+    # Also send the detail error message to stderr -- this will put the error message in the
     # process-specific log file.
     echo "$errorMsg" 1>&2
 
@@ -176,7 +176,7 @@ sampleError()
     errorMsg="$1"
     continuePossible="$2"
 
-    if [[ -z $SnpPipeline_StopOnSampleError || $SnpPipeline_StopOnSampleError = true || "$continuePossible" != true ]]; then
+    if [[ -z $StopOnSampleError || $StopOnSampleError = true || "$continuePossible" != true ]]; then
         logError "$(basename $0) failed."
     else
         logError "$(basename $0)"
@@ -184,19 +184,19 @@ sampleError()
     logError "$errorMsg"
     logError "================================================================================"
 
-    # Also send the detail error message to stderr -- this will put the error message in the 
+    # Also send the detail error message to stderr -- this will put the error message in the
     # process-specific log file.
     echo "$errorMsg" 1>&2
 
     # Exit 100 tells Sun Grid Engine to stop execution of dependent jobs
-    if [[ -z $SnpPipeline_StopOnSampleError || $SnpPipeline_StopOnSampleError = true ]]; then
+    if [[ -z $StopOnSampleError || $StopOnSampleError = true ]]; then
         exit 100 # run_snp_pipeline.sh will know this error has already been reported
     elif [[ "$continuePossible" != true ]]; then
         exit 98 # run_snp_pipeline.sh will know this error has already been reported, but it should not stop execution of the rest of the pipeline
     fi
 }
 
-# Log a warning to the error summary file but do not exit regardless of the SnpPipeline_StopOnSampleError setting
+# Log a warning to the error summary file but do not exit regardless of the StopOnSampleError setting
 sampleWarning()
 {
     errorMsg="$1"
@@ -205,7 +205,7 @@ sampleWarning()
     logError "$errorMsg"
     logError "================================================================================"
 
-    # Also send the detail error message to stderr -- this will put the error message in the 
+    # Also send the detail error message to stderr -- this will put the error message in the
     # process-specific log file.
     echo "$errorMsg" 1>&2
 }
@@ -302,7 +302,7 @@ handleTrappedSampleErrors()
     # ${BASH_LINENO[0]} contains the line number in the script of that command
 
     # Sun Grid Engine looks for error code 100
-    if [[ -z $SnpPipeline_StopOnSampleError || $SnpPipeline_StopOnSampleError = true ]]; then
+    if [[ -z $StopOnSampleError || $StopOnSampleError = true ]]; then
         exit 100 # run_snp_pipeline.sh will know this error has already been reported
     else
         exit 98 # run_snp_pipeline.sh will know this error has already been reported, but it should not stop execution of the rest of the pipeline

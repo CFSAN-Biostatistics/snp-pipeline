@@ -83,7 +83,7 @@ assertDifferentFiles()
 # Assert file $1 is newer than file $2.
 assertNewerFile()
 {
-    [ "$1" -nt "$2" ]
+    [ ! "$1" -ot "$2" ]  # $1 not older than $2
     errorCode=$?
     assertTrue "The file $1 should be newer than $2." $errorCode
 }
@@ -248,7 +248,7 @@ testRunSnpPipelineDependencyBowtie2RaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
 }
 
@@ -257,7 +257,7 @@ testRunSnpPipelineDependencyBowtie2RaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
 }
 
@@ -266,7 +266,7 @@ testRunSnpPipelineDependencyBowtie2RaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
 }
 
@@ -275,7 +275,7 @@ testRunSnpPipelineDependencySmaltRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     echo "SnpPipeline_Aligner=smalt" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 smalt
 }
@@ -285,7 +285,7 @@ testRunSnpPipelineDependencySmaltRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     echo "SnpPipeline_Aligner=smalt" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 smalt
 }
@@ -295,7 +295,7 @@ testRunSnpPipelineDependencySmaltRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     echo "SnpPipeline_Aligner=smalt" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 smalt
 }
@@ -305,7 +305,7 @@ testRunSnpPipelineDependencyPicardRequiredRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_RemoveDuplicateReads=true" >> "$tempDir/snppipeline.conf"
+    echo "RemoveDuplicateReads=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
     assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
@@ -316,7 +316,7 @@ testRunSnpPipelineDependencyPicardNotRequiredRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_RemoveDuplicateReads=false" >> "$tempDir/snppipeline.conf"
+    echo "RemoveDuplicateReads=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
     assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
     assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
@@ -361,21 +361,21 @@ tryIndexRefEnvironmentRaiseGlobalError()
 # Verify the index_ref command detects a misconfigured environment variable
 testIndexRefEnvironmentRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryIndexRefEnvironmentRaiseGlobalError 100
 }
 
 # Verify the index_ref command detects a misconfigured environment variable
 testIndexRefEnvironmentRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryIndexRefEnvironmentRaiseGlobalError 100
 }
 
 # Verify the index_ref command detects a misconfigured environment variable
 testIndexRefEnvironmentRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryIndexRefEnvironmentRaiseGlobalError 100
 }
 
@@ -416,21 +416,21 @@ tryIndexRefEmptyFastaFileRaiseGlobalError()
 # Verify the index_ref command detects a misconfigured environment variable
 testIndexRefEmptyFastaFileRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryIndexRefEmptyFastaFileRaiseGlobalError 100
 }
 
 # Verify the index_ref command detects a misconfigured environment variable
 testIndexRefEmptyFastaFileRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryIndexRefEmptyFastaFileRaiseGlobalError 100
 }
 
 # Verify the index_ref command detects a misconfigured environment variable
 testIndexRefEmptyFastaFileRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryIndexRefEmptyFastaFileRaiseGlobalError 100
 }
 
@@ -470,21 +470,21 @@ tryIndexRefBowtieIndexTrap()
 # Verify the index_ref command detects bowtie error and emits the global error marker file.
 testIndexRefBowtieIndexTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryIndexRefBowtieIndexTrap 100
 }
 
 # Verify the index_ref command detects bowtie error and emits the global error marker file.
 testIndexRefBowtieIndexTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryIndexRefBowtieIndexTrap 100
 }
 
 # Verify the index_ref command detects bowtie error and emits the global error marker file.
 testIndexRefBowtieIndexTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryIndexRefBowtieIndexTrap 100
 }
 
@@ -529,21 +529,21 @@ tryIndexRefSmaltIndexTrap()
 # Verify the index_ref command detects smalt error and emits the global error marker file.
 testIndexRefSmaltIndexTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryIndexRefSmaltIndexTrap 100
 }
 
 # Verify the index_ref command detects smalt error and emits the global error marker file.
 testIndexRefSmaltIndexTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryIndexRefSmaltIndexTrap 100
 }
 
 # Verify the index_ref command detects smalt error and emits the global error marker file.
 testIndexRefSmaltIndexTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryIndexRefSmaltIndexTrap 100
 }
 
@@ -613,21 +613,21 @@ tryIndexRefSamtoolsFaidxTrap()
 # Verify the index_ref command detects samtools error and emits the global error marker file.
 testIndexRefSamtoolsFaidxTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryIndexRefSamtoolsFaidxTrap 100
 }
 
 # Verify the index_ref command detects samtools error and emits the global error marker file.
 testIndexRefSamtoolsFaidxTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryIndexRefSamtoolsFaidxTrap 100
 }
 
 # Verify the index_ref command detects samtools error and emits the global error marker file.
 testIndexRefSamtoolsFaidxTrapUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryIndexRefSamtoolsFaidxTrap 100
 }
 
@@ -675,21 +675,21 @@ tryMapReadsEnvironmentRaiseGlobalError()
 # Verify the map_reads command detects a misconfigured environment variable.
 testMapReadsEnvironmentRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMapReadsEnvironmentRaiseGlobalError 100
 }
 
 # Verify the map_reads command detects a misconfigured environment variable.
 testMapReadsEnvironmentRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMapReadsEnvironmentRaiseGlobalError 100
 }
 
 # Verify the map_reads command detects a misconfigured environment variable.
 testMapReadsEnvironmentRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMapReadsEnvironmentRaiseGlobalError 100
 }
 
@@ -730,21 +730,21 @@ tryMapReadsMissingReferenceRaiseGlobalError()
 # Verify the map_reads command detects a missing reference file
 testMapReadsMissingReferenceRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMapReadsMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the map_reads command detects a missing reference file
 testMapReadsMissingReferenceRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMapReadsMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the map_reads command detects a missing reference file
 testMapReadsMissingReferenceRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMapReadsMissingReferenceRaiseGlobalError 100
 }
 
@@ -785,21 +785,21 @@ tryMapReadsMissingSample1RaiseSampleError()
 # Verify the map_reads command detects a misconfigured MissingSample1 variable.
 testMapReadsMissingSample1RaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMapReadsMissingSample1RaiseSampleError 100
 }
 
 # Verify the map_reads command detects a misconfigured MissingSample1 variable.
 testMapReadsMissingSample1RaiseSampleErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMapReadsMissingSample1RaiseSampleError 98
 }
 
 # Verify the map_reads command detects a misconfigured MissingSample1 variable.
 testMapReadsMissingSample1RaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMapReadsMissingSample1RaiseSampleError 100
 }
 
@@ -843,21 +843,21 @@ tryMapReadsMissingSample2RaiseSampleError()
 # Verify the map_reads command detects a misconfigured MissingSample2 variable.
 testMapReadsMissingSample2RaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMapReadsMissingSample2RaiseSampleError 100
 }
 
 # Verify the map_reads command detects a misconfigured MissingSample2 variable.
 testMapReadsMissingSample2RaiseSampleErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMapReadsMissingSample2RaiseSampleError 98
 }
 
 # Verify the map_reads command detects a misconfigured MissingSample2 variable.
 testMapReadsMissingSample2RaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMapReadsMissingSample2RaiseSampleError 100
 }
 
@@ -919,21 +919,21 @@ tryMapReadsBowtieAlignTrap()
 # Verify the map_reads command detects bowtie alignment error.
 testMapReadsBowtieAlignTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMapReadsBowtieAlignTrap 100
 }
 
 # Verify the map_reads command detects bowtie alignment error.
 testMapReadsBowtieAlignTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMapReadsBowtieAlignTrap 98
 }
 
 # Verify the map_reads command detects bowtie alignment error.
 testMapReadsBowtieAlignTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMapReadsBowtieAlignTrap 100
 }
 
@@ -998,21 +998,21 @@ tryMapReadsSmaltAlignTrap()
 # Verify the map_reads command detects smalt alignment error.
 testMapReadsSmaltAlignTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMapReadsSmaltAlignTrap 100
 }
 
 # Verify the map_reads command detects smalt alignment error.
 testMapReadsSmaltAlignTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMapReadsSmaltAlignTrap 98
 }
 
 # Verify the map_reads command detects smalt alignment error.
 testMapReadsSmaltAlignTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMapReadsSmaltAlignTrap 100
 }
 
@@ -1056,21 +1056,21 @@ tryCallSitesMissingReferenceRaiseGlobalError()
 # Verify the cfsan_snp_pipeline call_sites script detects a missing Reference file
 testCallSitesMissingReferenceRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallSitesMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects a missing reference file
 testCallSitesMissingReferenceRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallSitesMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects a missing reference file
 testCallSitesMissingReferenceRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallSitesMissingReferenceRaiseGlobalError 100
 }
 
@@ -1111,21 +1111,21 @@ tryCallSitesMissingSamFileRaiseSampleError()
 # Verify the cfsan_snp_pipeline call_sites script detects a misconfigured MissingSamFile variable.
 testCallSitesMissingSamFileRaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallSitesMissingSamFileRaiseSampleError 100
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects a misconfigured MissingSamFile variable.
 testCallSitesMissingSamFileRaiseSampleErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallSitesMissingSamFileRaiseSampleError 98
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects a misconfigured MissingSamFile variable.
 testCallSitesMissingSamFileRaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallSitesMissingSamFileRaiseSampleError 100
 }
 
@@ -1179,21 +1179,21 @@ tryCallSitesSamtoolsViewTrap()
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools view failure.
 testCallSitesSamtoolsViewTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallSitesSamtoolsViewTrap 100
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools view failure.
 testCallSitesSamtoolsViewTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallSitesSamtoolsViewTrap 98
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools view failure.
 testCallSitesSamtoolsViewTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallSitesSamtoolsViewTrap 100
 }
 
@@ -1247,21 +1247,21 @@ tryCallSitesSamtoolsSortTrap()
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools sort failure.
 testCallSitesSamtoolsSortTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallSitesSamtoolsSortTrap 100
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools sort failure.
 testCallSitesSamtoolsSortTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallSitesSamtoolsSortTrap 98
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools sort failure.
 testCallSitesSamtoolsSortTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallSitesSamtoolsSortTrap 100
 }
 
@@ -1319,21 +1319,21 @@ tryCallSitesPicardMarkDuplicatesTrap()
 # Verify the cfsan_snp_pipeline call_sites script detects Picard MarkDuplicates failure.
 testCallSitesPicardMarkDuplicatesTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallSitesPicardMarkDuplicatesTrap 100
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Picard MarkDuplicates failure.
 testCallSitesPicardMarkDuplicatesTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallSitesPicardMarkDuplicatesTrap 98
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Picard MarkDuplicates failure.
 testCallSitesPicardMarkDuplicatesTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallSitesPicardMarkDuplicatesTrap 100
 }
 
@@ -1392,21 +1392,21 @@ tryCallSitesPicardMarkDuplicatesClasspathRaiseGlobalError()
 # Verify the cfsan_snp_pipeline call_sites script detects unset java classpath needed to run PicardMarkDuplicates.
 testCallSitesPicardMarkDuplicatesClasspathRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallSitesPicardMarkDuplicatesClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects unset java classpath needed to run PicardMarkDuplicates.
 testCallSitesPicardMarkDuplicatesClasspathRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallSitesPicardMarkDuplicatesClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects unset java classpath needed to run PicardMarkDuplicates.
 testCallSitesPicardMarkDuplicatesClasspathRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallSitesPicardMarkDuplicatesClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
 }
 
@@ -1464,21 +1464,21 @@ tryCallSitesSamtoolsMpileupTrap()
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools mpileup failure.
 testCallSitesSamtoolsMpileupTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallSitesSamtoolsMpileupTrap 100
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools mpileup failure.
 testCallSitesSamtoolsMpileupTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallSitesSamtoolsMpileupTrap 98
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools mpileup failure.
 testCallSitesSamtoolsMpileupTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallSitesSamtoolsMpileupTrap 100
 }
 
@@ -1539,21 +1539,21 @@ tryCallSitesVarscanRaiseSampleError()
 # Verify the cfsan_snp_pipeline call_sites script detects Varscan failure.
 testCallSitesVarscanRaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallSitesVarscanRaiseSampleError 100
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Varscan failure.
 testCallSitesVarscanRaiseSampleErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallSitesVarscanRaiseSampleError 98
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects Varscan failure.
 testCallSitesVarscanRaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallSitesVarscanRaiseSampleError 100
 }
 
@@ -1616,21 +1616,21 @@ tryCallSitesVarscanClasspathRaiseGlobalError()
 # Verify the cfsan_snp_pipeline call_sites script detects unset java classpath needed to run Varscan.
 testCallSitesVarscanClasspathRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallSitesVarscanClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects unset java classpath needed to run Varscan.
 testCallSitesVarscanClasspathRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallSitesVarscanClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
 }
 
 # Verify the cfsan_snp_pipeline call_sites script detects unset java classpath needed to run Varscan.
 testCallSitesVarscanClasspathRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallSitesVarscanClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
 }
 
@@ -1703,14 +1703,14 @@ tryFilterRegionsPermissionTrap()
 # Verify the cfsan_snp_pipeline filter_regions script traps attempts to write to unwritable file
 testFilterRegionsPermissionTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryFilterRegionsPermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script traps attempts to write to unwritable file
 testFilterRegionsPermissionTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
 
     expectErrorCode=0
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
@@ -1779,7 +1779,7 @@ testFilterRegionsPermissionTrapNoStop()
 # Verify the cfsan_snp_pipeline filter_regions script traps attempts to write to unwritable file
 testFilterRegionsPermissionTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryFilterRegionsPermissionTrap 100
 }
 
@@ -1817,21 +1817,21 @@ tryFilterRegionsMissingSampleDirRaiseGlobalError()
 # Verify the cfsan_snp_pipeline filter_regions script detects missing sample directories file
 testFilterRegionsMissingSampleDirRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryFilterRegionsMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects missing sample directories file
 testFilterRegionsMissingSampleDirRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryFilterRegionsMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects missing sample directories file
 testFilterRegionsMissingSampleDirRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryFilterRegionsMissingSampleDirRaiseGlobalError 100
 }
 
@@ -1874,21 +1874,21 @@ tryFilterRegionsMissingReferenceRaiseGlobalError()
 # Verify the cfsan_snp_pipeline filter_regions script detects missing reference file
 testFilterRegionsMissingReferenceRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryFilterRegionsMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects missing reference file
 testFilterRegionsMissingReferenceRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryFilterRegionsMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects missing reference file
 testFilterRegionsMissingReferenceRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryFilterRegionsMissingReferenceRaiseGlobalError 100
 }
 
@@ -1931,21 +1931,21 @@ tryFilterRegionsMissingOutgroupRaiseGlobalError()
 # Verify the cfsan_snp_pipeline filter_regions script detects missing outgroup samples file
 testFilterRegionsMissingOutgroupRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryFilterRegionsMissingOutgroupRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects missing outgroup samples file
 testFilterRegionsMissingOutgroupRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryFilterRegionsMissingOutgroupRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects missing outgroup samples file
 testFilterRegionsMissingOutgroupRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryFilterRegionsMissingOutgroupRaiseGlobalError 100
 }
 
@@ -1992,21 +1992,21 @@ tryFilterRegionsMissingVcfRaiseGlobalError()
 # Verify the cfsan_snp_pipeline filter_regions script detects all vcf files missing
 testFilterRegionsMissingVcfRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryFilterRegionsMissingVcfRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects all vcf files missing
 testFilterRegionsMissingVcfRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryFilterRegionsMissingVcfRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects all vcf files missing
 testFilterRegionsMissingVcfRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryFilterRegionsMissingVcfRaiseGlobalError 100
 }
 
@@ -2056,7 +2056,7 @@ tryFilterRegionsMissingVcfRaiseSampleError()
 # Verify the filter_regions command detects missing some VCF files, but not all
 testFilterRegionsMissingVcfRaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryFilterRegionsMissingVcfRaiseSampleError 100
 }
 
@@ -2072,7 +2072,7 @@ testFilterRegionsMissingVcfRaiseSampleErrorNoStop()
     # This simulates what run_snp_pipeline does before running other scripts
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     export errorOutputFile="$tempDir/error.log"
 
     # Run prep work
@@ -2106,7 +2106,7 @@ testFilterRegionsMissingVcfRaiseSampleErrorNoStop()
 # Verify the filter_regions command detects missing some VCF files, but not all
 testFilterRegionsMissingVcfRaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryFilterRegionsMissingVcfRaiseSampleError 100
 }
 
@@ -2273,21 +2273,21 @@ tryMergeSitesPermissionTrap()
 # Verify the cfsan_snp_pipeline merge_sites script traps attempts to write to unwritable file
 testMergeSitesPermissionTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMergeSitesPermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline merge_sites script traps attempts to write to unwritable file
 testMergeSitesPermissionTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMergeSitesPermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline merge_sites script traps attempts to write to unwritable file
 testMergeSitesPermissionTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMergeSitesPermissionTrap 100
 }
 
@@ -2326,21 +2326,21 @@ tryMergeSitesMissingSampleDirRaiseGlobalError()
 # Verify the merge_sites command detects failure.
 testMergeSitesMissingSampleDirRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMergeSitesMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the merge_sites command detects failure.
 testMergeSitesMissingSampleDirRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMergeSitesMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the merge_sites command detects failure.
 testMergeSitesMissingSampleDirRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMergeSitesMissingSampleDirRaiseGlobalError 100
 }
 
@@ -2387,21 +2387,21 @@ tryMergeSitesMissingVcfRaiseGlobalError()
 # Verify the merge_sites command detects failure.
 testMergeSitesMissingVcfRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMergeSitesMissingVcfRaiseGlobalError 100
 }
 
 # Verify the merge_sites command detects failure.
 testMergeSitesMissingVcfRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMergeSitesMissingVcfRaiseGlobalError 100
 }
 
 # Verify the merge_sites command detects failure.
 testMergeSitesMissingVcfRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMergeSitesMissingVcfRaiseGlobalError 100
 }
 
@@ -2451,7 +2451,7 @@ tryMergeSitesMissingVcfRaiseSampleError()
 # Verify the merge_sites command detects failure.
 testMergeSitesMissingVcfRaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMergeSitesMissingVcfRaiseSampleError 100
 }
 
@@ -2467,7 +2467,7 @@ testMergeSitesMissingVcfRaiseSampleErrorNoStop()
     # This simulates what run_snp_pipeline does before running other scripts
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     export errorOutputFile="$tempDir/error.log"
 
     # Run prep work
@@ -2501,7 +2501,7 @@ testMergeSitesMissingVcfRaiseSampleErrorNoStop()
 # Verify the merge_sites command detects failure.
 testMergeSitesMissingVcfRaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMergeSitesMissingVcfRaiseSampleError 100
 }
 
@@ -2540,21 +2540,21 @@ tryCallConsensusCorruptSnplistTrap()
 # Verify the call_consensus command traps on corrupt snplist file
 testCallConsensusCorruptSnplistTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallConsensusCorruptSnplistTrap 100
 }
 
 # Verify the call_consensus command traps on corrupt snplist file
 testCallConsensusCorruptSnplistTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallConsensusCorruptSnplistTrap 98
 }
 
 # Verify the call_consensus command traps on corrupt snplist file
 testCallConsensusCorruptSnplistTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallConsensusCorruptSnplistTrap 100
 }
 
@@ -2596,21 +2596,21 @@ tryCallConsensusMissingSnpListRaiseGlobalError()
 # Verify the call_consensus command detects failure.
 testCallConsensusMissingSnpListRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallConsensusMissingSnpListRaiseGlobalError 100
 }
 
 # Verify the call_consensus command detects failure.
 testCallConsensusMissingSnpListRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallConsensusMissingSnpListRaiseGlobalError 100
 }
 
 # Verify the call_consensus command detects failure.
 testCallConsensusMissingSnpListRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallConsensusMissingSnpListRaiseGlobalError 100
 }
 
@@ -2655,21 +2655,21 @@ tryCallConsensusEmptySnpList()
 # Verify the call_consensus command does not fail merely because the snplist file is empty.
 testCallConsensusEmptySnpListStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallConsensusEmptySnpList 0
 }
 
 # Verify the call_consensus command does not fail merely because the snplist file is empty.
 testCallConsensusEmptySnpListNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallConsensusEmptySnpList 0
 }
 
 # Verify the call_consensus command does not fail merely because the snplist file is empty.
 testCallConsensusEmptySnpListStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallConsensusEmptySnpList 0
 }
 
@@ -2713,21 +2713,21 @@ tryCallConsensusMissingPileupRaiseSampleError()
 # Verify the call_consensus command detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallConsensusMissingPileupRaiseSampleError 100
 }
 
 # Verify the call_consensus command detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallConsensusMissingPileupRaiseSampleError 98
 }
 
 # Verify the call_consensus command detects missing pileup file.
 testCallConsensusMissingPileupRaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallConsensusMissingPileupRaiseSampleError 100
 }
 
@@ -2773,21 +2773,21 @@ tryCallConsensusMissingExcludeRaiseSampleError()
 # Verify the call_consensus command detects missing exclude file.
 testCallConsensusMissingExcludeRaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCallConsensusMissingExcludeRaiseSampleError 100
 }
 
 # Verify the call_consensus command detects missing exclude file.
 testCallConsensusMissingExcludeRaiseSampleErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCallConsensusMissingExcludeRaiseSampleError 98
 }
 
 # Verify the call_consensus command detects missing exclude file.
 testCallConsensusMissingExcludeRaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCallConsensusMissingExcludeRaiseSampleError 100
 }
 
@@ -2828,21 +2828,21 @@ tryMergeVcfsCorruptVcfTrap()
 # Verify the merge_vcfs command detects failure.
 testMergeVcfsCorruptVcfTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMergeVcfsCorruptVcfTrap 100
 }
 
 # Verify the merge_vcfs command detects failure.
 testMergeVcfsCorruptVcfTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMergeVcfsCorruptVcfTrap 100
 }
 
 # Verify the merge_vcfs command detects failure.
 testMergeVcfsCorruptVcfTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMergeVcfsCorruptVcfTrap 100
 }
 
@@ -2880,21 +2880,21 @@ tryMergeVcfsMissingSampleDirRaiseGlobalError()
 # Verify the merge_vcfs command detects failure.
 testMergeVcfsMissingSampleDirRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMergeVcfsMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the merge_vcfs command detects failure.
 testMergeVcfsMissingSampleDirRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMergeVcfsMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the merge_vcfs command detects failure.
 testMergeVcfsMissingSampleDirRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMergeVcfsMissingSampleDirRaiseGlobalError 100
 }
 
@@ -2933,7 +2933,7 @@ tryMergeVcfsMissingVcfRaiseSampleError()
 # Verify the merge_vcfs command detects a missing consensus VCF file.
 testMergeVcfsMissingVcfRaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryMergeVcfsMissingVcfRaiseSampleError 100
 }
 
@@ -2952,7 +2952,7 @@ testMergeVcfsMissingVcfRaiseSampleErrorNoStop()
     # This simulates what run_snp_pipeline does before running other scripts
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     export errorOutputFile="$tempDir/error.log"
 
     # Run cfsan_snp_pipeline merge_vcfs with missing vcf files
@@ -2977,7 +2977,7 @@ testMergeVcfsMissingVcfRaiseSampleErrorNoStop()
 # Verify the merge_vcfs command detects a missing consensus VCF file.
 testMergeVcfsMissingVcfRaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryMergeVcfsMissingVcfRaiseSampleError 100
 }
 
@@ -2991,7 +2991,7 @@ testMergeVcfsOnlyOneSample()
     # This simulates what run_snp_pipeline does before running other scripts
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     export errorOutputFile="$tempDir/error.log"
 
     # Run cfsan_snp_pipeline merge_vcfs with only one vcf file
@@ -3048,21 +3048,21 @@ tryMergeVcfsZeroGoodSamplesRaiseGlobalError()
 # Verify the merge_vcfs command detects failure.
 #testMergeVcfsZeroGoodSamplesRaiseGlobalErrorStop()
 #{
-#    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path.
+#    # Nothing to test, StopOnSampleError must be false to test this code path.
 #    # Otherwise, the first missing VCF file will trigger stop upon sample error -- already tested.
 #}
 
 # Verify the merge_vcfs command detects failure.
 testMergeVcfsZeroGoodSamplesRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryMergeVcfsZeroGoodSamplesRaiseGlobalError 100
 }
 
 # Verify the merge_vcfs command detects failure.
 #testMergeVcfsZeroGoodSamplesRaiseGlobalErrorStopUnset()
 #{
-#    # Nothing to test, SnpPipeline_StopOnSampleError must be false to test this code path.
+#    # Nothing to test, StopOnSampleError must be false to test this code path.
 #    # Otherwise, the first missing VCF file will trigger stop upon sample error -- already tested.
 #}
 
@@ -3110,21 +3110,21 @@ trySnpMatrixPermissionTrap()
 # Verify the cfsan_snp_pipeline snp_matrix script traps attempts to write to unwritable file
 testSnpMatrixPermissionTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     trySnpMatrixPermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script traps attempts to write to unwritable file
 testSnpMatrixPermissionTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     trySnpMatrixPermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script traps attempts to write to unwritable file
 testSnpMatrixPermissionTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     trySnpMatrixPermissionTrap 100
 }
 
@@ -3162,21 +3162,21 @@ trySnpMatrixMissingSampleDirRaiseGlobalError()
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testSnpMatrixMissingSampleDirRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     trySnpMatrixMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testSnpMatrixMissingSampleDirRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     trySnpMatrixMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testSnpMatrixMissingSampleDirRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     trySnpMatrixMissingSampleDirRaiseGlobalError 100
 }
 
@@ -3228,21 +3228,21 @@ trySnpMatrixMissingConsensusRaiseGlobalError()
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testSnpMatrixMissingConsensusRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     trySnpMatrixMissingConsensusRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testSnpMatrixMissingConsensusRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     trySnpMatrixMissingConsensusRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testSnpMatrixMissingConsensusRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     trySnpMatrixMissingConsensusRaiseGlobalError 100
 }
 
@@ -3290,7 +3290,7 @@ trySnpMatrixMissingConsensusRaiseSampleError()
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testSnpMatrixMissingConsensusRaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     trySnpMatrixMissingConsensusRaiseSampleError 100
 }
 
@@ -3306,7 +3306,7 @@ testSnpMatrixMissingConsensusRaiseSampleErrorNoStop()
     # This simulates what run_snp_pipeline does before running other scripts
     export logDir="$tempDir/logs"
     mkdir -p "$logDir"
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     export errorOutputFile="$tempDir/error.log"
 
     # Run the pipeline, specifing the locations of samples and the reference
@@ -3339,7 +3339,7 @@ testSnpMatrixMissingConsensusRaiseSampleErrorNoStop()
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
 testSnpMatrixMissingConsensusRaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     trySnpMatrixMissingConsensusRaiseSampleError 100
 }
 
@@ -3383,21 +3383,21 @@ trySnpReferencePermissionTrap()
 # Verify the cfsan_snp_pipeline snp_reference script traps attempts to write to unwritable file
 testSnpReferencePermissionTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     trySnpReferencePermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline snp_reference script traps attempts to write to unwritable file
 testSnpReferencePermissionTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     trySnpReferencePermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline snp_reference script traps attempts to write to unwritable file
 testSnpReferencePermissionTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     trySnpReferencePermissionTrap 100
 }
 
@@ -3437,21 +3437,21 @@ trySnpReferenceMissingSnpListRaiseGlobalError()
 # Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testSnpReferenceMissingSnpListRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     trySnpReferenceMissingSnpListRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testSnpReferenceMissingSnpListRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     trySnpReferenceMissingSnpListRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testSnpReferenceMissingSnpListRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     trySnpReferenceMissingSnpListRaiseGlobalError 100
 }
 
@@ -3493,21 +3493,21 @@ trySnpReferenceMissingReferenceRaiseGlobalError()
 # Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testSnpReferenceMissingReferenceRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     trySnpReferenceMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testSnpReferenceMissingReferenceRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     trySnpReferenceMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline snp_reference script detects failure.
 testSnpReferenceMissingReferenceRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     trySnpReferenceMissingReferenceRaiseGlobalError 100
 }
 
@@ -3549,21 +3549,21 @@ tryCollectMetricsMissingSampleDirRaiseSampleError()
 # Verify the cfsan_snp_pipeline collect_metrics script detects a missing sample directory
 testCollectMetricsMissingSampleDirRaiseSampleErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCollectMetricsMissingSampleDirRaiseSampleError 100
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script detects a missing sample directory
 testCollectMetricsMissingSampleDirRaiseSampleErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCollectMetricsMissingSampleDirRaiseSampleError 98
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script detects a missing sample directory
 testCollectMetricsMissingSampleDirRaiseSampleErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCollectMetricsMissingSampleDirRaiseSampleError 100
 }
 
@@ -3605,21 +3605,21 @@ tryCollectMetricsMissingReferenceRaiseGlobalError()
 # Verify the cfsan_snp_pipeline collect_metrics script detects missing reference
 testCollectMetricsMissingReferenceRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCollectMetricsMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script detects missing reference
 testCollectMetricsMissingReferenceRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCollectMetricsMissingReferenceRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script detects missing reference
 testCollectMetricsMissingReferenceRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCollectMetricsMissingReferenceRaiseGlobalError 100
 }
 
@@ -3692,21 +3692,21 @@ tryCollectMetricsMissingInputFiles()
 # Verify the cfsan_snp_pipeline collect_metrics script handles missing input files
 testCollectMetricsMissingInputFilesStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCollectMetricsMissingInputFiles 0
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script handles missing input files
 testCollectMetricsMissingInputFilesNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCollectMetricsMissingInputFiles 0
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script handles missing input files
 testCollectMetricsMissingInputFilesStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCollectMetricsMissingInputFiles 0
 }
 
@@ -3792,21 +3792,21 @@ tryCollectMetricsEmptyInputFiles()
 # Verify the cfsan_snp_pipeline collect_metrics script handles empty input files
 testCollectMetricsEmptyInputFilesStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCollectMetricsEmptyInputFiles 0
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script handles empty input files
 testCollectMetricsEmptyInputFilesNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCollectMetricsEmptyInputFiles 0
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script handles empty input files
 testCollectMetricsEmptyInputFilesStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCollectMetricsEmptyInputFiles 0
 }
 
@@ -3872,21 +3872,21 @@ tryCollectMetricsCorruptInputFiles()
 # Verify the cfsan_snp_pipeline collect_metrics script handles corrupt input files
 testCollectMetricsCorruptInputFilesStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCollectMetricsCorruptInputFiles 0
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script handles corrupt input files
 testCollectMetricsCorruptInputFilesNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCollectMetricsCorruptInputFiles 0
 }
 
 # Verify the cfsan_snp_pipeline collect_metrics script handles corrupt input files
 testCollectMetricsCorruptInputFilesStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCollectMetricsCorruptInputFiles 0
 }
 
@@ -3924,21 +3924,21 @@ tryCombineMetricsMissingSampleDirRaiseGlobalError()
 # Verify the cfsan_snp_pipeline combine_metrics script detects missing input file
 testCombineMetricsMissingSampleDirRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCombineMetricsMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline combine_metrics script detects missing input file
 testCombineMetricsMissingSampleDirRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCombineMetricsMissingSampleDirRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline combine_metrics script detects missing input file
 testCombineMetricsMissingSampleDirRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCombineMetricsMissingSampleDirRaiseGlobalError 100
 }
 
@@ -3983,21 +3983,21 @@ tryCombineMetricsMissingSampleMetricsRaiseSampleWarning()
 # Verify the cfsan_snp_pipeline combine_metrics script detects a missing sample metrics file
 testCombineMetricsMissingSampleMetricsRaiseSampleWarningStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCombineMetricsMissingSampleMetricsRaiseSampleWarning 0
 }
 
 # Verify the cfsan_snp_pipeline combine_metrics script detects a missing sample metrics file
 testCombineMetricsMissingSampleMetricsRaiseSampleWarningNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCombineMetricsMissingSampleMetricsRaiseSampleWarning 0
 }
 
 # Verify the cfsan_snp_pipeline combine_metrics script detects a missing sample metrics file
 testCombineMetricsMissingSampleMetricsRaiseSampleWarningStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCombineMetricsMissingSampleMetricsRaiseSampleWarning 0
 }
 
@@ -4041,21 +4041,21 @@ tryCombineMetricsPermissionTrap()
 # Verify the cfsan_snp_pipeline combine_metrics script traps attempts to write to unwritable file
 testCombineMetricsPermissionTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryCombineMetricsPermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline combine_metrics script traps attempts to write to unwritable file
 testCombineMetricsPermissionTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryCombineMetricsPermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline combine_metrics script traps attempts to write to unwritable file
 testCombineMetricsPermissionTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryCombineMetricsPermissionTrap 100
 }
 
@@ -4092,21 +4092,21 @@ tryDistanceMissingInputRaiseGlobalError()
 # Verify the cfsan_snp_pipeline distance script detects missing input file
 testDistanceMissingInputRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryDistanceMissingInputRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline distance script detects missing input file
 testDistanceMissingInputRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryDistanceMissingInputRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline distance script detects missing input file
 testDistanceMissingInputRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryDistanceMissingInputRaiseGlobalError 100
 }
 
@@ -4144,21 +4144,21 @@ tryDistanceMissingOutputOptionsRaiseGlobalError()
 # Verify the cfsan_snp_pipeline distance script detects no output file options
 testDistanceMissingOutputOptionsRaiseGlobalErrorStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryDistanceMissingOutputOptionsRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline distance script detects no output file options
 testDistanceMissingOutputOptionsRaiseGlobalErrorNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryDistanceMissingOutputOptionsRaiseGlobalError 100
 }
 
 # Verify the cfsan_snp_pipeline distance script detects no output file options
 testDistanceMissingOutputOptionsRaiseGlobalErrorStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryDistanceMissingOutputOptionsRaiseGlobalError 100
 }
 
@@ -4200,21 +4200,21 @@ tryDistancePermissionTrap()
 # Verify the cfsan_snp_pipeline distance script traps attempts to write to unwritable file
 testDistancePermissionTrapStop()
 {
-    export SnpPipeline_StopOnSampleError=true
+    export StopOnSampleError=true
     tryDistancePermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline distance script traps attempts to write to unwritable file
 testDistancePermissionTrapNoStop()
 {
-    export SnpPipeline_StopOnSampleError=false
+    export StopOnSampleError=false
     tryDistancePermissionTrap 100
 }
 
 # Verify the cfsan_snp_pipeline distance script traps attempts to write to unwritable file
 testDistancePermissionTrapStopUnset()
 {
-    unset SnpPipeline_StopOnSampleError
+    unset StopOnSampleError
     tryDistancePermissionTrap 100
 }
 
@@ -4251,7 +4251,7 @@ testRunSnpPipelineMissingReferenceRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingReferenceRaiseFatalError 1
 }
 
@@ -4260,7 +4260,7 @@ testRunSnpPipelineMissingReferenceRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingReferenceRaiseFatalError 1
 }
 
@@ -4269,7 +4269,7 @@ testRunSnpPipelineMissingReferenceRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingReferenceRaiseFatalError 1
 }
 
@@ -4303,7 +4303,7 @@ testRunSnpPipelineMissingConfigurationFileRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingConfigurationFileRaiseFatalError 1
 }
 
@@ -4312,7 +4312,7 @@ testRunSnpPipelineMissingConfigurationFileRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingConfigurationFileRaiseFatalError 1
 }
 
@@ -4321,7 +4321,7 @@ testRunSnpPipelineMissingConfigurationFileRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingConfigurationFileRaiseFatalError 1
 }
 
@@ -4359,7 +4359,7 @@ testRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalError 1
 }
 
@@ -4368,7 +4368,7 @@ testRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalError 1
 }
 
@@ -4377,7 +4377,7 @@ testRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineInvalidAlignerConfigurationFileRaiseFatalError 1
 }
 
@@ -4411,7 +4411,7 @@ testRunSnpPipelineMissingSampleDirFileRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSampleDirFileRaiseFatalError 1
 }
 
@@ -4420,7 +4420,7 @@ testRunSnpPipelineMissingSampleDirFileRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSampleDirFileRaiseFatalError 1
 }
 
@@ -4429,7 +4429,7 @@ testRunSnpPipelineMissingSampleDirFileRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSampleDirFileRaiseFatalError 1
 }
 
@@ -4474,7 +4474,7 @@ testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineValidateSampleDirFileRaiseFatalError 1
 }
 
@@ -4483,7 +4483,7 @@ testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
 
     # Extract test data to temp dir
     cfsan_snp_pipeline data lambdaVirusInputs $tempDir
@@ -4560,7 +4560,7 @@ testRunSnpPipelineValidateSampleDirFileRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineValidateSampleDirFileRaiseFatalError 1
 }
 
@@ -4594,7 +4594,7 @@ testRunSnpPipelineMissingSamplesDirRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSamplesDirRaiseFatalError 1
 }
 
@@ -4603,7 +4603,7 @@ testRunSnpPipelineMissingSamplesDirRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSamplesDirRaiseFatalError 1
 }
 
@@ -4612,7 +4612,7 @@ testRunSnpPipelineMissingSamplesDirRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineMissingSamplesDirRaiseFatalError 1
 }
 
@@ -4647,7 +4647,7 @@ testRunSnpPipelineEmptySamplesDirRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineEmptySamplesDirRaiseFatalError 1
 }
 
@@ -4656,7 +4656,7 @@ testRunSnpPipelineEmptySamplesDirRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineEmptySamplesDirRaiseFatalError 1
 }
 
@@ -4665,7 +4665,7 @@ testRunSnpPipelineEmptySamplesDirRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineEmptySamplesDirRaiseFatalError 1
 }
 
@@ -4700,7 +4700,7 @@ testRunSnpPipelineSamplesDirNoFastqRaiseFatalErrorStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineSamplesDirNoFastqRaiseFatalError 1
 }
 
@@ -4709,7 +4709,7 @@ testRunSnpPipelineSamplesDirNoFastqRaiseFatalErrorNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineSamplesDirNoFastqRaiseFatalError 1
 }
 
@@ -4718,7 +4718,7 @@ testRunSnpPipelineSamplesDirNoFastqRaiseFatalErrorStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineSamplesDirNoFastqRaiseFatalError 1
 }
 
@@ -4782,7 +4782,7 @@ testRunSnpPipelineTrapPrepReferenceTrapStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapPrepReferenceTrap 1
 }
 
@@ -4791,7 +4791,7 @@ testRunSnpPipelineTrapPrepReferenceTrapNoStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapPrepReferenceTrap 1
 }
 
@@ -4800,7 +4800,7 @@ testRunSnpPipelineTrapPrepReferenceTrapStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapPrepReferenceTrap 1
 }
 
@@ -4868,7 +4868,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapStop()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapAlignSampleToReferenceTrap 1
 }
 
@@ -4877,7 +4877,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopAllFail()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     expectErrorCode=1
 
     # Copy the supplied test data to a work area:
@@ -4951,7 +4951,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapNoStopSomeFail()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
     expectErrorCode=0
 
     # Copy the supplied test data to a work area:
@@ -5052,7 +5052,7 @@ testRunSnpPipelineTrapAlignSampleToReferenceTrapStopUnset()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "unset SnpPipeline_StopOnSampleError" >> "$tempDir/snppipeline.conf"
+    echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineTrapAlignSampleToReferenceTrap 1
 }
 
@@ -5446,7 +5446,7 @@ testRunSnpPipelineRerunMissingVCF()
     sleep 1
 
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "SnpPipeline_StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
+    echo "StopOnSampleError=false" >> "$tempDir/snppipeline.conf"
 
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -S "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"
 
@@ -5725,7 +5725,7 @@ testRunSnpPipelineExcessiveSnps()
 
     # Create a config file with a low enough maxsnps setting to block a sample
     cfsan_snp_pipeline data configurationFile $tempDir
-    sed -i s:SnpPipeline_MaxSnps=-1:SnpPipeline_MaxSnps=40: "$tempDir/snppipeline.conf"
+    sed -i s:MaxSnps=-1:MaxSnps=40: "$tempDir/snppipeline.conf"
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -o "$tempDir" -s "$tempDir/samples" "$tempDir/reference/lambda_virus.fasta" &> "$tempDir/run_snp_pipeline.log"

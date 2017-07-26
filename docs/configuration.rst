@@ -34,8 +34,8 @@ variables with the same names as the parameters in the configuration file.
 
 The available configuration parameters are described below.
 
-SnpPipeline_StopOnSampleError
------------------------------
+StopOnSampleError
+-----------------
 Controls whether the pipeline exits upon detecting errors affecting only a single
 sample.  The pipeline will always stop upon detecting global errors affecting all
 samples.
@@ -48,7 +48,7 @@ samples.
 
 **Example**::
 
-    SnpPipeline_StopOnSampleError=false
+    StopOnSampleError=false
 
 
 MaxCpuCores
@@ -68,8 +68,8 @@ processes.
     MaxCpuCores=2
 
 
-SnpPipeline_MaxSnps
--------------------
+MaxSnps
+-------
 Controls the maximum number of snps allowed for each sample. Any sample with excessive snps exceeding
 this limit will be excluded from the snp list, snp matrix, and snpma.vcf file. When set to -1, this
 parameter is disabled.
@@ -81,7 +81,7 @@ parameter is disabled.
 
 **Example**::
 
-    SnpPipeline_MaxSnps=1000
+    MaxSnps=1000
 
 
 SnpPipeline_Aligner
@@ -224,8 +224,8 @@ Any of the SAMtools sort options can be specified.
     SamtoolsSort_ExtraParams=""
 
 
-SnpPipeline_RemoveDuplicateReads
---------------------------------
+RemoveDuplicateReads
+--------------------
 Controls whether the pipeline removes duplicate reads prior to creating the pileup
 and calling snps.
 
@@ -235,7 +235,7 @@ and calling snps.
 
 **Example**::
 
-    SnpPipeline_RemoveDuplicateReads=false
+    RemoveDuplicateReads=false
 
 
 PicardMarkDuplicates_ExtraParams

@@ -60,7 +60,7 @@ def handle_called_process_exception(exc_type, exc_value, exc_traceback):
     file_name, line_number, function_name, code_text = trace_entries[-1]
     exc_type_name = exc_type.__name__
 
-    stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
+    stop_on_error_env = os.environ.get("StopOnSampleError")
     stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
 
     error_output_file = os.environ.get("errorOutputFile")
@@ -78,7 +78,7 @@ def handle_called_process_exception(exc_type, exc_value, exc_traceback):
     # A subprocess failed and was already trapped.
     # Actually, we cannot be 100% certain the error was trapped if the error code is 123.  This
     # indicates an error in an array of sample jobs launched in parallel by xargs; but since
-    # SnpPipeline_StopOnSampleError is true, we will assume the error was already trapped.
+    # StopOnSampleError is true, we will assume the error was already trapped.
     if error_code == 100 or (stop_on_error and error_code == 123):
         log_error("See also the log files in directory " + log_dir)
         log_error("Shutting down the SNP Pipeline.")
@@ -201,7 +201,7 @@ def validate_file_of_sample_dirs(sample_dirs_file):
                     found_error = True
 
     if found_error:
-        if os.environ.get("SnpPipeline_StopOnSampleError") == "true":
+        if os.environ.get("StopOnSampleError") == "true":
             sys.exit(1)
         else:
             log_error("================================================================================")
@@ -484,8 +484,8 @@ def run(args):
 
     # Stop the pipeline by default upon single sample errors if not configured either way
     # The environment variable is used by called processes
-    stop_on_error = config_params.get("SnpPipeline_StopOnSampleError", "").lower() or "true"
-    os.environ["SnpPipeline_StopOnSampleError"] = stop_on_error
+    stop_on_error = config_params.get("StopOnSampleError", "").lower() or "true"
+    os.environ["StopOnSampleError"] = stop_on_error
 
     # Convert the stop_on_error flag to boolean for internal use in this function
     stop_on_error = stop_on_error == "true"
@@ -514,7 +514,7 @@ def run(args):
     os.environ["SmaltAlign_ExtraParams"] = config_params.get("SmaltAlign_ExtraParams", "")
     os.environ["SamtoolsSamFilter_ExtraParams"] = config_params.get("SamtoolsSamFilter_ExtraParams", "")
     os.environ["SamtoolsSort_ExtraParams"] = config_params.get("SamtoolsSort_ExtraParams", "")
-    os.environ["SnpPipeline_RemoveDuplicateReads"] = config_params.get("SnpPipeline_RemoveDuplicateReads", "").lower() or "true"
+    os.environ["RemoveDuplicateReads"] = config_params.get("RemoveDuplicateReads", "").lower() or "true"
     os.environ["PicardMarkDuplicates_ExtraParams"] = config_params.get("PicardMarkDuplicates_ExtraParams", "")
     os.environ["PicardJvm_ExtraParams"] = config_params.get("PicardJvm_ExtraParams", "")
     os.environ["SamtoolsMpileup_ExtraParams"] = config_params.get("SamtoolsMpileup_ExtraParams", "")
@@ -543,7 +543,7 @@ def run(args):
         utils.report_error("CLASSPATH is not configured with the path to VarScan")
         found_all_dependencies = False
 
-    if os.environ["SnpPipeline_RemoveDuplicateReads"] == "true":
+    if os.environ["RemoveDuplicateReads"] == "true":
         stdout = command.run("java picard.cmdline.PicardCommandLine 2>&1")
         if "Error" in stdout:
             utils.report_error("CLASSPATH is not configured with the path to Picard")
