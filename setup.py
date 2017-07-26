@@ -84,7 +84,6 @@ setup(
         'scripts/copy_snppipeline_data.py',
         'scripts/collectSampleMetrics.sh',
         'scripts/combineSampleMetrics.sh',
-        'scripts/snp_pipeline_inc.sh',
         'scripts/mergeVcf.sh',
         'scripts/calculate_snp_distances.py',
     ],
