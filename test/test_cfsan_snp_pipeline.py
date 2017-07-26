@@ -121,7 +121,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         reference_file = os.path.join(lambda_dir, "reference", "lambda_virus.fasta")
 
         devNull = open(os.devnull, 'w')
-        ret = subprocess.call("run_snp_pipeline.sh -o %s -s %s %s" % (lambda_dir, samples_dir, reference_file), shell=True, stdout=devNull)
+        ret = subprocess.call("cfsan_snp_pipeline run -o %s -s %s %s" % (lambda_dir, samples_dir, reference_file), shell=True, stdout=devNull)
         devNull.close()
         SnpPipelineTest.directory_run_result = lambda_dir
         SnpPipelineTest.file_of_directories = os.path.join(lambda_dir, 'sampleDirectories.txt')
