@@ -96,7 +96,7 @@ Outputs
 -------
 
 By default, the SNP Pipeline generates the following output files.  If you
-need more control over the output, you can run the pipeline one step at a time.
+need more control over the output, you can run the pipeline one step at a time (not recommended).
 See :ref:`step-by-step-workflows`.
 
 * ``snplist.txt`` : contains a list of the high-confidence SNP positions
@@ -160,13 +160,13 @@ See :ref:`step-by-step-workflows`.
 All-In-One SNP Pipeline Script
 ------------------------------
 
-Most users should be able to run the SNP Pipeline by launching a single script,
+Most users should run the SNP Pipeline by launching a single script,
 ``run_snp_pipeline.sh``.  This script is easy to use and works equally well on
 your desktop workstation or on a High Performance Computing cluster.  You can
 find examples of using the script in the sections below.
 
 If you need more flexibility, you can run the individual pipeline scripts one
-step at a time.  See :ref:`step-by-step-workflows`.
+step at a time (not recommended).  See :ref:`step-by-step-workflows`.
 
 .. _logging-label:
 
@@ -613,10 +613,10 @@ bases are in the referenceSNP.fasta and referenceSNP_preserved.fasta::
 Step-by-Step Workflows
 ----------------------
 
-The run_snp_pipeline.sh script described above provides a simplified interface
+The run_snp_pipeline.sh script described above provides a simple and powerful interface
 for running all the pipeline steps from a single command.  If you need more
 control over the inputs, outputs, or processing steps, you can run the pipeline
-one step at a time.
+one step at a time, however this is not recommended.
 
 The sections below give detailed examples of workflows you can run with the
 component tools of the pipeline.
@@ -895,6 +895,9 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
 
 Step-by-Step Workflow - General Case
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note: the step-by-step workflows are not recommended.  Most users should run the pipeline
+with the all-in-one ``run_snp_pipeline.sh`` command.
 
 Step 1 - Gather data:
 
