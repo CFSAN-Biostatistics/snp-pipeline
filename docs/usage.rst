@@ -16,9 +16,14 @@ of shell scripts and python scripts.
 | Script                      | | Description                                                      |
 +=============================+====================================================================+
 | run_snp_pipeline.sh         | | This do-it-all script runs the other scripts listed below,       |
-|                             | | comprising all the pipeline steps                                |
+|                             | | comprising all the pipeline steps.  This is the same as running  |
+|                             | | cfsan_snp_pipeline run.                                          |
 +-----------------------------+--------------------------------------------------------------------+
 | cfsan_snp_pipeline          | | This is the main command line tool with subcommands listed below |
++-----------------------------+--------------------------------------------------------------------+
+| | run                       | | This all-in-one command runs all the necessary pipeline          |
+|                             | | subcommands listed below, in the right order, comprising all the |
+|                             | | pipeline steps                                                   |
 +-----------------------------+--------------------------------------------------------------------+
 | | data                      | | Copies supplied example data to a work directory                 |
 +-----------------------------+--------------------------------------------------------------------+
