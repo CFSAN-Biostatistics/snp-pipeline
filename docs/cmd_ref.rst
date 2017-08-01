@@ -8,9 +8,42 @@
 Command Reference
 =================
 
+.. _cmd-ref-cfsan-snp-pipeline:
+
+cfsan_snp_pipeline
+------------------------
+
+::
+
+  usage: cfsan_snp_pipeline [-h] [--version] subcommand        ...
+  
+  The CFSAN SNP Pipeline is a collection of tools using reference-based
+  alignments to call SNPs for a set of samples.
+  
+  positional arguments:
+    subcommand       
+      run              This do-it-all script runs all the pipeline steps
+      data             Copy included data to a specified directory
+      index_ref        Index the reference
+      map_reads        Align reads to the reference
+      call_sites       Find the sites with high-confidence SNPs in a sample
+      filter_regions   Remove abnormally dense SNPs from all samples
+      merge_sites      Prepare the list of sites having SNPs
+      call_consensus   Call the consensus base at high-confidence sites
+      merge_vcfs       Merge the per-sample VCF files
+      snp_matrix       Create a matrix of SNPs
+      distance         Calculate the SNP distances between samples
+      snp_reference    Write reference bases at SNP locations to a fasta file
+      collect_metrics  Collect quality and SNP metrics for a sample
+      combine_metrics  Merge the per-sample metrics
+  
+  optional arguments:
+    -h, --help         show this help message and exit
+    --version          show program's version number and exit
+
 .. _cmd-ref-run-snp-pipeline:
 
-run_snp_pipeline.sh
+run
 ------------------------
 
 ::
@@ -105,39 +138,6 @@ run_snp_pipeline.sh
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
-
-.. _cmd-ref-cfsan-snp-pipeline:
-
-cfsan_snp_pipeline
-------------------------
-
-::
-
-  usage: cfsan_snp_pipeline [-h] [--version] subcommand        ...
-  
-  The CFSAN SNP Pipeline is a collection of tools using reference-based
-  alignments to call SNPs for a set of samples.
-  
-  positional arguments:
-    subcommand       
-      run              This do-it-all script runs all the pipeline steps
-      data             Copy included data to a specified directory
-      index_ref        Index the reference
-      map_reads        Align reads to the reference
-      call_sites       Find the sites with high-confidence SNPs in a sample
-      filter_regions   Remove abnormally dense SNPs from all samples
-      merge_sites      Prepare the list of sites having SNPs
-      call_consensus   Call the consensus base at high-confidence sites
-      merge_vcfs       Merge the per-sample VCF files
-      snp_matrix       Create a matrix of SNPs
-      distance         Calculate the SNP distances between samples
-      snp_reference    Write reference bases at SNP locations to a fasta file
-      collect_metrics  Collect quality and SNP metrics for a sample
-      combine_metrics  Merge the per-sample metrics
-  
-  optional arguments:
-    -h, --help         show this help message and exit
-    --version          show program's version number and exit
 
 data
 ------------------------
