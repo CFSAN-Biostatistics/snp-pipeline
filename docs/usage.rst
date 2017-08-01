@@ -197,22 +197,35 @@ performamnce reasons, the samples are sorted by size and processed largest
 first.  This sorting is reflected in the naming of the log files.  The log files
 are named with a suffix indicating the sample number::
 
-    -rw------- 1 me group  1330 Oct 17 16:37 alignSamples.log-1
-    -rw------- 1 me group  1330 Oct 17 16:37 alignSamples.log-2
-    -rw------- 1 me group  1330 Oct 17 16:37 alignSamples.log-3
-    -rw------- 1 me group 12045 Oct 17 16:37 prepReference.log
-    -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-1
-    -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-2
-    -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-3
-    -rw------- 1 me group   983 Oct 17 16:37 snpList.log
-    -rw------- 1 me group   983 Oct 17 16:37 snpList_preserved.log
-    -rw------- 1 me group  1039 Oct 17 16:37 snpMatrix.log
-    -rw------- 1 me group  1039 Oct 17 16:37 snpMatrix_preserved.log
-    -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-1
-    -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-2
-    -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-3
+    -rw------- 1 me group 12045 Oct 17 16:37 indexRef.log
+    -rw------- 1 me group  1330 Oct 17 16:37 mapReads.log-1
+    -rw------- 1 me group  1330 Oct 17 16:37 mapReads.log-2
+    -rw------- 1 me group  1330 Oct 17 16:37 mapReads.log-3
+    -rw------- 1 me group  1686 Oct 17 16:37 callSites.log-1
+    -rw------- 1 me group  1686 Oct 17 16:37 callSites.log-2
+    -rw------- 1 me group  1686 Oct 17 16:37 callSites.log-3
+    -rw------- 1 me group  1035 Oct 17 16:37 filterRegions.log
+    -rw------- 1 me group  1275 Oct 17 16:37 mergeSites.log
+    -rw------- 1 me group  1375 Oct 17 16:37 mergeSites_preserved.log
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus.log-1
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus.log-2
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus.log-3
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus_preserved.log-1
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus_preserved.log-2
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus_preserved.log-3
+    -rw------- 1 me group  1047 Oct 17 16:37 snpMatrix.log
+    -rw------- 1 me group  1147 Oct 17 16:37 snpMatrix_preserved.log
     -rw------- 1 me group   806 Oct 17 16:37 snpReference.log
     -rw------- 1 me group   806 Oct 17 16:37 snpReference_preserved.log
+    -rw------- 1 me group  1895 Oct 17 16:37 mergeVcfs.log
+    -rw------- 1 me group  2039 Oct 17 16:37 mergeVcfs_preserved.log
+    -rw------- 1 me group   887 Oct 17 16:37 distance.log
+    -rw------- 1 me group   977 Oct 17 16:37 distance_preserved.log
+    -rw------- 1 me group  2169 Oct 17 16:37 collectMetrics.log-1
+    -rw------- 1 me group  2169 Oct 17 16:37 collectMetrics.log-2
+    -rw------- 1 me group  2169 Oct 17 16:37 collectMetrics.log-3
+    -rw------- 1 me group   983 Oct 17 16:37 combineMetrics.log
+
 
 To determine which samples correspond to which log files, you can either grep the
 log files for the sample name or inspect the sorted sampleDirectories.txt file to determine
