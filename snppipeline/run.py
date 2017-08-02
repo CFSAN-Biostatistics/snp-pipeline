@@ -698,7 +698,7 @@ def run(args):
     # Thread X.2: the thread processing the preserved VCF files and corresponding downstream results
 
     progress("Step 6.1 - Merge the SNP sites across all samples into the SNP list file")
-    # The create_snp_list process creates the filtered list of sample directories.  It is the list of samples not having excessive snps.
+    # The mergeSites process creates the filtered list of sample directories.  It is the list of samples not having excessive snps.
     # When running on a workstation, the file exists at this point during the script execution, but on grid or torque, it has not yet been created. However,
     # we know the path to the file regardless of whether it exists yet.
     filtered_sample_dirs_file = sample_dirs_file + ".OrigVCF.filtered"

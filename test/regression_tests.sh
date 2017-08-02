@@ -201,17 +201,6 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "There were errors processing some samples"
 
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "cfsan_snp_pipeline"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "prepReference.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "alignSampleToReference.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "prepSamples.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "snp_filter.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "create_snp_list.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "call_consensus.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "create_snp_matrix.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "create_snp_reference_seq.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "collectSampleMetrics.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "combineSampleMetrics.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/error.log" "calculate_snp_distances.py"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "$aligner"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "samtools"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "java"
@@ -222,17 +211,6 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     assertFileContains "$tempDir/error.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "cfsan_snp_pipeline"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "prepReference.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "alignSampleToReference.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "prepSamples.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "snp_filter.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "create_snp_list.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "call_consensus.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "create_snp_matrix.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "create_snp_reference_seq.py"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "collectSampleMetrics.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "combineSampleMetrics.sh"
-    verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "calculate_snp_distances.py"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "$aligner"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "samtools"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "java"
@@ -655,18 +633,18 @@ tryMapReadsEnvironmentRaiseGlobalError()
     export SnpPipeline_Aligner=garbage
 
     # Try to align a paired-end sample to the reference
-    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log"
     errorCode=$?
 
     # Verify the map_reads command error handling behavior
     assertEquals "cfsan_snp_pipeline map_reads returned incorrect error code when the SnpPipeline_Aligner environment variable was misconfigured." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
+    assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads failed"
     assertFileContains "$tempDir/error.log" "Error: only bowtie2 and smalt aligners are supported."
-    assertFileContains "$logDir/alignSampleToReference.log" "Error: only bowtie2 and smalt aligners are supported."
-    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads finished"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mapReads.log" "Error: only bowtie2 and smalt aligners are supported."
+    assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads finished"
+    assertFileNotContains "$logDir/mapReads.log" "Use the -f option to force a rebuild"
 
     # Restore the normal aligner
     export SnpPipeline_Aligner=bowtie2
@@ -713,18 +691,18 @@ tryMapReadsMissingReferenceRaiseGlobalError()
     rm "$tempDir/reference/lambda_virus.fasta"
 
     # Try to align a paired-end sample to the reference
-    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log"
     errorCode=$?
 
     # Verify the map_reads command error handling behavior
     assertEquals "cfsan_snp_pipeline map_reads returned incorrect error code when the reference file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
+    assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads failed"
     assertFileContains "$tempDir/error.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
-    assertFileContains "$logDir/alignSampleToReference.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads finished"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mapReads.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
+    assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads finished"
+    assertFileNotContains "$logDir/mapReads.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the map_reads command detects a missing reference file
@@ -768,18 +746,18 @@ tryMapReadsMissingSample1RaiseSampleError()
     rm "$tempDir/samples/sample1/sample1_1.fastq"
 
     # Try to align a paired-end sample to the reference
-    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log"
     errorCode=$?
 
     # Verify the map_reads command error handling behavior
     assertEquals "cfsan_snp_pipeline map_reads returned incorrect error code when the sample file 1 was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
+    assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads failed"
     assertFileContains "$tempDir/error.log" "Sample file $tempDir/samples/sample1/sample1_1.fastq does not exist"
-    assertFileContains "$logDir/alignSampleToReference.log" "Sample file $tempDir/samples/sample1/sample1_1.fastq does not exist"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads finished"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mapReads.log" "Sample file $tempDir/samples/sample1/sample1_1.fastq does not exist"
+    assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads finished"
+    assertFileNotContains "$logDir/mapReads.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the map_reads command detects a misconfigured MissingSample1 variable.
@@ -823,18 +801,18 @@ tryMapReadsMissingSample2RaiseSampleError()
     rm "$tempDir/samples/sample1/sample1_2.fastq"
 
     # Try to align a paired-end sample to the reference
-    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log"
     errorCode=$?
 
     # Verify the map_reads command error handling behavior
     assertEquals "cfsan_snp_pipeline map_reads returned incorrect error code when the sample file 1 was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads failed"
+    assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads failed"
     assertFileContains "$tempDir/error.log" "Sample file $tempDir/samples/sample1/sample1_2.fastq does not exist"
-    assertFileContains "$logDir/alignSampleToReference.log" "Sample file $tempDir/samples/sample1/sample1_2.fastq does not exist"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "cfsan_snp_pipeline map_reads finished"
-    assertFileNotContains "$logDir/alignSampleToReference.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mapReads.log" "Sample file $tempDir/samples/sample1/sample1_2.fastq does not exist"
+    assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads finished"
+    assertFileNotContains "$logDir/mapReads.log" "Use the -f option to force a rebuild"
 
     # Restore the normal aligner
     export SnpPipeline_Aligner=bowtie2
@@ -885,34 +863,34 @@ tryMapReadsBowtieAlignTrap()
     echo "Garbage" > "$tempDir/samples/sample1/sample1_1.fastq"
 
     # Try to align a paired-end sample to the reference
-    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log-1"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log-1"
     errorCode=$?
 
     # Verify the map_reads command error handling behavior
     assertEquals "cfsan_snp_pipeline map_reads with bowtie2 returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileNotContains "$logDir/mapReads.log-1" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "bowtie2"
-    assertFileContains "$logDir/alignSampleToReference.log-1" "bowtie2"
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "cfsan_snp_pipeline map_reads finished"
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mapReads.log-1" "bowtie2"
+    assertFileNotContains "$logDir/mapReads.log-1" "cfsan_snp_pipeline map_reads finished"
+    assertFileNotContains "$logDir/mapReads.log-1" "Use the -f option to force a rebuild"
 
     # Repeat the test with an unpaired fastq
     echo "Garbage" > "$tempDir/samples/sample3/sample3_1.fastq"
     rm "$tempDir/error.log" &> /dev/null
-    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/alignSampleToReference.log-3"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/mapReads.log-3"
     errorCode=$?
 
     # Verify the map_reads command error handling behavior
     assertEquals "cfsan_snp_pipeline map_reads with bowtie2 returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileNotContains "$logDir/mapReads.log-3" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "bowtie2"
-    assertFileContains "$logDir/alignSampleToReference.log-3" "bowtie2"
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "cfsan_snp_pipeline map_reads finished"
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mapReads.log-3" "bowtie2"
+    assertFileNotContains "$logDir/mapReads.log-3" "cfsan_snp_pipeline map_reads finished"
+    assertFileNotContains "$logDir/mapReads.log-3" "Use the -f option to force a rebuild"
 }
 
 
@@ -961,34 +939,34 @@ tryMapReadsSmaltAlignTrap()
     echo "Garbage" > "$tempDir/samples/sample1/sample1_1.fastq"
 
     # Try to align a paired-end sample to the reference
-    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/alignSampleToReference.log-1"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log-1"
     errorCode=$?
 
     # Verify the map_reads command error handling behavior
     assertEquals "cfsan_snp_pipeline map_reads with smalt returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileNotContains "$logDir/mapReads.log-1" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "smalt map"
-    assertFileContains "$logDir/alignSampleToReference.log-1" "smalt map"
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "cfsan_snp_pipeline map_reads finished"
-    assertFileNotContains "$logDir/alignSampleToReference.log-1" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mapReads.log-1" "smalt map"
+    assertFileNotContains "$logDir/mapReads.log-1" "cfsan_snp_pipeline map_reads finished"
+    assertFileNotContains "$logDir/mapReads.log-1" "Use the -f option to force a rebuild"
 
     # Repeat the test with an unpaired fastq
     echo "Garbage" > "$tempDir/samples/sample3/sample3_1.fastq"
     rm "$tempDir/error.log" &> /dev/null
-    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/alignSampleToReference.log-3"
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample3/sample3_1.fastq" &> "$logDir/mapReads.log-3"
     errorCode=$?
 
     # Verify the map_reads command error handling behavior
     assertEquals "cfsan_snp_pipeline map_reads with smalt returned incorrect error code when the input fastq was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline map_reads."
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "Error detected while running cfsan_snp_pipeline map_reads."
+    assertFileNotContains "$logDir/mapReads.log-3" "Error detected while running cfsan_snp_pipeline map_reads."
     assertFileContains "$tempDir/error.log" "smalt map"
-    assertFileContains "$logDir/alignSampleToReference.log-3" "smalt map"
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "cfsan_snp_pipeline map_reads finished"
-    assertFileNotContains "$logDir/alignSampleToReference.log-3" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mapReads.log-3" "smalt map"
+    assertFileNotContains "$logDir/mapReads.log-3" "cfsan_snp_pipeline map_reads finished"
+    assertFileNotContains "$logDir/mapReads.log-3" "Use the -f option to force a rebuild"
 
     # Restore the normal aligner
     export SnpPipeline_Aligner=bowtie2
@@ -1664,7 +1642,7 @@ tryFilterRegionsPermissionTrap()
     chmod -w "$tempDir/samples/sample1/var.flt_preserved.vcf"
 
     # Try to run cfsan_snp_pipeline filter_regions -- it should have problems writing to sample1/var.flt_preserved.vcf
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline filter_regions error handling behavior
@@ -1672,9 +1650,9 @@ tryFilterRegionsPermissionTrap()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Cannot create the file for preserved SNPs"
-    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running cfsan_snp_pipeline filter_regions"
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileNotContains "$logDir/filterRegions.log" "Error detected while running cfsan_snp_pipeline filter_regions"
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/samples/sample1/var.flt_preserved.vcf"
     rm "$tempDir/error.log"
 
@@ -1685,7 +1663,7 @@ tryFilterRegionsPermissionTrap()
     chmod -w "$tempDir/samples/sample1/var.flt_removed.vcf"
 
     # Try to run cfsan_snp_pipeline filter_regions -- it should have problems writing to sample1/var.flt_removed.vcf
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline filter_regions error handling behavior
@@ -1693,9 +1671,9 @@ tryFilterRegionsPermissionTrap()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Cannot create the file for removed SNPs"
-    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running cfsan_snp_pipeline filter_regions"
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileNotContains "$logDir/filterRegions.log" "Error detected while running cfsan_snp_pipeline filter_regions"
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/samples/sample1/var.flt_removed.vcf"
     rm "$tempDir/error.log"
 }
@@ -1738,7 +1716,7 @@ testFilterRegionsPermissionTrapNoStop()
     chmod -w "$tempDir/samples/sample1/var.flt_preserved.vcf"
 
     # Try to run cfsan_snp_pipeline filter_regions -- it should have problems writing to sample1/var.flt_preserved.vcf
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline filter_regions error handling behavior
@@ -1747,9 +1725,9 @@ testFilterRegionsPermissionTrapNoStop()
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions"
     assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Cannot create the file for preserved SNPs"
-    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running cfsan_snp_pipeline filter_regions"
-    assertFileContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileNotContains "$logDir/filterRegions.log" "Error detected while running cfsan_snp_pipeline filter_regions"
+    assertFileContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/samples/sample1/var.flt_preserved.vcf"
     rm "$tempDir/error.log"
 
@@ -1760,7 +1738,7 @@ testFilterRegionsPermissionTrapNoStop()
     chmod -w "$tempDir/samples/sample1/var.flt_removed.vcf"
 
     # Try to run cfsan_snp_pipeline filter_regions -- it should have problems writing to sample1/var.flt_removed.vcf
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline filter_regions error handling behavior
@@ -1769,9 +1747,9 @@ testFilterRegionsPermissionTrapNoStop()
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions"
     assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Cannot create the file for removed SNPs"
-    assertFileNotContains "$logDir/snp_filter.log" "Error detected while running cfsan_snp_pipeline filter_regions"
-    assertFileContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileNotContains "$logDir/filterRegions.log" "Error detected while running cfsan_snp_pipeline filter_regions"
+    assertFileContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/samples/sample1/var.flt_removed.vcf"
     rm "$tempDir/error.log"
 }
@@ -1800,18 +1778,18 @@ tryFilterRegionsMissingSampleDirRaiseGlobalError()
     export errorOutputFile="$tempDir/error.log"
 
     # Run cfsan_snp_pipeline filter_regions with missing sampleDirectories.txt
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
-    assertFileContains "$logDir/snp_filter.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/filterRegions.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects missing sample directories file
@@ -1857,18 +1835,18 @@ tryFilterRegionsMissingReferenceRaiseGlobalError()
     echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/non-exist-reference" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/non-exist-reference" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when reference file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Reference file $tempDir/non-exist-reference does not exist"
-    assertFileContains "$logDir/snp_filter.log" "Reference file $tempDir/non-exist-reference does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/filterRegions.log" "Reference file $tempDir/non-exist-reference does not exist"
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects missing reference file
@@ -1914,18 +1892,18 @@ tryFilterRegionsMissingOutgroupRaiseGlobalError()
     echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
-    cfsan_snp_pipeline filter_regions -g "$tempDir/outgroup" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions -g "$tempDir/outgroup" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when file of outgroup samples file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "File of outgroup samples $tempDir/outgroup does not exist"
-    assertFileContains "$logDir/snp_filter.log" "File of outgroup samples $tempDir/outgroup does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/filterRegions.log" "File of outgroup samples $tempDir/outgroup does not exist"
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects missing outgroup samples file
@@ -1967,26 +1945,26 @@ tryFilterRegionsMissingVcfRaiseGlobalError()
 
     # Run cfsan_snp_pipeline filter_regions -- fail because of missing all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when all var.flt.vcf were missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Error: all 4 VCF files were missing or empty"
-    assertFileContains "$logDir/snp_filter.log" "Error: all 4 VCF files were missing or empty"
+    assertFileContains "$logDir/filterRegions.log" "Error: all 4 VCF files were missing or empty"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline filter_regions script detects all vcf files missing
@@ -2033,24 +2011,24 @@ tryFilterRegionsMissingVcfRaiseSampleError()
 
     # Run cfsan_snp_pipeline filter_regions -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify the filter_regions command error handling behavior
     assertEquals "cfsan_snp_pipeline filter_regions returned incorrect error code when some var.flt.vcf were missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
-    assertFileContains "$logDir/snp_filter.log" "Error: 3 VCF files were missing or empty"
+    assertFileContains "$logDir/filterRegions.log" "Error: 3 VCF files were missing or empty"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the filter_regions command detects missing some VCF files, but not all
@@ -2082,7 +2060,7 @@ testFilterRegionsMissingVcfRaiseSampleErrorNoStop()
 
     # Run cfsan_snp_pipeline filter_regions -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snp_filter.log"
+    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirList.txt" "$tempDir/reference/lambda_virus.fasta" &> "$logDir/filterRegions.log"
     errorCode=$?
 
     # Verify the filter_regions command error handling behavior
@@ -2090,17 +2068,17 @@ testFilterRegionsMissingVcfRaiseSampleErrorNoStop()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions"
     assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline filter_regions failed."
-    assertFileNotContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions failed."
+    assertFileNotContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions failed."
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
-    assertFileContains "$logDir/snp_filter.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$logDir/filterRegions.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
-    assertFileContains "$logDir/snp_filter.log" "Error: 3 VCF files were missing or empty"
-    assertFileContains "$logDir/snp_filter.log" "cfsan_snp_pipeline filter_regions finished"
-    assertFileNotContains "$logDir/snp_filter.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/filterRegions.log" "Error: 3 VCF files were missing or empty"
+    assertFileContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+    assertFileNotContains "$logDir/filterRegions.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the filter_regions command detects missing some VCF files, but not all
@@ -2256,17 +2234,17 @@ tryMergeSitesPermissionTrap()
     echo "Dummy vcf content" > "$tempDir/samples/sample2/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample3/var.flt.vcf"
     echo "Dummy vcf content" > "$tempDir/samples/sample4/var.flt.vcf"
-    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/mergeSites.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline merge_sites error handling behavior
     assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline merge_sites"
-    assertFileNotContains "$logDir/create_snp_list.log" "Error detected while running cfsan_snp_pipeline merge_sites"
+    assertFileNotContains "$logDir/mergeSites.log" "Error detected while running cfsan_snp_pipeline merge_sites"
     assertFileContains "$tempDir/error.log" "IOError|PermissionError"
-    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
+    assertFileNotContains "$logDir/mergeSites.log" "cfsan_snp_pipeline merge_sites finished"
+    assertFileNotContains "$logDir/mergeSites.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/snplist.txt"
 }
 
@@ -2309,18 +2287,18 @@ tryMergeSitesMissingSampleDirRaiseGlobalError()
     export errorOutputFile="$tempDir/error.log"
 
     # Run cfsan_snp_pipeline merge_sites with missing sampleDirectories.txt
-    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirectories.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/mergeSites.log"
     errorCode=$?
 
     # Verify merge_sites error handling behavior
     assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
-    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites failed."
+    assertFileNotContains "$logDir/mergeSites.log" "cfsan_snp_pipeline merge_sites failed."
     assertFileContains "$tempDir/error.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
-    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mergeSites.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
+    assertFileNotContains "$logDir/mergeSites.log" "cfsan_snp_pipeline merge_sites finished"
+    assertFileNotContains "$logDir/mergeSites.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the merge_sites command detects failure.
@@ -2362,26 +2340,26 @@ tryMergeSitesMissingVcfRaiseGlobalError()
 
     # Run cfsan_snp_pipeline merge_sites -- fail because of missing all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/mergeSites.log"
     errorCode=$?
 
     # Verify merge_sites error handling behavior
     assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when var.flt.vcf was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
-    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites failed."
+    assertFileNotContains "$logDir/mergeSites.log" "cfsan_snp_pipeline merge_sites failed."
     assertFileContains "$tempDir/error.log" "Error: all 4 VCF files were missing or empty"
-    assertFileContains "$logDir/create_snp_list.log" "Error: all 4 VCF files were missing or empty"
+    assertFileContains "$logDir/mergeSites.log" "Error: all 4 VCF files were missing or empty"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample1/var.flt.vcf does not exist"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileNotContains "$logDir/mergeSites.log" "cfsan_snp_pipeline merge_sites finished"
+    assertFileNotContains "$logDir/mergeSites.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the merge_sites command detects failure.
@@ -2428,24 +2406,24 @@ tryMergeSitesMissingVcfRaiseSampleError()
 
     # Run cfsan_snp_pipeline merge_sites -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/mergeSites.log"
     errorCode=$?
 
     # Verify merge_sites error handling behavior
     assertEquals "cfsan_snp_pipeline merge_sites returned incorrect error code when var.flt.vcf was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
-    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites failed."
+    assertFileNotContains "$logDir/mergeSites.log" "cfsan_snp_pipeline merge_sites failed."
     assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
-    assertFileContains "$logDir/create_snp_list.log" "Error: 3 VCF files were missing or empty"
+    assertFileContains "$logDir/mergeSites.log" "Error: 3 VCF files were missing or empty"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileNotContains "$logDir/mergeSites.log" "cfsan_snp_pipeline merge_sites finished"
+    assertFileNotContains "$logDir/mergeSites.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the merge_sites command detects failure.
@@ -2477,7 +2455,7 @@ testMergeSitesMissingVcfRaiseSampleErrorNoStop()
 
     # Run cfsan_snp_pipeline merge_sites -- fail because of missing some, but not all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/create_snp_list.log"
+    cfsan_snp_pipeline merge_sites -o "$tempDir/snplist.txt"  "$tempDir/sampleDirList.txt" "$tempDir/sampleDirectories.txt.OrigVCF.filtered" &> "$logDir/mergeSites.log"
     errorCode=$?
 
     # Verify merge_sites error handling behavior
@@ -2485,17 +2463,17 @@ testMergeSitesMissingVcfRaiseSampleErrorNoStop()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites"
     assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline merge_sites failed."
-    assertFileNotContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites failed."
+    assertFileNotContains "$logDir/mergeSites.log" "cfsan_snp_pipeline merge_sites failed."
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
-    assertFileContains "$logDir/create_snp_list.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample2/var.flt.vcf does not exist"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample3/var.flt.vcf does not exist"
+    assertFileContains "$logDir/mergeSites.log" "VCF file $tempDir/samples/sample4/var.flt.vcf does not exist"
     assertFileContains "$tempDir/error.log" "Error: 3 VCF files were missing or empty"
-    assertFileContains "$logDir/create_snp_list.log" "Error: 3 VCF files were missing or empty"
-    assertFileContains "$logDir/create_snp_list.log" "cfsan_snp_pipeline merge_sites finished"
-    assertFileNotContains "$logDir/create_snp_list.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/mergeSites.log" "Error: 3 VCF files were missing or empty"
+    assertFileContains "$logDir/mergeSites.log" "cfsan_snp_pipeline merge_sites finished"
+    assertFileNotContains "$logDir/mergeSites.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the merge_sites command detects failure.
@@ -2524,17 +2502,17 @@ tryCallConsensusCorruptSnplistTrap()
     # Run cfsan_snp_pipeline call_consensus -- fail because of corrupt snplist
     echo "Corrupt snplist content" > "$tempDir/snplist.txt"
     echo "Dummy pileup content" > "$tempDir/samples/sample1/reads.all.pileup"
-    cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/callConsensus.log"
     errorCode=$?
 
     # Verify error handling behavior
     assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline call_consensus"
-    assertFileNotContains "$logDir/call_consensus.log" "Error detected while running cfsan_snp_pipeline call_consensus"
+    assertFileNotContains "$logDir/callConsensus.log" "Error detected while running cfsan_snp_pipeline call_consensus"
     assertFileContains "$tempDir/error.log" "function read_snp_position_list at line"
-    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
-    assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
+    assertFileNotContains "$logDir/callConsensus.log" "cfsan_snp_pipeline call_consensus finished"
+    assertFileNotContains "$logDir/callConsensus.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the call_consensus command traps on corrupt snplist file
@@ -2577,20 +2555,20 @@ tryCallConsensusMissingSnpListRaiseGlobalError()
     export errorOutputFile="$tempDir/error.log"
 
     # Run cfsan_snp_pipeline call_consensus -- fail because of missing snplist
-    cfsan_snp_pipeline call_consensus -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    cfsan_snp_pipeline call_consensus -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/callConsensus.log"
     errorCode=$?
 
     # Verify the call_consensus command error handling behavior
     assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when snplist was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_consensus failed."
-    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus failed."
+    assertFileNotContains "$logDir/callConsensus.log" "cfsan_snp_pipeline call_consensus failed."
     assertFileContains "$tempDir/error.log" "cannot call consensus without the snplist file"
-    assertFileContains "$logDir/call_consensus.log" "cannot call consensus without the snplist file"
+    assertFileContains "$logDir/callConsensus.log" "cannot call consensus without the snplist file"
     assertFileContains "$tempDir/error.log" "Snplist file snplist.txt does not exist"
-    assertFileContains "$logDir/call_consensus.log" "Snplist file snplist.txt does not exist"
-    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
-    assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/callConsensus.log" "Snplist file snplist.txt does not exist"
+    assertFileNotContains "$logDir/callConsensus.log" "cfsan_snp_pipeline call_consensus finished"
+    assertFileNotContains "$logDir/callConsensus.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the call_consensus command detects failure.
@@ -2637,7 +2615,7 @@ tryCallConsensusEmptySnpList()
 
     # Run cfsan_snp_pipeline call_consensus with empty snplist
     touch "$tempDir/snplist.txt"
-    cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/samples/sample1/consensus.fasta"  --vcfFileName "$tempDir/samples/sample1/consensus.vcf" "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/samples/sample1/consensus.fasta"  --vcfFileName "$tempDir/samples/sample1/consensus.vcf" "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/callConsensus.log"
     errorCode=$?
 
     # Verify the call_consensus command error handling behavior
@@ -2645,11 +2623,11 @@ tryCallConsensusEmptySnpList()
     verifyNonExistingFile "$tempDir/error.log"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/consensus.fasta"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/consensus.vcf"
-    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus failed."
-    assertFileNotContains "$logDir/call_consensus.log" "cannot call consensus without the snplist file"
-    assertFileNotContains "$logDir/call_consensus.log" "Snplist file $tempDir/snplist.txt is empty"
-    assertFileContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
-    assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
+    assertFileNotContains "$logDir/callConsensus.log" "cfsan_snp_pipeline call_consensus failed."
+    assertFileNotContains "$logDir/callConsensus.log" "cannot call consensus without the snplist file"
+    assertFileNotContains "$logDir/callConsensus.log" "Snplist file $tempDir/snplist.txt is empty"
+    assertFileContains "$logDir/callConsensus.log" "cfsan_snp_pipeline call_consensus finished"
+    assertFileNotContains "$logDir/callConsensus.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the call_consensus command does not fail merely because the snplist file is empty.
@@ -2694,20 +2672,20 @@ tryCallConsensusMissingPileupRaiseSampleError()
 
     # Run cfsan_snp_pipeline call_consensus -- fail because of missing pileup
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    cfsan_snp_pipeline call_consensus -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/callConsensus.log"
     errorCode=$?
 
     # Verify the call_consensus command error handling behavior
     assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when pileup file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_consensus failed."
-    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus failed."
+    assertFileNotContains "$logDir/callConsensus.log" "cfsan_snp_pipeline call_consensus failed."
     assertFileContains "$tempDir/error.log" "cannot call consensus without the pileup file"
-    assertFileContains "$logDir/call_consensus.log" "cannot call consensus without the pileup file"
+    assertFileContains "$logDir/callConsensus.log" "cannot call consensus without the pileup file"
     assertFileContains "$tempDir/error.log" "Pileup file $tempDir/samples/sample1/reads.all.pileup does not exist"
-    assertFileContains "$logDir/call_consensus.log" "Pileup file $tempDir/samples/sample1/reads.all.pileup does not exist"
-    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
-    assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/callConsensus.log" "Pileup file $tempDir/samples/sample1/reads.all.pileup does not exist"
+    assertFileNotContains "$logDir/callConsensus.log" "cfsan_snp_pipeline call_consensus finished"
+    assertFileNotContains "$logDir/callConsensus.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the call_consensus command detects missing pileup file.
@@ -2754,20 +2732,20 @@ tryCallConsensusMissingExcludeRaiseSampleError()
 
     # Run cfsan_snp_pipeline call_consensus -- fail because of missing pileup
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    cfsan_snp_pipeline call_consensus -e "$tempDir/samples/sample1/excludeFile.vcf" -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/call_consensus.log"
+    cfsan_snp_pipeline call_consensus -e "$tempDir/samples/sample1/excludeFile.vcf" -l "$tempDir/snplist.txt" -o "$tempDir/consensus.fasta"  "$tempDir/samples/sample1/reads.all.pileup" &> "$logDir/callConsensus.log"
     errorCode=$?
 
     # Verify the call_consensus command error handling behavior
     assertEquals "cfsan_snp_pipeline call_consensus returned incorrect error code when exclude file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_consensus failed."
-    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus failed."
+    assertFileNotContains "$logDir/callConsensus.log" "cfsan_snp_pipeline call_consensus failed."
     assertFileContains "$tempDir/error.log" "cannot call consensus without the file of excluded positions"
-    assertFileContains "$logDir/call_consensus.log" "cannot call consensus without the file of excluded positions"
+    assertFileContains "$logDir/callConsensus.log" "cannot call consensus without the file of excluded positions"
     assertFileContains "$tempDir/error.log" "Exclude file $tempDir/samples/sample1/excludeFile.vcf does not exist"
-    assertFileContains "$logDir/call_consensus.log" "Exclude file $tempDir/samples/sample1/excludeFile.vcf does not exist"
-    assertFileNotContains "$logDir/call_consensus.log" "cfsan_snp_pipeline call_consensus finished"
-    assertFileNotContains "$logDir/call_consensus.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/callConsensus.log" "Exclude file $tempDir/samples/sample1/excludeFile.vcf does not exist"
+    assertFileNotContains "$logDir/callConsensus.log" "cfsan_snp_pipeline call_consensus finished"
+    assertFileNotContains "$logDir/callConsensus.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the call_consensus command detects missing exclude file.
@@ -3093,17 +3071,17 @@ trySnpMatrixPermissionTrap()
     echo "Dummy content" > "$tempDir/samples/sample2/consensus.fasta"
     echo "Dummy content" > "$tempDir/samples/sample3/consensus.fasta"
     echo "Dummy content" > "$tempDir/samples/sample4/consensus.fasta"
-    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/snpMatrix.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline snp_matrix error handling behavior
     assertEquals "cfsan_snp_pipeline snp_matrix returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline snp_matrix"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "Error detected while running cfsan_snp_pipeline snp_matrix"
+    assertFileNotContains "$logDir/snpMatrix.log" "Error detected while running cfsan_snp_pipeline snp_matrix"
     assertFileContains "$tempDir/error.log" "IOError|PermissionError"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
+    assertFileNotContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
+    assertFileNotContains "$logDir/snpMatrix.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/snpma.fasta"
 }
 
@@ -3145,18 +3123,18 @@ trySnpMatrixMissingSampleDirRaiseGlobalError()
     export errorOutputFile="$tempDir/error.log"
 
     # Run cfsan_snp_pipeline snp_matrix with missing sampleDirectories.txt
-    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/snpMatrix.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline snp_matrix error handling behavior
     assertEquals "cfsan_snp_pipeline snp_matrix returned incorrect error code when sample directories file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix failed."
-    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix failed."
+    assertFileNotContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix failed."
     assertFileContains "$tempDir/error.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
-    assertFileContains "$logDir/create_snp_matrix.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/snpMatrix.log" "File of sample directories $tempDir/sampleDirectories.txt does not exist"
+    assertFileNotContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
+    assertFileNotContains "$logDir/snpMatrix.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
@@ -3203,26 +3181,26 @@ trySnpMatrixMissingConsensusRaiseGlobalError()
 
     # Run cfsan_snp_pipeline snp_matrix -- fail because of missing all VCF files
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirList.txt"
-    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpmap.fasta"  "$tempDir/sampleDirList.txt" &> "$logDir/create_snp_matrix.log"
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpmap.fasta"  "$tempDir/sampleDirList.txt" &> "$logDir/snpMatrix.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline snp_matrix error handling behavior
     assertEquals "cfsan_snp_pipeline snp_matrix returned incorrect error code when all consensus.fasta missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix failed."
-    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix failed."
+    assertFileNotContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix failed."
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample2/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample3/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
-    assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
-    assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample2/consensus.fasta does not exist"
-    assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample3/consensus.fasta does not exist"
-    assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
+    assertFileContains "$logDir/snpMatrix.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
+    assertFileContains "$logDir/snpMatrix.log" "Consensus fasta file $tempDir/samples/sample2/consensus.fasta does not exist"
+    assertFileContains "$logDir/snpMatrix.log" "Consensus fasta file $tempDir/samples/sample3/consensus.fasta does not exist"
+    assertFileContains "$logDir/snpMatrix.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Error: all 4 consensus fasta files were missing or empty"
-    assertFileContains "$logDir/create_snp_matrix.log" "Error: all 4 consensus fasta files were missing or empty"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/snpMatrix.log" "Error: all 4 consensus fasta files were missing or empty"
+    assertFileNotContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
+    assertFileNotContains "$logDir/snpMatrix.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
@@ -3269,22 +3247,22 @@ trySnpMatrixMissingConsensusRaiseSampleError()
     printf "%s\n" $tempDir/samples/* >  "$tempDir/sampleDirectories.txt"
     rm "$tempDir/samples/sample1/consensus.fasta"
     rm "$tempDir/samples/sample4/consensus.fasta"
-    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/snpMatrix.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline snp_matrix error handling behavior
     assertEquals "cfsan_snp_pipeline snp_matrix returned incorrect error code when some consensus.fasta missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix failed."
-    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix failed."
+    assertFileNotContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix failed."
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
-    assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
-    assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
+    assertFileContains "$logDir/snpMatrix.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
+    assertFileContains "$logDir/snpMatrix.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Error: 2 consensus fasta files were missing or empty"
-    assertFileContains "$logDir/create_snp_matrix.log" "Error: 2 consensus fasta files were missing or empty"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/snpMatrix.log" "Error: 2 consensus fasta files were missing or empty"
+    assertFileNotContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
+    assertFileNotContains "$logDir/snpMatrix.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
@@ -3317,7 +3295,7 @@ testSnpMatrixMissingConsensusRaiseSampleErrorNoStop()
     rm "$tempDir/samples/sample1/consensus.fasta"
     rm "$tempDir/samples/sample4/consensus.fasta"
     rm "$tempDir/snpma.fasta"
-    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/create_snp_matrix.log"
+    cfsan_snp_pipeline snp_matrix -o "$tempDir/snpma.fasta"  "$tempDir/sampleDirectories.txt" &> "$logDir/snpMatrix.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline snp_matrix error handling behavior
@@ -3325,15 +3303,15 @@ testSnpMatrixMissingConsensusRaiseSampleErrorNoStop()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix"
     assertFileNotContains "$tempDir/error.log" "cfsan_snp_pipeline snp_matrix failed."
-    assertFileNotContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix failed."
+    assertFileNotContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix failed."
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
-    assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
-    assertFileContains "$logDir/create_snp_matrix.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
+    assertFileContains "$logDir/snpMatrix.log" "Consensus fasta file $tempDir/samples/sample1/consensus.fasta does not exist"
+    assertFileContains "$logDir/snpMatrix.log" "Consensus fasta file $tempDir/samples/sample4/consensus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "Error: 2 consensus fasta files were missing or empty"
-    assertFileContains "$logDir/create_snp_matrix.log" "Error: 2 consensus fasta files were missing or empty"
-    assertFileContains "$logDir/create_snp_matrix.log" "cfsan_snp_pipeline snp_matrix finished"
-    assertFileNotContains "$logDir/create_snp_matrix.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/snpMatrix.log" "Error: 2 consensus fasta files were missing or empty"
+    assertFileContains "$logDir/snpMatrix.log" "cfsan_snp_pipeline snp_matrix finished"
+    assertFileNotContains "$logDir/snpMatrix.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline snp_matrix script detects failure.
@@ -3366,17 +3344,17 @@ trySnpReferencePermissionTrap()
     # Try to create snplist.txt
     printf "%s\n" $tempDir/samples/* > "$tempDir/sampleDirectories.txt"
     echo "Dummy content" > "$tempDir/snplist.txt"
-    cfsan_snp_pipeline snp_reference -l "$tempDir/snplist.txt" -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
+    cfsan_snp_pipeline snp_reference -l "$tempDir/snplist.txt" -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snpReference.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline snp_reference error handling behavior
     assertEquals "cfsan_snp_pipeline snp_reference returned incorrect error code when the output file was unwritable." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline snp_reference"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "Error detected while running cfsan_snp_pipeline snp_reference"
+    assertFileNotContains "$logDir/snpReference.log" "Error detected while running cfsan_snp_pipeline snp_reference"
     assertFileContains "$tempDir/error.log" "IOError|PermissionError"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference finished"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "Use the -f option to force a rebuild"
+    assertFileNotContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference finished"
+    assertFileNotContains "$logDir/snpReference.log" "Use the -f option to force a rebuild"
     rm -f "$tempDir/referenceSNP.fasta"
 }
 
@@ -3418,20 +3396,20 @@ trySnpReferenceMissingSnpListRaiseGlobalError()
     export errorOutputFile="$tempDir/error.log"
 
     # Run cfsan_snp_pipeline snp_reference -- fail because of missing snplist
-    cfsan_snp_pipeline snp_reference -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
+    cfsan_snp_pipeline snp_reference -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snpReference.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline snp_reference error handling behavior
     assertEquals "cfsan_snp_pipeline snp_reference returned incorrect error code when snplist was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_reference failed."
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference failed."
+    assertFileNotContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference failed."
     assertFileContains "$tempDir/error.log" "Snplist file snplist.txt does not exist"
-    assertFileContains "$logDir/create_snp_reference_seq.log" "Snplist file snplist.txt does not exist"
+    assertFileContains "$logDir/snpReference.log" "Snplist file snplist.txt does not exist"
     assertFileContains "$tempDir/error.log" "cannot create the snp reference sequence without the snplist file"
-    assertFileContains "$logDir/create_snp_reference_seq.log" "cannot create the snp reference sequence without the snplist file"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference finished"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/snpReference.log" "cannot create the snp reference sequence without the snplist file"
+    assertFileNotContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference finished"
+    assertFileNotContains "$logDir/snpReference.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline snp_reference script detects failure.
@@ -3474,20 +3452,20 @@ trySnpReferenceMissingReferenceRaiseGlobalError()
     # Run cfsan_snp_pipeline snp_reference -- fail because of missing reference
     echo "Dummy snplist content" > "$tempDir/snplist"
     rm "$tempDir/reference/lambda_virus.fasta"
-    cfsan_snp_pipeline snp_reference -l "$tempDir/snplist" -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/create_snp_reference_seq.log"
+    cfsan_snp_pipeline snp_reference -l "$tempDir/snplist" -o "$tempDir/referenceSNP.fasta"  "$tempDir/reference/lambda_virus.fasta" &> "$logDir/snpReference.log"
     errorCode=$?
 
     # Verify cfsan_snp_pipeline snp_reference error handling behavior
     assertEquals "cfsan_snp_pipeline snp_reference returned incorrect error code when reference fasta file was missing." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline snp_reference failed."
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference failed."
+    assertFileNotContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference failed."
     assertFileContains "$tempDir/error.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
-    assertFileContains "$logDir/create_snp_reference_seq.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
+    assertFileContains "$logDir/snpReference.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
     assertFileContains "$tempDir/error.log" "cannot create the snp reference sequence without the reference fasta file"
-    assertFileContains "$logDir/create_snp_reference_seq.log" "cannot create the snp reference sequence without the reference fasta file"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "cfsan_snp_pipeline snp_reference finished"
-    assertFileNotContains "$logDir/create_snp_reference_seq.log" "Use the -f option to force a rebuild"
+    assertFileContains "$logDir/snpReference.log" "cannot create the snp reference sequence without the reference fasta file"
+    assertFileNotContains "$logDir/snpReference.log" "cfsan_snp_pipeline snp_reference finished"
+    assertFileNotContains "$logDir/snpReference.log" "Use the -f option to force a rebuild"
 }
 
 # Verify the cfsan_snp_pipeline snp_reference script detects failure.

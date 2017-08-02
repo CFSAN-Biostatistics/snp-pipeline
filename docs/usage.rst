@@ -1265,17 +1265,19 @@ When errors stop the execution of the pipeline on Grid Engine or Torque, other n
 in progress will continue until complete.  However, subsequent job steps will not execute and
 instead will remain in the queue.  On Grid Engine ``qstat`` will show output like the following::
 
-    3038927 0.55167 alignSampl app_sdavis   Eqw   01/15/2016 16:50:03
-    3038928 0.00000 prepSample app_sdavis   hqw   01/15/2016 16:50:04
-    3038929 0.00000 snpList    app_sdavis   hqw   01/15/2016 16:50:04
-    3038930 0.00000 callConsen app_sdavis   hqw   01/15/2016 16:50:04
-    3038931 0.00000 snpMatrix  app_sdavis   hqw   01/15/2016 16:50:04
-    3038932 0.00000 snpReferen app_sdavis   hqw   01/15/2016 16:50:04
-    3038933 0.00000 mergeVcf   app_sdavis   hqw   01/15/2016 16:50:05
-    3038934 0.00000 collectMet app_sdavis   hqw   01/15/2016 16:50:05
-    3038935 0.00000 combineMet app_sdavis   hqw   01/15/2016 16:50:05
+    3038927 0.55167 mapReads   app_sdavis   Eqw   07/15/2017 16:50:03
+    3038928 0.00000 callSites  app_sdavis   hqw   07/15/2017 16:50:04
+    3038929 0.00000 filterRegi app_sdavis   hqw   07/15/2017 16:50:04
+    3038930 0.00000 mergeSites app_sdavis   hqw   07/15/2017 16:50:04
+    3038931 0.00000 callConsen app_sdavis   hqw   07/15/2017 16:50:04
+    3038932 0.00000 snpMatrix  app_sdavis   hqw   07/15/2017 16:50:04
+    3038933 0.00000 snpReferen app_sdavis   hqw   07/15/2017 16:50:04
+    3038934 0.00000 mergeVcfs  app_sdavis   hqw   07/15/2017 16:50:05
+    3038935 0.00000 distance   app_sdavis   hqw   07/15/2017 16:50:05
+    3038936 0.00000 collectMet app_sdavis   hqw   07/15/2017 16:50:05
+    3038937 0.00000 combineMet app_sdavis   hqw   07/15/2017 16:50:05
 
 To clear the jobs from the queue on Grid Engine::
 
-    seq 3038927 3038935 | xargs -I @ qdel @
+    seq 3038927 3038937 | xargs qdel
 

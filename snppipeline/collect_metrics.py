@@ -345,7 +345,7 @@ def collect_metrics(args):
         phase1_snps = str(phase1_snps)
 
     #-------------------------
-    verbose_print("# %s %s" % (utils.timestamp(), "Count number of snp_filter preserved high confidence SNP positions from phase 1 vcf file"))
+    verbose_print("# %s %s" % (utils.timestamp(), "Count number of filter_regions preserved high confidence SNP positions from phase 1 vcf file"))
     #-------------------------
     phase1_snps_preserved = ""
     excluded_sample_preserved = ""
