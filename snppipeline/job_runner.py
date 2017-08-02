@@ -265,7 +265,10 @@ class JobRunner(object):
             if self.verbose:
                 print(shell_command_line)
             job_id = subprocess.check_output(shell_command_line, shell=True)
-            return job_id.strip()
+            job_id = job_id.strip()
+            if self.verbose:
+                print("Job id=" + job_id)
+            return job_id
 
 
     def run_array(self, command_line, job_name, log_file, array_file, num_tasks=None, max_processes=None, wait_for=[], wait_for_array=[], slot_dependency=False, threads=1, parallel_environment=None):
@@ -370,8 +373,11 @@ class JobRunner(object):
                 print(shell_command_line)
 
             job_id = subprocess.check_output(shell_command_line, shell=True) # If the return code is non-zero it raises a CalledProcessError
+            job_id = job_id.strip()
             if self.strip_job_array_suffix:
                 dot_idx = job_id.find('.')
                 if dot_idx > 0:
                     job_id = job_id[0: dot_idx]
+            if self.verbose:
+                print("Job id=" + job_id)
             return job_id

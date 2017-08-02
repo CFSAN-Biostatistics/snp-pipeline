@@ -740,14 +740,14 @@ def run(args):
     output_file = os.path.join(work_dir, "snpma.fasta")
     extra_params = os.environ.get("SnpMatrix_ExtraParams", "")
     command_line = "cfsan_snp_pipeline snp_matrix" + force_flag + "-c consensus.fasta -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file
-    job_id_snp_matrix = runner.run(command_line, "snpMatrix", log_file, wait_for=[job_id_call_consensus])
+    job_id_snp_matrix = runner.run(command_line, "snpMatrix", log_file, wait_for_array=[job_id_call_consensus])
 
     progress("Step 8.2 - Create the SNP matrix")
     log_file = os.path.join(log_dir, "snpMatrix_preserved.log")
     output_file = os.path.join(work_dir, "snpma_preserved.fasta")
     extra_params = os.environ.get("SnpMatrix_ExtraParams", "")
     command_line = "cfsan_snp_pipeline snp_matrix" + force_flag + "-c consensus_preserved.fasta -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
-    job_id_snp_matrix2 = runner.run(command_line, "snpMatrix_preserved", log_file, wait_for=[job_id_call_consensus2])
+    job_id_snp_matrix2 = runner.run(command_line, "snpMatrix_preserved", log_file, wait_for_array=[job_id_call_consensus2])
 
     progress("Step 9.1 - Create the reference sequence at SNP sites")
     log_file = os.path.join(log_dir, "snpReference.log")
@@ -755,7 +755,7 @@ def run(args):
     output_file = os.path.join(work_dir, "referenceSNP.fasta")
     extra_params = os.environ.get("SnpReference_ExtraParams", "")
     command_line = "cfsan_snp_pipeline snp_reference" + force_flag + "-l " + list_file + " -o " + output_file + ' ' + extra_params + ' ' + reference_file_path
-    job_id_snp_reference = runner.run(command_line, "snpReference", log_file, wait_for=[job_id_call_consensus])
+    job_id_snp_reference = runner.run(command_line, "snpReference", log_file, wait_for_array=[job_id_call_consensus])
 
     progress("Step 9.2 - Create the reference sequence at SNP sites")
     log_file = os.path.join(log_dir, "snpReference_preserved.log")
@@ -763,7 +763,7 @@ def run(args):
     output_file = os.path.join(work_dir, "referenceSNP_preserved.fasta")
     extra_params = os.environ.get("SnpReference_ExtraParams", "")
     command_line = "cfsan_snp_pipeline snp_reference" + force_flag + "-l " + list_file + " -o " + output_file + ' ' + extra_params + ' ' + reference_file_path
-    job_id_snp_reference2 = runner.run(command_line, "snpReference_preserved", log_file, wait_for=[job_id_call_consensus2])
+    job_id_snp_reference2 = runner.run(command_line, "snpReference_preserved", log_file, wait_for_array=[job_id_call_consensus2])
 
     progress("Step 10.1 - Merge sample VCFs to create the multi-VCF file")
     if "--vcfFileName" in os.environ.get("CallConsensus_ExtraParams", ""):
@@ -771,7 +771,7 @@ def run(args):
         output_file = os.path.join(work_dir, "snpma.vcf")
         extra_params = os.environ.get("MergeVcfs_ExtraParams", "")
         command_line = "cfsan_snp_pipeline merge_vcfs" + force_flag + "-o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file
-        job_id_merge_vcfs = runner.run(command_line, "mergeVcfs", log_file, wait_for=[job_id_call_consensus])
+        job_id_merge_vcfs = runner.run(command_line, "mergeVcfs", log_file, wait_for_array=[job_id_call_consensus])
     else:
         print("Skipped per CallConsensus_ExtraParams configuration")
 
@@ -781,7 +781,7 @@ def run(args):
         output_file = os.path.join(work_dir, "snpma_preserved.vcf")
         extra_params = os.environ.get("MergeVcfs_ExtraParams", "")
         command_line = "cfsan_snp_pipeline merge_vcfs" + force_flag + "-n consensus_preserved.vcf -o " + output_file + ' ' + extra_params + ' ' + filtered_sample_dirs_file2
-        job_id_merge_vcfs2 = runner.run(command_line, "mergeVcfs_preserved", log_file, wait_for=[job_id_call_consensus2])
+        job_id_merge_vcfs2 = runner.run(command_line, "mergeVcfs_preserved", log_file, wait_for_array=[job_id_call_consensus2])
     else:
         print("Skipped per CallConsensus_ExtraParams configuration")
 
