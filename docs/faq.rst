@@ -165,8 +165,8 @@ also on a high performance computing cluster running Grid Engine or Torque.  See
 
 **Q: How can I control the number of CPU cores used by the bowtie2 or smalt aligners?**
 
-A: By default, the SNP Pipeline will give bowtie2 or smalt all available CPU cores on a workstation and 8 CPU cores per
-sample on a high performance computing cluster.  You can override the defaults with the ``-p`` bowtie2 option or the ``-n`` smalt option.  Set
+A: By default, the SNP Pipeline will use 8 CPU cores for each bowtie2 or smalt process.
+You can override the defaults with the ``-p`` bowtie2 option or the ``-n`` smalt option.  Set
 the option either in the configuration file if you are running run_snp_pipeline.sh, or in the Bowtie2Align_ExtraParams
 environment variable if you are running the map_reads command directly.  For example, to run alignments with
 16 concurrent threads::
