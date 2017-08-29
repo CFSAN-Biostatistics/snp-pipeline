@@ -156,38 +156,31 @@ possible because NCBI does not always store the original read names in the SRA d
 Performance
 -----------
 
-**Q: How can I control the number of concurrent processes lauched on my workstation?**
+**Q: How can I control the number of concurrent processes?**
 
-A: If you are using a HPC with a job queue manager, the pipeline will automatically run multiple
-concurrent processes across multiple servers -- there are no options to control the number of
-concurrent processes.  On a workstation, the pipeline uses all available CPU cores by default
-and spawns multiple concurrent processes to use all the cores.  However, you may want to
-control the number of concurrent processes.  There are three steps in the pipeline where multiple
-processes are launched on a workstation.  You can control the number of processes with the
-following parameters in the configuration file.  These parameters are used only by the
-run_snp_pipeline.sh script::
+A: By default, the pipeline will use all available CPU resources.  You can limit the number of CPU cores the
+pipeline will use with the ``MaxCpuCores`` parameter in the configuration file.  By limiting the number of
+CPU cores, you will also limit the the number of concurrent processes.  This works on your workstation and
+also on a high performance computing cluster running Grid Engine or Torque.  See also the question below.
 
-    # Maximum concurrent call_sites processes (SAMtools and Varscan)
-    MaxConcurrentPrepSamples=
+**Q: How can I control the number of CPU cores used by the bowtie2 or smalt aligners?**
 
-    # Maximum concurrent call_consensus processes
-    MaxConcurrentCallConsensus=
-
-    # Maximum concurrent collect_metrics processes
-    MaxConcurrentCollectSampleMetrics=
-
-**Q: How can I control the number of CPU cores used by the bowtie2 aligner?**
-
-A: By default, the SNP Pipeline will give bowtie2 all available CPU cores on a workstation and 8 CPU cores per
-sample on a high performance computing cluster.  You can override the defaults with the ``-p`` bowtie2 option.  Set
+A: By default, the SNP Pipeline will use 8 CPU cores for each bowtie2 or smalt process.
+You can override the defaults with the ``-p`` bowtie2 option or the ``-n`` smalt option.  Set
 the option either in the configuration file if you are running run_snp_pipeline.sh, or in the Bowtie2Align_ExtraParams
 environment variable if you are running the map_reads command directly.  For example, to run alignments with
 16 concurrent threads::
 
-    Bowtie2Align_ExtraParams="--reorder -p 16"
+    Bowtie2Align_ExtraParams = "-p 16"
+    SmaltAlign_ExtraParams = "-n 16"
 
-On a workstation, alignments are run one at a time using multiple threads per alignment.  On a cluster with
-a job queue, multiple alignments are run concurrently, each with multiple threads.
+Multiple alignments are run concurrently, each with multiple threads.  The number of concurrently executing
+alignment processes depends on the ``MaxCpuCores`` parameter setting.  For example if you set bowtie to use
+10 CPU cores per process and set MaxCpuCores to 20, you will have 2 concurrent bowtie2 processes each with
+10 CPU threads.
+
+You cannot use more threads than the number of allowed CPU cores.  For example, if you set bowtie to use
+10 threads and you set MaxCpuCores to 8, bowtie will only get 8 threads, not 10.
 
 **Q: How can I control the amount of memory that is used by the Picard and VarScan java virtual machines?**
 

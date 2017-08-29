@@ -9,6 +9,7 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
+import errno
 import locale
 import os
 import platform
@@ -217,7 +218,44 @@ def extract_version_str(program_name, command_line):
     return "Unrecognized " + program_name + " version"
 
 
-def read_properties(prop_file_path):
+def is_directory_writeable(path):
+    """Returns true if the specified directory is writeable.
+
+    Parameters
+    ----------
+    path : str
+        Directory path to create.
+
+    Returns
+    -------
+    writeable : bool
+        True if the path is a writeable directory
+    """
+    return os.path.isdir(path) and os.access(path, os.W_OK | os.X_OK)
+
+
+def mkdir_p(path):
+    """Python equivalent of bash mkdir -p.
+
+    Parameters
+    ----------
+    path : str
+        Directory path to create.
+
+    Raises
+    ------
+    OSError if the directory does not already exist and cannot be created
+    """
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
+def read_properties(prop_file_path, recognize_vars=False):
     """Read a file of name=value pairs and load them into a dictionary.
 
     Name and value must be separated by =.
@@ -229,6 +267,10 @@ def read_properties(prop_file_path):
     ----------
     prop_file_path : str
         Path to the property file.
+    recognize_vars : bool, optional
+        If True, values containing dollar prefixed tokens are expanded to
+        previously read property values or environment variable values if
+        possible.
 
     Returns
     -------
@@ -250,11 +292,28 @@ def read_properties(prop_file_path):
     >>> print("Ddd=", file=f)               # no value
     >>> print("Eee='5\\"'", file=f)         # double quote within single-quoted value
     >>> print("Fff=\\"6'\\"", file=f)       # single quote within double-quoted value
+    >>> print("Ggg=$Aaa", file=f)           # ignore other parameter when recognize_vars=False
     >>> f.close()
 
     # Read the properties
     >>> read_properties(filepath)
-    OrderedDict([('Aaa', 'bbb'), ('Bbb', '2'), ('Ccc', '33'), ('Ddd', ''), ('Eee', '5"'), ('Fff', "6'")])
+    OrderedDict([('Aaa', 'bbb'), ('Bbb', '2'), ('Ccc', '33'), ('Ddd', ''), ('Eee', '5"'), ('Fff', "6'"), ('Ggg', '$Aaa')])
+    >>> os.unlink(filepath)
+
+    # Create a property file
+    >>> os.environ["DUMMY_ENV_VAR"] = "D ummy"
+    >>> f = NamedTemporaryFile(delete=False, mode='w')
+    >>> filepath = f.name
+    >>> print("Aaa = bbb", file=f)                          # define Aaa property
+    >>> print("Bbb = $Aaa ", file=f)                        # substitute property
+    >>> print("Ccc=$DUMMY_ENV_VAR", file=f)                 # substitute environment variable
+    >>> print("Ddd=$DUMMY_ENV_VAR $more", file=f)           # substitute environment variable, ignore something that cannot be resolved
+    >>> print("Eee=$DUMMY_ENV_VAR$Aaa $Bbb", file=f)        # substitute two properties and one environment variable
+    >>> f.close()
+
+    # Read the properties
+    >>> read_properties(filepath, recognize_vars=True)
+    OrderedDict([('Aaa', 'bbb'), ('Bbb', 'bbb'), ('Ccc', 'D ummy'), ('Ddd', 'D ummy $more'), ('Eee', 'D ummybbb bbb')])
     >>> os.unlink(filepath)
     """
     properties = OrderedDict()
@@ -274,6 +333,23 @@ def read_properties(prop_file_path):
                 value = value.strip('"')
             elif value.startswith("'") and value.endswith("'"):
                 value = value.strip("'")
+
+            # expand known tokens
+            if recognize_vars:
+                old_value = None
+                token_regex = "[$][a-zA-Z_]+[a-zA-Z0-9_]*"
+                while value != old_value:
+                    old_value = value
+                    match = re.search(token_regex, value)
+                    if match:
+                        token = match.group(0)[1:] # drop the leading $
+                        if token in properties:
+                            token_value = properties[token]
+                            value = re.sub(token_regex, token_value, value, count=1)
+                        elif token in os.environ:
+                            token_value = os.environ[token]
+                            value = re.sub(token_regex, token_value, value, count=1)
+
             properties[key] = value
 
     return properties
@@ -345,13 +421,66 @@ def sample_id_from_file(file_path):
     return sample_id
 
 
+def log_error(message):
+    """Write an error message to the error log if enabled.
+    """
+    # Log to error file if it is defined, which happens automatically if running run_snp_pipeline.sh.
+    # The errorOutputFile may also be defined manually if running scripts without run_snp_pipeline.sh.
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            print(message, file=err_log)
+
+
+def report_error(message):
+    """Send an error message to the error log and to stderr.
+    """
+    log_error(message)
+
+    # send the detail error message to stderr -- this will put the error
+    # message in the process-specific log file.
+    sys.stdout.flush() # make sure stdout is flushed before printing the error
+    if message:
+        print(message, file=sys.stderr)
+
+
+def fatal_error(message):
+    """Log a fatal error message to the error summary file and to stderr and then exit.
+    """
+    report_error(message)
+    sys.exit(1)
+
+
+def sample_warning(message):
+    """Log a warning to the error summary file with special formatting and also print the warning to stderr.
+    Do not exit regardless of the StopOnSampleError setting.
+
+    Parameters
+    ----------
+    message : str
+        Warning message text.
+    """
+    error_output_file = os.environ.get("errorOutputFile")
+    if error_output_file:
+        with open(error_output_file, "a") as err_log:
+            print("%s warning:" % program_name_with_command(), file=err_log)
+            print(message, file=err_log)
+            print("================================================================================", file=err_log)
+
+    # Also send the detail error message to stderr -- this will put the error message in the
+    # process-specific log file.
+    sys.stdout.flush() # make sure stdout is flushed before printing the error
+    if message:
+        print(message, file=sys.stderr)
+
+
 def global_error(message):
     """
     Log a fatal error to the error summary file and exit with error code 100
     to cause Sun Grid Engine to also detect the error.
 
     This method always stops pipeline execution, it does not care about the
-    SnpPipeline_StopOnSampleError flag.
+    StopOnSampleError flag.
 
     Args:
         message : str
@@ -383,14 +512,14 @@ def sample_error(message, continue_possible=False):
     Log an error to the error summary file and conditionally exit with error
     code 100 to cause Sun Grid Engine to also detect the error.
 
-    The SnpPipeline_StopOnSampleError and continue_possible flags control the
+    The StopOnSampleError and continue_possible flags control the
     pipeline exit / continuation behavior.  Possible behaviors are:
     - Stop this step and all subsequent steps of the pipeline if
-      SnpPipeline_StopOnSampleError is true or unset
+      StopOnSampleError is true or unset
     - Stop execution of this step, but continue subsequent steps if
-      SnpPipeline_StopOnSampleError is false and continue_possible is false
+      StopOnSampleError is false and continue_possible is false
     - Allow this step to continue if
-      SnpPipeline_StopOnSampleError is false and continue_possible is true
+      StopOnSampleError is false and continue_possible is true
 
     Args:
         message : str
@@ -400,7 +529,7 @@ def sample_error(message, continue_possible=False):
             flag true may allow the code to continue without exiting if
             configured to do so.
     """
-    stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
+    stop_on_error_env = os.environ.get("StopOnSampleError")
     stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
 
     # Log the event to the error log
@@ -521,7 +650,7 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
     # Exit 100 does two things:
     # 1. Sun Grid Engine will stop execution of dependent jobs
     # 2. run_snp_pipeline.sh will know this error has already been reported
-    stop_on_error_env = os.environ.get("SnpPipeline_StopOnSampleError")
+    stop_on_error_env = os.environ.get("StopOnSampleError")
     stop_on_error = stop_on_error_env is None or stop_on_error_env == "true"
     if stop_on_error:
         # run_snp_pipeline.sh will know this error has already been reported
@@ -532,42 +661,29 @@ def handle_sample_exception(exc_type, exc_value, exc_traceback):
         sys.exit(98)
 
 
-def report_error(message):
-    """Send an error message to the error log and to stderr.
-    """
-    error_output_file = os.environ.get("errorOutputFile")
-    if error_output_file:
-        with open(error_output_file, "a") as err_log:
-            print(message, file=err_log)
-
-    # send the detail error message to stderr -- this will put the error
-    # message in the process-specific log file.
-    sys.stdout.flush() # make sure stdout is flushed before printing the error
-    if message:
-        print(message, file=sys.stderr)
-
-
-def sample_warning(message):
-    """Log a warning to the error summary file with special formatting and also print the warning to stderr.
-    Do not exit regardless of the SnpPipeline_StopOnSampleError setting.
+def which(executable):
+    """Search the PATH for the specified executable file.
 
     Parameters
     ----------
-    message : str
-        Warning message text.
-    """
-    error_output_file = os.environ.get("errorOutputFile")
-    if error_output_file:
-        with open(error_output_file, "a") as err_log:
-            print("%s warning:" % program_name_with_command(), file=err_log)
-            print(message, file=err_log)
-            print("================================================================================", file=err_log)
+    executable : str
+        Name of executable
 
-    # Also send the detail error message to stderr -- this will put the error message in the
-    # process-specific log file.
-    sys.stdout.flush() # make sure stdout is flushed before printing the error
-    if message:
-        print(message, file=sys.stderr)
+    Returns
+    -------
+    path : str, or None
+        Path to the executable or None if not found on the PATH.
+        If the excutable is available at more than one location,
+        Only the first path is returned.
+    """
+    path = os.environ.get('PATH', "")
+
+    for p in path.split(os.pathsep):
+        p = os.path.join(p, executable)
+        if os.access(p, os.X_OK): # Can the file be executed?
+            return p
+
+    return None
 
 
 def verify_existing_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):
@@ -693,6 +809,11 @@ def verify_non_empty_directory(error_prefix, directory, error_handler=None, cont
         Only used when error_handler is "sample".  Indicates if it is possible
         to continue execution.  Setting this flag true may allow the code
         to continue without exiting if configured to do so.
+
+    Returns
+    -------
+    okay : bool
+        If the function does not exit the program, it returns true if directory exists and is not empty
     """
     if error_handler not in ["global", "sample", None]:
         raise ValueError("Invalid error_handler: %s" % repr(error_handler))
@@ -705,9 +826,8 @@ def verify_non_empty_directory(error_prefix, directory, error_handler=None, cont
         message = error_prefix + directory + " is not a directory."
     elif len(os.listdir(directory)) == 0:
         message = error_prefix + directory + " is empty."
-
-    if not message:
-        return
+    else:
+        return True
 
     if error_handler == "global":
         global_error(message)
@@ -715,6 +835,7 @@ def verify_non_empty_directory(error_prefix, directory, error_handler=None, cont
         sample_error(message, continue_possible=continue_possible)
     else:
         report_error(message)
+    return False
 
 
 def global_error_on_missing_file(file_path, program):

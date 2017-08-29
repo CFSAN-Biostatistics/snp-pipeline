@@ -58,18 +58,19 @@ def list_fastq_files(directory):
 
 # Mapping of Illumina flowcell last 4 characters to instrument type
 ILLUMINA_FLOWCELL_INSTRUMENT_TYPE_DICT = {
-    "AAXX" : "Genome Analyzer",
-    "ACXX" : "HiSeq",   # HiSeq High-Output v3
-    "ADXX" : "HiSeq",   # HiSeq RR v1
-    "AFXX" : "NextSeq", # NextSeq Mid-Output
-    "AGXX" : "NextSeq", # NextSeq High-Output
-    "ALXX" : "HiSeqX",
-    "AMXX" : "HiSeq",   # HiSeq RR v2
-    "ANXX" : "HiSeq",   # HiSeq High-Output v4
-    "BBXX" : "HiSeq",   # See SRR3619967
-    "BCXX" : "HiSeq",   # HiSeq v1.5 or HiSeq RR v2
-    "BGXY" : "NextSeq", # NextSeq High-Output
+    "AAXX": "Genome Analyzer",
+    "ACXX": "HiSeq",   # HiSeq High-Output v3
+    "ADXX": "HiSeq",   # HiSeq RR v1
+    "AFXX": "NextSeq", # NextSeq Mid-Output
+    "AGXX": "NextSeq", # NextSeq High-Output
+    "ALXX": "HiSeqX",
+    "AMXX": "HiSeq",   # HiSeq RR v2
+    "ANXX": "HiSeq",   # HiSeq High-Output v4
+    "BBXX": "HiSeq",   # See SRR3619967
+    "BCXX": "HiSeq",   # HiSeq v1.5 or HiSeq RR v2
+    "BGXY": "NextSeq", # NextSeq High-Output
 }
+
 
 def flowcell_to_instrument_type(flow_cell):
     """Given a flow cell id, determine the sequencing instrument type.

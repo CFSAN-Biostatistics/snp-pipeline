@@ -47,7 +47,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='0.8.2',
+    version='1.0.0b12',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -60,7 +60,7 @@ setup(
     """,
 
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
@@ -69,7 +69,8 @@ setup(
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
-    entry_points={'console_scripts': ['cfsan_snp_pipeline = snppipeline.cfsan_snp_pipeline:main'] },
+    entry_points={'console_scripts': ['cfsan_snp_pipeline = snppipeline.cfsan_snp_pipeline:main',
+                                      'qarrayrun = snppipeline.qarrayrun:main'] },
     scripts=[
         'scripts/run_snp_pipeline.sh',
         'scripts/prepReference.sh',
@@ -83,7 +84,6 @@ setup(
         'scripts/copy_snppipeline_data.py',
         'scripts/collectSampleMetrics.sh',
         'scripts/combineSampleMetrics.sh',
-        'scripts/snp_pipeline_inc.sh',
         'scripts/mergeVcf.sh',
         'scripts/calculate_snp_distances.py',
     ],

@@ -34,8 +34,8 @@ variables with the same names as the parameters in the configuration file.
 
 The available configuration parameters are described below.
 
-SnpPipeline_StopOnSampleError
------------------------------
+StopOnSampleError
+-----------------
 Controls whether the pipeline exits upon detecting errors affecting only a single
 sample.  The pipeline will always stop upon detecting global errors affecting all
 samples.
@@ -48,62 +48,28 @@ samples.
 
 **Example**::
 
-    SnpPipeline_StopOnSampleError=false
+    StopOnSampleError=false
 
 
-MaxConcurrentPrepSamples
-------------------------
-
-Controls the number of call_sites processes (SAMtools and Varscan) running concurrently
-on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
-This parameter is used by run_snp_pipeline.sh only.
-
-**Default**:
-
-    When this parameter is not set to a value, the pipeline will launch multiple concurrent
-    processes using all available CPU cores on a workstation.
-
-**Example**::
-
-    MaxConcurrentPrepSamples=2
-
-
-MaxConcurrentCallConsensus
---------------------------
-
-Controls the number of call_consensus processes running concurrently
-on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
-This parameter is used by run_snp_pipeline.sh only.
+MaxCpuCores
+-----------
+Controls the number of CPU cores used by the SNP Pipeline.  This parameter controls
+CPU resources on both your workstation and on an HPC cluster.  By limiting the
+number of CPU cores used, you are also limiting the number of concurrently executing
+processes.
 
 **Default**:
 
     When this parameter is not set to a value, the pipeline will launch multiple concurrent
-    processes using all available CPU cores on a workstation.
+    processes using all available CPU cores.
 
 **Example**::
 
-    MaxConcurrentCallConsensus=4
+    MaxCpuCores=2
 
 
-MaxConcurrentCollectSampleMetrics
-----------------------------------
-
-Controls the number of collect_metrics processes running concurrently
-on a workstation.  This parameter is ignored when running the pipeline on an HPC job queue.
-This parameter is used by run_snp_pipeline.sh only.
-
-**Default**:
-
-    When this parameter is not set to a value, the pipeline will launch multiple concurrent
-    processes using all available CPU cores on a workstation.
-
-**Example**::
-
-    MaxConcurrentCollectSampleMetrics=4
-
-
-SnpPipeline_MaxSnps
--------------------
+MaxSnps
+-------
 Controls the maximum number of snps allowed for each sample. Any sample with excessive snps exceeding
 this limit will be excluded from the snp list, snp matrix, and snpma.vcf file. When set to -1, this
 parameter is disabled.
@@ -115,8 +81,7 @@ parameter is disabled.
 
 **Example**::
 
-    SnpPipeline_MaxSnps=1000
-
+    MaxSnps=1000
 
 
 SnpPipeline_Aligner
@@ -259,8 +224,8 @@ Any of the SAMtools sort options can be specified.
     SamtoolsSort_ExtraParams=""
 
 
-SnpPipeline_RemoveDuplicateReads
---------------------------------
+RemoveDuplicateReads
+--------------------
 Controls whether the pipeline removes duplicate reads prior to creating the pileup
 and calling snps.
 
@@ -270,7 +235,7 @@ and calling snps.
 
 **Example**::
 
-    SnpPipeline_RemoveDuplicateReads=false
+    RemoveDuplicateReads=false
 
 
 PicardMarkDuplicates_ExtraParams
@@ -355,7 +320,7 @@ Any of the JVM options can be specified.
     VarscanJvm_ExtraParams="-Xmx300m"
 
 
-RemoveAbnormalSnp_ExtraParams
+FilterRegions_ExtraParams
 ------------------------------
 Specifies options passed to the filter_regions command.
 
@@ -374,10 +339,10 @@ Specifies options passed to the filter_regions command.
 
 **Example**::
 
-    RemoveAbnormalSnp_ExtraParams="--edge_length 500 --window_size 1000 --max_snp 3 --out_group /path/to/outgroupSamples.txt"
+    FilterRegions_ExtraParams="--edge_length 500 --window_size 1000 --max_snp 3 --out_group /path/to/outgroupSamples.txt"
 
 
-CreateSnpList_ExtraParams
+MergeSites_ExtraParams
 -------------------------
 Specifies options passed to the merge_sites command.
 
@@ -385,7 +350,7 @@ Specifies options passed to the merge_sites command.
 
 **Example**::
 
-    CreateSnpList_ExtraParams="--verbose 1"
+    MergeSites_ExtraParams="--verbose 1"
 
 
 CallConsensus_ExtraParams
@@ -425,7 +390,7 @@ Specifies options passed to the call_consensus command.
     CallConsensus_ExtraParams="--verbose 1 --minBaseQual 15 --vcfFileName consensus.vcf"
 
 
-CreateSnpMatrix_ExtraParams
+SnpMatrix_ExtraParams
 ---------------------------
 Specifies options passed to the snp_matrix command.
 
@@ -433,10 +398,10 @@ Specifies options passed to the snp_matrix command.
 
 **Example**::
 
-    CreateSnpMatrix_ExtraParams="--verbose 1"
+    SnpMatrix_ExtraParams="--verbose 1"
 
 
-CreateSnpReferenceSeq_ExtraParams
+SnpReference_ExtraParams
 ---------------------------------
 Specifies options passed to the snp_reference command.
 
@@ -444,18 +409,18 @@ Specifies options passed to the snp_reference command.
 
 **Example**::
 
-    CreateSnpReferenceSeq_ExtraParams="--verbose 1"
+    SnpReference_ExtraParams="--verbose 1"
 
 
-MergeVcf_ExtraParams
---------------------
+MergeVcfs_ExtraParams
+---------------------
 Specifies options passed to the merge_vcfs command.
 
 **Default**: none
 
 **Example**::
 
-    MergeVcf_ExtraParams="-n sample.vcf"
+    MergeVcfs_ExtraParams="-n sample.vcf"
 
 
 BcftoolsMerge_ExtraParams

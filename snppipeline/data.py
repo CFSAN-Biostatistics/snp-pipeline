@@ -6,7 +6,9 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import os
+import shutil
 import subprocess
+
 from pkg_resources import resource_filename
 
 
@@ -50,8 +52,8 @@ def copy_data(args):
 
     if args.whichData == 'configurationFile':
         source_file = os.path.join(data_directory, 'configuration', 'snppipeline.conf')
-        command = 'cp -p ' + source_file + ' ' + dest_directory
-        return_code = subprocess.call(command, shell=True)
+        shutil.copy2(source_file, dest_directory)
+        return_code = 0
     else:
         source_directory = os.path.join(data_directory, args.whichData)
         command = 'cp -r -p ' + source_directory + '/* ' + dest_directory

@@ -242,7 +242,7 @@ def collect_metrics(args):
     # Calculate number of duplicate reads from deduped bam file
     #-------------------------
     num_dup_reads = ""
-    remove_duplicate_reads = os.environ.get("SnpPipeline_RemoveDuplicateReads") or "true"
+    remove_duplicate_reads = os.environ.get("RemoveDuplicateReads") or "true"
     remove_duplicate_reads = remove_duplicate_reads.lower()
     if remove_duplicate_reads == "true":
         verbose_print("# %s %s" % (utils.timestamp(), "Calculate number of duplicate reads from deduped bam file"))
@@ -345,7 +345,7 @@ def collect_metrics(args):
         phase1_snps = str(phase1_snps)
 
     #-------------------------
-    verbose_print("# %s %s" % (utils.timestamp(), "Count number of snp_filter preserved high confidence SNP positions from phase 1 vcf file"))
+    verbose_print("# %s %s" % (utils.timestamp(), "Count number of filter_regions preserved high confidence SNP positions from phase 1 vcf file"))
     #-------------------------
     phase1_snps_preserved = ""
     excluded_sample_preserved = ""

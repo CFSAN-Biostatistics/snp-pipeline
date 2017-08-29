@@ -7,7 +7,7 @@
 # for each of the tools in the SNP Pipeline.  This is part of the
 # RST/Sphinx documentation for the SNP Pipeline.
 #
-# This script should be manually executed before each release to 
+# This script should be manually executed before each release to
 # capture the changes since the last release.
 #
 # Input : None
@@ -26,20 +26,20 @@ echo Command Reference >> x.txt
 echo ================= >> x.txt
 echo >> x.txt
 
-echo '.. _cmd-ref-run-snp-pipeline:' >> x.txt
-echo >> x.txt
-echo run_snp_pipeline.sh      >> x.txt
-echo ------------------------ >> x.txt
-echo >> x.txt; echo :: >> x.txt; echo >> x.txt
-run_snp_pipeline.sh       -h | sed 's/^/  /' >> x.txt
-echo >> x.txt
-
 echo '.. _cmd-ref-cfsan-snp-pipeline:' >> x.txt
 echo >> x.txt
 echo cfsan_snp_pipeline       >> x.txt
 echo ------------------------ >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 cfsan_snp_pipeline           -h | sed 's/^/  /' >> x.txt
+echo >> x.txt
+
+echo '.. _cmd-ref-run-snp-pipeline:' >> x.txt
+echo >> x.txt
+echo run                      >> x.txt
+echo ------------------------ >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+cfsan_snp_pipeline run       -h | sed 's/^/  /' >> x.txt
 echo >> x.txt
 
 echo data                     >> x.txt

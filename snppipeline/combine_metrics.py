@@ -22,7 +22,7 @@ def combine_metrics(args):
 
     All the input files are created outside of this function.  Before
     running this command, the metrics file for each sample must be created by the
-    collectSampleMetrics script.
+    collect_metrics command.
 
     The package documentation provides an example of preparing these files based
     on the lambda_virus sequence that is used as one test for this package.

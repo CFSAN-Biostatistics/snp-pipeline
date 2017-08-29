@@ -16,9 +16,14 @@ of shell scripts and python scripts.
 | Script                      | | Description                                                      |
 +=============================+====================================================================+
 | run_snp_pipeline.sh         | | This do-it-all script runs the other scripts listed below,       |
-|                             | | comprising all the pipeline steps                                |
+|                             | | comprising all the pipeline steps.  This is the same as running  |
+|                             | | cfsan_snp_pipeline run.                                          |
 +-----------------------------+--------------------------------------------------------------------+
 | cfsan_snp_pipeline          | | This is the main command line tool with subcommands listed below |
++-----------------------------+--------------------------------------------------------------------+
+| | run                       | | This all-in-one command runs all the necessary pipeline          |
+|                             | | subcommands listed below, in the right order, comprising all the |
+|                             | | pipeline steps                                                   |
 +-----------------------------+--------------------------------------------------------------------+
 | | data                      | | Copies supplied example data to a work directory                 |
 +-----------------------------+--------------------------------------------------------------------+
@@ -84,14 +89,14 @@ named the way the pipeline expects.  Follow these guidelines:
 * If there is an outgroup among samples, a file containing the sample ids
   of the outgroup samples must be created in advance, and
   the relative or absolute path of this file should be specified in the parameter
-  "RemoveAbnormalSnp_ExtraParams" in the configuration file "snppipeline.conf" (see
-  the description of the parameter "RemoveAbnormalSnp_ExtraParams").
+  "FilterRegions_ExtraParams" in the configuration file "snppipeline.conf" (see
+  the description of the parameter "FilterRegions_ExtraParams").
 
 Outputs
 -------
 
 By default, the SNP Pipeline generates the following output files.  If you
-need more control over the output, you can run the pipeline one step at a time.
+need more control over the output, you can run the pipeline one step at a time (not recommended).
 See :ref:`step-by-step-workflows`.
 
 * ``snplist.txt`` : contains a list of the high-confidence SNP positions
@@ -155,13 +160,13 @@ See :ref:`step-by-step-workflows`.
 All-In-One SNP Pipeline Script
 ------------------------------
 
-Most users should be able to run the SNP Pipeline by launching a single script,
+Most users should run the SNP Pipeline by launching a single script,
 ``run_snp_pipeline.sh``.  This script is easy to use and works equally well on
 your desktop workstation or on a High Performance Computing cluster.  You can
 find examples of using the script in the sections below.
 
 If you need more flexibility, you can run the individual pipeline scripts one
-step at a time.  See :ref:`step-by-step-workflows`.
+step at a time (not recommended).  See :ref:`step-by-step-workflows`.
 
 .. _logging-label:
 
@@ -192,22 +197,35 @@ performamnce reasons, the samples are sorted by size and processed largest
 first.  This sorting is reflected in the naming of the log files.  The log files
 are named with a suffix indicating the sample number::
 
-    -rw------- 1 me group  1330 Oct 17 16:37 alignSamples.log-1
-    -rw------- 1 me group  1330 Oct 17 16:37 alignSamples.log-2
-    -rw------- 1 me group  1330 Oct 17 16:37 alignSamples.log-3
-    -rw------- 1 me group 12045 Oct 17 16:37 prepReference.log
-    -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-1
-    -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-2
-    -rw------- 1 me group  1686 Oct 17 16:37 prepSamples.log-3
-    -rw------- 1 me group   983 Oct 17 16:37 snpList.log
-    -rw------- 1 me group   983 Oct 17 16:37 snpList_preserved.log
-    -rw------- 1 me group  1039 Oct 17 16:37 snpMatrix.log
-    -rw------- 1 me group  1039 Oct 17 16:37 snpMatrix_preserved.log
-    -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-1
-    -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-2
-    -rw------- 1 me group   841 Oct 17 16:37 snpPileup.log-3
+    -rw------- 1 me group 12045 Oct 17 16:37 indexRef.log
+    -rw------- 1 me group  1330 Oct 17 16:37 mapReads.log-1
+    -rw------- 1 me group  1330 Oct 17 16:37 mapReads.log-2
+    -rw------- 1 me group  1330 Oct 17 16:37 mapReads.log-3
+    -rw------- 1 me group  1686 Oct 17 16:37 callSites.log-1
+    -rw------- 1 me group  1686 Oct 17 16:37 callSites.log-2
+    -rw------- 1 me group  1686 Oct 17 16:37 callSites.log-3
+    -rw------- 1 me group  1035 Oct 17 16:37 filterRegions.log
+    -rw------- 1 me group  1275 Oct 17 16:37 mergeSites.log
+    -rw------- 1 me group  1375 Oct 17 16:37 mergeSites_preserved.log
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus.log-1
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus.log-2
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus.log-3
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus_preserved.log-1
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus_preserved.log-2
+    -rw------- 1 me group  1509 Oct 17 16:37 callConsensus_preserved.log-3
+    -rw------- 1 me group  1047 Oct 17 16:37 snpMatrix.log
+    -rw------- 1 me group  1147 Oct 17 16:37 snpMatrix_preserved.log
     -rw------- 1 me group   806 Oct 17 16:37 snpReference.log
     -rw------- 1 me group   806 Oct 17 16:37 snpReference_preserved.log
+    -rw------- 1 me group  1895 Oct 17 16:37 mergeVcfs.log
+    -rw------- 1 me group  2039 Oct 17 16:37 mergeVcfs_preserved.log
+    -rw------- 1 me group   887 Oct 17 16:37 distance.log
+    -rw------- 1 me group   977 Oct 17 16:37 distance_preserved.log
+    -rw------- 1 me group  2169 Oct 17 16:37 collectMetrics.log-1
+    -rw------- 1 me group  2169 Oct 17 16:37 collectMetrics.log-2
+    -rw------- 1 me group  2169 Oct 17 16:37 collectMetrics.log-3
+    -rw------- 1 me group   983 Oct 17 16:37 combineMetrics.log
+
 
 To determine which samples correspond to which log files, you can either grep the
 log files for the sample name or inspect the sorted sampleDirectories.txt file to determine
@@ -595,10 +613,10 @@ bases are in the referenceSNP.fasta and referenceSNP_preserved.fasta::
 Step-by-Step Workflows
 ----------------------
 
-The run_snp_pipeline.sh script described above provides a simplified interface
+The run_snp_pipeline.sh script described above provides a simple and powerful interface
 for running all the pipeline steps from a single command.  If you need more
 control over the inputs, outputs, or processing steps, you can run the pipeline
-one step at a time.
+one step at a time, however this is not recommended.
 
 The sections below give detailed examples of workflows you can run with the
 component tools of the pipeline.
@@ -878,6 +896,9 @@ can be found in snpma.fasta.  The corresponding reference bases are in the refer
 Step-by-Step Workflow - General Case
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Note: the step-by-step workflows are not recommended.  Most users should run the pipeline
+with the all-in-one ``run_snp_pipeline.sh`` command.
+
 Step 1 - Gather data:
 
 You will need the following data:
@@ -1010,7 +1031,7 @@ depth, and high density snp filtering.
 Duplicate reads are removed with the ``Picard`` software tool which must be installed for this functionality.
 
 You can disable this step and keep the duplicate reads by configuring the
-``SnpPipeline_RemoveDuplicateReads`` parameter in the configuration file.
+``RemoveDuplicateReads`` parameter in the configuration file.
 
 You can customize the picard MarkDuplicates behavior to some extent by configuring the
 ``PicardMarkDuplicates_ExtraParams`` parameter in the configuration file.
@@ -1056,7 +1077,7 @@ regions are removed from *all* samples.  Therefore, if you add or remove a sampl
 final SNPs detected in all other samples.  See :ref:`cmd-ref-snp-filter`.
 
 The sensitivity of the SNP filtering can be controlled with parameters in the configuration file by setting values in
-``RemoveAbnormalSnp_ExtraParams``.  You can control the length of end-of-contig trimming, dense region window size, and
+``FilterRegions_ExtraParams``.  You can control the length of end-of-contig trimming, dense region window size, and
 maximum snps allowed within the window.  See :ref:`configuration-label`.
 
 
@@ -1075,7 +1096,7 @@ Grab the default configuration file::
 
     cfsan_snp_pipeline data configurationFile
 
-Edit ``snppipeline.conf``, and change the ``RemoveAbnormalSnp_ExtraParams`` parameter::
+Edit ``snppipeline.conf``, and change the ``FilterRegions_ExtraParams`` parameter::
 
     Add the --out_group option with the path to the file containing the outgroup sample ids.
 
@@ -1107,7 +1128,7 @@ Grab the default configuration file::
 
 Edit ``snppipeline.conf``, and change this setting::
 
-    SnpPipeline_MaxSnps=1000  # substitute your threshold value here, or -1 to disable this function
+    MaxSnps=1000  # substitute your threshold value here, or -1 to disable this function
 
 Then run the pipeline with the -c command line option::
 
@@ -1204,13 +1225,12 @@ The metrics are:
 |                         | | ``minConsFreq`` parameter.                                     |
 +-------------------------+------------------------------------------------------------------+
 | Excluded Sample         | | When a sample has an excessive number of snps exceeding the    |
-|                         | | ``SnpPipeline_MaxSnps`` parameter value, this metric will have |
-|                         | | the value ``Excluded``.  Otherwise, this metric is blank.      |
+|                         | | ``MaxSnps`` parameter value, this metric will have the value   |
+|                         | | ``Excluded``.  Otherwise, this metric is blank.                |
 +-------------------------+------------------------------------------------------------------+
 | Excluded Preserved      | | When a sample has an excessive number of preserved snps        |
-| Sample                  | | exceeding the ``SnpPipeline_MaxSnps`` parameter value, this    |
-|                         | | metric will have the value ``Excluded``.  Otherwise, this      |
-|                         | | metric is blank.                                               |
+| Sample                  | | exceeding the ``MaxSnps`` parameter value, this metric will    |
+|                         | | have the value ``Excluded``.  Otherwise, this metric is blank. |
 +-------------------------+------------------------------------------------------------------+
 | Warnings and Errors     | | A list of warnings or errors encountered while collecting the  |
 |                         | | metrics.                                                       |
@@ -1229,33 +1249,35 @@ See :ref:`logging-label`.
 By default, the SNP Pipeline is configured to stop when execution errors occur.  However, it is
 possible some errors may affect only individual samples and other samples can still be
 processed.  If you want the pipeline to continue processing after an error affecting only
-a single sample has occurred, you can try disabling the ``SnpPipeline_StopOnSampleError``
+a single sample has occurred, you can try disabling the ``StopOnSampleError``
 configuration parameter (not recommended).  See :ref:`configuration-label`.
-When ``SnpPipeline_StopOnSampleError`` is ``false``
+When ``StopOnSampleError`` is ``false``
 the pipeline will attempt to continue subsequent processing steps when an error does not
 affect all samples.  Errors are logged in the ``error.log`` file regardless of how the
-``SnpPipeline_StopOnSampleError`` parameter is configured.  You should review the ``error.log``
+``StopOnSampleError`` parameter is configured.  You should review the ``error.log``
 after running the pipeline to see a summary of any errors detected during execution.
 
 
 Note: currently, when using the Torque job queue manager, the pipeline will always stop on
-errors regardless of the ``SnpPipeline_StopOnSampleError`` parameter setting.
+errors regardless of the ``StopOnSampleError`` parameter setting.
 
 When errors stop the execution of the pipeline on Grid Engine or Torque, other non-failing jobs
 in progress will continue until complete.  However, subsequent job steps will not execute and
 instead will remain in the queue.  On Grid Engine ``qstat`` will show output like the following::
 
-    3038927 0.55167 alignSampl app_sdavis   Eqw   01/15/2016 16:50:03
-    3038928 0.00000 prepSample app_sdavis   hqw   01/15/2016 16:50:04
-    3038929 0.00000 snpList    app_sdavis   hqw   01/15/2016 16:50:04
-    3038930 0.00000 callConsen app_sdavis   hqw   01/15/2016 16:50:04
-    3038931 0.00000 snpMatrix  app_sdavis   hqw   01/15/2016 16:50:04
-    3038932 0.00000 snpReferen app_sdavis   hqw   01/15/2016 16:50:04
-    3038933 0.00000 mergeVcf   app_sdavis   hqw   01/15/2016 16:50:05
-    3038934 0.00000 collectMet app_sdavis   hqw   01/15/2016 16:50:05
-    3038935 0.00000 combineMet app_sdavis   hqw   01/15/2016 16:50:05
+    3038927 0.55167 mapReads   app_sdavis   Eqw   07/15/2017 16:50:03
+    3038928 0.00000 callSites  app_sdavis   hqw   07/15/2017 16:50:04
+    3038929 0.00000 filterRegi app_sdavis   hqw   07/15/2017 16:50:04
+    3038930 0.00000 mergeSites app_sdavis   hqw   07/15/2017 16:50:04
+    3038931 0.00000 callConsen app_sdavis   hqw   07/15/2017 16:50:04
+    3038932 0.00000 snpMatrix  app_sdavis   hqw   07/15/2017 16:50:04
+    3038933 0.00000 snpReferen app_sdavis   hqw   07/15/2017 16:50:04
+    3038934 0.00000 mergeVcfs  app_sdavis   hqw   07/15/2017 16:50:05
+    3038935 0.00000 distance   app_sdavis   hqw   07/15/2017 16:50:05
+    3038936 0.00000 collectMet app_sdavis   hqw   07/15/2017 16:50:05
+    3038937 0.00000 combineMet app_sdavis   hqw   07/15/2017 16:50:05
 
 To clear the jobs from the queue on Grid Engine::
 
-    seq 3038927 3038935 | xargs -I @ qdel @
+    seq 3038927 3038937 | xargs qdel
 

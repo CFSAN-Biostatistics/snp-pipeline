@@ -3,6 +3,44 @@
 History
 -------
 
+1.0.0 (2017-08-??) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Changes Impacting Backwards Compatibility:**
+
+* The configuration file is not an executable bash script anymore.  However, you can still
+  substitute environment variables with the $VAR_NAME notation.
+* Some configuration parameter names are changed.  If you have been using a customized
+  configuration file, you should begin using a new configuration file.
+* Simplified the configuration of multi-threading.  Replaced the configuration parameters
+  MaxConcurrentCollectSampleMetrics, MaxConcurrentCallConsensus, and MaxConcurrentPrepSamples
+  with a single new configuration parameter ``MaxCpuCores``.  See also :ref:`faq-performance-label`.
+* Log file names are changed to harmonize with cfsan_snp_pipeline sub-command names.
+* Grid and Torque job names are changed to match cfsan_snp_pipeline sub-command names.
+* Deprecated all the old step-by-step scripts.  These will be removed in a future release:
+
+    * copy_snppipeline_data.py
+    * prepReference.sh
+    * alignSampleToReference.sh
+    * prepSamples.sh
+    * snp_filter.py
+    * create_snp_list.py
+    * call_consensus.py
+    * mergeVcf.sh
+    * create_snp_matrix.py
+    * calculate_snp_distances.py
+    * create_snp_reference_seq.py
+    * collectSampleMetrics.sh
+    * combineSampleMetrics.sh
+
+**Other Changes:**
+
+* Sweeping changes under the hood replacing the main run_snp_pipeline shell script with equivalent
+  python code.
+* Added a new helper utility, ``qarrayrun`` to simplify creating and running array jobs on Grid
+  Engine or Torque.
+
+
 0.8.2 (2017-06-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -15,7 +53,7 @@ History
 * Fix collect metrics failure when the fastq sequence id line is missing the machine or flowcell.
 
 
-0.8.0 (2017-05-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_
+0.8.0 (2017-05-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_ 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
@@ -45,7 +83,7 @@ History
 * Added the capability to remove duplicate reads from BAM files prior to creating the pileup and
   calling snps.  See :ref:`remove-duplicate-reads-label`.  This change introduces a dependency on
   ``Picard`` and will require changing your CLASSPATH.  See :ref:`installation-label`. You can
-  disable this step and keep the duplicate reads by configuring ``SnpPipeline_RemoveDuplicateReads=false``
+  disable this step and keep the duplicate reads by configuring ``RemoveDuplicateReads=false``
   in the configuration file.
 * Added a new metric to count the number of duplicate reads in each sample.
 * Capture read-group metadata in the SAM/BAM files during the read mapping step.
@@ -96,7 +134,7 @@ History
 
 **Other Changes:**
 
-* A new configuration parameter, ``SnpPipeline_MaxSnps``, controls the maximum number of snps
+* A new configuration parameter, ``MaxSnps``, controls the maximum number of snps
   allowed for each sample.  Samples with excessive snps exceeding this limit are excluded
   from the snp list and snp matrix.
   See :ref:`excessive-snps-label`.
