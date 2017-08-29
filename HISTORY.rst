@@ -3,7 +3,7 @@
 History
 -------
 
-1.0.0 (2017-06-??) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
+1.0.0 (2017-08-??) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
@@ -17,9 +17,26 @@ History
   with a single new configuration parameter ``MaxCpuCores``.  See also :ref:`faq-performance-label`.
 * Log file names are changed to harmonize with cfsan_snp_pipeline sub-command names.
 * Grid and Torque job names are changed to match cfsan_snp_pipeline sub-command names.
+* Deprecated all the old step-by-step scripts.  These will be removed in a future release:
+
+    * copy_snppipeline_data.py
+    * prepReference.sh
+    * alignSampleToReference.sh
+    * prepSamples.sh
+    * snp_filter.py
+    * create_snp_list.py
+    * call_consensus.py
+    * mergeVcf.sh
+    * create_snp_matrix.py
+    * calculate_snp_distances.py
+    * create_snp_reference_seq.py
+    * collectSampleMetrics.sh
+    * combineSampleMetrics.sh
 
 **Other Changes:**
 
+* Sweeping changes under the hood replacing the main run_snp_pipeline shell script with equivalent
+  python code.
 * Added a new helper utility, ``qarrayrun`` to simplify creating and running array jobs on Grid
   Engine or Torque.
 
