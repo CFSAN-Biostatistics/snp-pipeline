@@ -387,6 +387,27 @@ def configure_process_threads(extra_params_env_var, threads_option, default_thre
     return max_processes, threads_per_process
 
 
+def validate_properties(properties):
+    """Verify the previously read properties are from the latest version of the properties file.
+
+    Prints an error message to stderr and exits if the properties file is not the latest.
+
+    Parameters
+    ----------
+    properties : dict
+        Dictionary mapping property names to str values.  This is obtained by calling the utils.read_properties() function.
+    """
+    message = "Your configuration file does not match this version of the SNP Pipeline.\n" \
+              "Please start with a fresh configuration file.\n" \
+              "Use this command:\n" \
+              "    cfsan_snp_pipeline data configurationFile  # this will overwrite an existing snppipeline.conf file!!!"
+
+    required_parameters = ["StopOnSampleError", "MaxCpuCores", "MaxSnps", "RemoveDuplicateReads"]
+    for p in required_parameters:
+        if not p in properties:
+            utils.fatal_error(message)
+
+
 def run(args):
     """Run all the steps of the snp pipeline in th correct order.
 
@@ -471,6 +492,7 @@ def run(args):
 
         shutil.copy2(config_file_path, log_dir)  # copy2 tries to preserve timestamps
         config_params = utils.read_properties(config_file_path, recognize_vars=True)
+        validate_properties(config_params)
     else:
         command.run("cfsan_snp_pipeline data configurationFile " + log_dir, outfile=sys.stdout)
         config_file_path = os.path.join(log_dir, "snppipeline.conf")
