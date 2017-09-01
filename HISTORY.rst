@@ -3,18 +3,18 @@
 History
 -------
 
-1.0.0 (2017-08-??) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
+1.0.0 (2017-09-01) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
 
-* The configuration file is not an executable bash script anymore.  However, you can still
-  substitute environment variables with the $VAR_NAME notation.
 * Some configuration parameter names are changed.  If you have been using a customized
   configuration file, you should begin using a new configuration file.
 * Simplified the configuration of multi-threading.  Replaced the configuration parameters
   MaxConcurrentCollectSampleMetrics, MaxConcurrentCallConsensus, and MaxConcurrentPrepSamples
   with a single new configuration parameter ``MaxCpuCores``.  See also :ref:`faq-performance-label`.
+* The configuration file is not an executable bash script anymore.  However, you can still
+  substitute environment variables with the $VAR_NAME notation.
 * Log file names are changed to harmonize with cfsan_snp_pipeline sub-command names.
 * Grid and Torque job names are changed to match cfsan_snp_pipeline sub-command names.
 * Deprecated all the old step-by-step scripts.  These will be removed in a future release:
@@ -32,6 +32,8 @@ History
     * create_snp_reference_seq.py
     * collectSampleMetrics.sh
     * combineSampleMetrics.sh
+
+* You may safely continue using ``run_snp_pipeline.sh``.  It is not deprecated and will not be removed in future releases.
 
 **Other Changes:**
 
@@ -53,7 +55,7 @@ History
 * Fix collect metrics failure when the fastq sequence id line is missing the machine or flowcell.
 
 
-0.8.0 (2017-05-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_ 
+0.8.0 (2017-05-09) - `docs <http://snp-pipeline.readthedocs.io/en/0.8-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
@@ -99,7 +101,7 @@ History
   different environmental sources, and different types of sequencing instruments.
 
 
-0.7.0 (2016-11-30) - `docs <http://snp-pipeline.readthedocs.io/en/0.7-branch/history.html>`_ 
+0.7.0 (2016-11-30) - `docs <http://snp-pipeline.readthedocs.io/en/0.7-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Added a new script to the pipeline: ``snp_filter.py`` removes snps from the ends of contigs and
