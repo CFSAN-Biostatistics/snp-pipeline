@@ -458,7 +458,7 @@ Step 1 - Gather data::
 
     # Check the data
     #   The original data was used to generate a hash as follows:
-    #     sha256sum reference/*.fasta samples/*/*.fastq > sha256sumCheck
+    #     sha256sum sampleList reference/*.fasta samples/*/*.fastq.gz > sha256sumCheck
     #   The command below checks the downloaded data (and the reference sequence) against the
     #     hashes that are saved in the sha256sumCheck file using sha256sum command, which is
     #     generally available on unix systems.
@@ -546,11 +546,11 @@ Step 1 - Create dataset::
     #   sequences. There are other ways to get the data, but the SRA-toolkit is
     #   easy to install, and does a good job of downloading large files.
     mkdir samples
-    < sampleList xargs -I % sh -c ' mkdir samples/%; fastq-dump --gzip --origfmt --split-files --outdir samples/% %;'
+    < sampleList xargs -I % sh -c ' mkdir samples/%; fastq-dump --gzip --split-files --outdir samples/% %;'
 
     # Check the data
     #   The original data was used to generate a hash as follows:
-    #     sha256sum sampleList reference/*.fasta samples/*/*.fastq > sha256sumCheck
+    #     sha256sum sampleList reference/*.fasta samples/*/*.fastq.gz > sha256sumCheck
     #   The command below checks the downloaded data (and the reference sequence) against the
     #     hashes that are saved in the sha256sumCheck file using sha256sum command, which is
     #     generally available on unix systems.
@@ -786,7 +786,7 @@ Step 1 - Gather data::
 
     # Check the data
     #   The original data was used to generate a hash as follows:
-    #     sha256sum reference/*.fasta samples/*/*.fastq > sha256sumCheck
+    #     sha256sum sampleList reference/*.fasta samples/*/*.fastq.gz > sha256sumCheck
     #   The command below checks the downloaded data (and the reference sequence) against the
     #     hashes that are saved in the sha256sumCheck file using sha256sum command, which is
     #     generally available on unix systems.
