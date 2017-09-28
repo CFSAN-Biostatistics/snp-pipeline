@@ -3,6 +3,12 @@
 History
 -------
 
+1.0.1 (2017-09-28) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Updated usage instructions and expected result files for the Agona and Listeria datasets.
+
+
 1.0.0 (2017-09-01) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

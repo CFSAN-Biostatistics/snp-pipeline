@@ -2,4 +2,4 @@
 
 __author__ = 'Errol Strain, Yan Luo, James Pettengill, Hugh A. Rand, Steve Davis'
 __email__ = 'hugh.rand@fda.hhs.gov'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
