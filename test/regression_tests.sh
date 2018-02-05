@@ -438,7 +438,8 @@ tryIndexRefBowtieIndexTrap()
     # Verify error handling behavior
     assertEquals "cfsan_snp_pipeline index_ref / bowtie returned incorrect error code when the input fasta was corrupt." $expectErrorCode $errorCode
     verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "Error detected while running cfsan_snp_pipeline index_ref."
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline index_ref"
+    assertFileContains "$tempDir/error.log" "error|failed"
     assertFileNotContains "$logDir/indexRef.log" "Error detected while running cfsan_snp_pipeline index_ref."
     assertFileContains "$tempDir/error.log" "bowtie2-build"
     assertFileNotContains "$logDir/indexRef.log" "cfsan_snp_pipeline index_ref finished"

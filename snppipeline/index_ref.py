@@ -74,6 +74,7 @@ def index_ref(args):
             verbose_print("# %s %s" % (utils.timestamp(), command_line))
             verbose_print("# %s" % version_str)
             command.run(command_line, sys.stdout)
+            utils.global_error_on_missing_file(target_file, "bowtie2-build")
 
     elif snp_pipeline_aligner == "smalt":
         target_file = reference_base_path + ".smi"
