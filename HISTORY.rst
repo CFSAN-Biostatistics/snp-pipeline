@@ -6,10 +6,16 @@ History
 2.0.0 (2018-02-xx) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Added local realignment around indels.  This change creates a dependency on Picard and GATK 3.
+**Changes Impacting Backwards Compatibility:**
+
 * Moved all the bam file creation functionality from the call_sites command to the
-  map_reads command.  The call_sites command now only creates a pileup and finds
+  map_reads command.  The map_reads command takes fastq files as input (as before) and
+  produces a finished bam file.  The call_sites command now only creates a pileup and finds
   high-confidence variant sites.
+* Added local realignment around indels.  This change creates a dependency on Picard and GATK.
+
+**Other Changes:**
+
 * Updated the included datasets with results after local realignment.
 
 
