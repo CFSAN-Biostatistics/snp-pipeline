@@ -574,10 +574,15 @@ def run(args):
         utils.report_error("CLASSPATH is not configured with the path to Picard")
         found_all_dependencies = False
 
-    stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK 2>&1")
+    stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK --version 2>&1")
     if "Error" in stdout:
         utils.report_error("CLASSPATH is not configured with the path to GATK")
         found_all_dependencies = False
+    else:
+        stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner --version 2>&1")
+        if "ERROR" in stdout:
+            utils.report_error("The installed GATK version does not support indel realignment.  Try installing an older release prior to GATK v4.")
+            found_all_dependencies = False
 
     if not found_all_dependencies:
         utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")
