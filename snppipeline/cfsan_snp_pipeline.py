@@ -264,7 +264,8 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     # Create the parser for the "map_reads" command
     # -------------------------------------------------------------------------
     description = """Align the sequence reads for a specified sample to a specified reference genome.
-                     The output is written to the file "reads.sam" in the sample directory."""
+                     The reads are sorted, duplicates marked, and realigned around indels.
+                     The output is written to the file "reads.sorted.deduped.indelrealigned.bam" in the sample directory."""
     subparser = subparsers.add_parser("map_reads", help="Align reads to the reference", description=description, formatter_class=formatter_class)
     subparser.add_argument(dest="referenceFile",    type=str, help="Relative or absolute path to the reference fasta file")
     subparser.add_argument(dest="sampleFastqFile1", type=str, help="Relative or absolute path to the fastq file")

@@ -531,14 +531,18 @@ def run(args):
     # Put the configuration parameters into the process environment variables
     os.environ["Bowtie2Build_ExtraParams"] = config_params.get("Bowtie2Build_ExtraParams", "")
     os.environ["SmaltIndex_ExtraParams"] = config_params.get("SmaltIndex_ExtraParams", "")
+    os.environ["CreateSequenceDictionary_ExtraParams"] = config_params.get("CreateSequenceDictionary_ExtraParams", "")
     os.environ["SamtoolsFaidx_ExtraParams"] = config_params.get("SamtoolsFaidx_ExtraParams", "")
     os.environ["Bowtie2Align_ExtraParams"] = config_params.get("Bowtie2Align_ExtraParams", "")
     os.environ["SmaltAlign_ExtraParams"] = config_params.get("SmaltAlign_ExtraParams", "")
     os.environ["SamtoolsSamFilter_ExtraParams"] = config_params.get("SamtoolsSamFilter_ExtraParams", "")
     os.environ["SamtoolsSort_ExtraParams"] = config_params.get("SamtoolsSort_ExtraParams", "")
     os.environ["RemoveDuplicateReads"] = config_params.get("RemoveDuplicateReads", "").lower() or "true"
-    os.environ["PicardMarkDuplicates_ExtraParams"] = config_params.get("PicardMarkDuplicates_ExtraParams", "")
     os.environ["PicardJvm_ExtraParams"] = config_params.get("PicardJvm_ExtraParams", "")
+    os.environ["PicardMarkDuplicates_ExtraParams"] = config_params.get("PicardMarkDuplicates_ExtraParams", "")
+    os.environ["GatkJvm_ExtraParams"] = config_params.get("GatkJvm_ExtraParams", "")
+    os.environ["RealignerTargetCreator_ExtraParams"] = config_params.get("RealignerTargetCreator_ExtraParams", "")
+    os.environ["IndelRealigner_ExtraParams"] = config_params.get("IndelRealigner_ExtraParams", "")
     os.environ["SamtoolsMpileup_ExtraParams"] = config_params.get("SamtoolsMpileup_ExtraParams", "")
     os.environ["VarscanMpileup2snp_ExtraParams"] = config_params.get("VarscanMpileup2snp_ExtraParams", "")
     os.environ["VarscanJvm_ExtraParams"] = config_params.get("VarscanJvm_ExtraParams", "")
@@ -565,11 +569,15 @@ def run(args):
         utils.report_error("CLASSPATH is not configured with the path to VarScan")
         found_all_dependencies = False
 
-    if os.environ["RemoveDuplicateReads"] == "true":
-        stdout = command.run("java picard.cmdline.PicardCommandLine 2>&1")
-        if "Error" in stdout:
-            utils.report_error("CLASSPATH is not configured with the path to Picard")
-            found_all_dependencies = False
+    stdout = command.run("java picard.cmdline.PicardCommandLine 2>&1")
+    if "Error" in stdout:
+        utils.report_error("CLASSPATH is not configured with the path to Picard")
+        found_all_dependencies = False
+
+    stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK 2>&1")
+    if "Error" in stdout:
+        utils.report_error("CLASSPATH is not configured with the path to GATK")
+        found_all_dependencies = False
 
     if not found_all_dependencies:
         utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")

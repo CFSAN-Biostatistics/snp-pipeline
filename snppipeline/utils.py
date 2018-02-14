@@ -254,6 +254,23 @@ def mkdir_p(path):
         else:
             raise
 
+def remove_file(filename):
+    """Remove a file without complaints if the file does not exist.
+
+    Parameters
+    ----------
+    path : str
+        File path to create.
+
+    Raises
+    ------
+    OSError if an error occurs (other than the file not existing)
+    """
+    try:
+        os.remove(filename)
+    except OSError as e:
+        if e.errno != errno.ENOENT: # No such file or directory
+            raise # Re-raise exception if a different error occurred
 
 def read_properties(prop_file_path, recognize_vars=False):
     """Read a file of name=value pairs and load them into a dictionary.

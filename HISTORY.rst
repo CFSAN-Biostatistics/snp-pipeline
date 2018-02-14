@@ -3,6 +3,16 @@
 History
 -------
 
+2.0.0 (2018-02-xx) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Added local realignment around indels.  This change creates a dependency on Picard and GATK 3.
+* Moved all the bam file creation functionality from the call_sites command to the
+  map_reads command.  The call_sites command now only creates a pileup and finds
+  high-confidence variant sites.
+* Updated the included datasets with results after local realignment.
+
+
 1.0.1 (2017-09-28) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
