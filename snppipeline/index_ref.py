@@ -116,7 +116,9 @@ def index_ref(args):
         version_str = utils.extract_version_str("Picard", "java picard.cmdline.PicardCommandLine CreateSequenceDictionary --version 2>&1")
         picard_jvm_extra_params = os.environ.get("PicardJvm_ExtraParams") or ""
         picard_create_sequence_dictionary_extra_params = os.environ.get("CreateSequenceDictionary_ExtraParams") or ""
-        command_line = "java " + picard_jvm_extra_params + ' ' + "picard.cmdline.PicardCommandLine CreateSequenceDictionary REFERENCE=" + reference_file_path + " OUTPUT=" + target_file + ' ' + picard_create_sequence_dictionary_extra_params
+        tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+        tmp_option = " TMP_DIR=" + tmpdir if tmpdir else ""
+        command_line = "java " + picard_jvm_extra_params + ' ' + "picard.cmdline.PicardCommandLine CreateSequenceDictionary REFERENCE=" + reference_file_path + " OUTPUT=" + target_file + tmp_option + ' ' + picard_create_sequence_dictionary_extra_params
         verbose_print("# Create reference sequence dictionary.")
         verbose_print("# %s %s" % (utils.timestamp(), command_line))
         verbose_print("# %s" % version_str)

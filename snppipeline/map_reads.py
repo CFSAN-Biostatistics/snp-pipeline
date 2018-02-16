@@ -1,5 +1,6 @@
 """This module is part of the CFSAN SNP Pipeline. It contains the code to
 align reads to a reference genome using an external mapper -- bowtie2 or smalt.
+The sample alignment is sorted, duplicate reads are marked, and reads realigned around indels.
 Read group tags are also assigned during this step.
 """
 
@@ -323,7 +324,12 @@ def map_reads(args):
             utils.global_error("Error: cannot execute GATK RealignerTargetCreator. Define the path to GATK in the CLASSPATH environment variable.")
         else:
             version_str = utils.extract_version_str("GATK", "java org.broadinstitute.gatk.engine.CommandLineGATK -T RealignerTargetCreator --version 2>&1")
+
             gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
+            tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+            if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
+                gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
+
             realigner_target_creator_extra_params = os.environ.get("RealignerTargetCreator_ExtraParams") or ""
             command_line = "java " + gatk_jvm_extra_params + ' ' + "org.broadinstitute.gatk.engine.CommandLineGATK -T RealignerTargetCreator -R " + reference_file_path + " -I " + bam_file + " -o " + realign_targets_file  + ' ' + realigner_target_creator_extra_params
             verbose_print("# Identify targets for realignment.")
@@ -347,7 +353,12 @@ def map_reads(args):
             utils.global_error("Error: cannot execute GATK IndelRealigner. Define the path to GATK in the CLASSPATH environment variable.")
         else:
             version_str = utils.extract_version_str("GATK", "java org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner --version 2>&1")
+
             gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
+            tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+            if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
+                gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
+
             indel_realigner_extra_params = os.environ.get("IndelRealigner_ExtraParams") or ""
             command_line = "java " + gatk_jvm_extra_params + ' ' + "org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner -R " + reference_file_path + " -targetIntervals " + realign_targets_file + " -I " + bam_file + " -o " + indel_realigned_bam_file  + ' ' + indel_realigner_extra_params
             verbose_print("# Realign around indels")
