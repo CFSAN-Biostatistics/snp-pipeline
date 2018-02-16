@@ -158,7 +158,10 @@ can be specified.
 
 **Default**:
 
-|   If you do not specify the ``-p`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
+|   If you do not specify the ``-p`` option, the CFSAN SNP Pipeline will set it to 8 threads
+|   automatically by default.  If you set the number of bowtie2 threads, you
+|   should consider also setting the number of RealignerTargetCreator threads because a
+|   fixed set of CPU resources will be allocated for all the map_reads processes.
 |      To disable bowtie2 multithreading, specify "-p 1".
 |   If Bowtie2Align_ExtraParams is not set to any value, the ``--reorder`` option is enabled by default.
 |      Any value, even a single space, will suppress this default option.
@@ -184,7 +187,10 @@ can be specified.
 
 **Default**:
 
-|   If you do not specify the ``-n`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
+|   If you do not specify the ``-n`` option, the CFSAN SNP Pipeline will set it to 8 threads
+|   automatically by default.  If you set the number of smalt threads, you
+|   should consider also setting the number of RealignerTargetCreator threads because a
+|   fixed set of CPU resources will be allocated for all the map_reads processes.
 |      To disable smalt multithreading, specify "-n 1".
 |   If SmaltAlign_ExtraParams is not set to any value, the ``-O`` option is enabled by default.
 |      Any value, even a single space, will suppress this default option.
@@ -300,7 +306,19 @@ RealignerTargetCreator_ExtraParams
 ----------------------------------
 Specifies options passed to the GATK RealignerTargetCreator tool.
 
-**Default**: None
+**Default**:
+
+|   If you do not specify the ``-nt`` option, the CFSAN SNP Pipeline will set it to 8 threads
+|   automatically by default.  If you set the number of RealignerTargetCreator threads, you
+|   should consider also setting the number of aligner (bowtie or smalt) threads because a
+|   fixed set of CPU resources will be allocated for all the map_reads processes.
+      To disable RealignerTargetCreator multithreading, specify "-nt 1".
+|
+
+**Parameter Notes**:
+
+| ``-nt``       : number of parallel threads
+|
 
 **Example**::
 

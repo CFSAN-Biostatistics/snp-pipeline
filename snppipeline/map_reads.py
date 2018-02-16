@@ -201,7 +201,7 @@ def map_reads(args):
             verbose_print("# %s %s" % (utils.timestamp(), command_line))
             verbose_print("# %s" % version_str)
             command.run(command_line, sys.stdout)
-
+        verbose_print("")
 
     #==========================================================================
     # Convert sam to bam file, selecting only the mapped reads

@@ -268,8 +268,10 @@ def configure_process_threads(extra_params_env_var, threads_option, default_thre
     extra_params_env_var : str
         Name of an environment variable the user can set with embedded command line options
         to configure the number of threads for a process.
-    threads_option : str
+    threads_option : str, or list of str
         The exact spelling of a command line option to set the number of threads, for example "-n".
+        This parameter can also be a list of command line options when there is more than one way to
+        specify the number of threads, for example, ["-nt", "--num_threads"].
     default_threads_per_process : int
         The number of threads to use if the user did not set a preferred value in the named
         environment variable.
@@ -357,10 +359,23 @@ def configure_process_threads(extra_params_env_var, threads_option, default_thre
     (1, 7)
     >>> os.environ["SmaltAlign_ExtraParams"]
     '--version -n 7'
+
+    # Two different ways to configure the number of threads
+    >>> os.environ["RealignerTargetCreator_ExtraParams"] = "-nt 7"
+    >>> configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], 8, 24)
+    (3, 7)
+    >>> os.environ["RealignerTargetCreator_ExtraParams"] = "--num_threads 7"
+    >>> configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], 8, 24)
+    (3, 7)
     """
-    regex_str = threads_option + "[ \t]*([0-9]+)"
-    extra_params = os.environ.get(extra_params_env_var, "")
-    match = re.search(regex_str, extra_params)
+    threads_options = [threads_option] if type(threads_option) is str else threads_option
+    match = False
+    for threads_option in threads_options:
+        regex_str = threads_option + "[ \t]*([0-9]+)"
+        extra_params = os.environ.get(extra_params_env_var, "")
+        match = re.search(regex_str, extra_params)
+        if match:
+            break # stop looking for thread control options in the command line as soon as we find the first one
     if match:
         configured_threads_per_process = int(match.group(1))
         threads_per_process = configured_threads_per_process
@@ -707,7 +722,13 @@ def run(args):
         extra_params_env_var = "Bowtie2Align_ExtraParams"
         threads_option = "-p"
 
-    max_processes, threads_per_process = configure_process_threads(extra_params_env_var, threads_option, 8, max_cpu_cores)
+    aligner_max_processes, aligner_threads_per_process = configure_process_threads(extra_params_env_var, threads_option, 8, max_cpu_cores)
+    realigner_max_processes, realigner_threads_per_process = configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], 8, max_cpu_cores)
+
+    # There are multiple processes within map_reads, each with multiple threads.
+    # The CPU allocation must be enough for the process needing the largest number of threads.
+    max_processes = min(aligner_max_processes, realigner_max_processes)
+    threads_per_process = max(aligner_threads_per_process, realigner_threads_per_process)
 
     parallel_environment = config_params.get("GridEngine_PEname", None)
     log_file = os.path.join(log_dir, "mapReads.log")
