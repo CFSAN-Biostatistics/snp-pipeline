@@ -112,6 +112,17 @@ def map_reads(args):
         # The read group identifies reads from a single run and lane
         read_group_tags = fastq.construct_read_group_tags(sample_fastq_file1, sample_id)
 
+        # Make up dummy read group tags if the read group information is missing from the fastq files.
+        # GATK components require these tags.
+        if read_group_tags is None:
+            id = "1"
+            sm = sample_id
+            lb = "1"
+            pl = None
+            pu = sample_id
+            read_group_tags = fastq.ReadGroupTags(id, sm, lb, pl, pu)
+
+
         # Default to 8 cores on HPC or all cpu cores on workstation
         if os.environ.get("JOB_ID") or os.environ.get("PBS_JOBID"):
             num_cores = 8
@@ -131,19 +142,12 @@ def map_reads(args):
             # Specify the read group and sample tags here, --rg tags cannot be specified without ID.
             # The read group tags are used by some downstream tools, like Picard and GATK.
             read_group_params = ""
-            if read_group_tags:
-                read_group_params += " --rg-id " + read_group_tags.ID
-                read_group_params += " --rg SM:" + read_group_tags.SM
-                read_group_params += " --rg LB:" + read_group_tags.LB
+            read_group_params += " --rg-id " + read_group_tags.ID
+            read_group_params += " --rg SM:" + read_group_tags.SM
+            read_group_params += " --rg LB:" + read_group_tags.LB
+            if read_group_tags.PL is not None:
                 read_group_params += " --rg PL:" + read_group_tags.PL
-                read_group_params += " --rg PU:" + read_group_tags.PU
-            else:
-                # Make up dummy read group tags if the read group information is missing from the fastq files.
-                # GATK components require these tags.
-                read_group_params += " --rg-id 1"
-                read_group_params += " --rg SM:" + sample_id
-                read_group_params += " --rg LB:1"
-                read_group_params += " --rg PU:" + sample_id
+            read_group_params += " --rg PU:" + read_group_tags.PU
 
             # Substitute the default parameters if the user did not specify bowtie parameters
             bowtie2_align_params = bowtie2_align_extra_params or "--reorder -q"
@@ -195,7 +199,10 @@ def map_reads(args):
             command_line += " RGID=" + read_group_tags.ID
             command_line += " RGSM=" + read_group_tags.SM
             command_line += " RGLB=" + read_group_tags.LB
-            command_line += " RGPL=" + read_group_tags.PL
+            if read_group_tags.PL is None:
+                command_line += " RGPL=unknown"  # Picard requires this command line option
+            else:
+                command_line += " RGPL=" + read_group_tags.PL
             command_line += " RGPU=" + read_group_tags.PU
             verbose_print("")
             verbose_print("# Assign read group id %s" % (read_group_tags.ID))
