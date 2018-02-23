@@ -210,7 +210,9 @@ map_reads
                                       [sampleFastqFile2]
   
   Align the sequence reads for a specified sample to a specified reference
-  genome. The output is written to the file "reads.sam" in the sample directory.
+  genome. The reads are sorted, duplicates marked, and realigned around indels.
+  The output is written to the file "reads.sorted.deduped.indelrealigned.bam" in
+  the sample directory.
   
   positional arguments:
     referenceFile         Relative or absolute path to the reference fasta file
