@@ -343,7 +343,7 @@ def map_reads(args):
             verbose_print("# %s %s" % (utils.timestamp(), command_line))
             verbose_print("# %s" % version_str)
             command.run(command_line, sys.stdout)
-            utils.sample_error_on_missing_file(realign_targets_file, "GATK RealignerTargetCreator")
+            utils.sample_error_on_missing_file(realign_targets_file, "GATK RealignerTargetCreator", empty_ok=True)
             verbose_print("")
 
     #==========================================================================
@@ -372,4 +372,4 @@ def map_reads(args):
             verbose_print("# %s %s" % (utils.timestamp(), command_line))
             verbose_print("# %s" % version_str)
             command.run(command_line, sys.stdout)
-            utils.sample_error_on_missing_file(realign_targets_file, "GATK IndelRealigner")
+            utils.sample_error_on_missing_file(indel_realigned_bam_file, "GATK IndelRealigner")
