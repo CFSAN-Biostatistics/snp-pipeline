@@ -452,6 +452,7 @@ def run(args):
     global log_dir
     global job_queue_mgr
 
+    start_time = time.time()
     # Where are we running: grid, torque, or None (local)
     job_queue_mgr = args.jobQueueMgr
 
@@ -572,6 +573,8 @@ def run(args):
     os.environ["CombineMetrics_ExtraParams"] = config_params.get("CombineMetrics_ExtraParams", "")
 
     # Verify the dependencies are available on the path
+    print("Checking dependencies...")
+
     dependencies = ["cfsan_snp_pipeline", snp_pipeline_aligner, "samtools", "java", "tabix", "bgzip", "bcftools"]
     found_all_dependencies = True
     for executable in dependencies:
@@ -601,6 +604,9 @@ def run(args):
 
     if not found_all_dependencies:
         utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")
+    else:
+        print("OK")
+
 
     # Process the sample directory command line option
     # TODO: detect broken fastq symlinks
@@ -878,3 +884,7 @@ def run(args):
     # Exit here to prevent showing the "cfsan_snp_pipeline run finished" message.  The jobs are queued, not finished yet.
     if job_queue_mgr is not None: # HPC
         sys.exit(0)
+    else:
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print("Elapsed time =", elapsed_time)
