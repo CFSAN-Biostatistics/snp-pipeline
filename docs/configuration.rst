@@ -294,12 +294,12 @@ Any of the JVM options can be specified.
 
 **Parameter Notes**:
 
-| ``-Xmx300m``  : use 300 MB memory (modify as needed)
+| ``-Xmx3500m``  : use 3500 MB memory (modify as needed)
 |
 
 **Example**::
 
-    GatkJvm_ExtraParams="-Xmx300m"
+    GatkJvm_ExtraParams="-Xmx3500m"
 
 
 RealignerTargetCreator_ExtraParams
