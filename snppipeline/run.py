@@ -253,6 +253,54 @@ def persist_sorted_sample_dirs_file(samples_parent_dir, sample_dirs_file):
             print(directory, file=f)
 
 
+def compute_num_processes_and_threads(max_cpu_cores, threads_per_process):
+    """Compute the number of allowed processes and threads given the maximum allowed
+    number of CPUs and requested number of threads per process.
+
+    Parameters
+    ----------
+    max_cpu_cores : int or None
+        The maximum allowed number of CPU cores to consume by all instances of the process.
+        If set the None, it implies no limit to the number of CPU cores that can be used.
+    threads_per_process : int
+        The user-requested number of threads to use.
+
+    Returns
+    -------
+    num_processes : int or None
+        The computed maximum number of allowed concurrent processes, or None to allow unlimited.
+    threads_per_process : int
+        The number of threads per process instance which might be less than requested if the
+        number of allowed cpus is less than the requested number of threads.
+
+    Examples
+    --------
+    # max CPU not set
+    >>> compute_num_processes_and_threads(None, 8)
+    (None, 8)
+
+    # max CPU set, not multiple of threads
+    >>> compute_num_processes_and_threads(20, 8)
+    (2, 8)
+
+    # max CPU set, multiple of threads
+    >>> compute_num_processes_and_threads(24, 8)
+    (3, 8)
+
+    # max CPU less than desired threads
+    >>> compute_num_processes_and_threads(2, 8)
+    (1, 2)
+    """
+    if max_cpu_cores is None:
+        num_processes = None
+    elif max_cpu_cores >= threads_per_process:
+        num_processes = int(max_cpu_cores / threads_per_process)
+    else:
+        num_processes = 1
+        threads_per_process = max_cpu_cores
+    return num_processes, threads_per_process
+
+
 def configure_process_threads(extra_params_env_var, threads_option, default_threads_per_process, max_cpu_cores):
     """Detect the user-configured number of allowed threads for a process and compute the
     corresponding number of allowed processes given the maximum allowed number of CPUs.
@@ -382,13 +430,7 @@ def configure_process_threads(extra_params_env_var, threads_option, default_thre
     else:
         threads_per_process = default_threads_per_process
 
-    if max_cpu_cores is None:
-        max_processes = None
-    elif max_cpu_cores >= threads_per_process:
-        max_processes = int(max_cpu_cores / threads_per_process)
-    else:
-        max_processes = 1
-        threads_per_process = max_cpu_cores
+    max_processes, threads_per_process = compute_num_processes_and_threads(max_cpu_cores, threads_per_process)
 
     threads_option += ' ' + str(threads_per_process)
     if match and threads_per_process != configured_threads_per_process:
