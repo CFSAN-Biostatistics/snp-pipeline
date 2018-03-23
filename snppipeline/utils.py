@@ -753,7 +753,7 @@ def verify_existing_input_files(error_prefix, file_list, error_handler=None, con
     return len(err_messages)
 
 
-def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):
+def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, continue_possible=False, empty_ok=False):
     """Verify each file in a list of files exists and is non-empty.
     Missing or empty files are reported in the verbose log.
 
@@ -774,6 +774,8 @@ def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, co
         Only used when error_handler is "sample".  Indicates if it is possible
         to continue execution.  Setting this flag true may allow the code
         to continue without exiting if configured to do so.
+    empty_ok : bool, optional, defaults to False
+        Flag to allow empty files in special cases.
 
     Returns
     -------
@@ -789,7 +791,7 @@ def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, co
         if not os.path.isfile(file_path):
             err_messages.append("%s %s does not exist." % (error_prefix, file_path))
             continue
-        if os.path.getsize(file_path) == 0:
+        if not empty_ok and os.path.getsize(file_path) == 0:
             err_messages.append("%s %s is empty." % (error_prefix, file_path))
             continue
 
