@@ -223,12 +223,14 @@ Any of the SAMtools view options can be specified.
 
 **Parameter Notes**:
 
-| ``-F 4``      : discard unmapped reads
-|
+``-F 4``
+  Discard unmapped reads.
+``-q threshold``
+  Discard reads with map quality below threshold.
 
 **Example**::
 
-    SamtoolsSamFilter_ExtraParams="-F 4"
+    SamtoolsSamFilter_ExtraParams="-F 4 -q 6"
 
 
 SamtoolsSort_ExtraParams
