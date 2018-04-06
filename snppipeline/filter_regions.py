@@ -206,25 +206,20 @@ def filter_regions(args):
             for vcf_data_line in vcf_reader:
                 #Create a dict to store all SNPs in this sample
                 #get contig length from contig name.The CHROM should be a contig name in the format of Velvet/SPAdes output.
-                record = (vcf_data_line.POS, vcf_data_line)
-                snp_dict[vcf_data_line.CHROM].append(record)
+                snp_dict[vcf_data_line.CHROM].append(vcf_data_line.POS)
 
             #Find bad regions and add them into bad_region
             for contig, snp_list in snp_dict.items():
 
                 #sort all SNPs in this contig by position
-                sorted_list = sorted(snp_list, key=lambda SNPs: SNPs[0])
+                sorted_list = sorted(snp_list)
 
                 #total number of SNPs
                 num_of_snp = len(sorted_list)
 
                 if contig not in bad_regions_dict:
                     #New contig
-                    try:
-                        contig_length = contig_length_dict[contig]
-                    except:
-                        #cannot find contig length. Use the sys.maxsize.
-                        contig_length = sys.maxsize
+                    contig_length = contig_length_dict.get(contig, sys.maxsize)
 
                     if (contig_length <= (edge_length * 2)):
                         bad_regions_dict[contig] = [(0, contig_length)]
@@ -233,10 +228,9 @@ def filter_regions(args):
                         bad_regions_dict[contig] = region
 
                 #Process SNPs
-                for idx, snp in enumerate(sorted_list):
+                for idx, pos_start in enumerate(sorted_list):
                     if (idx + max_num_snp) < num_of_snp:
-                        pos_start = snp[0]
-                        pos_end = sorted_list[idx + max_num_snp][0]
+                        pos_end = sorted_list[idx + max_num_snp]
                         if (pos_start + window_size) >= pos_end:
                             #Add bad region
                             regions = bad_regions_dict[contig]
@@ -246,17 +240,14 @@ def filter_regions(args):
 
     #Combine all bad regions for each contig
     for contig, regions in bad_regions_dict.items():
-        sorted_regions = utils.sort_coord(regions)
-        combined_regions = utils.consensus(sorted_regions)
+        combined_regions = utils.merge_regions(regions)
         bad_regions_dict[contig] = combined_regions
 
     #Scan vcf files to remove SNPs
     for vcf_file_path in list_of_vcf_files:
         if not need_rebuild_dict[vcf_file_path]:
             continue
-        #Get sample ID
-        ss = vcf_file_path.split('/')
-        sample_ID = ss[-2]
+        sample_ID = utils.sample_id_from_file(vcf_file_path)
 
         if sample_ID not in sorted_list_of_outgroup_samples:
             try:

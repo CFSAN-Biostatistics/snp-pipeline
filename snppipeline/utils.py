@@ -1093,42 +1093,7 @@ def calculate_sequence_distance(seq1, seq2, case_insensitive=True):
     return mismatches
 
 
-#Both sort_coord and concensus are to combine bad regions
-#as a lexical parsing problem.
-def sort_coord(regions):
-    """Given a list of regions, return a sorted list of starting and ending
-    positions where each position is tagged with 's' or 'e' to indicate
-    start or end.
-
-    Parameters
-    ----------
-    regions : list of tuples
-        List of (start, end) position integers.
-
-    Returns
-    -------
-    coords : list of tuples
-        List of (tag, position) where tag is 's' or 'e' sorted by position, then tag.
-    """
-    coords = []
-    #add each start/end position into a new array as a tuple where the
-    #first element represents whether it is a start or end
-    for coord in regions:
-        coords.append(('s', coord[0]))
-        coords.append(('e', coord[1]))
-
-    #sort by start and end first. In case of event where
-    #a start and end coordinate are the same, we want the start
-    #coordinate to come first.
-    coords.sort(key=lambda x: x[0], reverse=True)
-
-    #sort by coordinate
-    coords.sort(key=lambda x: x[1])
-
-    return coords
-
-
-def consensus(coords):
+def merge_regions(regions):
     """Coalesce regions.
 
     Scans a sorted list of region starting and ending positions looking
@@ -1137,61 +1102,116 @@ def consensus(coords):
 
     Parameters
     ----------
-    coords : list of tuples
-        List of (tag, position) where tag is 's' or 'e' sorted by position, then tag.
+    regions : list of tuples
+        List of (start, end) position integers.
 
     Returns
     -------
     regions : list of tuples
-        List of (start, end) position integers.
+        List of merged (start, end) position integers.
+
+    Examples
+    --------
+    >>> # Empty list
+    >>> merge_regions([])
+    []
+
+    >>> # Only one region
+    >>> merge_regions([(10,20)])
+    [(10, 20)]
+
+    >>> # Discard contained region at left
+    >>> merge_regions([(10,20), (10,15)])
+    [(10, 20)]
+
+    >>> # Discard contained region at right
+    >>> merge_regions([(10,20), (15,20)])
+    [(10, 20)]
+
+    >>> # Discard contained region exact match
+    >>> merge_regions([(10,20), (10,20)])
+    [(10, 20)]
+
+    >>> # Discard contained region fully contained
+    >>> merge_regions([(10,20), (11,19)])
+    [(10, 20)]
+
+    >>> # Extend region by overlap right
+    >>> merge_regions([(10,20), (15,25)])
+    [(10, 25)]
+
+    >>> # Extend region by overlap left
+    >>> merge_regions([(10,20), (5,15)])
+    [(5, 20)]
+
+    >>> # Extend immediately adjacent region by extension
+    >>> merge_regions([(10,20), (21,30)])
+    [(10, 30)]
+
+    >>> # No overlap
+    >>> merge_regions([(40,50), (25,30)])
+    [(25, 30), (40, 50)]
+
+    >>> # Single position region : discard contained region
+    >>> merge_regions([(40,50), (40,40)])
+    [(40, 50)]
+
+    >>> # Single position region : discard contained region
+    >>> merge_regions([(40,50), (50,50)])
+    [(40, 50)]
+
+    >>> # Single position region : discard contained region
+    >>> merge_regions([(40,50), (41,41)])
+    [(40, 50)]
+
+    >>> # Single position region : discard contained region
+    >>> merge_regions([(40,50), (49,49)])
+    [(40, 50)]
+
+    >>> # Single position region : extend immediately adjacent region by extension
+    >>> merge_regions([(10,10), (11,21)])
+    [(10, 21)]
+
+    >>> # Single position region : extend immediately adjacent region by extension
+    >>> merge_regions([(10,20), (21,21)])
+    [(10, 21)]
+
+    >>> # Single position region : merge two immediately adjacent single-position regions
+    >>> merge_regions([(20,20), (21,21)])
+    [(20, 21)]
+
+    >>> # Single position region : no overlap
+    >>> merge_regions([(40,50), (60,60)])
+    [(40, 50), (60, 60)]
+
+    >>> # Single position region : no overlap
+    >>> merge_regions([(40,40), (50,60)])
+    [(40, 40), (50, 60)]
+
+    >>> # Single position region : no overlap
+    >>> merge_regions([(40,40), (50,50)])
+    [(40, 40), (50, 50)]
     """
-    count = 0
-    posA = 0
-    out = []
-    for pos in coords:
-        if count == 0:
-            posA = pos[1]
-        if pos[0] == 's':
-            count += 1
-        if pos[0] == 'e':
-            count -= 1
-
-        if count == 0:
-            out.append((posA, pos[1]))
-
-    return out
-
-
-def overlap(coords):
-    """A simple lexical tokenizer to find overlap.
-    """
-    count = 0
-    posA = 0
-
-    #this will tell you how many 'levels' there are
-    #to the current overlap. Essentially how many
-    #features makes up the overlap.
-    level = 1
-    out = []
-    for pos in coords:
-        if pos[0] == 's':
-            count = 1
-            level += 1
-            posA = pos[1]
-        if pos[0] == 'e':
-            level -= 1
-            count -= 1
-
-        if count == 0:
-            # Only output overlap if there are more than 1 feature making up the overlap
-            if level > 1:
-                out.append((posA, pos[1], level))
-
-    return out
+    if len(regions) == 0:
+        return regions
+    regions = sorted(regions)
+    merged_regions = list()
+    merged_regions.append(regions[0])
+    for region in regions[1:]:
+        last_merged_region = merged_regions[-1]
+        last_merged_region_start, last_merged_region_end = last_merged_region
+        region_start, region_end = region
+        if region_start >= last_merged_region_start and region_end <= last_merged_region_end:
+            pass # discard region contained in the last region
+        elif region_start <= (last_merged_region_end + 1) and region_end > last_merged_region_end:
+            merged_regions[-1] = (last_merged_region_start, region_end) # extend last region by overlapping or adjacent region
+        else:
+            merged_regions.append(region) # add non-overlapping region to sorted list
+    return merged_regions
 
 
 def in_region(pos, regions):
-    """Find whether a position is included in a bad region.
+    """Find whether a position is included in a region.
 
     Parameters
     ----------
@@ -1204,6 +1224,20 @@ def in_region(pos, regions):
     -------
     bool
         True if the position is within an of the regions, False otherwise.
+
+    Examples
+    --------
+    # Empty list
+    >>> in_region(1, [])
+    False
+
+    # In list
+    >>> in_region(10, [(3, 5), (9, 12)])
+    True
+
+    # Not in list
+    >>> in_region(10, [(3, 5), (11, 12)])
+    False
     """
     for region in regions:
         if (pos >= region[0]) and (pos <= region[1]):
