@@ -337,9 +337,11 @@ Specifies options passed to the filter_regions command.
 ``--out_group``
     Relative or absolute path to the file indicating outgroup samples, one sample ID per line.
 
+You can filter snps more than once by specifying multiple window sizes and max snps.  For example "-m 3 2 -w 1000 100" will filter more than 3 snps in 1000 bases and also more than 2 snps in 100 bases.
+
 **Example**::
 
-    FilterRegions_ExtraParams="--edge_length 500 --window_size 1000 --max_snp 3 --out_group /path/to/outgroupSamples.txt"
+    FilterRegions_ExtraParams="--edge_length 500 --window_size 1000 100 --max_snp 3 2 --out_group /path/to/outgroupSamples.txt"
 
 
 MergeSites_ExtraParams
