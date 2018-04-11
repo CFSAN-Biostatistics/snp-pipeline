@@ -5502,16 +5502,10 @@ testAlreadyFreshOutputs()
 
     # Test special cfsan_snp_pipeline collect_metrics result persistence
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
-    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=110"
+    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=102"
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.55"
-    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
-    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.22"
-
-    assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
-    assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=110"
-    assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.55"
-    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
-    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.22"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=287.02"
+    assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.88"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
     assertFileContains "$tempDir/samples/sample1/metrics" "snps=46"

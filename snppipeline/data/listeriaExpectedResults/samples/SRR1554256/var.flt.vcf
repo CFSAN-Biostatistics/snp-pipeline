@@ -22,4 +22,4 @@
 ##FORMAT=<ID=ADF,Number=1,Type=Integer,Description="Depth of variant-supporting bases on forward strand (reads2plus)">
 ##FORMAT=<ID=ADR,Number=1,Type=Integer,Description="Depth of variant-supporting bases on reverse strand (reads2minus)">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1
-unitig_0|quiver	1833624	.	A	G	.	PASS	ADP=49;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:255:49:49:1:48:97.96%:1.9625E-27:37:47:0:1:38:10
+unitig_0|quiver	1833624	.	A	G	.	PASS	ADP=26;WT=0;HET=0;HOM=1;NC=0	GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR	1/1:146:26:26:0:26:100%:2.0165E-15:0:48:0:0:23:3
