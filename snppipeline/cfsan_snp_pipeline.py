@@ -293,14 +293,15 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     # Create the parser for the "filter_regions" command
     # -------------------------------------------------------------------------
     description = "Remove abnormally dense SNPs from the input VCF file, save the reserved SNPs into a new VCF file, and save the removed SNPs into another VCF file."
-    subparser = subparsers.add_parser("filter_regions", help="Remove abnormally dense SNPs from all samples", description=description, formatter_class=formatter_class)
+    epilog = 'You can filter snps more than once by specifying multiple window sizes and max snps.  For example "-m 3 2 -w 1000 100" will filter more than 3 snps in 1000 bases and also more than 2 snps in 100 bases.'
+    subparser = subparsers.add_parser("filter_regions", help="Remove abnormally dense SNPs from all samples", description=description, formatter_class=formatter_class, epilog=epilog)
     subparser.add_argument(                       dest="sampleDirsFile", type=str,                                                help="Relative or absolute path to file containing a list of directories -- one per sample")
     subparser.add_argument(                       dest="refFastaFile",   type=str,                                                help="Relative or absolute path to the reference fasta file")
     subparser.add_argument("-f", "--force",       dest="forceFlag",      action="store_true",                                     help="Force processing even when result files already exist and are newer than inputs")
     subparser.add_argument("-n", "--vcfname",     dest="vcfFileName",    type=str, default="var.flt.vcf", metavar="NAME",         help="File name of the input VCF files which must exist in each of the sample directories")
     subparser.add_argument("-l", "--edge_length", dest="edgeLength",     type=int, default=500,           metavar="EDGE_LENGTH",  help="The length of the edge regions in a contig, in which all SNPs will be removed.")
-    subparser.add_argument("-w", "--window_size", dest="windowSize",     type=int, default=1000,          metavar="WINDOW_SIZE",  help="The length of the window in which the number of SNPs should be no more than max_num_snp.")
-    subparser.add_argument("-m", "--max_snp",     dest="maxSNP",         type=int, default=3,             metavar="MAX_NUM_SNPs", help="The maximum number of SNPs allowed in a window.")
+    subparser.add_argument("-w", "--window_size", dest="windowSizeList", type=int, default=[1000], nargs='*', metavar="WINDOW_SIZE",  help="The length of the window in which the number of SNPs should be no more than max_num_snp.")
+    subparser.add_argument("-m", "--max_snp",     dest="maxSnpsList",    type=int, default=[3],    nargs='*', metavar="MAX_NUM_SNPs", help="The maximum number of SNPs allowed in a window.")
     subparser.add_argument("-g", "--out_group",   dest="outGroupFile",   type=str, default=None,          metavar="OUT_GROUP",    help="Relative or absolute path to the file indicating outgroup samples, one sample ID per line.")
     subparser.add_argument("-v", "--verbose",     dest="verbose",        type=int, default=1,             metavar="0..5",         help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
@@ -499,14 +500,19 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
 
     # Special validation
     if args.subparser_name == "filter_regions":
+        if len(args.windowSizeList) != len(args.maxSnpsList):
+            utils.global_error("Error: you must specify the same number of arguments for window size and max snps.")
+
+        for window_size in args.windowSizeList:
+            if window_size < 1:
+                utils.global_error("Error: the length of the window must be a positive integer, and the input is %d." % window_size)
+
+        for max_snps in args.maxSnpsList:
+            if max_snps < 1:
+                utils.global_error("Error: the maximum number of SNPs allowed must be a positive integer, and the input is %d." % max_snps)
+
         if (args.edgeLength < 1):
             utils.global_error("Error: the length of the edge regions must be a positive integer, and the input is %d." % args.edgeLength)
-
-        if (args.windowSize < 1):
-            utils.global_error("Error: the length of the window must be a positive integer, and the input is %d." % args.windowSize)
-
-        if (args.maxSNP < 1):
-            utils.global_error("Error: the maximum number of SNPs allowed must be a positive integer, and the input is %d." % args.maxSNP)
 
     return args
 

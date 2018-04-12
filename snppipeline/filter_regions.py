@@ -14,6 +14,63 @@ import vcf
 from snppipeline import utils
 
 
+def find_dense_regions(max_allowed_snps, window_size, snps):
+    """Scan a list of snp positions to find regions where the snp density exceeds the
+    allowed thershold.
+
+    Parameters
+    ----------
+    max_allowed_snps : int
+        Maximum allowed number of snps in a given rolling window.
+    window_size : int
+        Size of rolling window along the length of a genome which
+        is scanned for excessive snps.
+    snps : list of int
+        Sorted list of snp positions
+
+    Returns
+    -------
+    dense_region_list : list of tuples
+        List of (start_position, end_position) tuples identifying the list of
+        dense snp regions.
+
+    Examples
+    --------
+    # Empty list
+    >>> find_dense_regions(3, 1000, [])
+    []
+
+    # Not dense window
+    >>> find_dense_regions(3, 1000, [1, 2, 3, 1001])
+    []
+
+    # One more than max_allowed_snps at window boundaries
+    >>> find_dense_regions(3, 1000, [1, 20, 30, 1000])
+    [(1, 1000)]
+
+    # Two more than max_allowed_snps at window boundaries
+    >>> find_dense_regions(3, 1000, [1, 20, 30, 40, 1000])
+    [(1, 1000)]
+
+    # Overlapping dense regions with combined size greater than window_size
+    >>> find_dense_regions(3, 1000, [1, 20, 30, 40, 501, 600, 1000, 1500])
+    [(1, 1500)]
+
+    # Multiple dense regions
+    >>> find_dense_regions(3, 1000, [1, 2, 3, 1000, 1500, 3001, 3002, 3003, 4000])
+    [(1, 1000), (3001, 4000)]
+    """
+    snp_count = len(snps)
+    dense_region_list = []
+    for idx, pos_start in enumerate(snps):
+        if (idx + max_allowed_snps) < snp_count:
+            pos_end = snps[idx + max_allowed_snps]
+            if (pos_start + window_size - 1) >= pos_end:
+                dense_region_list.append((pos_start, pos_end))
+    dense_region_list = utils.merge_regions(dense_region_list)
+    return dense_region_list
+
+
 def filter_regions(args):
     """Remove bad SNPs from original vcf files
 
@@ -73,8 +130,8 @@ def filter_regions(args):
     # Validate some parameters
     #==========================================================================
     edge_length = args.edgeLength
-    window_size = args.windowSize
-    max_num_snp = args.maxSNP
+    window_size_list = args.windowSizeList
+    max_num_snps_list = args.maxSnpsList
 
     #==========================================================================
     # Prep work
@@ -206,25 +263,14 @@ def filter_regions(args):
             for vcf_data_line in vcf_reader:
                 #Create a dict to store all SNPs in this sample
                 #get contig length from contig name.The CHROM should be a contig name in the format of Velvet/SPAdes output.
-                record = (vcf_data_line.POS, vcf_data_line)
-                snp_dict[vcf_data_line.CHROM].append(record)
+                snp_dict[vcf_data_line.CHROM].append(vcf_data_line.POS)
 
             #Find bad regions and add them into bad_region
             for contig, snp_list in snp_dict.items():
 
-                #sort all SNPs in this contig by position
-                sorted_list = sorted(snp_list, key=lambda SNPs: SNPs[0])
-
-                #total number of SNPs
-                num_of_snp = len(sorted_list)
-
                 if contig not in bad_regions_dict:
                     #New contig
-                    try:
-                        contig_length = contig_length_dict[contig]
-                    except:
-                        #cannot find contig length. Use the sys.maxsize.
-                        contig_length = sys.maxsize
+                    contig_length = contig_length_dict.get(contig, sys.maxsize)
 
                     if (contig_length <= (edge_length * 2)):
                         bad_regions_dict[contig] = [(0, contig_length)]
@@ -232,31 +278,23 @@ def filter_regions(args):
                         region = [(0, edge_length), (contig_length - edge_length, contig_length)]
                         bad_regions_dict[contig] = region
 
-                #Process SNPs
-                for idx, snp in enumerate(sorted_list):
-                    if (idx + max_num_snp) < num_of_snp:
-                        pos_start = snp[0]
-                        pos_end = sorted_list[idx + max_num_snp][0]
-                        if (pos_start + window_size) >= pos_end:
-                            #Add bad region
-                            regions = bad_regions_dict[contig]
-                            temp_region = (pos_start, pos_end)
-                            regions.append(temp_region)
+                # Process SNPs
+                sorted_snps = sorted(snp_list)
+                regions = bad_regions_dict[contig]
+                for max_allowed_snps, window_size in zip(max_num_snps_list, window_size_list):
+                    regions.extend(find_dense_regions(max_allowed_snps, window_size, sorted_snps))
         vcf_reader_handle.close()
 
     #Combine all bad regions for each contig
     for contig, regions in bad_regions_dict.items():
-        sorted_regions = utils.sort_coord(regions)
-        combined_regions = utils.consensus(sorted_regions)
+        combined_regions = utils.merge_regions(regions)
         bad_regions_dict[contig] = combined_regions
 
     #Scan vcf files to remove SNPs
     for vcf_file_path in list_of_vcf_files:
         if not need_rebuild_dict[vcf_file_path]:
             continue
-        #Get sample ID
-        ss = vcf_file_path.split('/')
-        sample_ID = ss[-2]
+        sample_ID = utils.sample_id_from_file(vcf_file_path)
 
         if sample_ID not in sorted_list_of_outgroup_samples:
             try:
