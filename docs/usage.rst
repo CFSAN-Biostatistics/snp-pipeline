@@ -670,6 +670,7 @@ Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
+    export SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
     cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/lambda_virus.fasta
 
 Step 5 - Find the sites having high-confidence SNPs::
@@ -680,7 +681,7 @@ Step 5 - Find the sites having high-confidence SNPs::
 
 Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-    cfsan_snp_pipeline filter_regions --window_size 1000 100 --max_snp 3 2 -n var.flt.vcf sampleDirectories.txt reference/lambda_virus.fasta
+    cfsan_snp_pipeline filter_regions --window_size 1000 125 15 --max_snp 3 2 1 -n var.flt.vcf sampleDirectories.txt reference/lambda_virus.fasta
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -809,6 +810,7 @@ Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
+    export SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
     cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/NC_011149.fasta
 
 Step 5 - Find the sites having high-confidence SNPs::
@@ -819,7 +821,7 @@ Step 5 - Find the sites having high-confidence SNPs::
 
 Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-    cfsan_snp_pipeline filter_regions --window_size 1000 100 --max_snp 3 2 -n var.flt.vcf sampleDirectories.txt reference/NC_011149.fasta
+    cfsan_snp_pipeline filter_regions --window_size 1000 125 15 --max_snp 3 2 1 -n var.flt.vcf sampleDirectories.txt reference/NC_011149.fasta
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -944,6 +946,7 @@ Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
+    export SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
     cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/my_reference.fasta
 
 Step 5 - Find the sites having high-confidence SNPs::
@@ -954,7 +957,7 @@ Step 5 - Find the sites having high-confidence SNPs::
 
 Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-    cfsan_snp_pipeline filter_regions --window_size 1000 100 --max_snp 3 2 -n var.flt.vcf sampleDirectories.txt reference/my_reference.fasta
+    cfsan_snp_pipeline filter_regions --window_size 1000 125 15 --max_snp 3 2 1 -n var.flt.vcf sampleDirectories.txt reference/my_reference.fasta
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 

@@ -191,6 +191,8 @@ can be specified.
     SmaltAlign_ExtraParams="-O -i 1000 -r 1"
 
 
+.. _SamtoolsSamFilter-ExtraParams-label:
+
 SamtoolsSamFilter_ExtraParams
 -----------------------------
 Specifies options passed to the SAMtools view tool when filtering the SAM file.
@@ -204,12 +206,14 @@ Any of the SAMtools view options can be specified.
 
 **Parameter Notes**:
 
-| ``-F 4``      : discard unmapped reads
-|
+``-F 4``
+  Exclude unmapped reads.
+``-q threshold``
+  Exclude reads with map quality below threshold.
 
 **Example**::
 
-    SamtoolsSamFilter_ExtraParams="-F 4"
+    SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
 
 
 SamtoolsSort_ExtraParams
@@ -320,6 +324,8 @@ Any of the JVM options can be specified.
     VarscanJvm_ExtraParams="-Xmx300m"
 
 
+.. _FilterRegions-ExtraParams-label:
+
 FilterRegions_ExtraParams
 ------------------------------
 Specifies options passed to the filter_regions command.
@@ -341,7 +347,7 @@ You can filter snps more than once by specifying multiple window sizes and max s
 
 **Example**::
 
-    FilterRegions_ExtraParams="--edge_length 500 --window_size 1000 100 --max_snp 3 2 --out_group /path/to/outgroupSamples.txt"
+    FilterRegions_ExtraParams="--edge_length 500 --window_size 1000 125 15 --max_snp 3 2 1 --out_group /path/to/outgroupSamples.txt"
 
 
 MergeSites_ExtraParams
