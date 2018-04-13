@@ -2,4 +2,4 @@ Sample	Fastq_Files	Fastq_File_Size	Machine	Flowcell	Number_of_Reads	Duplicate_Re
 "sample1"	"sample1_1.fastq, sample1_2.fastq"	4818902			20000	102	94.55	287.02	22.88	46	32	46	32	0	0			
 "sample2"	"sample2_1.fastq, sample2_2.fastq"	4813480			20000	88	94.78	286.45	22.94	44	41	44	41	0	0			
 "sample4"	"sample4_1.fastq, sample4_2.fastq"	4783620			20000	102	94.44	285.87	22.26	36	27	36	27	0	0			
-"sample3"	"sample3_1.fastq, sample3_2.fastq"	4774974			20000	105	94.43	284.88	22.13	38	35	38	35	0	0			
+"sample3"	"sample3_1.fastq, sample3_2.fastq"	4774974			20000	105	94.43	284.88	22.13	38	35	38	35	1	1			
