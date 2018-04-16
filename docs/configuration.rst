@@ -137,6 +137,19 @@ can be specified.
     SamtoolsFaidx_ExtraParams=""
 
 
+CreateSequenceDictionary_ExtraParams
+------------------------------------
+
+Specifies options passed to the Picard CreateSequenceDictionary indexer.  Any of the CreateSequenceDictionary options
+can be specified.
+
+**Default**: none
+
+**Example**::
+
+    CreateSequenceDictionary_ExtraParams=""
+
+
 Bowtie2Align_ExtraParams
 ------------------------
 
@@ -145,8 +158,11 @@ can be specified.
 
 **Default**:
 
-|   If you do not specify the ``-p`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
-|      There is no way to completely suppress the -p option.
+|   If you do not specify the ``-p`` option, the CFSAN SNP Pipeline will set it to 8 threads
+|   automatically by default.  If you set the number of bowtie2 threads, you
+|   should consider also setting the number of RealignerTargetCreator threads because a
+|   fixed set of CPU resources will be allocated for all the map_reads processes.
+|      To disable bowtie2 multithreading, specify "-p 1".
 |   If Bowtie2Align_ExtraParams is not set to any value, the ``--reorder`` option is enabled by default.
 |      Any value, even a single space, will suppress this default option.
 |
@@ -171,8 +187,11 @@ can be specified.
 
 **Default**:
 
-|   If you do not specify the ``-n`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
-|      There is no way to completely suppress the -n option.
+|   If you do not specify the ``-n`` option, the CFSAN SNP Pipeline will set it to 8 threads
+|   automatically by default.  If you set the number of smalt threads, you
+|   should consider also setting the number of RealignerTargetCreator threads because a
+|   fixed set of CPU resources will be allocated for all the map_reads processes.
+|      To disable smalt multithreading, specify "-n 1".
 |   If SmaltAlign_ExtraParams is not set to any value, the ``-O`` option is enabled by default.
 |      Any value, even a single space, will suppress this default option.
 |
@@ -242,17 +261,6 @@ and calling snps.
     RemoveDuplicateReads=false
 
 
-PicardMarkDuplicates_ExtraParams
---------------------------------
-Specifies options passed to the Picard MarkDuplicates tool when removing duplicate reads.
-
-**Default**: None
-
-**Example**::
-
-    PicardMarkDuplicates_ExtraParams="DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH"
-
-
 PicardJvm_ExtraParams
 ---------------------
 Specifies options passed to the Picard Java Virtual Machine.
@@ -268,6 +276,68 @@ Any of the JVM options can be specified.
 **Example**::
 
     PicardJvm_ExtraParams="-Xmx300m"
+
+
+PicardMarkDuplicates_ExtraParams
+--------------------------------
+Specifies options passed to the Picard MarkDuplicates tool when removing duplicate reads.
+
+**Default**: None
+
+**Example**::
+
+    PicardMarkDuplicates_ExtraParams="DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH"
+
+
+GatkJvm_ExtraParams
+-------------------
+Specifies options passed to the GATK Java Virtual Machine.
+Any of the JVM options can be specified.
+
+**Default**: None
+
+**Parameter Notes**:
+
+| ``-Xmx3500m``  : use 3500 MB memory (modify as needed)
+|
+
+**Example**::
+
+    GatkJvm_ExtraParams="-Xmx3500m"
+
+
+RealignerTargetCreator_ExtraParams
+----------------------------------
+Specifies options passed to the GATK RealignerTargetCreator tool.
+
+**Default**:
+
+|   If you do not specify the ``-nt`` option, the CFSAN SNP Pipeline will set it to 8 threads
+|   automatically by default.  If you set the number of RealignerTargetCreator threads, you
+|   should consider also setting the number of aligner (bowtie or smalt) threads because a
+|   fixed set of CPU resources will be allocated for all the map_reads processes.
+      To disable RealignerTargetCreator multithreading, specify "-nt 1".
+|
+
+**Parameter Notes**:
+
+| ``-nt``       : number of parallel threads
+|
+
+**Example**::
+
+    RealignerTargetCreator_ExtraParams="--minReadsAtLocus 7"
+
+
+IndelRealigner_ExtraParams
+--------------------------
+Specifies options passed to the GATK IndelRealigner tool.
+
+**Default**: None
+
+**Example**::
+
+    IndelRealigner_ExtraParams="--consensusDeterminationModel USE_READS"
 
 
 SamtoolsMpileup_ExtraParams

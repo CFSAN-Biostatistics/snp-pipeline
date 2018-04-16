@@ -254,6 +254,23 @@ def mkdir_p(path):
         else:
             raise
 
+def remove_file(filename):
+    """Remove a file without complaints if the file does not exist.
+
+    Parameters
+    ----------
+    path : str
+        File path to create.
+
+    Raises
+    ------
+    OSError if an error occurs (other than the file not existing)
+    """
+    try:
+        os.remove(filename)
+    except OSError as e:
+        if e.errno != errno.ENOENT: # No such file or directory
+            raise # Re-raise exception if a different error occurred
 
 def read_properties(prop_file_path, recognize_vars=False):
     """Read a file of name=value pairs and load them into a dictionary.
@@ -736,7 +753,7 @@ def verify_existing_input_files(error_prefix, file_list, error_handler=None, con
     return len(err_messages)
 
 
-def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):
+def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, continue_possible=False, empty_ok=False):
     """Verify each file in a list of files exists and is non-empty.
     Missing or empty files are reported in the verbose log.
 
@@ -757,6 +774,8 @@ def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, co
         Only used when error_handler is "sample".  Indicates if it is possible
         to continue execution.  Setting this flag true may allow the code
         to continue without exiting if configured to do so.
+    empty_ok : bool, optional, defaults to False
+        Flag to allow empty files in special cases.
 
     Returns
     -------
@@ -772,7 +791,7 @@ def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, co
         if not os.path.isfile(file_path):
             err_messages.append("%s %s does not exist." % (error_prefix, file_path))
             continue
-        if os.path.getsize(file_path) == 0:
+        if not empty_ok and os.path.getsize(file_path) == 0:
             err_messages.append("%s %s is empty." % (error_prefix, file_path))
             continue
 
@@ -860,7 +879,7 @@ def global_error_on_missing_file(file_path, program):
         global_error("Error: %s is empty after running %s." % (file_path, program))
 
 
-def sample_error_on_missing_file(file_path, program):
+def sample_error_on_missing_file(file_path, program, empty_ok=False):
     """Generate a sample error if a specified file is missing or empty after
     running a named program.
 
@@ -870,15 +889,17 @@ def sample_error_on_missing_file(file_path, program):
         Path to the file to check
     program : str
         Name of the program that should have created the file.
+    empty_ok : bool, optional, defaults to False
+        Flag to allow empty files in special cases.
 
     Returns
     -------
     None
-        If the file is missing or empty, this function does not return, the program exits.
+        If the file is missing or (empty and not empty_ok), this function does not return, the program exits.
     """
     if not os.path.isfile(file_path):
         sample_error("Error: %s does not exist after running %s." % (file_path, program))
-    if os.path.getsize(file_path) == 0:
+    if not empty_ok and os.path.getsize(file_path) == 0:
         sample_error("Error: %s is empty after running %s." % (file_path, program))
 
 
@@ -909,9 +930,12 @@ def target_needs_rebuild(source_files, target_file):
     """Determine if a target file needs a fresh rebuild, i.e. the target does
     not exist or its modification time is older than any of its source files.
 
-    Args:
-        source_files : relative or absolute path to a list of files
-        target_file : relative or absolute path to target file
+    Parameters
+    ----------
+    source_files : list of str
+        Relative or absolute path to a list of files.
+    target_file : str
+        Relative or absolute path to target file.
     """
     if not os.path.isfile(target_file):
         return True

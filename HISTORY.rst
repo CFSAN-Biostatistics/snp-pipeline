@@ -3,13 +3,24 @@
 History
 -------
 
-2.0.0 (2018-04-??) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
+2.0.0 (2018-04-xx) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Changes Impacting Backwards Compatibility:**
+
+* Moved all the bam file creation functionality from the call_sites command to the
+  map_reads command.  The map_reads command takes fastq files as input (as before) and
+  produces a finished bam file.  The call_sites command now only creates a pileup and finds
+  high-confidence variant sites.
+* Added local realignment around indels.  This change creates a dependency on Picard and GATK.
+
+**Other Changes:**
 
 * Increased the configurable map quality threshold to exclude poorly mapped reads from analysis.
   See :ref:`SamtoolsSamFilter-ExtraParams-label`.
 * Enhanced the SNP density filter to find dense regions of SNPs in multiple window sizes, each with
   a different number of allowed snps.  See :ref:`FilterRegions-ExtraParams-label`.
+* Updated the included datasets.
 
 
 1.0.1 (2017-09-28) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
