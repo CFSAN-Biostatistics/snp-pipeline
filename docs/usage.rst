@@ -691,8 +691,8 @@ Step 7 - Combine the SNP positions across all samples into the SNP list file::
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf --vcfRefName lambda_virus.fasta -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf --vcfRefName lambda_virus.fasta -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
@@ -831,8 +831,8 @@ Step 7 - Combine the SNP positions across all samples into the SNP list file::
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf --vcfRefName NC_011149.fasta -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf --vcfRefName NC_011149.fasta -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
@@ -1053,6 +1053,29 @@ More information about the Picard MarkDuplicates tool can be found here:
 * https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates
 * http://gatkforums.broadinstitute.org/gatk/discussion/6747/how-to-mark-duplicates-with-markduplicates-or-markduplicateswithmatecigar
 * http://broadinstitute.github.io/picard/faq.html
+
+See also :ref:`configuration-label`.
+
+
+.. _local-realignment-label:
+
+Local Realignment
+-----------------
+When reads are mapped to the reference, each read is mapped independently.  The reads may be misaligned 
+around insertions or deletions.  The local realignment process attempts to minimize the total number of
+mismatched bases in all the reads around the indels.
+
+The reads are realigned with the ``GATK`` software (before version 4.0) which must be installed for this
+functionality.  It is a two step process.  First, the pipeline identifies regions where indels are likely.
+Then, the reads are realigned in the identified regions.
+
+Local realignment can be a time-consuming process.  You can disable this step by configuring
+the ``EnableLocalRealignment`` parameter in the configuration file.
+
+More information about the GATK local realigner can be found here:
+
+* https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_indels_IndelRealigner.php
+* https://software.broadinstitute.org/gatk/documentation/article.php?id=38
 
 See also :ref:`configuration-label`.
 

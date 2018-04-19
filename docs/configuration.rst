@@ -289,6 +289,20 @@ Specifies options passed to the Picard MarkDuplicates tool when removing duplica
     PicardMarkDuplicates_ExtraParams="DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH"
 
 
+EnableLocalRealignment
+----------------------
+Controls whether the pipeline realigns reads around indels prior to creating the pileup
+and calling snps.
+
+**Default**:
+
+    When this parameter is not set to a value, the pipeline realigns reads around indels.
+
+**Example**::
+
+    EnableLocalRealignment=false
+
+
 GatkJvm_ExtraParams
 -------------------
 Specifies options passed to the GATK Java Virtual Machine.

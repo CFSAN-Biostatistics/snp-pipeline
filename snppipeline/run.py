@@ -459,7 +459,7 @@ def validate_properties(properties):
               "Use this command:\n" \
               "    cfsan_snp_pipeline data configurationFile  # this will overwrite an existing snppipeline.conf file!!!"
 
-    required_parameters = ["StopOnSampleError", "MaxCpuCores", "MaxSnps", "RemoveDuplicateReads"]
+    required_parameters = ["StopOnSampleError", "MaxCpuCores", "MaxSnps", "RemoveDuplicateReads", "EnableLocalRealignment"]
     for p in required_parameters:
         if not p in properties:
             utils.fatal_error(message)
@@ -598,6 +598,7 @@ def run(args):
     os.environ["RemoveDuplicateReads"] = config_params.get("RemoveDuplicateReads", "").lower() or "true"
     os.environ["PicardJvm_ExtraParams"] = config_params.get("PicardJvm_ExtraParams", "")
     os.environ["PicardMarkDuplicates_ExtraParams"] = config_params.get("PicardMarkDuplicates_ExtraParams", "")
+    os.environ["EnableLocalRealignment"] = config_params.get("EnableLocalRealignment", "").lower() or "true"
     os.environ["GatkJvm_ExtraParams"] = config_params.get("GatkJvm_ExtraParams", "")
     os.environ["RealignerTargetCreator_ExtraParams"] = config_params.get("RealignerTargetCreator_ExtraParams", "")
     os.environ["IndelRealigner_ExtraParams"] = config_params.get("IndelRealigner_ExtraParams", "")
@@ -629,20 +630,24 @@ def run(args):
         utils.report_error("CLASSPATH is not configured with the path to VarScan")
         found_all_dependencies = False
 
-    stdout = command.run("java picard.cmdline.PicardCommandLine 2>&1")
-    if "Error" in stdout:
-        utils.report_error("CLASSPATH is not configured with the path to Picard")
-        found_all_dependencies = False
-
-    stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK --version 2>&1")
-    if "Error" in stdout:
-        utils.report_error("CLASSPATH is not configured with the path to GATK")
-        found_all_dependencies = False
-    else:
-        stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner --version 2>&1")
-        if "ERROR" in stdout:
-            utils.report_error("The installed GATK version does not support indel realignment.  Try installing an older release prior to GATK v4.")
+    picard_required = os.environ["RemoveDuplicateReads"] == "true" or  os.environ["EnableLocalRealignment"] == "true"
+    if picard_required:
+        stdout = command.run("java picard.cmdline.PicardCommandLine 2>&1")
+        if "Error" in stdout:
+            utils.report_error("CLASSPATH is not configured with the path to Picard")
             found_all_dependencies = False
+
+    gatk_required = os.environ["EnableLocalRealignment"] == "true"
+    if gatk_required:
+        stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK --version 2>&1")
+        if "Error" in stdout:
+            utils.report_error("CLASSPATH is not configured with the path to GATK")
+            found_all_dependencies = False
+        else:
+            stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner --version 2>&1")
+            if "ERROR" in stdout:
+                utils.report_error("The installed GATK version does not support indel realignment.  Try installing an older release prior to GATK v4.")
+                found_all_dependencies = False
 
     if not found_all_dependencies:
         utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")
