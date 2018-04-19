@@ -265,12 +265,12 @@ def map_reads(args):
     # Mark duplicate reads, so they will be ignored in subsequent steps
     #==========================================================================
 
-    remove_duplicate_reads = os.environ.get("RemoveDuplicateReads") or "true"
-    remove_duplicate_reads = remove_duplicate_reads.lower()
-    if remove_duplicate_reads == "true":
+    remove_duplicate_reads = os.environ.get("RemoveDuplicateReads", "true").lower() == "true"
+    input_file = sorted_bam_file
+    output_file = utils.add_file_suffix(input_file, ".deduped", enable=remove_duplicate_reads)
+    if remove_duplicate_reads:
         # Check for fresh deduped bam file; if not, remove duplicate reads
-        deduped_bam_file = os.path.join(sample_dir, "reads.sorted.deduped.bam")
-        needs_rebuild = utils.target_needs_rebuild([sorted_bam_file], deduped_bam_file)
+        needs_rebuild = utils.target_needs_rebuild([input_file], output_file)
         if not args.forceFlag and not needs_rebuild:
             verbose_print("# Deduped bam file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
         else:
@@ -283,93 +283,98 @@ def map_reads(args):
                 picard_mark_duplicates_extra_params = os.environ.get("PicardMarkDuplicates_ExtraParams") or ""
                 tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
                 tmp_option = " TMP_DIR=" + tmpdir if tmpdir else ""
-                command_line = "java " + picard_jvm_extra_params + ' ' + "picard.cmdline.PicardCommandLine MarkDuplicates INPUT=" + sorted_bam_file + " OUTPUT=" + deduped_bam_file + " METRICS_FILE=" + os.path.join(sample_dir, "duplicate_reads_metrics.txt") + tmp_option + ' ' + picard_mark_duplicates_extra_params
+                command_line = "java " + picard_jvm_extra_params + ' ' + "picard.cmdline.PicardCommandLine MarkDuplicates INPUT=" + input_file + " OUTPUT=" + output_file + " METRICS_FILE=" + os.path.join(sample_dir, "duplicate_reads_metrics.txt") + tmp_option + ' ' + picard_mark_duplicates_extra_params
                 verbose_print("# Mark duplicate reads in bam file.")
                 verbose_print("# %s %s" % (utils.timestamp(), command_line))
                 verbose_print("# %s" % version_str)
                 command.run(command_line, sys.stdout)
-                utils.sample_error_on_missing_file(deduped_bam_file, "picard MarkDuplicates")
+                utils.sample_error_on_missing_file(output_file, "picard MarkDuplicates")
                 verbose_print("")
-        bam_file = deduped_bam_file
-        indel_realigned_bam_file = os.path.join(sample_dir, "reads.sorted.deduped.indelrealigned.bam")
-    else:
-        bam_file = sorted_bam_file
-        indel_realigned_bam_file = os.path.join(sample_dir, "reads.sorted.indelrealigned.bam")
+
+    #==========================================================================
+    # Next three steps are part of local realignment around indels
+    #==========================================================================
+    enable_local_realignment = os.environ.get("EnableLocalRealignment", "true").lower() == "true"
 
     #==========================================================================
     # Index the sorted bam file prior to RealignerTargetCreator
     #==========================================================================
 
-    # Check for fresh bai file; if not, index it
-    bam_index_file = bam_file[:-3] + "bai"
-    needs_rebuild = utils.target_needs_rebuild([bam_file], bam_index_file)
-    if not args.forceFlag and not needs_rebuild:
-        verbose_print("# Bam file index is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
-    else:
-        version_str = utils.extract_version_str("SAMtools", "samtools 2>&1 > /dev/null")
-        command_line = "samtools index " + bam_file + ' ' + bam_index_file
-        verbose_print("# Index bam file.")
-        verbose_print("# %s %s" % (utils.timestamp(), command_line))
-        verbose_print("# %s" % version_str)
-        command.run(command_line, sys.stdout)
-        utils.sample_error_on_missing_file(bam_index_file, "samtools index")
-        verbose_print("")
+    input_file = output_file # output from last step becomes input to this step
+    if enable_local_realignment:
+        # Check for fresh bai file; if not, index it
+        bam_index_file = input_file[:-3] + "bai"
+        needs_rebuild = utils.target_needs_rebuild([input_file], bam_index_file)
+        if not args.forceFlag and not needs_rebuild:
+            verbose_print("# Bam file index is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
+        else:
+            version_str = utils.extract_version_str("SAMtools", "samtools 2>&1 > /dev/null")
+            command_line = "samtools index " + input_file + ' ' + bam_index_file
+            verbose_print("# Index bam file.")
+            verbose_print("# %s %s" % (utils.timestamp(), command_line))
+            verbose_print("# %s" % version_str)
+            command.run(command_line, sys.stdout)
+            utils.sample_error_on_missing_file(bam_index_file, "samtools index")
+            verbose_print("")
 
 
     #==========================================================================
     # Identify targets for realignment
     #==========================================================================
 
-    # Check for fresh realign_targets_file file; if not run RealignerTargetCreator
-    realign_targets_file = os.path.join(sample_dir, "realign.target.intervals")
-    needs_rebuild = utils.target_needs_rebuild([bam_file, bam_index_file], realign_targets_file)
-    if not args.forceFlag and not needs_rebuild:
-        verbose_print("# Realign targets file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
-    else:
-        classpath = os.environ.get("CLASSPATH")
-        if not classpath or "genomeanalysistk" not in classpath.lower():
-            utils.global_error("Error: cannot execute GATK RealignerTargetCreator. Define the path to GATK in the CLASSPATH environment variable.")
+    if enable_local_realignment:
+        # Check for fresh realign_targets_file file; if not run RealignerTargetCreator
+        realign_targets_file = os.path.join(sample_dir, "realign.target.intervals")
+        needs_rebuild = utils.target_needs_rebuild([input_file, bam_index_file], realign_targets_file)
+        if not args.forceFlag and not needs_rebuild:
+            verbose_print("# Realign targets file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
         else:
-            version_str = utils.extract_version_str("GATK", "java org.broadinstitute.gatk.engine.CommandLineGATK -T RealignerTargetCreator --version 2>&1")
+            classpath = os.environ.get("CLASSPATH")
+            if not classpath or "genomeanalysistk" not in classpath.lower():
+                utils.global_error("Error: cannot execute GATK RealignerTargetCreator. Define the path to GATK in the CLASSPATH environment variable.")
+            else:
+                version_str = utils.extract_version_str("GATK", "java org.broadinstitute.gatk.engine.CommandLineGATK -T RealignerTargetCreator --version 2>&1")
 
-            gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
-            tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
-            if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
-                gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
+                gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
+                tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+                if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
+                    gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
 
-            realigner_target_creator_extra_params = os.environ.get("RealignerTargetCreator_ExtraParams") or ""
-            command_line = "java " + gatk_jvm_extra_params + ' ' + "org.broadinstitute.gatk.engine.CommandLineGATK -T RealignerTargetCreator -R " + reference_file_path + " -I " + bam_file + " -o " + realign_targets_file  + ' ' + realigner_target_creator_extra_params
-            verbose_print("# Identify targets for realignment.")
-            verbose_print("# %s %s" % (utils.timestamp(), command_line))
-            verbose_print("# %s" % version_str)
-            command.run(command_line, sys.stdout)
-            utils.sample_error_on_missing_file(realign_targets_file, "GATK RealignerTargetCreator", empty_ok=True)
-            verbose_print("")
+                realigner_target_creator_extra_params = os.environ.get("RealignerTargetCreator_ExtraParams") or ""
+                command_line = "java " + gatk_jvm_extra_params + ' ' + "org.broadinstitute.gatk.engine.CommandLineGATK -T RealignerTargetCreator -R " + reference_file_path + " -I " + input_file + " -o " + realign_targets_file  + ' ' + realigner_target_creator_extra_params
+                verbose_print("# Identify targets for realignment.")
+                verbose_print("# %s %s" % (utils.timestamp(), command_line))
+                verbose_print("# %s" % version_str)
+                command.run(command_line, sys.stdout)
+                utils.sample_error_on_missing_file(realign_targets_file, "GATK RealignerTargetCreator", empty_ok=True)
+                verbose_print("")
 
     #==========================================================================
     # Realign around indels
     #==========================================================================
 
-    # Check for fresh indelrealigned bam file; if not run IndelRealigner
-    needs_rebuild = utils.target_needs_rebuild([bam_file, bam_index_file, realign_targets_file], indel_realigned_bam_file)
-    if not args.forceFlag and not needs_rebuild:
-        verbose_print("# Indelrealigned bam file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
-    else:
-        classpath = os.environ.get("CLASSPATH")
-        if not classpath or "genomeanalysistk" not in classpath.lower():
-            utils.global_error("Error: cannot execute GATK IndelRealigner. Define the path to GATK in the CLASSPATH environment variable.")
+    output_file = utils.add_file_suffix(input_file, ".indelrealigned", enable=enable_local_realignment)
+    if enable_local_realignment:
+        # Check for fresh indelrealigned bam file; if not run IndelRealigner
+        needs_rebuild = utils.target_needs_rebuild([input_file, bam_index_file, realign_targets_file], output_file)
+        if not args.forceFlag and not needs_rebuild:
+            verbose_print("# Indelrealigned bam file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
         else:
-            version_str = utils.extract_version_str("GATK", "java org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner --version 2>&1")
+            classpath = os.environ.get("CLASSPATH")
+            if not classpath or "genomeanalysistk" not in classpath.lower():
+                utils.global_error("Error: cannot execute GATK IndelRealigner. Define the path to GATK in the CLASSPATH environment variable.")
+            else:
+                version_str = utils.extract_version_str("GATK", "java org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner --version 2>&1")
 
-            gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
-            tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
-            if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
-                gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
+                gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
+                tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+                if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
+                    gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
 
-            indel_realigner_extra_params = os.environ.get("IndelRealigner_ExtraParams") or ""
-            command_line = "java " + gatk_jvm_extra_params + ' ' + "org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner -R " + reference_file_path + " -targetIntervals " + realign_targets_file + " -I " + bam_file + " -o " + indel_realigned_bam_file  + ' ' + indel_realigner_extra_params
-            verbose_print("# Realign around indels")
-            verbose_print("# %s %s" % (utils.timestamp(), command_line))
-            verbose_print("# %s" % version_str)
-            command.run(command_line, sys.stdout)
-            utils.sample_error_on_missing_file(indel_realigned_bam_file, "GATK IndelRealigner")
+                indel_realigner_extra_params = os.environ.get("IndelRealigner_ExtraParams") or ""
+                command_line = "java " + gatk_jvm_extra_params + ' ' + "org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner -R " + reference_file_path + " -targetIntervals " + realign_targets_file + " -I " + input_file + " -o " + output_file  + ' ' + indel_realigner_extra_params
+                verbose_print("# Realign around indels")
+                verbose_print("# %s %s" % (utils.timestamp(), command_line))
+                verbose_print("# %s" % version_str)
+                command.run(command_line, sys.stdout)
+                utils.sample_error_on_missing_file(output_file, "GATK IndelRealigner")

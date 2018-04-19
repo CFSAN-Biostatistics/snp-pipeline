@@ -1057,6 +1057,29 @@ More information about the Picard MarkDuplicates tool can be found here:
 See also :ref:`configuration-label`.
 
 
+.. _local-realignment-label:
+
+Local Realignment
+-----------------
+When reads are mapped to the reference, each read is mapped independently.  The reads may be misaligned 
+around insertions or deletions.  The local realignment process attempts to minimize the total number of
+mismatched bases in all the reads around the indels.
+
+The reads are realigned with the ``GATK`` software (before version 4.0) which must be installed for this
+functionality.  It is a two step process.  First, the pipeline identifies regions where indels are likely.
+Then, the reads are realigned in the identified regions.
+
+Local realignment can be a time-consuming process.  You can disable this step by configuring
+the ``EnableLocalRealignment`` parameter in the configuration file.
+
+More information about the GATK local realigner can be found here:
+
+* https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_indels_IndelRealigner.php
+* https://software.broadinstitute.org/gatk/documentation/article.php?id=38
+
+See also :ref:`configuration-label`.
+
+
 .. _snp-filtering-label:
 
 SNP Filtering

@@ -50,12 +50,12 @@ def call_sites(args):
 
     sample_dir = args.sampleDir
 
-    remove_duplicate_reads = os.environ.get("RemoveDuplicateReads") or "true"
-    remove_duplicate_reads = remove_duplicate_reads.lower()
-    if remove_duplicate_reads == "true":
-        input_bam_file = os.path.join(sample_dir, "reads.sorted.deduped.indelrealigned.bam")
-    else:
-        input_bam_file = os.path.join(sample_dir, "reads.sorted.indelrealigned.bam")
+    remove_duplicate_reads = os.environ.get("RemoveDuplicateReads", "true").lower() == "true"
+    enable_local_realignment = os.environ.get("EnableLocalRealignment", "true").lower() == "true"
+
+    input_bam_file = os.path.join(sample_dir, "reads.sorted.bam")
+    input_bam_file = utils.add_file_suffix(input_bam_file, ".deduped", enable=remove_duplicate_reads)
+    input_bam_file = utils.add_file_suffix(input_bam_file, ".indelrealigned", enable=enable_local_realignment)
 
     utils.verify_non_empty_input_files("Sample BAM file", [input_bam_file], error_handler="sample")
 

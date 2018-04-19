@@ -272,6 +272,44 @@ def remove_file(filename):
         if e.errno != errno.ENOENT: # No such file or directory
             raise # Re-raise exception if a different error occurred
 
+
+def add_file_suffix(path, suffix, enable=True):
+    """Insert a suffix at the end of a file name, but before the file extension.
+
+    Parameters
+    ----------
+    path : str
+        File path with a file extension.
+    suffix : str
+        Suffix to add to the file name.
+    enable : bool, optional defaults to True
+        If not True, the path is returned unchanged.
+
+    Returns
+    -------
+    path : str
+        Modified file path.
+
+    Examples
+    -------
+    # disabled
+    >>> add_file_suffix("aaa/bbb/ccc", ".suffix", enable=False)
+    'aaa/bbb/ccc'
+
+    # No extension
+    >>> add_file_suffix("aaa/bbb/ccc", ".suffix", enable=True)
+    'aaa/bbb/ccc.suffix'
+
+    # Extension
+    >>> add_file_suffix("aaa/bbb/ccc.txt", ".suffix", enable=True)
+    'aaa/bbb/ccc.suffix.txt'
+    """
+    if enable:
+        path_without_extension, extension = os.path.splitext(path)
+        path = path_without_extension + suffix + extension
+    return path
+
+
 def read_properties(prop_file_path, recognize_vars=False):
     """Read a file of name=value pairs and load them into a dictionary.
 

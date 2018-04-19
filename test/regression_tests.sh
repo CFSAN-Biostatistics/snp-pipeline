@@ -208,8 +208,6 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bgzip"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bcftools"
     assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to VarScan"
-    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
-    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GATK"
     assertFileContains "$tempDir/error.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "cfsan_snp_pipeline"
@@ -220,8 +218,6 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bgzip"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bcftools"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to VarScan"
-    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
-    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GATK"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 }
 
@@ -280,6 +276,48 @@ testRunSnpPipelineDependencySmaltRaiseFatalErrorStopUnset()
     echo "unset StopOnSampleError" >> "$tempDir/snppipeline.conf"
     echo "SnpPipeline_Aligner=smalt" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 smalt
+}
+
+# Verify run_snp_pipeline requires Picard when removing duplicate reads
+testRunSnpPipelineDependencyRemoveDuplicateReadsRaiseFatalErrorStop()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+    cfsan_snp_pipeline data configurationFile $tempDir
+    echo "RemoveDuplicateReads=true" >> "$tempDir/snppipeline.conf"
+    echo "EnableLocalRealignment=false" >> "$tempDir/snppipeline.conf"
+    tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
+    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
+    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GATK"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GATK"
+}
+
+# Verify run_snp_pipeline requires Picard and GATK when realigning around indels
+testRunSnpPipelineDependencyLocalRealignRaiseFatalErrorStop()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+    cfsan_snp_pipeline data configurationFile $tempDir
+    echo "RemoveDuplicateReads=false" >> "$tempDir/snppipeline.conf"
+    echo "EnableLocalRealignment=true" >> "$tempDir/snppipeline.conf"
+    tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
+    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
+    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GATK"
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GATK"
+}
+
+# Verify run_snp_pipeline does not require Picard when not removing duplicate reads and not realigning around indels
+testRunSnpPipelineDependencyPicardGatkNotRequiredRaiseFatalErrorStop()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+    cfsan_snp_pipeline data configurationFile $tempDir
+    echo "RemoveDuplicateReads=false" >> "$tempDir/snppipeline.conf"
+    echo "EnableLocalRealignment=false" >> "$tempDir/snppipeline.conf"
+    tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
+    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
+    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GATK"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GATK"
 }
 
 # Verify the index_ref command detects a misconfigured environment variable
@@ -1696,6 +1734,130 @@ testMapReadsIndelRealignerClasspathRaiseGlobalErrorStopUnset()
     tryMapReadsIndelRealignerClasspathRaiseGlobalError 100 # this is a global error because all samples will fail
 }
 
+
+# Verify the map_reads command create the proper files when RemoveDuplicateReads OFF and EnableLocalRealignment OFF
+testMapReadsRemoveDuplicateReadsOffEnableLocalRealignmentOff()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    export RemoveDuplicateReads=false
+    export EnableLocalRealignment=false
+
+    # Extract test data to temp dir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+
+    # Run prep work
+    cfsan_snp_pipeline index_ref "$tempDir/reference/lambda_virus.fasta" &> "$logDir/indexRef.log"
+
+    # Align sample1 to the reference
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log"
+    errorCode=$?
+
+    # Verify the correct files are created with no unwanted files
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonExistingFile      "$tempDir/samples/sample1/reads.sorted.deduped.bam"
+    verifyNonExistingFile      "$tempDir/samples/sample1/reads.sorted.indelrealigned.bam"
+    verifyNonExistingFile      "$tempDir/samples/sample1/reads.sorted.deduped.indelrealigned.bam"
+}
+
+# Verify the map_reads command create the proper files when RemoveDuplicateReads OFF and EnableLocalRealignment ON
+testMapReadsRemoveDuplicateReadsOffEnableLocalRealignmentOn()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    export RemoveDuplicateReads=false
+    export EnableLocalRealignment=true
+
+    # Extract test data to temp dir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+
+    # Run prep work
+    cfsan_snp_pipeline index_ref "$tempDir/reference/lambda_virus.fasta" &> "$logDir/indexRef.log"
+
+    # Align sample1 to the reference
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log"
+    errorCode=$?
+
+    # Verify the correct files are created with no unwanted files
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonExistingFile      "$tempDir/samples/sample1/reads.sorted.deduped.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.indelrealigned.bam"
+    verifyNonExistingFile      "$tempDir/samples/sample1/reads.sorted.deduped.indelrealigned.bam"
+}
+
+# Verify the map_reads command create the proper files when RemoveDuplicateReads ON and EnableLocalRealignment OFF
+testMapReadsRemoveDuplicateReadsOnEnableLocalRealignmentOff()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    export RemoveDuplicateReads=true
+    export EnableLocalRealignment=false
+
+    # Extract test data to temp dir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+
+    # Run prep work
+    cfsan_snp_pipeline index_ref "$tempDir/reference/lambda_virus.fasta" &> "$logDir/indexRef.log"
+
+    # Align sample1 to the reference
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log"
+    errorCode=$?
+
+    # Verify the correct files are created with no unwanted files
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
+    verifyNonExistingFile      "$tempDir/samples/sample1/reads.sorted.indelrealigned.bam"
+    verifyNonExistingFile      "$tempDir/samples/sample1/reads.sorted.deduped.indelrealigned.bam"
+}
+
+# Verify the map_reads command create the proper files when RemoveDuplicateReads ON and EnableLocalRealignment ON
+testMapReadsRemoveDuplicateReadsOnEnableLocalRealignmentOn()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    export RemoveDuplicateReads=true
+    export EnableLocalRealignment=true
+
+    # Extract test data to temp dir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+
+    # Run prep work
+    cfsan_snp_pipeline index_ref "$tempDir/reference/lambda_virus.fasta" &> "$logDir/indexRef.log"
+
+    # Align sample1 to the reference
+    cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" "$tempDir/samples/sample1/sample1_2.fastq" &> "$logDir/mapReads.log"
+    errorCode=$?
+
+    # Verify the correct files are created with no unwanted files
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.bam"
+    verifyNonExistingFile      "$tempDir/samples/sample1/reads.sorted.indelrealigned.bam"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.indelrealigned.bam"
+}
 
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools mpileup failure.
 tryCallSitesSamtoolsMpileupTrap()

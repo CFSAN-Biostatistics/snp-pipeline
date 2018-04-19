@@ -37,6 +37,12 @@ Note: you will need either Bowtie2 or SMALT.  You do not have to install both.
 However, the included result files were generated with Bowtie2.  Your results may differ
 when using SMALT.
 
+Note: Picard is required when removing deplicate reads and when realigning reads around indels.
+Both of these functions are enabled by default, but can be disabled in the configuration file.
+
+Note: GATK is required when realigning reads around indels, which is enabled by default, 
+but can be disabled in the configuration file.
+
 Step 3 - Environment Variables
 ------------------------------
 Define the CLASSPATH environment variable to specify the location of the Picard and VarScan jar files.  Add

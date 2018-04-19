@@ -106,21 +106,23 @@ def index_ref(args):
 
 
     # Create the reference dict file used later by GATK
-    verbose_print("")
-    target_file = reference_base_path + ".dict"
-    needs_rebuild = utils.target_needs_rebuild([reference_file_path], target_file)
-    if not args.forceFlag and not needs_rebuild:
-        verbose_print("# Sequence dictionary %s is already freshly built.  Use the -f option to force a rebuild." % target_file)
-    else:
-        utils.remove_file(target_file) # Need to delete existing output, if any, before running
-        version_str = utils.extract_version_str("Picard", "java picard.cmdline.PicardCommandLine CreateSequenceDictionary --version 2>&1")
-        picard_jvm_extra_params = os.environ.get("PicardJvm_ExtraParams") or ""
-        picard_create_sequence_dictionary_extra_params = os.environ.get("CreateSequenceDictionary_ExtraParams") or ""
-        tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
-        tmp_option = " TMP_DIR=" + tmpdir if tmpdir else ""
-        command_line = "java " + picard_jvm_extra_params + ' ' + "picard.cmdline.PicardCommandLine CreateSequenceDictionary REFERENCE=" + reference_file_path + " OUTPUT=" + target_file + tmp_option + ' ' + picard_create_sequence_dictionary_extra_params
-        verbose_print("# Create reference sequence dictionary.")
-        verbose_print("# %s %s" % (utils.timestamp(), command_line))
-        verbose_print("# %s" % version_str)
-        command.run(command_line, sys.stdout)
-        utils.sample_error_on_missing_file(target_file, "picard CreateSequenceDictionary")
+    enable_local_realignment = os.environ.get("EnableLocalRealignment", "true").lower() == "true"
+    if enable_local_realignment:
+        verbose_print("")
+        target_file = reference_base_path + ".dict"
+        needs_rebuild = utils.target_needs_rebuild([reference_file_path], target_file)
+        if not args.forceFlag and not needs_rebuild:
+            verbose_print("# Sequence dictionary %s is already freshly built.  Use the -f option to force a rebuild." % target_file)
+        else:
+            utils.remove_file(target_file) # Need to delete existing output, if any, before running
+            version_str = utils.extract_version_str("Picard", "java picard.cmdline.PicardCommandLine CreateSequenceDictionary --version 2>&1")
+            picard_jvm_extra_params = os.environ.get("PicardJvm_ExtraParams") or ""
+            picard_create_sequence_dictionary_extra_params = os.environ.get("CreateSequenceDictionary_ExtraParams") or ""
+            tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+            tmp_option = " TMP_DIR=" + tmpdir if tmpdir else ""
+            command_line = "java " + picard_jvm_extra_params + ' ' + "picard.cmdline.PicardCommandLine CreateSequenceDictionary REFERENCE=" + reference_file_path + " OUTPUT=" + target_file + tmp_option + ' ' + picard_create_sequence_dictionary_extra_params
+            verbose_print("# Create reference sequence dictionary.")
+            verbose_print("# %s %s" % (utils.timestamp(), command_line))
+            verbose_print("# %s" % version_str)
+            command.run(command_line, sys.stdout)
+            utils.sample_error_on_missing_file(target_file, "picard CreateSequenceDictionary")

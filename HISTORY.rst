@@ -12,7 +12,9 @@ History
   map_reads command.  The map_reads command takes fastq files as input (as before) and
   produces a finished bam file.  The call_sites command now only creates a pileup and finds
   high-confidence variant sites.
-* Added local realignment around indels.  This change creates a dependency on Picard and GATK.
+* Added local realignment around indels.  This is an optional step enabled by default.
+  When enabled, local realignment creates a dependency on Picard and GATK.  See
+  :ref:`local-realignment-label`.
 
 **Other Changes:**
 
