@@ -1306,3 +1306,195 @@ def in_region(pos, regions):
             return True
 
     return False
+
+
+def compute_num_processes_and_threads(max_cpu_cores, threads_per_process):
+    """Compute the number of allowed processes and threads given the maximum allowed
+    number of CPUs and requested number of threads per process.
+
+    Parameters
+    ----------
+    max_cpu_cores : int or None
+        The maximum allowed number of CPU cores to consume by all instances of the process.
+        If set the None, it implies no limit to the number of CPU cores that can be used.
+    threads_per_process : int
+        The user-requested number of threads to use.
+
+    Returns
+    -------
+    num_processes : int or None
+        The computed maximum number of allowed concurrent processes, or None to allow unlimited.
+    threads_per_process : int
+        The number of threads per process instance which might be less than requested if the
+        number of allowed cpus is less than the requested number of threads.
+
+    Examples
+    --------
+    # max CPU not set
+    >>> compute_num_processes_and_threads(None, 8)
+    (None, 8)
+
+    # max CPU set, not multiple of threads
+    >>> compute_num_processes_and_threads(20, 8)
+    (2, 8)
+
+    # max CPU set, multiple of threads
+    >>> compute_num_processes_and_threads(24, 8)
+    (3, 8)
+
+    # max CPU less than desired threads
+    >>> compute_num_processes_and_threads(2, 8)
+    (1, 2)
+    """
+    if max_cpu_cores is None:
+        num_processes = None
+    elif max_cpu_cores >= threads_per_process:
+        num_processes = int(max_cpu_cores / threads_per_process)
+    else:
+        num_processes = 1
+        threads_per_process = max_cpu_cores
+    return num_processes, threads_per_process
+
+
+def configure_process_threads(extra_params_env_var, threads_option, default_threads_per_process, max_cpu_cores):
+    """Detect the user-configured number of allowed threads for a process and compute the
+    corresponding number of allowed processes given the maximum allowed number of CPUs.
+
+    The named environment variable is parsed to detect a user-setting for the number of threads per process.
+    If not found, the environment variable is modified with a default setting.
+
+    If the user requests a number of threads that is greater than the max_cpu_cores, the number of allowed
+    threads will be set to the max_cpu_cores.
+
+    Parameters
+    ----------
+    extra_params_env_var : str
+        Name of an environment variable the user can set with embedded command line options
+        to configure the number of threads for a process.
+    threads_option : str, or list of str
+        The exact spelling of a command line option to set the number of threads, for example "-n".
+        This parameter can also be a list of command line options when there is more than one way to
+        specify the number of threads, for example, ["-nt", "--num_threads"].
+    default_threads_per_process : int
+        The number of threads to use if the user did not set a preferred value in the named
+        environment variable.
+    max_cpu_cores : int or None
+        The maximum allowed number of CPU cores to consume by all instances of the process.
+        If set the None, it implies no limit to the number of CPU cores that can be used.
+
+    Returns
+    -------
+    max_processes : int or None
+        The computed maximum number of allowed concurrent processes, or None to allow unlimited.
+    threads_per_process : int
+        The number of threads per process instance.  This will either be the value previously
+        configured by the user in the named environment variable, or the default value passed
+        as an argument.
+
+    Examples
+    --------
+    # env var not set, max CPU not set
+    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, None)
+    (None, 8)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 8'
+
+    # env var not set, max CPU set, not multiple of threads
+    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 20)
+    (2, 8)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 8'
+
+    # env var not set, max CPU set, multiple of threads
+    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 24)
+    (3, 8)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 8'
+
+    # env var exists but option not set, max CPU not set
+    >>> os.environ["SmaltAlign_ExtraParams"] = "--version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 9, None)
+    (None, 9)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '--version -n 9'
+
+    # env var exists, option set, max CPU not set
+    >>> os.environ["SmaltAlign_ExtraParams"] = "--version -n 10"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, None)
+    (None, 10)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '--version -n 10'
+
+    # env var exists, option set, max CPU set, not multiple of threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 22)
+    (2, 10)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 10 --version'
+
+    # env var exists, option set, max CPU set, multiple of threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 30)
+    (3, 10)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 10 --version'
+
+    # env var exists, option set, max CPU set, max CPU == desired threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 4 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 4)
+    (1, 4)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 4 --version'
+
+    # env var exists, option set, max CPU set, max CPU less than desired threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 2)
+    (1, 2)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 2 --version'
+
+    # env var exists but option not set, max CPU less than default number of threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "--version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 9, 7)
+    (1, 7)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '--version -n 7'
+
+    # Two different ways to configure the number of threads
+    >>> os.environ["RealignerTargetCreator_ExtraParams"] = "-nt 7"
+    >>> configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], 8, 24)
+    (3, 7)
+    >>> os.environ["RealignerTargetCreator_ExtraParams"] = "--num_threads 7"
+    >>> configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], 8, 24)
+    (3, 7)
+    """
+    threads_options = [threads_option] if type(threads_option) is str else threads_option
+    match = False
+    for threads_option in threads_options:
+        regex_str = threads_option + "[ \t]*([0-9]+)"
+        extra_params = os.environ.get(extra_params_env_var, "")
+        match = re.search(regex_str, extra_params)
+        if match:
+            break # stop looking for thread control options in the command line as soon as we find the first one
+    if match:
+        configured_threads_per_process = int(match.group(1))
+        threads_per_process = configured_threads_per_process
+    else:
+        threads_per_process = default_threads_per_process
+
+    max_processes, threads_per_process = compute_num_processes_and_threads(max_cpu_cores, threads_per_process)
+
+    threads_option += ' ' + str(threads_per_process)
+    if match and threads_per_process != configured_threads_per_process:
+        extra_params = re.sub(regex_str, threads_option, extra_params)
+        os.environ[extra_params_env_var] = extra_params
+    elif not match:
+        if extra_params:
+            extra_params += ' '
+        os.environ[extra_params_env_var] = extra_params + threads_option
+
+    return max_processes, threads_per_process
+

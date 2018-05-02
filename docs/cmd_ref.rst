@@ -205,7 +205,8 @@ map_reads
 
 ::
 
-  usage: cfsan_snp_pipeline map_reads [-h] [-f] [-v 0..5] [--version]
+  usage: cfsan_snp_pipeline map_reads [-h] [-f] [-v 0..5] [--threads INT]
+                                      [--version]
                                       referenceFile sampleFastqFile1
                                       [sampleFastqFile2]
   
@@ -226,6 +227,7 @@ map_reads
                           and are newer than inputs (default: False)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
+    --threads INT         Number of CPU cores to use (default: 8)
     --version             show program's version number and exit
 
 call_sites

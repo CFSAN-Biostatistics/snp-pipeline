@@ -15,6 +15,14 @@ History
 * Added local realignment around indels.  This is an optional step enabled by default.
   When enabled, local realignment creates a dependency on Picard and GATK.  See
   :ref:`local-realignment-label`.
+* The pipeline uses multiple CPU threads when running SAMtools.
+* SAMtools version 1.4 or higher is required.  Older versions are not supported anymore.
+* When running in an HPC environment, the pipeline is configured to use 20 CPU threads by
+  default when mapping reads to the reference.  You can change this by configuring the
+  :ref:`CpuCoresPerProcessOnHPC-label` parameter.
+* When running on a workstation, the pipeline is configured to use 8 CPU threads by
+  default when mapping reads to the reference.  You can change this by configuring the
+  :ref:`CpuCoresPerProcessOnWorkstation-label` parameter.
 
 **Other Changes:**
 
@@ -22,6 +30,7 @@ History
   See :ref:`SamtoolsSamFilter-ExtraParams-label`.
 * Enhanced the SNP density filter to find dense regions of SNPs in multiple window sizes, each with
   a different number of allowed snps.  See :ref:`FilterRegions-ExtraParams-label`.
+* Added a ``--threads`` option to the map_reads script.  This should only be used when building custom :ref:`step-by-step-workflows`.
 * Updated the included datasets.
 
 

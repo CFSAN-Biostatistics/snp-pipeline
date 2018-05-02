@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.1
 ##FILTER=<ID=PASS,Description="All filters passed">
-##fileDate=20180412
-##source=CFSAN SNP-Pipeline 2.0.0b6
+##fileDate=20180502
+##source=CFSAN SNP-Pipeline 2.0.0b9
 ##reference=NC_011149.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -19,8 +19,8 @@
 ##FILTER=<ID=StrBias0,Description="Fraction of variant supporting reads below 0.00 on one strand">
 ##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">
 ##contig=<ID=gi|197247352|ref|NC_011149.1|>
-##bcftools_mergeVersion=1.3.1+htslib-1.3.1
-##bcftools_mergeCommand=merge -o 2.0.0b6/snpma_preserved.vcf --merge all --info-rules NS:sum 2.0.0b6/tmp.vcf.wpr7vw/ERR178926.vcf.gz 2.0.0b6/tmp.vcf.wpr7vw/ERR178929.vcf.gz 2.0.0b6/tmp.vcf.wpr7vw/SRR1566386.vcf.gz 2.0.0b6/tmp.vcf.wpr7vw/SRR2566901.vcf.gz 2.0.0b6/tmp.vcf.wpr7vw/SRR3664651.vcf.gz 2.0.0b6/tmp.vcf.wpr7vw/SRR3665129.vcf.gz
+##bcftools_mergeVersion=1.8+htslib-1.8
+##bcftools_mergeCommand=merge -o 2.0.0b9/snpma_preserved.vcf --merge all --info-rules NS:sum 2.0.0b9/tmp.vcf.5yT9LO/ERR178926.vcf.gz 2.0.0b9/tmp.vcf.5yT9LO/ERR178929.vcf.gz 2.0.0b9/tmp.vcf.5yT9LO/SRR1566386.vcf.gz 2.0.0b9/tmp.vcf.5yT9LO/SRR2566901.vcf.gz 2.0.0b9/tmp.vcf.5yT9LO/SRR3664651.vcf.gz 2.0.0b9/tmp.vcf.5yT9LO/SRR3665129.vcf.gz; Date=Wed May  2 11:43:52 2018
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	ERR178926	ERR178929	SRR1566386	SRR2566901	SRR3664651	SRR3665129
 gi|197247352|ref|NC_011149.1|	682	.	A	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:46:0:46:0:0:24:22:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
 gi|197247352|ref|NC_011149.1|	684	.	T	C	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:47:1:46:1:0:24:22:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.

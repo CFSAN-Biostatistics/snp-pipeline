@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.1
 ##FILTER=<ID=PASS,Description="All filters passed">
-##fileDate=20180412
-##source=CFSAN SNP-Pipeline 2.0.0b6
+##fileDate=20180502
+##source=CFSAN SNP-Pipeline 2.0.0b9
 ##reference=lambda_virus.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -19,8 +19,8 @@
 ##FILTER=<ID=StrBias0,Description="Fraction of variant supporting reads below 0.00 on one strand">
 ##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">
 ##contig=<ID=gi|9626243|ref|NC_001416.1|>
-##bcftools_mergeVersion=1.3.1+htslib-1.3.1
-##bcftools_mergeCommand=merge -o 2.0.0b6/snpma.vcf --merge all --info-rules NS:sum 2.0.0b6/tmp.vcf.LVUNyB/sample1.vcf.gz 2.0.0b6/tmp.vcf.LVUNyB/sample2.vcf.gz 2.0.0b6/tmp.vcf.LVUNyB/sample3.vcf.gz 2.0.0b6/tmp.vcf.LVUNyB/sample4.vcf.gz
+##bcftools_mergeVersion=1.8+htslib-1.8
+##bcftools_mergeCommand=merge -o 2.0.0b9/snpma.vcf --merge all --info-rules NS:sum 2.0.0b9/tmp.vcf.bnFXxi/sample1.vcf.gz 2.0.0b9/tmp.vcf.bnFXxi/sample2.vcf.gz 2.0.0b9/tmp.vcf.bnFXxi/sample3.vcf.gz 2.0.0b9/tmp.vcf.bnFXxi/sample4.vcf.gz; Date=Wed May  2 13:00:58 2018
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample1	sample2	sample3	sample4
 gi|9626243|ref|NC_001416.1|	403	.	G	A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:26:0:26:0:0:13:13:PASS	0:24:24:0:11:13:0:0:PASS	0:25:25:0:13:12:0:0:PASS	0:15:15:0:11:4:0:0:PASS
 gi|9626243|ref|NC_001416.1|	550	.	G	A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:22:21:1:13:8:0:1:PASS	0:26:26:0:14:12:0:0:PASS	0:29:29:0:13:16:0:0:PASS	1:26:0:26:0:0:14:12:PASS

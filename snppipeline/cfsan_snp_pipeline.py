@@ -7,6 +7,7 @@ This is the top-level script for the collection of cfsan_snp_pipeline tools.
 from __future__ import absolute_import
 
 import argparse
+import psutil
 import sys
 import textwrap
 
@@ -263,6 +264,13 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     # -------------------------------------------------------------------------
     # Create the parser for the "map_reads" command
     # -------------------------------------------------------------------------
+    def threads(value):
+        ivalue = int(value)
+        num_local_cpu_cores = psutil.cpu_count()
+        if ivalue < 1 or ivalue > (2 * num_local_cpu_cores):
+            raise argparse.ArgumentTypeError("Number of threads must be between %d and %d" % (1, 2 * num_local_cpu_cores))
+        return ivalue
+
     description = """Align the sequence reads for a specified sample to a specified reference genome.
                      The reads are sorted, duplicates marked, and realigned around indels.
                      The output is written to the file "reads.sorted.deduped.indelrealigned.bam" in the sample directory."""
@@ -272,6 +280,7 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.add_argument(dest="sampleFastqFile2", type=str, help="Optional relative or absolute path to the mate fastq file, if paired", nargs="?")
     subparser.add_argument("-f", "--force",   dest="forceFlag", action="store_true", help="Force processing even when result files already exist and are newer than inputs")
     subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--threads", dest="threads",   type=threads, default=8, metavar="INT", help="Number of CPU cores to use")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=map_reads.map_reads)
     subparser.set_defaults(excepthook=utils.handle_sample_exception)

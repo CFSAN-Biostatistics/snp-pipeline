@@ -89,6 +89,17 @@ def map_reads(args):
     reference_base_path = os.path.splitext(reference_file_path)[0] # strip the file extension
     reference_id = os.path.basename(reference_base_path)
 
+    num_threads = args.threads
+
+    #==========================================================================
+    # Enforce the proper SAMtools version
+    #==========================================================================
+
+    samtools_version_str = utils.extract_version_str("SAMtools", "samtools 2>&1 > /dev/null")
+    samtools_version = samtools_version_str.split()[-1] # just the number
+    if samtools_version < "1.4":
+        utils.global_error("The installed %s is not supported.  Version 1.4 or higher is required." % samtools_version_str)
+
     #==========================================================================
     # Check if alignment to reference has already been done
     #==========================================================================
@@ -122,22 +133,15 @@ def map_reads(args):
             pu = sample_id
             read_group_tags = fastq.ReadGroupTags(id, sm, lb, pl, pu)
 
-
-        # Default to 8 cores on HPC or all cpu cores on workstation
-        if os.environ.get("JOB_ID") or os.environ.get("PBS_JOBID"):
-            num_cores = 8
-        else:
-            num_cores = psutil.cpu_count()
-
-        num_cores_param = ""
-
         if snp_pipeline_aligner == "bowtie2":
             version_str = utils.extract_version_str("bowtie2", "bowtie2 --version")
 
-            # Parse the user-specified bowtie parameters to determine if the user specified the number of CPU cores
-            bowtie2_align_extra_params = os.environ.get("Bowtie2Align_ExtraParams") or ""
-            if not utils.detect_numeric_option_in_parameters_str(bowtie2_align_extra_params, "-p"):
-                num_cores_param = "-p " + str(num_cores)
+            # Substitute the default parameters if the user did not specify bowtie parameters
+            os.environ["Bowtie2Align_ExtraParams"] = os.environ.get("Bowtie2Align_ExtraParams") or "--reorder"
+
+            # Set the number of threads to use
+            utils.configure_process_threads("Bowtie2Align_ExtraParams", "-p", num_threads, None)
+            bowtie2_align_extra_params = os.environ["Bowtie2Align_ExtraParams"]
 
             # Specify the read group and sample tags here, --rg tags cannot be specified without ID.
             # The read group tags are used by some downstream tools, like Picard and GATK.
@@ -149,11 +153,8 @@ def map_reads(args):
                 read_group_params += " --rg PL:" + read_group_tags.PL
             read_group_params += " --rg PU:" + read_group_tags.PU
 
-            # Substitute the default parameters if the user did not specify bowtie parameters
-            bowtie2_align_params = bowtie2_align_extra_params or "--reorder -q"
-
             # Build the command with options depending on whether the fastq files are paired
-            command_line = "bowtie2 " + num_cores_param + " " + read_group_params + " " + bowtie2_align_params + " -x " + reference_base_path
+            command_line = "bowtie2 " + read_group_params + " " + bowtie2_align_extra_params + " -x " + reference_base_path
             if sample_fastq_file2:
                 command_line += " -1 " + sample_fastq_file1 + " -2 " + sample_fastq_file2
             else:
@@ -162,19 +163,18 @@ def map_reads(args):
         elif snp_pipeline_aligner == "smalt":
             version_str = utils.extract_version_str("smalt", "smalt version")
 
-            # Parse the user-specified smalt parameters to determine if the user specified the number of CPU cores
-            smalt_align_extra_params = os.environ.get("SmaltAlign_ExtraParams") or ""
-            if not utils.detect_numeric_option_in_parameters_str(smalt_align_extra_params, "-n"):
-                num_cores_param = "-n " + str(num_cores)
-
             # Substitute the default parameters if the user did not specify smalt parameters
-            smalt_align_params = smalt_align_extra_params or "-O"
+            os.environ["SmaltAlign_ExtraParams"] = os.environ.get("SmaltAlign_ExtraParams") or  "-O"
+
+            # Set the number of threads to use
+            utils.configure_process_threads("SmaltAlign_ExtraParams", "-n", num_threads, None)
+            smalt_align_extra_params = os.environ["SmaltAlign_ExtraParams"]
 
             # Don't use the -i 1000 option if the fastq file is unpaired
             if not sample_fastq_file2:
                 smalt_align_params = re.sub("-i[ ]+[0-9]+", '', smalt_align_extra_params) # regex substitute
 
-            command_line = "smalt map " + num_cores_param + " " + smalt_align_params + " " + reference_base_path + " " + sample_fastq_file1 + " " + (sample_fastq_file2 or "")
+            command_line = "smalt map " + smalt_align_extra_params + " " + reference_base_path + " " + sample_fastq_file1 + " " + (sample_fastq_file2 or "")
 
         #==========================================================================
         # Run the command to execute bowtie2 or smalt
@@ -221,14 +221,17 @@ def map_reads(args):
     if not args.forceFlag and not needs_rebuild:
         verbose_print("# Unsorted bam file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
     else:
-        version_str = utils.extract_version_str("SAMtools", "samtools 2>&1 > /dev/null")
-
         # Substitute the default parameters if the user did not specify samtools view parameters
-        samtools_samfilter_params = os.environ.get("SamtoolsSamFilter_ExtraParams") or "-F 4"
+        os.environ["SamtoolsSamFilter_ExtraParams"] = os.environ.get("SamtoolsSamFilter_ExtraParams") or "-F 4"
+
+        # Set the number of threads to use
+        utils.configure_process_threads("SamtoolsSamFilter_ExtraParams", ["-@", "--threads"], num_threads, None)
+        samtools_samfilter_params = os.environ["SamtoolsSamFilter_ExtraParams"]
+
         command_line = "samtools view -S -b " + samtools_samfilter_params + " -o " + unsorted_bam_file + ' ' + sam_file
         verbose_print("# Convert sam file to bam file with only mapped positions.")
         verbose_print("# %s %s" % (utils.timestamp(), command_line))
-        verbose_print("# %s" % version_str)
+        verbose_print("# %s" % samtools_version_str)
         command.run(command_line, sys.stdout)
         utils.sample_error_on_missing_file(unsorted_bam_file, "samtools view")
         verbose_print("")
@@ -243,20 +246,14 @@ def map_reads(args):
     if not args.forceFlag and not needs_rebuild:
         verbose_print("# Sorted bam file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
     else:
-        version_str = utils.extract_version_str("SAMtools", "samtools 2>&1 > /dev/null")
-        samtools_sort_extra_params = os.environ.get("SamtoolsSort_ExtraParams") or ""
+        # Set the number of threads to use
+        utils.configure_process_threads("SamtoolsSort_ExtraParams", ["-@", "--threads"], num_threads, None)
+        samtools_sort_extra_params = os.environ["SamtoolsSort_ExtraParams"]
 
-        # Inspect the samtools version to determine how to execute samtools
-        # Use the -o FILE command line option with SAMtools 1.3 and higher
-        samtools_version = version_str.split()[-1] # just the number
-        if samtools_version < "1.3":
-            command_line = "samtools sort " + samtools_sort_extra_params + ' ' + unsorted_bam_file + ' ' + os.path.join(sample_dir, "reads.sorted")
-        else:
-            command_line = "samtools sort " + samtools_sort_extra_params + " -o " + sorted_bam_file + ' ' + unsorted_bam_file
-
+        command_line = "samtools sort " + samtools_sort_extra_params + " -o " + sorted_bam_file + ' ' + unsorted_bam_file
         verbose_print("# Convert bam to sorted bam file.")
         verbose_print("# %s %s" % (utils.timestamp(), command_line))
-        verbose_print("# %s" % version_str)
+        verbose_print("# %s" % samtools_version_str)
         command.run(command_line, sys.stdout)
         utils.sample_error_on_missing_file(sorted_bam_file, "samtools sort")
         verbose_print("")
@@ -308,11 +305,14 @@ def map_reads(args):
         if not args.forceFlag and not needs_rebuild:
             verbose_print("# Bam file index is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
         else:
-            version_str = utils.extract_version_str("SAMtools", "samtools 2>&1 > /dev/null")
-            command_line = "samtools index " + input_file + ' ' + bam_index_file
+            # Set the number of threads to use
+            utils.configure_process_threads("SamtoolsIndex_ExtraParams", "-@", num_threads, None)
+            samtools_index_extra_params = os.environ["SamtoolsIndex_ExtraParams"]
+
+            command_line = "samtools index " + samtools_index_extra_params + ' ' + input_file + ' ' + bam_index_file
             verbose_print("# Index bam file.")
             verbose_print("# %s %s" % (utils.timestamp(), command_line))
-            verbose_print("# %s" % version_str)
+            verbose_print("# %s" % samtools_version_str)
             command.run(command_line, sys.stdout)
             utils.sample_error_on_missing_file(bam_index_file, "samtools index")
             verbose_print("")
@@ -340,7 +340,10 @@ def map_reads(args):
                 if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
                     gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
 
-                realigner_target_creator_extra_params = os.environ.get("RealignerTargetCreator_ExtraParams") or ""
+                # Set the number of threads to use
+                utils.configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], num_threads, None)
+                realigner_target_creator_extra_params= os.environ["RealignerTargetCreator_ExtraParams"]
+
                 command_line = "java " + gatk_jvm_extra_params + ' ' + "org.broadinstitute.gatk.engine.CommandLineGATK -T RealignerTargetCreator -R " + reference_file_path + " -I " + input_file + " -o " + realign_targets_file  + ' ' + realigner_target_creator_extra_params
                 verbose_print("# Identify targets for realignment.")
                 verbose_print("# %s %s" % (utils.timestamp(), command_line))

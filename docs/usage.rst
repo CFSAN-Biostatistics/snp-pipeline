@@ -671,7 +671,7 @@ Step 4 - Align the samples to the reference::
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
     export SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/lambda_virus.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads --threads $numCores reference/lambda_virus.fasta
 
 Step 5 - Find the sites having high-confidence SNPs::
 
@@ -811,7 +811,7 @@ Step 4 - Align the samples to the reference::
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
     export SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/NC_011149.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads --threads $numCores reference/NC_011149.fasta
 
 Step 5 - Find the sites having high-confidence SNPs::
 
@@ -947,7 +947,7 @@ Step 4 - Align the samples to the reference::
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
     export SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/my_reference.fasta
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads --threads $numCores reference/my_reference.fasta
 
 Step 5 - Find the sites having high-confidence SNPs::
 

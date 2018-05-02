@@ -156,33 +156,44 @@ possible because NCBI does not always store the original read names in the SRA d
 Performance
 -----------
 
-**Q: How can I control the number of concurrent processes?**
+**Q: How can I limit the CPU resources consumed by the pipeline?**
 
 A: By default, the pipeline will use all available CPU resources.  You can limit the number of CPU cores the
-pipeline will use with the ``MaxCpuCores`` parameter in the configuration file.  By limiting the number of
-CPU cores, you will also limit the the number of concurrent processes.  This works on your workstation and
-also on a high performance computing cluster running Grid Engine or Torque.  See also the question below.
+pipeline will use with the :ref:`MaxCpuCores-label` parameter in the configuration file.  This works on your workstation and
+also on a high performance computing cluster running Grid Engine or Torque.  See also the questions below.
 
-**Q: How can I control the number of CPU cores used by the bowtie2 or smalt aligners?**
+**Q: How can I control the number of CPU cores used by the bowtie2, smalt, samtools, and GATK?**
 
-A: By default, the SNP Pipeline will use 8 CPU cores for each bowtie2 or smalt process.
-You can override the defaults with the ``-p`` bowtie2 option or the ``-n`` smalt option.  Set
-the option either in the configuration file if you are running run_snp_pipeline.sh, or in the Bowtie2Align_ExtraParams
-environment variable if you are running the map_reads command directly.  For example, to run alignments with
-16 concurrent threads::
+A: You can set the number of CPU cores per process with the :ref:`CpuCoresPerProcessOnHPC-label` and :ref:`CpuCoresPerProcessOnWorkstation-label`
+parameters.  This is the recommended way to control CPU cores per process for all multi-threaded processes in the pipeline::
 
-    Bowtie2Align_ExtraParams = "-p 16"
-    SmaltAlign_ExtraParams = "-n 16"
+    CpuCoresPerProcessOnHPC = 16
+    CpuCoresPerProcessOnWorkstation = 8
 
-Multiple alignments are run concurrently, each with multiple threads.  The number of concurrently executing
-alignment processes depends on the ``MaxCpuCores`` parameter setting.  For example if you set bowtie to use
-10 CPU cores per process and set MaxCpuCores to 20, you will have 2 concurrent bowtie2 processes each with
-10 CPU threads.
+If you want to allocate a different number of CPU cores for different processes, you can customize
+each command.  For example, you can set the number of bowtie threads with the ``-p`` option and
+the number of samtools threads with the ``-@`` option.  Set the options either in the configuration
+file if you are running run_snp_pipeline.sh, or in the environment variables if you are running the
+map_reads command directly.  ::
+
+    Bowtie2Align_ExtraParams = "-p 20"
+    SamtoolsSort_ExtraParams = "-@ 15"
 
 You cannot use more threads than the number of allowed CPU cores.  For example, if you set bowtie to use
 10 threads and you set MaxCpuCores to 8, bowtie will only get 8 threads, not 10.
 
-**Q: How can I control the amount of memory that is used by the Picard and VarScan java virtual machines?**
+**Q: How can I control the number of concurrent processes?**
+
+A: You can set configuration parameters to indirectly control the number of processes.  First, set the :ref:`MaxCpuCores-label` parameter.
+Then set the :ref:`CpuCoresPerProcessOnHPC-label` and :ref:`CpuCoresPerProcessOnWorkstation-label` parameters.  The number of concurrently
+executing processes will be the total number of CPUs divided by the number of CPU cores per process.
+
+Multiple processes are run concurrently, each with multiple threads.  The number of concurrently executing
+processes depends on the :ref:`MaxCpuCores-label` parameter setting.  For example if you set bowtie to use
+10 CPU cores per process and set MaxCpuCores to 20, you will have 2 concurrent bowtie2 processes each with
+10 CPU threads.
+
+**Q: How can I control the amount of memory that is used by the Picard, GATK, and VarScan java virtual machines?**
 
 A: The amount of memory used by the java VM can be set by using the ``-Xmx`` java VM option.  Set the
 option either in the configuration file if you are running run_snp_pipeline.sh, or in the VarscanJvm_ExtraParams
@@ -190,6 +201,7 @@ environment variable if you are running the call_sites command directly. For exa
 size to 3000 MB::
 
     PicardJvm_ExtraParams="-Xmx3000m"
+    GatkJvm_ExtraParams="-Xmx3000m"
     VarscanJvm_ExtraParams="-Xmx3000m"
 
 Developer Questions
