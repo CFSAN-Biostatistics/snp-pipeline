@@ -32,6 +32,7 @@ History
   a different number of allowed snps.  See :ref:`FilterRegions-ExtraParams-label`.
 * Added a ``--threads`` option to the map_reads script.  This should only be used when building custom :ref:`step-by-step-workflows`.
 * Updated the included datasets.
+* Documented the tested versions of other software used by the pipeline.  See :ref:`installation-label`.
 
 
 1.0.1 (2017-09-28) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
