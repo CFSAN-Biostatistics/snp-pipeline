@@ -471,27 +471,33 @@ def run(args):
             utils.report_error("The installed %s is not supported.  Version 1.4 or higher is required." % version_str)
             found_all_dependencies = False
 
-    stdout = command.run("java net.sf.varscan.VarScan 2>&1")
-    if "Error" in stdout:
-        utils.report_error("CLASSPATH is not configured with the path to VarScan")
+    jar_file_path = utils.find_path_in_path_list("VarScan", "CLASSPATH")
+    if jar_file_path:
+        stdout = command.run("java -jar " + jar_file_path + " 2>&1")
+    if not jar_file_path or "error" in stdout.lower():
+        utils.report_error("CLASSPATH is not configured with the path to VarScan.jar")
         found_all_dependencies = False
 
     picard_required = os.environ["RemoveDuplicateReads"] == "true" or  os.environ["EnableLocalRealignment"] == "true"
     if picard_required:
-        stdout = command.run("java picard.cmdline.PicardCommandLine 2>&1")
-        if "Error" in stdout:
-            utils.report_error("CLASSPATH is not configured with the path to Picard")
+        jar_file_path = utils.find_path_in_path_list("picard", "CLASSPATH")
+        if jar_file_path:
+            stdout = command.run("java -jar " + jar_file_path + " 2>&1")
+        if not jar_file_path or "error" in stdout.lower():
+            utils.report_error("CLASSPATH is not configured with the path to picard.jar")
             found_all_dependencies = False
 
     gatk_required = os.environ["EnableLocalRealignment"] == "true"
     if gatk_required:
-        stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK --version 2>&1")
-        if "Error" in stdout:
-            utils.report_error("CLASSPATH is not configured with the path to GATK")
+        jar_file_path = utils.find_path_in_path_list("GenomeAnalysisTK", "CLASSPATH")
+        if jar_file_path:
+            stdout = command.run("java -jar " + jar_file_path + " --version 2>&1")
+        if not jar_file_path or "error" in stdout.lower():
+            utils.report_error("CLASSPATH is not configured with the path to GenomeAnalysisTK.jar")
             found_all_dependencies = False
         else:
-            stdout = command.run("java org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner --version 2>&1")
-            if "ERROR" in stdout:
+            stdout = command.run("java -jar " + jar_file_path + " -T IndelRealigner --version 2>&1")
+            if "error" in stdout.lower():
                 utils.report_error("The installed GATK version does not support indel realignment.  Try installing an older release prior to GATK v4.")
                 found_all_dependencies = False
 

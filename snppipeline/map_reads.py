@@ -92,6 +92,19 @@ def map_reads(args):
     num_threads = args.threads
 
     #==========================================================================
+    # verify jar files are in CLASSPATH
+    #==========================================================================
+    picard_jar_file_path = utils.find_path_in_path_list("picard", "CLASSPATH")
+    if not picard_jar_file_path:
+        utils.global_error("Error: cannot execute Picard. Define the path to picard.jar in the CLASSPATH environment variable.")
+    picard_version_str = utils.extract_version_str("Picard", "java -jar " + picard_jar_file_path + " AddOrReplaceReadGroups --version 2>&1")
+
+    gatk_jar_file_path = utils.find_path_in_path_list("GenomeAnalysisTK", "CLASSPATH")
+    if not gatk_jar_file_path:
+        utils.global_error("Error: cannot execute GATK. Define the path to GenomeAnalysisTK.jar in the CLASSPATH environment variable.")
+    gatk_version_str = utils.extract_version_str("GATK", "java -jar " + gatk_jar_file_path + " --version 2>&1")
+
+    #==========================================================================
     # Enforce the proper SAMtools version
     #==========================================================================
 
@@ -191,9 +204,8 @@ def map_reads(args):
         if snp_pipeline_aligner == "smalt" and read_group_tags:
             smalt_sam_file = os.path.join(sample_dir, "reads.smalt.sam")
             shutil.move(sam_file, smalt_sam_file)
-            version_str = utils.extract_version_str("Picard", "java  picard.cmdline.PicardCommandLine AddOrReplaceReadGroups --version 2>&1")
             jvm_params = os.environ.get("PicardJvm_ExtraParams") or ""
-            command_line = "java " + jvm_params + " picard.cmdline.PicardCommandLine AddOrReplaceReadGroups"
+            command_line = "java " + jvm_params + " -jar " + picard_jar_file_path + " AddOrReplaceReadGroups"
             command_line += " I=" + smalt_sam_file
             command_line += " O=" + sam_file
             command_line += " RGID=" + read_group_tags.ID
@@ -207,7 +219,7 @@ def map_reads(args):
             verbose_print("")
             verbose_print("# Assign read group id %s" % (read_group_tags.ID))
             verbose_print("# %s %s" % (utils.timestamp(), command_line))
-            verbose_print("# %s" % version_str)
+            verbose_print("# %s" % picard_version_str)
             command.run(command_line, sys.stdout)
         verbose_print("")
 
@@ -271,22 +283,17 @@ def map_reads(args):
         if not args.forceFlag and not needs_rebuild:
             verbose_print("# Deduped bam file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
         else:
-            classpath = os.environ.get("CLASSPATH")
-            if not classpath or "picard" not in classpath.lower():
-                utils.global_error("Error: cannot execute Picard. Define the path to Picard in the CLASSPATH environment variable.")
-            else:
-                version_str = utils.extract_version_str("Picard", "java picard.cmdline.PicardCommandLine MarkDuplicates --version 2>&1")
-                picard_jvm_extra_params = os.environ.get("PicardJvm_ExtraParams") or ""
-                picard_mark_duplicates_extra_params = os.environ.get("PicardMarkDuplicates_ExtraParams") or ""
-                tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
-                tmp_option = " TMP_DIR=" + tmpdir if tmpdir else ""
-                command_line = "java " + picard_jvm_extra_params + ' ' + "picard.cmdline.PicardCommandLine MarkDuplicates INPUT=" + input_file + " OUTPUT=" + output_file + " METRICS_FILE=" + os.path.join(sample_dir, "duplicate_reads_metrics.txt") + tmp_option + ' ' + picard_mark_duplicates_extra_params
-                verbose_print("# Mark duplicate reads in bam file.")
-                verbose_print("# %s %s" % (utils.timestamp(), command_line))
-                verbose_print("# %s" % version_str)
-                command.run(command_line, sys.stdout)
-                utils.sample_error_on_missing_file(output_file, "picard MarkDuplicates")
-                verbose_print("")
+            picard_jvm_extra_params = os.environ.get("PicardJvm_ExtraParams") or ""
+            picard_mark_duplicates_extra_params = os.environ.get("PicardMarkDuplicates_ExtraParams") or ""
+            tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+            tmp_option = " TMP_DIR=" + tmpdir if tmpdir else ""
+            command_line = "java " + picard_jvm_extra_params + " -jar " + picard_jar_file_path + " MarkDuplicates INPUT=" + input_file + " OUTPUT=" + output_file + " METRICS_FILE=" + os.path.join(sample_dir, "duplicate_reads_metrics.txt") + tmp_option + ' ' + picard_mark_duplicates_extra_params
+            verbose_print("# Mark duplicate reads in bam file.")
+            verbose_print("# %s %s" % (utils.timestamp(), command_line))
+            verbose_print("# %s" % picard_version_str)
+            command.run(command_line, sys.stdout)
+            utils.sample_error_on_missing_file(output_file, "picard MarkDuplicates")
+            verbose_print("")
 
     #==========================================================================
     # Next three steps are part of local realignment around indels
@@ -330,27 +337,22 @@ def map_reads(args):
             verbose_print("# Realign targets file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
         else:
             classpath = os.environ.get("CLASSPATH")
-            if not classpath or "genomeanalysistk" not in classpath.lower():
-                utils.global_error("Error: cannot execute GATK RealignerTargetCreator. Define the path to GATK in the CLASSPATH environment variable.")
-            else:
-                version_str = utils.extract_version_str("GATK", "java org.broadinstitute.gatk.engine.CommandLineGATK -T RealignerTargetCreator --version 2>&1")
+            gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
+            tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+            if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
+                gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
 
-                gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
-                tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
-                if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
-                    gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
+            # Set the number of threads to use
+            utils.configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], num_threads, None)
+            realigner_target_creator_extra_params= os.environ["RealignerTargetCreator_ExtraParams"]
 
-                # Set the number of threads to use
-                utils.configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], num_threads, None)
-                realigner_target_creator_extra_params= os.environ["RealignerTargetCreator_ExtraParams"]
-
-                command_line = "java " + gatk_jvm_extra_params + ' ' + "org.broadinstitute.gatk.engine.CommandLineGATK -T RealignerTargetCreator -R " + reference_file_path + " -I " + input_file + " -o " + realign_targets_file  + ' ' + realigner_target_creator_extra_params
-                verbose_print("# Identify targets for realignment.")
-                verbose_print("# %s %s" % (utils.timestamp(), command_line))
-                verbose_print("# %s" % version_str)
-                command.run(command_line, sys.stdout)
-                utils.sample_error_on_missing_file(realign_targets_file, "GATK RealignerTargetCreator", empty_ok=True)
-                verbose_print("")
+            command_line = "java " + gatk_jvm_extra_params + " -jar " + gatk_jar_file_path + " -T RealignerTargetCreator -R " + reference_file_path + " -I " + input_file + " -o " + realign_targets_file  + ' ' + realigner_target_creator_extra_params
+            verbose_print("# Identify targets for realignment.")
+            verbose_print("# %s %s" % (utils.timestamp(), command_line))
+            verbose_print("# %s" % gatk_version_str)
+            command.run(command_line, sys.stdout)
+            utils.sample_error_on_missing_file(realign_targets_file, "GATK RealignerTargetCreator", empty_ok=True)
+            verbose_print("")
 
     #==========================================================================
     # Realign around indels
@@ -363,21 +365,15 @@ def map_reads(args):
         if not args.forceFlag and not needs_rebuild:
             verbose_print("# Indelrealigned bam file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
         else:
-            classpath = os.environ.get("CLASSPATH")
-            if not classpath or "genomeanalysistk" not in classpath.lower():
-                utils.global_error("Error: cannot execute GATK IndelRealigner. Define the path to GATK in the CLASSPATH environment variable.")
-            else:
-                version_str = utils.extract_version_str("GATK", "java org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner --version 2>&1")
+            gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
+            tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
+            if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
+                gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
 
-                gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
-                tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
-                if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
-                    gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
-
-                indel_realigner_extra_params = os.environ.get("IndelRealigner_ExtraParams") or ""
-                command_line = "java " + gatk_jvm_extra_params + ' ' + "org.broadinstitute.gatk.engine.CommandLineGATK -T IndelRealigner -R " + reference_file_path + " -targetIntervals " + realign_targets_file + " -I " + input_file + " -o " + output_file  + ' ' + indel_realigner_extra_params
-                verbose_print("# Realign around indels")
-                verbose_print("# %s %s" % (utils.timestamp(), command_line))
-                verbose_print("# %s" % version_str)
-                command.run(command_line, sys.stdout)
-                utils.sample_error_on_missing_file(output_file, "GATK IndelRealigner")
+            indel_realigner_extra_params = os.environ.get("IndelRealigner_ExtraParams") or ""
+            command_line = "java " + gatk_jvm_extra_params + " -jar " + gatk_jar_file_path + " -T IndelRealigner -R " + reference_file_path + " -targetIntervals " + realign_targets_file + " -I " + input_file + " -o " + output_file  + ' ' + indel_realigner_extra_params
+            verbose_print("# Realign around indels")
+            verbose_print("# %s %s" % (utils.timestamp(), command_line))
+            verbose_print("# %s" % gatk_version_str)
+            command.run(command_line, sys.stdout)
+            utils.sample_error_on_missing_file(output_file, "GATK IndelRealigner")

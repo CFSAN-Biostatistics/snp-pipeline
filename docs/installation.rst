@@ -28,7 +28,7 @@ Software    Tested Version      Description
 Bowtie2_    2.3.4.1        A tool for aligning reads to long reference sequences
 SMALT_      0.7.6          A tool for aligning reads to long reference sequences
 SAMtools_   1.8            Utilities for manipulating alignments in the SAM format
-Picard_     2.8.3          A set of tools for manipulating sequence data
+Picard_     2.18.4         A set of tools for manipulating sequence data
 GATK_       3.8-1-0        Variant discovery and genotyping tools
 VarScan_    2.3.9          A tool to detect variants in NGS data
 tabix_      1.8            A generic indexer for tab-delimited genome position files
@@ -37,7 +37,7 @@ BcfTools_   1.8            Utilities for variant calling and manipulating VCFs a
 fastq-dump_ 2.8.1          An SRA Toolkit utility for fetching samples from NCBI SRA
 =========== ============== ===============================================================
 
-Note: the versions above are tested and known to work together, but other versions may also work.
+Note: the versions above are tested and known to work together. Other versions may also work.
 
 Note: you will need either Bowtie2 or SMALT.  You do not have to install both.
 However, the included result files were generated with Bowtie2.  Your results may differ
@@ -46,19 +46,17 @@ when using SMALT.
 Note: Picard is required when removing deplicate reads and when realigning reads around indels.
 Both of these functions are enabled by default, but can be disabled in the configuration file.
 
-Note: GATK is required when realigning reads around indels, which is enabled by default, 
+Note: GATK is required when realigning reads around indels, which is enabled by default,
 but can be disabled in the configuration file.
 
 Step 3 - Environment Variables
 ------------------------------
-Define the CLASSPATH environment variable to specify the location of the Picard and VarScan jar files.  Add
+Define the CLASSPATH environment variable to specify the location of the Picard, VarScan, and GATK jar files.  Add
 the following lines (or something similiar) to your .bashrc file::
 
     export CLASSPATH=~/software/varscan.v2.3.9/VarScan.jar:$CLASSPATH
     export CLASSPATH=~/software/picard/picard.jar:$CLASSPATH
     export CLASSPATH=~/software/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef/GenomeAnalysisTK.jar:$CLASSPATH
-
-The order is important.  The GATK path should be before Picard in the CLASSPATH environment variable.
 
 Step 4 - Python
 ---------------

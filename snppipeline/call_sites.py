@@ -91,14 +91,14 @@ def call_sites(args):
     if not args.forceFlag and not needs_rebuild:
         verbose_print("# VCF file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
     else:
-        classpath = os.environ.get("CLASSPATH")
-        if not classpath or "varscan" not in classpath.lower():
-            utils.global_error("Error: cannot execute VarScan. Define the path to VarScan in the CLASSPATH environment variable.")
+        jar_file_path = utils.find_path_in_path_list("VarScan", "CLASSPATH")
+        if not jar_file_path:
+            utils.global_error("Error: cannot execute VarScan. Define the path to VarScan.jar in the CLASSPATH environment variable.")
         else:
-            version_str = utils.extract_version_str("VarScan", "java net.sf.varscan.VarScan 2>&1 > /dev/null | head -n 1 | cut -d ' ' -f 2")
+            version_str = utils.extract_version_str("VarScan", "java -jar " + jar_file_path + " 2>&1 > /dev/null | head -n 1 | cut -d ' ' -f 2")
             varscan_jvm_extra_params = os.environ.get("VarscanJvm_ExtraParams") or ""
             varscan_mpileup2snp_extra_params = os.environ.get("VarscanMpileup2snp_ExtraParams") or ""
-            command_line = "java " + varscan_jvm_extra_params + " net.sf.varscan.VarScan mpileup2snp " + pileup_file + " --output-vcf 1 " + varscan_mpileup2snp_extra_params
+            command_line = "java " + varscan_jvm_extra_params + " -jar " + jar_file_path + " mpileup2snp " + pileup_file + " --output-vcf 1 " + varscan_mpileup2snp_extra_params
             verbose_print("# Create vcf file")
             verbose_print("# %s %s" % (utils.timestamp(), command_line))
             verbose_print("# %s" % version_str)

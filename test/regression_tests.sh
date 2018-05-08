@@ -207,7 +207,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "tabix"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bgzip"
     verifyWhetherCommandOnPathChecked "$tempDir/error.log" "bcftools"
-    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to VarScan"
+    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to VarScan.jar"
     assertFileContains "$tempDir/error.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "cfsan_snp_pipeline"
@@ -217,7 +217,7 @@ tryRunSnpPipelineDependencyRaiseFatalError()
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "tabix"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bgzip"
     verifyWhetherCommandOnPathChecked "$tempDir/run_snp_pipeline.stderr.log" "bcftools"
-    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to VarScan"
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to VarScan.jar"
     assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html"
 }
 
@@ -286,10 +286,10 @@ testRunSnpPipelineDependencyRemoveDuplicateReadsRaiseFatalErrorStop()
     echo "RemoveDuplicateReads=true" >> "$tempDir/snppipeline.conf"
     echo "EnableLocalRealignment=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
-    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
-    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
-    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GATK"
-    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GATK"
+    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to picard.jar"
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to picard.jar"
+    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GenomeAnalysisTK.jar"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GenomeAnalysisTK.jar"
 }
 
 # Verify run_snp_pipeline requires Picard and GATK when realigning around indels
@@ -300,10 +300,10 @@ testRunSnpPipelineDependencyLocalRealignRaiseFatalErrorStop()
     echo "RemoveDuplicateReads=false" >> "$tempDir/snppipeline.conf"
     echo "EnableLocalRealignment=true" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
-    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
-    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GATK"
-    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
-    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GATK"
+    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to picard.jar"
+    assertFileContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GenomeAnalysisTK.jar"
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to picard.jar"
+    assertFileContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GenomeAnalysisTK.jar"
 }
 
 # Verify run_snp_pipeline does not require Picard when not removing duplicate reads and not realigning around indels
@@ -314,10 +314,10 @@ testRunSnpPipelineDependencyPicardGatkNotRequiredRaiseFatalErrorStop()
     echo "RemoveDuplicateReads=false" >> "$tempDir/snppipeline.conf"
     echo "EnableLocalRealignment=false" >> "$tempDir/snppipeline.conf"
     tryRunSnpPipelineDependencyRaiseFatalError 1 bowtie2
-    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to Picard"
-    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GATK"
-    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to Picard"
-    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GATK"
+    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to picard.jar"
+    assertFileNotContains "$tempDir/error.log" "CLASSPATH is not configured with the path to GenomeAnalysisTK.jar"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to picard.jar"
+    assertFileNotContains "$tempDir/run_snp_pipeline.stderr.log" "CLASSPATH is not configured with the path to GenomeAnalysisTK.jar"
 }
 
 # Verify the index_ref command detects a misconfigured environment variable
@@ -1394,8 +1394,8 @@ tryMapReadsPicardMarkDuplicatesClasspathRaiseGlobalError()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
     assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads failed"
-    assertFileContains "$tempDir/error.log" "Error: cannot execute Picard. Define the path to Picard in the CLASSPATH environment variable."
-    assertFileContains "$logDir/mapReads.log" "Error: cannot execute Picard. Define the path to Picard in the CLASSPATH environment variable."
+    assertFileContains "$tempDir/error.log" "Error: cannot execute Picard. Define the path to picard.jar in the CLASSPATH environment variable."
+    assertFileContains "$logDir/mapReads.log" "Error: cannot execute Picard. Define the path to picard.jar in the CLASSPATH environment variable."
     assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/mapReads.log" "Deduped bam file is already freshly created"
 }
@@ -1568,7 +1568,7 @@ tryMapReadsRealignerTargetCreatorClasspathRaiseGlobalError()
     sleep 1
     echo "Garbage" > "$tempDir/samples/sample1/reads.sorted.deduped.bai"
     saveClassPath="$CLASSPATH"
-    unset CLASSPATH
+    export CLASSPATH="picard.jar"  # we are testing for GATK, not picard
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" &> "$logDir/mapReads.log"
     errorCode=$?
     export CLASSPATH="$saveClassPath"
@@ -1578,8 +1578,8 @@ tryMapReadsRealignerTargetCreatorClasspathRaiseGlobalError()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
     assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads failed"
-    assertFileContains "$tempDir/error.log" "Error: cannot execute GATK RealignerTargetCreator. Define the path to GATK in the CLASSPATH environment variable."
-    assertFileContains "$logDir/mapReads.log" "Error: cannot execute GATK RealignerTargetCreator. Define the path to GATK in the CLASSPATH environment variable."
+    assertFileContains "$tempDir/error.log" "Error: cannot execute GATK. Define the path to GenomeAnalysisTK.jar in the CLASSPATH environment variable."
+    assertFileContains "$logDir/mapReads.log" "Error: cannot execute GATK. Define the path to GenomeAnalysisTK.jar in the CLASSPATH environment variable."
     assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/mapReads.log" "Realign targets file is already freshly created"
 }
@@ -1697,7 +1697,7 @@ tryMapReadsIndelRealignerClasspathRaiseGlobalError()
     sleep 1
     echo "Garbage" > "$tempDir/samples/sample1/realign.target.intervals"
     saveClassPath="$CLASSPATH"
-    unset CLASSPATH
+    export CLASSPATH="picard.jar"  # we are testing for GATK, not picard
     cfsan_snp_pipeline map_reads "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1/sample1_1.fastq" &> "$logDir/mapReads.log"
     errorCode=$?
     export CLASSPATH="$saveClassPath"
@@ -1707,8 +1707,8 @@ tryMapReadsIndelRealignerClasspathRaiseGlobalError()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline map_reads failed"
     assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads failed"
-    assertFileContains "$tempDir/error.log" "Error: cannot execute GATK IndelRealigner. Define the path to GATK in the CLASSPATH environment variable."
-    assertFileContains "$logDir/mapReads.log" "Error: cannot execute GATK IndelRealigner. Define the path to GATK in the CLASSPATH environment variable."
+    assertFileContains "$tempDir/error.log" "Error: cannot execute GATK. Define the path to GenomeAnalysisTK.jar in the CLASSPATH environment variable."
+    assertFileContains "$logDir/mapReads.log" "Error: cannot execute GATK. Define the path to GenomeAnalysisTK.jar in the CLASSPATH environment variable."
     assertFileNotContains "$logDir/mapReads.log" "cfsan_snp_pipeline map_reads finished"
     assertFileNotContains "$logDir/mapReads.log" "Indelrealigned bam file is already freshly created"
 }
@@ -1941,7 +1941,7 @@ tryCallSitesVarscanRaiseSampleError()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "var.flt.vcf is empty"
     assertFileContains "$logDir/callSites.log" "var.flt.vcf is empty"
-    assertFileContains "$logDir/callSites.log" "VarScan mpileup2snp"
+    assertFileContains "$logDir/callSites.log" "VarScan.jar mpileup2snp"
     assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites finished"
     assertFileNotContains "$logDir/callSites.log" "Vcf file is already freshly created"
 }
@@ -1998,8 +1998,8 @@ tryCallSitesVarscanClasspathRaiseGlobalError()
     verifyNonEmptyReadableFile "$tempDir/error.log"
     assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_sites failed"
     assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites failed"
-    assertFileContains "$tempDir/error.log" "Error: cannot execute VarScan. Define the path to VarScan in the CLASSPATH environment variable."
-    assertFileContains "$logDir/callSites.log" "Error: cannot execute VarScan. Define the path to VarScan in the CLASSPATH environment variable."
+    assertFileContains "$tempDir/error.log" "Error: cannot execute VarScan. Define the path to VarScan.jar in the CLASSPATH environment variable."
+    assertFileContains "$logDir/callSites.log" "Error: cannot execute VarScan. Define the path to VarScan.jar in the CLASSPATH environment variable."
     assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites finished"
     assertFileNotContains "$logDir/callSites.log" "Vcf file is already freshly created"
 }

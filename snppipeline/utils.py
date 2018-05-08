@@ -1498,3 +1498,57 @@ def configure_process_threads(extra_params_env_var, threads_option, default_thre
 
     return max_processes, threads_per_process
 
+
+def find_path_in_path_list(search_item, env_var, case_sensitive=False):
+    """Search a colon-separated environment variable for a specified string.
+    Return the path containing the string.
+
+    Parameters
+    ----------
+    search_item : str
+        The string to search for in the path.  This string should have enough
+        characters to uniquely identify the path, but it does not have to be the
+        entire path to the file.  Any unique substring will work.  Typically, the
+        basename of the file is enough.
+    env_var : str
+        Name of the environment variable containing the path with the search item.
+    case_sensitive : bool, optional, defaults to False
+        When false, the search will be case insensitive, so any combination of
+        uppercase/lowercase search item is fine.
+
+    Returns
+    -------
+    path : str
+        The path to the jar file as specified in the environment variable if found.
+        Returns None if not found.
+
+    Examples
+    --------
+    >>> os.environ["TESTPATH"] = "/a/a/picard.jar:/b/b/gatk.jar:/c/c/VarScan.jar"
+    >>> find_path_in_path_list("missing", "TESTPATH") is None
+    True
+    >>> find_path_in_path_list("Picard", "TESTPATH") # first, case insensitive
+    '/a/a/picard.jar'
+    >>> find_path_in_path_list("Gatk", "TESTPATH") # middle, case insensitive
+    '/b/b/gatk.jar'
+    >>> find_path_in_path_list("varscan", "TESTPATH") # last, case insensitive
+    '/c/c/VarScan.jar'
+    >>> find_path_in_path_list("picard", "TESTPATH", case_sensitive=True) # first, case sensitive
+    '/a/a/picard.jar'
+    >>> find_path_in_path_list("gatk", "TESTPATH", case_sensitive=True) # middle, case sensitive
+    '/b/b/gatk.jar'
+    >>> find_path_in_path_list("VarScan", "TESTPATH", case_sensitive=True) # last, case sensitive
+    '/c/c/VarScan.jar'
+    """
+    paths = os.environ.get(env_var, "")
+    if not case_sensitive:
+        search_item = search_item.lower()
+
+    paths = paths.split(':')
+    for path in paths:
+        path_to_search = path.lower() if not case_sensitive else path
+        if search_item in path_to_search:
+            return path
+
+    return None
+
