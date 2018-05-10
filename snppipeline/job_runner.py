@@ -12,6 +12,14 @@ import subprocess
 import sys
 
 
+# Determine how to decode bytes
+std_encoding = sys.stdout.encoding
+if std_encoding is None:
+    std_encoding = sys.stdin.encoding
+if std_encoding is None:
+    std_encoding = "utf-8"
+
+
 class JobRunnerException(Exception):
     """Raised for fatal JobRunner errors"""
 
@@ -232,8 +240,9 @@ class JobRunner(object):
         text to stdout
         text to stderr
 
-        # Error case, external program returns non-zero
-        >>> job_id = runner.run("exit 100", "JobName", "")
+        # Error case, external program returns non-zero.
+        # Need to ignore exception details to work with both python2 and python3.
+        >>> job_id = runner.run("exit 100", "JobName", "") # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         CalledProcessError: Command 'set -o pipefail; exit 100 2>&1 | tee ' returned non-zero exit status 100
         """
@@ -265,6 +274,8 @@ class JobRunner(object):
             if self.verbose:
                 print(shell_command_line)
             job_id = subprocess.check_output(shell_command_line, shell=True)
+            if sys.version_info > (3,):
+                job_id = job_id.decode(std_encoding)  # Python 3 stdout is bytes, not str
             job_id = job_id.strip()
             if self.verbose:
                 print("Job id=" + job_id)
@@ -373,6 +384,8 @@ class JobRunner(object):
                 print(shell_command_line)
 
             job_id = subprocess.check_output(shell_command_line, shell=True) # If the return code is non-zero it raises a CalledProcessError
+            if sys.version_info > (3,):
+                job_id = job_id.decode(std_encoding)  # Python 3 stdout is bytes, not str
             job_id = job_id.strip()
             if self.strip_job_array_suffix:
                 dot_idx = job_id.find('.')

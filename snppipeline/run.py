@@ -635,7 +635,11 @@ def run(args):
 
     # There are multiple processes within map_reads, each with multiple threads.
     # The CPU allocation must be enough for the process needing the largest number of threads.
-    max_processes = min(aligner_max_processes, samfilter_max_processes, samsort_max_processes, samindex_max_processes, realigner_max_processes)
+    max_processes_list = [aligner_max_processes, samfilter_max_processes, samsort_max_processes, samindex_max_processes, realigner_max_processes]
+    if all([i is None for i in max_processes_list]):
+        max_processes = None
+    else:
+        max_processes = min([i for i in max_processes_list if i is not None])
     threads_per_process = max(aligner_threads_per_process, samfilter_threads_per_process, samsort_threads_per_process, samindex_threads_per_process, realigner_threads_per_process)
 
     parallel_environment = config_params.get("GridEngine_PEname", None)
