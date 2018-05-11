@@ -1080,119 +1080,6 @@ testMapReadsSmaltAlignTrapStopUnset()
 }
 
 
-# Verify the cfsan_snp_pipeline call_sites script detects a Missing reference file
-tryCallSitesMissingReferenceRaiseGlobalError()
-{
-    expectErrorCode=$1
-    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-
-    # Extract test data to temp dir
-    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
-
-    # Setup directories and env variables used to trigger error handling.
-    # This simulates what run_snp_pipeline does before running other scripts
-    export logDir="$tempDir/logs"
-    mkdir -p "$logDir"
-    export errorOutputFile="$tempDir/error.log"
-
-    # Deliberately try cfsan_snp_pipeline call_sites with missing file
-    rm "$tempDir/reference/lambda_virus.fasta"
-
-    # Try to align a paired-end sample to the reference
-    cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta" "xxxx" &> "$logDir/callSites.log"
-    errorCode=$?
-
-    # Verify cfsan_snp_pipeline call_sites error handling behavior
-    assertEquals "cfsan_snp_pipeline call_sites returned incorrect error code when the reference file was missing." $expectErrorCode $errorCode
-    verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_sites failed"
-    assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites failed"
-    assertFileContains "$tempDir/error.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
-    assertFileContains "$logDir/callSites.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
-    assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites finished"
-    assertFileNotContains "$logDir/callSites.log" "Use the -f option to force a rebuild"
-
-    # Restore the normal aligner
-    export SnpPipeline_Aligner=bowtie2
-}
-
-# Verify the cfsan_snp_pipeline call_sites script detects a missing Reference file
-testCallSitesMissingReferenceRaiseGlobalErrorStop()
-{
-    export StopOnSampleError=true
-    tryCallSitesMissingReferenceRaiseGlobalError 100
-}
-
-# Verify the cfsan_snp_pipeline call_sites script detects a missing reference file
-testCallSitesMissingReferenceRaiseGlobalErrorNoStop()
-{
-    export StopOnSampleError=false
-    tryCallSitesMissingReferenceRaiseGlobalError 100
-}
-
-# Verify the cfsan_snp_pipeline call_sites script detects a missing reference file
-testCallSitesMissingReferenceRaiseGlobalErrorStopUnset()
-{
-    unset StopOnSampleError
-    tryCallSitesMissingReferenceRaiseGlobalError 100
-}
-
-
-# Verify the cfsan_snp_pipeline call_sites script detects a missing sample bam file
-tryCallSitesMissingBamFileRaiseSampleError()
-{
-    expectErrorCode=$1
-    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
-
-    # Extract test data to temp dir
-    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
-
-    # Setup directories and env variables used to trigger error handling.
-    # This simulates what run_snp_pipeline does before running other scripts
-    export logDir="$tempDir/logs"
-    mkdir -p "$logDir"
-    export errorOutputFile="$tempDir/error.log"
-
-    # Deliberately try cfsan_snp_pipeline call_sites with missing file
-    cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1" &> "$logDir/callSites.log"
-    errorCode=$?
-
-    # Verify cfsan_snp_pipeline call_sites error handling behavior
-    assertEquals "cfsan_snp_pipeline call_sites returned incorrect error code when the reads.sorted.deduped.indelrealigned.bam file was missing." $expectErrorCode $errorCode
-    verifyNonEmptyReadableFile "$tempDir/error.log"
-    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_sites failed"
-    assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites failed"
-    assertFileContains "$tempDir/error.log" "Sample BAM file $tempDir/samples/sample1/reads.sorted.deduped.indelrealigned.bam does not exist"
-    assertFileContains "$logDir/callSites.log" "Sample BAM file $tempDir/samples/sample1/reads.sorted.deduped.indelrealigned.bam does not exist"
-    assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites finished"
-    assertFileNotContains "$logDir/callSites.log" "Use the -f option to force a rebuild"
-
-    # Restore the normal aligner
-    export SnpPipeline_Aligner=bowtie2
-}
-
-# Verify the cfsan_snp_pipeline call_sites script detects a missing sample bam file
-testCallSitesMissingBamFileRaiseSampleErrorStop()
-{
-    export StopOnSampleError=true
-    tryCallSitesMissingBamFileRaiseSampleError 100
-}
-
-# Verify the cfsan_snp_pipeline call_sites script detects a missing sample bam file
-testCallSitesMissingBamFileRaiseSampleErrorNoStop()
-{
-    export StopOnSampleError=false
-    tryCallSitesMissingBamFileRaiseSampleError 98
-}
-
-# Verify the cfsan_snp_pipeline call_sites script detects a missing sample bam file
-testCallSitesMissingBamFileRaiseSampleErrorStopUnset()
-{
-    unset StopOnSampleError
-    tryCallSitesMissingBamFileRaiseSampleError 100
-}
-
-
 # Verify the cfsan_snp_pipeline map_reads script detects Samtools view failure.
 tryMapReadsSamtoolsViewTrap()
 {
@@ -1858,6 +1745,119 @@ testMapReadsRemoveDuplicateReadsOnEnableLocalRealignmentOn()
     verifyNonExistingFile      "$tempDir/samples/sample1/reads.sorted.indelrealigned.bam"
     verifyNonEmptyReadableFile "$tempDir/samples/sample1/reads.sorted.deduped.indelrealigned.bam"
 }
+
+# Verify the cfsan_snp_pipeline call_sites script detects a Missing reference file
+tryCallSitesMissingReferenceRaiseGlobalError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Deliberately try cfsan_snp_pipeline call_sites with missing file
+    rm "$tempDir/reference/lambda_virus.fasta"
+
+    # Try to align a paired-end sample to the reference
+    cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta" "xxxx" &> "$logDir/callSites.log"
+    errorCode=$?
+
+    # Verify cfsan_snp_pipeline call_sites error handling behavior
+    assertEquals "cfsan_snp_pipeline call_sites returned incorrect error code when the reference file was missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_sites failed"
+    assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites failed"
+    assertFileContains "$tempDir/error.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
+    assertFileContains "$logDir/callSites.log" "Reference file $tempDir/reference/lambda_virus.fasta does not exist"
+    assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites finished"
+    assertFileNotContains "$logDir/callSites.log" "Use the -f option to force a rebuild"
+
+    # Restore the normal aligner
+    export SnpPipeline_Aligner=bowtie2
+}
+
+# Verify the cfsan_snp_pipeline call_sites script detects a missing Reference file
+testCallSitesMissingReferenceRaiseGlobalErrorStop()
+{
+    export StopOnSampleError=true
+    tryCallSitesMissingReferenceRaiseGlobalError 100
+}
+
+# Verify the cfsan_snp_pipeline call_sites script detects a missing reference file
+testCallSitesMissingReferenceRaiseGlobalErrorNoStop()
+{
+    export StopOnSampleError=false
+    tryCallSitesMissingReferenceRaiseGlobalError 100
+}
+
+# Verify the cfsan_snp_pipeline call_sites script detects a missing reference file
+testCallSitesMissingReferenceRaiseGlobalErrorStopUnset()
+{
+    unset StopOnSampleError
+    tryCallSitesMissingReferenceRaiseGlobalError 100
+}
+
+
+# Verify the cfsan_snp_pipeline call_sites script detects a missing sample bam file
+tryCallSitesMissingBamFileRaiseSampleError()
+{
+    expectErrorCode=$1
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Extract test data to temp dir
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir
+
+    # Setup directories and env variables used to trigger error handling.
+    # This simulates what run_snp_pipeline does before running other scripts
+    export logDir="$tempDir/logs"
+    mkdir -p "$logDir"
+    export errorOutputFile="$tempDir/error.log"
+
+    # Deliberately try cfsan_snp_pipeline call_sites with missing file
+    cfsan_snp_pipeline call_sites "$tempDir/reference/lambda_virus.fasta" "$tempDir/samples/sample1" &> "$logDir/callSites.log"
+    errorCode=$?
+
+    # Verify cfsan_snp_pipeline call_sites error handling behavior
+    assertEquals "cfsan_snp_pipeline call_sites returned incorrect error code when the reads.sorted.deduped.indelrealigned.bam file was missing." $expectErrorCode $errorCode
+    verifyNonEmptyReadableFile "$tempDir/error.log"
+    assertFileContains "$tempDir/error.log" "cfsan_snp_pipeline call_sites failed"
+    assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites failed"
+    assertFileContains "$tempDir/error.log" "Sample BAM file $tempDir/samples/sample1/reads.sorted.deduped.indelrealigned.bam does not exist"
+    assertFileContains "$logDir/callSites.log" "Sample BAM file $tempDir/samples/sample1/reads.sorted.deduped.indelrealigned.bam does not exist"
+    assertFileNotContains "$logDir/callSites.log" "cfsan_snp_pipeline call_sites finished"
+    assertFileNotContains "$logDir/callSites.log" "Use the -f option to force a rebuild"
+
+    # Restore the normal aligner
+    export SnpPipeline_Aligner=bowtie2
+}
+
+# Verify the cfsan_snp_pipeline call_sites script detects a missing sample bam file
+testCallSitesMissingBamFileRaiseSampleErrorStop()
+{
+    export StopOnSampleError=true
+    tryCallSitesMissingBamFileRaiseSampleError 100
+}
+
+# Verify the cfsan_snp_pipeline call_sites script detects a missing sample bam file
+testCallSitesMissingBamFileRaiseSampleErrorNoStop()
+{
+    export StopOnSampleError=false
+    tryCallSitesMissingBamFileRaiseSampleError 98
+}
+
+# Verify the cfsan_snp_pipeline call_sites script detects a missing sample bam file
+testCallSitesMissingBamFileRaiseSampleErrorStopUnset()
+{
+    unset StopOnSampleError
+    tryCallSitesMissingBamFileRaiseSampleError 100
+}
+
 
 # Verify the cfsan_snp_pipeline call_sites script detects Samtools mpileup failure.
 tryCallSitesSamtoolsMpileupTrap()
