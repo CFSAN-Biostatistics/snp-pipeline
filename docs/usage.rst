@@ -1178,64 +1178,78 @@ per metric.  The tabulated metrics file is named metrics.tsv by default.
 The metrics are:
 
 +-------------------------+------------------------------------------------------------------+
-| Column                  | | Description                                                    |
+| | Metric                | | Description                                                    |
 +=========================+==================================================================+
-| Sample                  | | The name of the directory containing the sample fastq files.   |
+| | Sample                | | The name of the directory containing the sample fastq files.   |
 +-------------------------+------------------------------------------------------------------+
-| Fastq Files             | | Comma separated list of fastq file names in the sample         |
+| | Fastq Files           | | Comma separated list of fastq file names in the sample         |
 |                         | | directory.                                                     |
 +-------------------------+------------------------------------------------------------------+
-| Fastq File Size         | | The sum of the sizes of the fastq files. This will be the      |
+| | Fastq File Size       | | The sum of the sizes of the fastq files. This will be the      |
 |                         | | compressed size if the files are compressed.                   |
 +-------------------------+------------------------------------------------------------------+
-| Machine                 | | The sequencing instrument ID extracted from the compressed     |
+| | Machine               | | The sequencing instrument ID extracted from the compressed     |
 |                         | | fastq.gz file header.  If the fastq files are not compressed,  |
 |                         | | the machine ID is not captured.                                |
 +-------------------------+------------------------------------------------------------------+
-| Flowcell                | | The flowcell used during the sequencing run, extracted from    |
+| | Flowcell              | | The flowcell used during the sequencing run, extracted from    |
 |                         | | the compressed fastq.gz file header. If the fastq files are    |
 |                         | | not compressed, the flowcell is not captured.                  |
 +-------------------------+------------------------------------------------------------------+
-| Number of Reads         | | The number of reads in the SAM file.  When using paired fastq  |
+| | Number of Reads       | | The number of reads in the SAM file.  When using paired fastq  |
 |                         | | files, this number will be twice the number of reads reported  |
 |                         | | by bowtie.                                                     |
 +-------------------------+------------------------------------------------------------------+
-| Duplicate Reads         | | The number of reads marked as duplicates.  These reads are not |
+| | Duplicate Reads       | | The number of reads marked as duplicates.  These reads are not |
 |                         | | included in the pileup and are not used to call snps.  When    |
 |                         | | a set of duplicate reads is found, only the highest-quality    |
 |                         | | read in the set is retained.                                   |
 +-------------------------+------------------------------------------------------------------+
-| Percent of Reads Mapped | | The percentage of reference-aligned reads in the SAM file.     |
+| | Percent of Reads      | | The percentage of reference-aligned reads in the SAM file.     |
+| | Mapped                | |                                                                |
 +-------------------------+------------------------------------------------------------------+
-| Average Insert Size     | | The average observed template length of mapped paired reads as |
-|                         | | captured by SAMtools view TLEN value. This metric is not       |
-|                         | | calculated for unpaired reads.                                 |
+| | Percent Proper Pair   | | The percentage of all reads in the SAM file that are aligned   |
+|                         | | to the reference in the proper orientation and within the      |
+|                         | | expected paired-end distance.  The Percent Proper Pair metric  |
+|                         | | is less than 100% when there are discordant alignments,        |
+|                         | | unpaired alignments, or reads that are not mapped at all.      |
+|                         | | This metric reflects the state of the alignment immediately    |
+|                         | | after the mapping, however, subsequent steps of the pipeline   |
+|                         | | remove the reads with low mapping quality, which has the       |
+|                         | | effect of increasing the percentage of proper pairs prior to   |
+|                         | | calling snps.                                                  |
 +-------------------------+------------------------------------------------------------------+
-| Average Pileup Depth    | | The average depth of coverage in the sample pileup file.  This |
+| | Average Insert Size   | | The average insert size of mapped paired reads in the SAM file |
+|                         | | as reported by SAMtools stats.  Discordant alignments will     |
+|                         | | increase the average insert size because by definition,        |
+|                         | | discordant alignments are not within the expected paired-end   |
+|                         | | distance.                                                      |
++-------------------------+------------------------------------------------------------------+
+| | Average Pileup Depth  | | The average depth of coverage in the sample pileup file.  This |
 |                         | | is calculated as the sum of the depth of the pileup across all |
 |                         | | pileup positions divided by the number of positions in the     |
 |                         | | reference.                                                     |
 +-------------------------+------------------------------------------------------------------+
-| Phase1 SNPs             | | The number of phase 1 SNPs found for this sample.  The count   |
+| | Phase1 SNPs           | | The number of phase 1 SNPs found for this sample.  The count   |
 |                         | | is computed as the number of SNP records in the VCF file       |
 |                         | | generated by the phase 1 snp caller (VarScan).                 |
 +-------------------------+------------------------------------------------------------------+
-| Phase1 Preserved SNPs   | | The number of phase 1 SNPs found by VarScan and preserved by   |
+| | Phase1 Preserved SNPs | | The number of phase 1 SNPs found by VarScan and preserved by   |
 |                         | | SNP Filtering.  The count is computed as the number of SNP     |
 |                         | | records in the preserved VCF file generated by the             |
 |                         | | ``filter_regions`` command.                                    |
 +-------------------------+------------------------------------------------------------------+
-| Phase2 SNPs             | | The number of phase 2 SNPs found for this sample.  The count   |
+| | Phase2 SNPs           | | The number of phase 2 SNPs found for this sample.  The count   |
 |                         | | is computed as the number of SNP records in the VCF file       |
 |                         | | generated by the consensus caller.                             |
 +-------------------------+------------------------------------------------------------------+
-| Phase2 Preserved SNPs   | | The number of phase 2 SNPs found for this sample and preserved |
+| | Phase2 Preserved SNPs | | The number of phase 2 SNPs found for this sample and preserved |
 |                         | | by SNP Filtering.  The count is computed as the number of SNP  |
 |                         | | records in the preserved VCF file generated by the consensus   |
 |                         | | caller.                                                        |
 +-------------------------+------------------------------------------------------------------+
-| Missing SNP Matrix      | | The number of positions in the SNP matrix for which a          |
-| Positions               | | consensus base could not be called for this sample.  The       |
+| | Missing SNP Matrix    | | The number of positions in the SNP matrix for which a          |
+| | Positions             | | consensus base could not be called for this sample.  The       |
 |                         | | inability to call a consensus base is caused by either a       |
 |                         | | pileup file with no coverage at a SNP position, or by          |
 |                         | | insufficient agreement among the pileup bases at the SNP       |
@@ -1243,8 +1257,8 @@ The metrics are:
 |                         | | position to make a consensus call is controlled by the         |
 |                         | | ``minConsFreq`` parameter.                                     |
 +-------------------------+------------------------------------------------------------------+
-| Missing Preserved SNP   | | The number of positions in the preserved SNP matrix for which  |
-| Matrix Positions        | | a consensus base could not be called for this sample.  The     |
+| | Missing Preserved SNP | | The number of positions in the preserved SNP matrix for which  |
+| | Matrix Positions      | | a consensus base could not be called for this sample.  The     |
 |                         | | inability to call a consensus base is caused by either a       |
 |                         | | pileup file with no coverage at a SNP position, or by          |
 |                         | | insufficient agreement among the pileup bases at the SNP       |
@@ -1252,15 +1266,15 @@ The metrics are:
 |                         | | position to make a consensus call is controlled by the         |
 |                         | | ``minConsFreq`` parameter.                                     |
 +-------------------------+------------------------------------------------------------------+
-| Excluded Sample         | | When a sample has an excessive number of snps exceeding the    |
+| | Excluded Sample       | | When a sample has an excessive number of snps exceeding the    |
 |                         | | ``MaxSnps`` parameter value, this metric will have the value   |
 |                         | | ``Excluded``.  Otherwise, this metric is blank.                |
 +-------------------------+------------------------------------------------------------------+
-| Excluded Preserved      | | When a sample has an excessive number of preserved snps        |
-| Sample                  | | exceeding the ``MaxSnps`` parameter value, this metric will    |
+| | Excluded Preserved    | | When a sample has an excessive number of preserved snps        |
+| | Sample                | | exceeding the ``MaxSnps`` parameter value, this metric will    |
 |                         | | have the value ``Excluded``.  Otherwise, this metric is blank. |
 +-------------------------+------------------------------------------------------------------+
-| Warnings and Errors     | | A list of warnings or errors encountered while collecting the  |
+| | Warnings and Errors   | | A list of warnings or errors encountered while collecting the  |
 |                         | | metrics.                                                       |
 +-------------------------+------------------------------------------------------------------+
 

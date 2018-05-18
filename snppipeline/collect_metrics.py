@@ -7,6 +7,7 @@ from __future__ import absolute_import
 
 from Bio import SeqIO
 import os
+import subprocess
 from tempfile import NamedTemporaryFile
 import vcf
 
@@ -214,10 +215,12 @@ def collect_metrics(args):
     fastq_file_list = ", ".join(fastq_file_list)
 
     #-------------------------
-    verbose_print("# %s %s" % (utils.timestamp(), "Calculate number of reads and %mapped from sam file"))
+    verbose_print("# %s %s" % (utils.timestamp(), "Calculate number of reads, %mapped, %proper pair, and ave insert size from sam file"))
     #-------------------------
     num_reads = ""
     percent_reads_mapped = ""
+    percent_proper_pair = ""
+    ave_insert_size = ""
     file = os.path.join(sample_dir, "reads.sam")
     if verify_input_file("SAM file", file):
         # Metrics already freshly collected?
@@ -225,18 +228,57 @@ def collect_metrics(args):
         if not args.forceFlag and not needs_rebuild:
             num_reads = metrics.get("numberReads", "") # reuse already fresh metrics
             percent_reads_mapped = metrics.get("percentReadsMapped", "") # reuse already fresh metrics
-        if num_reads and percent_reads_mapped:
-            verbose_print("Reusing previously calculated number of reads and %mapped")
+            percent_proper_pair = metrics.get("percentProperPair", "") # reuse already fresh metrics
+            ave_insert_size = metrics.get("aveInsertSize", "") # reuse already fresh metrics
+        missing_any_metrics = not all([num_reads, percent_reads_mapped, percent_proper_pair, ave_insert_size])
+        if not missing_any_metrics:
+            verbose_print("Reusing previously calculated number of reads, %mapped, %proper pair, and ave insert size")
         else:
-            num_reads = command.run("samtools view -S -c " + file)
-            num_reads = num_reads.strip()
-            mapped = command.run("samtools view -S -c -F 4 " + file)
-            mapped = mapped.strip()
+            tempfile = NamedTemporaryFile(delete=False, dir=sample_dir, prefix="tmp.sam.stats.", mode='w')
             try:
-                percent_reads_mapped = 100.0 * float(mapped) / float(num_reads)
-                percent_reads_mapped = "%.2f" % percent_reads_mapped
-            except ValueError:
-                handle_error("Cannot calculate number of reads and %mapped.")
+                command.run("samtools stats " + file, tempfile.name)
+            except subprocess.CalledProcessError:
+                pass # the error message has already been printed to stderr
+            with open(tempfile.name) as f:
+                for line in f:
+                    lower_line = line.lower()
+                    split_line = line.strip().split('\t')
+                    if "raw total sequences:" in lower_line:
+                        num_reads = split_line[2]
+                        continue
+                    if "reads mapped:" in lower_line:
+                        reads_mapped = split_line[2]
+                        try:
+                            percent_reads_mapped = 100.0 * float(reads_mapped) / float(num_reads)
+                            percent_reads_mapped = "%.2f" % percent_reads_mapped
+                        except ValueError:
+                            percent_reads_mapped = ""
+                        continue
+                    if "reads properly paired:" in lower_line:
+                        proper_pairs = split_line[2]
+                        try:
+                            percent_proper_pair = 100.0 * float(proper_pairs) / float(num_reads)
+                            percent_proper_pair = "%.2f" % percent_proper_pair
+                        except ValueError:
+                            percent_proper_pair = ""
+                        continue
+                    if "insert size average:" in lower_line:
+                        ave_insert_size = split_line[2]
+                        continue
+            os.unlink(tempfile.name)
+            missing_any_metrics = not all([num_reads, percent_reads_mapped, percent_proper_pair, ave_insert_size])
+            if missing_any_metrics:
+                missing_list = []
+                if not num_reads:
+                    missing_list.append("number of reads")
+                if not percent_reads_mapped:
+                    missing_list.append("percent reads mapped")
+                if not percent_proper_pair:
+                    missing_list.append("percent proper pair")
+                if not ave_insert_size:
+                    missing_list.append("ave insert size")
+                error_text = "Cannot calculate " + ", ".join(missing_list) + '.'
+                handle_error(error_text)
 
     #-------------------------
     # Calculate number of duplicate reads from deduped bam file
@@ -257,38 +299,6 @@ def collect_metrics(args):
             else:
                 num_dup_reads = command.run("samtools view -S -c -f 1024 " + file)
                 num_dup_reads = num_dup_reads.strip()
-
-    #-------------------------
-    verbose_print("# %s %s" % (utils.timestamp(), "Calculate mean insert size from bam file"))
-    #-------------------------
-    ave_insert_size = ""
-    file = os.path.join(sample_dir, "reads.sorted.bam")
-    if verify_input_file("BAM file", file):
-        # Metrics already freshly collected?
-        needs_rebuild = utils.target_needs_rebuild([file], metrics_file_path)
-        if not args.forceFlag and not needs_rebuild:
-            ave_insert_size = metrics.get("aveInsertSize", "") # reuse already fresh metrics
-        if ave_insert_size:
-            verbose_print("Reusing previously calculated mean insert size")
-        else:
-            # Extract inferred insert sizes (TLEN, column 9 of BAM file) for reads "mapped in proper pair" (2) and "first in pair" (64) = 66
-            tempfile = NamedTemporaryFile(delete=False, dir=sample_dir, prefix="tmp.inserts.", mode='w')
-            command.run("samtools view -f 66 " + file + " | cut -f 9 | sed 's/^-//'", tempfile.name)
-            insert_count = 0
-            insert_sum = 0
-            with open(tempfile.name) as f:
-                for line in f:
-                    try:
-                        insert_sum += int(line)
-                        insert_count += 1
-                    except ValueError:
-                        pass
-            os.unlink(tempfile.name)
-            if insert_count > 0 and insert_sum > 0:
-                ave_insert_size = float(insert_sum) / float(insert_count)
-                ave_insert_size = "%.2f" % ave_insert_size
-            else:
-                handle_error("Cannot calculate mean insert size.")
 
     #-------------------------
     verbose_print("# %s %s" % (utils.timestamp(), "Calculate mean depth from pileup file"))
@@ -454,6 +464,7 @@ def collect_metrics(args):
         print("numberReads=" + num_reads, file=f)
         print("numberDupReads=" + num_dup_reads, file=f)
         print("percentReadsMapped=" + percent_reads_mapped, file=f)
+        print("percentProperPair=" + percent_proper_pair, file=f)
         print("aveInsertSize=" + ave_insert_size, file=f)
         print("avePileupDepth=" + ave_pileup_depth, file=f)
         print("phase1Snps=" + phase1_snps, file=f)

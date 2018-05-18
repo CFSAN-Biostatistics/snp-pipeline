@@ -67,6 +67,7 @@ def combine_metrics(args):
     with open(merged_metrics_path, 'w') as f:
         # Emit the column headings
         column_headings = ["Sample", "Fastq Files", "Fastq File Size", "Machine", "Flowcell", "Number of Reads", "Duplicate Reads", "Percent of Reads Mapped",
+                           "Percent Proper Pair",
                            "Average Insert Size", "Average Pileup Depth", "Phase1 SNPs", "Phase1 Preserved SNPs", "Phase2 SNPs", "Phase2 Preserved SNPs",
                            "Missing SNP Matrix Positions", "Missing Preserved SNP Matrix Positions", "Excluded Sample", "Excluded Preserved Sample", "Warnings and Errors"]
         if not args.spaceHeadings:
@@ -98,6 +99,7 @@ def combine_metrics(args):
             f.write(metrics.get("numberReads", "") + '\t')
             f.write(metrics.get("numberDupReads", "") + '\t')
             f.write(metrics.get("percentReadsMapped", "") + '\t')
+            f.write(metrics.get("percentProperPair", "") + '\t')
             f.write(metrics.get("aveInsertSize", "") + '\t')
             f.write(metrics.get("avePileupDepth", "") + '\t')
             f.write(metrics.get("phase1Snps", "") + '\t')

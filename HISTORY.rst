@@ -23,6 +23,11 @@ History
 * When running on a workstation, the pipeline is configured to use 8 CPU threads by
   default when mapping reads to the reference.  You can change this by configuring the
   :ref:`CpuCoresPerProcessOnWorkstation-label` parameter.
+* Changed the algorithm used to compute the Average Insert Size metric.  The new algorithm uses
+  SAMtools stats.  In most cases the average insert size will be larger than before.
+* Added a new metric called ``Percent Proper Pair`` which measures the percentage of all reads that
+  are aligned to the reference in the proper orientation and within the expected paired-end distance.
+  See :ref:`metrics-usage-label`.
 
 **Other Changes:**
 
@@ -34,6 +39,7 @@ History
 * Updated the included datasets.
 * Documented the tested versions of other software used by the pipeline.  See :ref:`installation-label`.
 * Fixed compatibility with Python 3 when running with Grid Engine.
+
 
 
 1.0.1 (2017-09-28) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_

@@ -4044,7 +4044,6 @@ tryCollectMetricsMissingInputFiles()
 
     assertFileContains "$logDir/collectMetrics.log" "SAM file reads.sam was not found"
     assertFileContains "$logDir/collectMetrics.log" "Deduped BAM file reads.sorted.deduped.bam was not found"
-    assertFileContains "$logDir/collectMetrics.log" "BAM file reads.sorted.bam was not found"
     assertFileContains "$logDir/collectMetrics.log" "Pileup file reads.all.pileup was not found"
     assertFileContains "$logDir/collectMetrics.log" "VCF file var.flt.vcf was not found"
     assertFileContains "$logDir/collectMetrics.log" "VCF file var.flt_preserved.vcf was not found"
@@ -4055,7 +4054,6 @@ tryCollectMetricsMissingInputFiles()
 
     assertFileContains "$tempDir/samples/sample1/metrics" "SAM file reads.sam was not found"
     assertFileContains "$tempDir/samples/sample1/metrics" "Deduped BAM file reads.sorted.deduped.bam was not found"
-    assertFileContains "$tempDir/samples/sample1/metrics" "BAM file reads.sorted.bam was not found"
     assertFileContains "$tempDir/samples/sample1/metrics" "Pileup file reads.all.pileup was not found"
     assertFileContains "$tempDir/samples/sample1/metrics" "VCF file var.flt.vcf was not found"
     assertFileContains "$tempDir/samples/sample1/metrics" "VCF file var.flt_preserved.vcf was not found"
@@ -4067,6 +4065,7 @@ tryCollectMetricsMissingInputFiles()
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentProperPair=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=$"
@@ -4144,7 +4143,6 @@ tryCollectMetricsEmptyInputFiles()
 
     assertFileContains "$logDir/collectMetrics.log" "SAM file reads.sam is empty"
     assertFileContains "$logDir/collectMetrics.log" "Deduped BAM file reads.sorted.deduped.bam is empty"
-    assertFileContains "$logDir/collectMetrics.log" "BAM file reads.sorted.bam is empty"
     assertFileContains "$logDir/collectMetrics.log" "Pileup file reads.all.pileup is empty"
     assertFileContains "$logDir/collectMetrics.log" "VCF file var.flt.vcf is empty"
     assertFileContains "$logDir/collectMetrics.log" "VCF file var.flt_preserved.vcf is empty"
@@ -4155,7 +4153,6 @@ tryCollectMetricsEmptyInputFiles()
 
     assertFileContains "$tempDir/samples/sample1/metrics" "SAM file reads.sam is empty"
     assertFileContains "$tempDir/samples/sample1/metrics" "Deduped BAM file reads.sorted.deduped.bam is empty"
-    assertFileContains "$tempDir/samples/sample1/metrics" "BAM file reads.sorted.bam is empty"
     assertFileContains "$tempDir/samples/sample1/metrics" "Pileup file reads.all.pileup is empty"
     assertFileContains "$tempDir/samples/sample1/metrics" "VCF file var.flt.vcf is empty"
     assertFileContains "$tempDir/samples/sample1/metrics" "VCF file var.flt_preserved.vcf is empty"
@@ -4167,6 +4164,7 @@ tryCollectMetricsEmptyInputFiles()
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentProperPair=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=$"
@@ -4244,6 +4242,7 @@ tryCollectMetricsCorruptInputFiles()
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentProperPair=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=0$"
@@ -4254,10 +4253,8 @@ tryCollectMetricsCorruptInputFiles()
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0$"
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSamplePreserved=$"
-    assertFileContains "$tempDir/samples/sample1/metrics" "Cannot calculate number of reads and %mapped"
-    assertFileContains "$logDir/collectMetrics.log" "Cannot calculate number of reads and %mapped"
-    assertFileContains "$tempDir/samples/sample1/metrics" "Cannot calculate mean insert size"
-    assertFileContains "$logDir/collectMetrics.log" "Cannot calculate mean insert size"
+    assertFileContains "$tempDir/samples/sample1/metrics" "Cannot calculate number of reads, percent reads mapped, percent proper pair, ave insert size."
+    assertFileContains "$logDir/collectMetrics.log" "Cannot calculate number of reads, percent reads mapped, percent proper pair, ave insert size"
     assertFileContains "$tempDir/samples/sample1/metrics" "Cannot calculate mean pileup depth"
     assertFileContains "$logDir/collectMetrics.log" "Cannot calculate mean pileup depth"
     assertFileContains "$logDir/collectMetrics.log" "cfsan_snp_pipeline collect_metrics finished"
@@ -5940,7 +5937,8 @@ testAlreadyFreshOutputs()
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
     assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=102"
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.55"
-    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=287.02"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentProperPair=90.45"
+    assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.5"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.88"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
@@ -5954,6 +5952,7 @@ testAlreadyFreshOutputs()
     echo numberReads=AA > "$tempDir/samples/sample1/metrics"
     echo numberDupReads=BB >> "$tempDir/samples/sample1/metrics"
     echo percentReadsMapped=CC >> "$tempDir/samples/sample1/metrics"
+    echo percentProperPair=PPP >> "$tempDir/samples/sample1/metrics"
     echo aveInsertSize=DD >> "$tempDir/samples/sample1/metrics"
     echo avePileupDepth=EE >> "$tempDir/samples/sample1/metrics"
     echo phase1Snps=FF >> "$tempDir/samples/sample1/metrics"
@@ -6075,10 +6074,11 @@ testAlreadyFreshOutputs()
 
     # Special cfsan_snp_pipeline collect_metrics re-use last metrics
     assertFileNotContains "$tempDir/samples/sample1/metrics" "numberReads=20000"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "numberDupReads=110"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "numberDupReads=102"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=94.55"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.84"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.22"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "percentProperPair=90.45"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.5"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "avePileupDepth=22.88"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "snps=46"
@@ -6089,6 +6089,7 @@ testAlreadyFreshOutputs()
     assertFileContains "$tempDir/samples/sample1/metrics" "numberReads=AA"
     assertFileContains "$tempDir/samples/sample1/metrics" "numberDupReads=BB"
     assertFileContains "$tempDir/samples/sample1/metrics" "percentReadsMapped=CC"
+    assertFileContains "$tempDir/samples/sample1/metrics" "percentProperPair=PPP"
     assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=DD"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=EE"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=FF"
@@ -6098,7 +6099,7 @@ testAlreadyFreshOutputs()
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=JJ"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=KK"
 
-    assertFileContains "$tempDir/metrics.tsv" "sample1.*AA.*BB.*CC.*DD.*EE.*FF.*GG.*HH.*II.*JJ.*KK"
+    assertFileContains "$tempDir/metrics.tsv" "sample1.*AA.*BB.*CC.*PPP.*DD.*EE.*FF.*GG.*HH.*II.*JJ.*KK"
 }
 
 
