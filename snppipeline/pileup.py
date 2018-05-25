@@ -65,8 +65,9 @@ class Record(object):
             The reference base for the chromosome at this position.
             The upper/lower case of the base in the pileup file is preserved.
         most_common_base : str or None
-            The most commonly occurring base after discarding low-quality bases.
+            The most commonly occurring base (A,C,G,T,N,*) after discarding low-quality bases.
             Always uppercase if there is any good depth, otherwise None.
+            The * character represents a deletion.
         raw_depth : int
             The total depth of reads regardless of base quality.
         good_depth : int
@@ -79,15 +80,18 @@ class Record(object):
             The total depth of all reads on the reverse strand where the base
             quality meets or exceeds the min_base_quality.
         base_good_depth : Counter
-            Count of depth per base (A,C,G,T,N,-) on both forward and reverse
+            Count of depth per base (A,C,G,T,N,*) on both forward and reverse
             strands combined where the base quality meets or exceeds the
             min_base_quality.
+            The * character represents a deletion.
         forward_base_good_depth : Counter
-            Count of depth per base (A,C,G,T,N,-) on forward strand only where the
+            Count of depth per base (A,C,G,T,N,*) on forward strand only where the
             base quality meets or exceeds the min_base_quality.
+            The * character represents a deletion.
         reverse_base_good_depth : Counter
-            Count of depth per base (A,C,G,T,N,-) on reverse strand only where the
+            Count of depth per base (A,C,G,T,N,*) on reverse strand only where the
             base quality meets or exceeds the min_base_quality.
+            The * character represents a deletion.
 
         Examples
         -------
@@ -135,6 +139,8 @@ class Record(object):
         4
         >>> r.reverse_good_depth
         4
+        >>> sorted([(b, r.base_good_depth[b]) for b in r.base_good_depth])
+        [('A', 5), ('G', 3)]
         >>> r.base_good_depth['A'], r.base_good_depth['T'], r.base_good_depth['G'], r.base_good_depth['C'],
         (5, 0, 3, 0)
         >>> fwd = r.forward_base_good_depth
@@ -147,7 +153,7 @@ class Record(object):
         >>>
         >>>
         >>> r = Record(['ID', 628640, 'A', 20, '**.,,.,.............', '22E?;9HF;H8EDGHHI?GH'], 15)
-        >>> r.base_good_depth['-']
+        >>> r.base_good_depth['*']
         2
         >>> r = Record(['gi|197247352|ref|NC_011149.1|', '4663812', 'T', '0'], 15)
         >>> r.good_depth
@@ -156,6 +162,8 @@ class Record(object):
         0
         >>> r.reverse_good_depth
         0
+        >>> sorted([(b, r.base_good_depth[b]) for b in r.base_good_depth])
+        []
         >>> print(r.most_common_base)
         None
         """
@@ -227,9 +235,6 @@ class Record(object):
 
         self.good_depth = len(bases_list)
 
-        # Substitute - for * (deletion supported by this read)
-        bases_str = bases_str.replace('*', '-')
-
         # Substitute reference bases markers with letter
         bases_str = bases_str.replace('.', self.reference_base.upper())
         bases_str = bases_str.replace(',', self.reference_base.lower())
@@ -300,6 +305,61 @@ class Record(object):
         bases_str = bases_str.replace('$', '')
 
         return bases_str
+
+    def __repr__(self):
+        """Return an unambiguous string representation of a pileup Record. This
+        methid is used for developer debugging and troubleshooting.
+
+        Attributes
+        ==========
+        chrom : str
+            Chromosome.
+        position : int
+            One-based position of this record.
+        reference_base : str
+            The reference base for the chromosome at this position.
+            The upper/lower case of the base in the pileup file is preserved.
+        most_common_base : str or None
+            The most commonly occurring base (A,C,G,T,N,*) after discarding low-quality bases.
+            Always uppercase if there is any good depth, otherwise None.
+            The * character represents a deletion.
+        raw_depth : int
+            The total depth of reads regardless of base quality.
+        good_depth : int
+            The total depth of all reads where the base quality meets or
+            exceeds the min_base_quality.
+        forward_good_depth : int
+            The total depth of all reads on the forward strand where the base
+            quality meets or exceeds the min_base_quality.
+        reverse_good_depth : int
+            The total depth of all reads on the reverse strand where the base
+            quality meets or exceeds the min_base_quality.
+        base_good_depth : Counter
+            Count of depth per base (A,C,G,T,N) on both forward and reverse
+            strands combined where the base quality meets or exceeds the
+            min_base_quality.
+            The * character represents a deletion.
+        forward_base_good_depth : Counter
+            Count of depth per base (A,C,G,T,N) on forward strand only where the
+            base quality meets or exceeds the min_base_quality.
+            The * character represents a deletion.
+        reverse_base_good_depth : Counter
+            Count of depth per base (A,C,G,T,N) on reverse strand only where the
+            base quality meets or exceeds the min_base_quality.
+            The * character represents a deletion.
+        """
+        r = "chrom=" + self.chrom
+        r += " position=" + str(self.position)
+        r += " reference_base=" + self.reference_base
+        r += " most_common_base=" + str(self.most_common_base)
+        r += " raw_depth=" + str(self.raw_depth)
+        r += " good_depth=" + str(self.good_depth)
+        r += " forward_good_depth=" + str(self.forward_good_depth)
+        r += " reverse_good_depth=" + str(self.reverse_good_depth)
+        r += " base_good_depth=" + str(self.base_good_depth)
+        r += " forward_base_good_depth=" + str(self.forward_base_good_depth)
+        r += " reverse_base_good_depth=" + str(self.reverse_base_good_depth)
+        return r
 
 
 class Reader(object):

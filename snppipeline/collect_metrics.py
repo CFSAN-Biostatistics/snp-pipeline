@@ -88,6 +88,15 @@ def count_vcf_file_snps(file_path):
             for sample in record.samples:
                 if not sample.is_variant: # is GT == REF ?
                     continue
+
+                if sample.gt_bases is None:
+                    continue
+
+                # Do not count a spanning deletion (*) as a snp
+                alleles = sample.gt_bases.split(sample.gt_phase_char())
+                if all([bases not in ['A', 'C', 'G', 'T', 'N'] for bases in alleles]):
+                    continue
+
                 try:
                     if sample.data.FT != "PASS":
                         continue # don't count failed snps

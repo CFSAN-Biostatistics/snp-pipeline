@@ -28,6 +28,10 @@ History
 * Added a new metric called ``Percent Proper Pair`` which measures the percentage of all reads that
   are aligned to the reference in the proper orientation and within the expected paired-end distance.
   See :ref:`metrics-usage-label`.
+* Fixed a bug causing non-compliance with the VCF version 4.1 specification.  Prior to this
+  fix, the VCF files sometimes wrongly contained ``-`` characters in the ALT field to represent
+  deletions.  VCF files are now generated according to the VCF version 4.2 specification, and deletions,
+  if present, are represented with ``*`` characters.
 
 **Other Changes:**
 

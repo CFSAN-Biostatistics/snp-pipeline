@@ -28,7 +28,7 @@ import vcf
 from snppipeline.__init__ import __version__
 from snppipeline import pileup
 
-VCF_VERSION = '##fileformat=VCFv4.1\n'
+VCF_VERSION = '##fileformat=VCFv4.2\n'
 VCF_DATE    = '##fileDate=%Y%m%d\n'
 VCF_SOURCE  = '##source=CFSAN SNP-Pipeline %s\n' % __version__
 VCF_INFO    = '##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">\n'

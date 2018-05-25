@@ -164,9 +164,13 @@ def call_consensus(args):
         if (chrom, pos) in snp_positions:
             if fail_reasons:
                 position_consensus_base_dict[(chrom, pos)] = '-'
+            elif consensus_base == '*':
+                # In the fasta file, deletions are represented with dash '-'.
+                position_consensus_base_dict[(chrom, pos)] = '-'
             else:
                 position_consensus_base_dict[(chrom, pos)] = consensus_base
 
+        # Write to VCF file
         if vcf_file_name:
             writer.write_from_pileup(pileup_record, fail_reasons, args.vcfFailedSnpGt)
     if vcf_file_name:
@@ -174,10 +178,10 @@ def call_consensus(args):
 
     utils.verbose_print("called consensus positions = %i" % (len(position_consensus_base_dict)))
 
+    # Write the consensus calls to a fasta file
     consensus_list = [position_consensus_base_dict.get(key, '-') for key in snp_list]
     consensus_str = ''.join(consensus_list)
     snp_seq_record = SeqRecord(Seq(consensus_str), id=sample_name, description="")
 
-    # Write the consensus calls to a fasta file
     with open(consensus_file_path, "w") as fasta_file_object:
         SeqIO.write([snp_seq_record], fasta_file_object, "fasta")
