@@ -456,6 +456,8 @@ Specifies options passed to the GATK IndelRealigner tool.
     IndelRealigner_ExtraParams="--consensusDeterminationModel USE_READS"
 
 
+.. _SamtoolsMpileup-ExtraParams-label:
+
 SamtoolsMpileup_ExtraParams
 ---------------------------
 Specifies options passed to the SAMtools mpileup tool.
@@ -468,11 +470,12 @@ Any of the SAMtools mpileup options can be specified.
 | ``-q``    : minimum mapping quality for an alignment to be used
 | ``-Q``    : minimum base quality for a base to be considered
 | ``-x``    : disable read-pair overlap detection
+| ``-A``    : include alignments that are not proper-pairs
 |
 
 **Example**::
 
-    SamtoolsMpileup_ExtraParams="-q 0 -Q 13"
+    SamtoolsMpileup_ExtraParams="-q 0 -Q 13 -A"
 
 
 VarscanMpileup2snp_ExtraParams

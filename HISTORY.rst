@@ -39,6 +39,10 @@ History
   See :ref:`SamtoolsSamFilter-ExtraParams-label`.
 * Enhanced the SNP density filter to find dense regions of SNPs in multiple window sizes, each with
   a different number of allowed snps.  See :ref:`FilterRegions-ExtraParams-label`.
+* Changed the SAMtools mpileup options to include read alignments that are not properly paired.
+  This change increases the number of detected snps.  It also increases the effectiveness of the
+  density filter by causing the removal of snps in dense regions that would not otherwise have been
+  detected.  See :ref:`SamtoolsMpileup-ExtraParams-label`.
 * Added a ``--threads`` option to the map_reads script.  This should only be used when building custom :ref:`step-by-step-workflows`.
 * Updated the included datasets.
 * Documented the tested versions of other software used by the pipeline.  See :ref:`installation-label`.

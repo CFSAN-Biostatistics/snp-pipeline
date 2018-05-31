@@ -676,6 +676,7 @@ Step 4 - Align the samples to the reference::
 Step 5 - Find the sites having high-confidence SNPs::
 
     # Process the samples in parallel using all CPU cores
+    export SamtoolsMpileup_ExtraParams="-q 0 -Q 13 -A"
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores cfsan_snp_pipeline call_sites reference/lambda_virus.fasta
 
@@ -816,6 +817,7 @@ Step 4 - Align the samples to the reference::
 Step 5 - Find the sites having high-confidence SNPs::
 
     # Process the samples in parallel using all CPU cores
+    export SamtoolsMpileup_ExtraParams="-q 0 -Q 13 -A"
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores cfsan_snp_pipeline call_sites reference/NC_011149.fasta
 
@@ -952,6 +954,7 @@ Step 4 - Align the samples to the reference::
 Step 5 - Find the sites having high-confidence SNPs::
 
     # Process the samples in parallel using all CPU cores
+    export SamtoolsMpileup_ExtraParams="-q 0 -Q 13 -A"
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores cfsan_snp_pipeline call_sites reference/my_reference.fasta
 
