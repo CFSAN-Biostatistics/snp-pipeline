@@ -478,6 +478,8 @@ Any of the SAMtools mpileup options can be specified.
     SamtoolsMpileup_ExtraParams="-q 0 -Q 13 -A"
 
 
+.. _VarscanMpileup2snp_ExtraParams-label:
+
 VarscanMpileup2snp_ExtraParams
 ------------------------------
 Specifies options passed to the Varscan mpileup2snp tool.
@@ -489,11 +491,12 @@ Any of the Varscan mpileup2snp options can be specified.
 
 | ``--min-avg-qual`` : minimum base quality at a position to count a read
 | ``--min-var-freq`` : minimum variant allele frequency threshold
+| ``--min-reads2``   : minimum supporting reads at a position to call variants
 |
 
 **Example**::
 
-    VarscanMpileup2snp_ExtraParams="--min-avg-qual 15 --min-var-freq 0.90"
+    VarscanMpileup2snp_ExtraParams="--min-avg-qual 15 --min-var-freq 0.90 --min-reads2 5"
 
 
 VarscanJvm_ExtraParams
