@@ -2,7 +2,7 @@
 Pileup file parser.  Typical workflow would follow a pattern like this:
 
 import pileup as pileup
-caller = pileup.ConsensusCaller(min_freq, min_strand_depth, min_strand_bias)
+caller = pileup.ConsensusCaller(min_freq, min_depth, min_strand_depth, min_strand_bias)
 reader = pileup.Reader(file, min_base_quality, chrom_position_set=None)
 for record in reader:
     chrom = record.chrom
@@ -412,7 +412,7 @@ class Reader(object):
 
 
 class ConsensusCaller(object):
-    def __init__(self, min_cons_freq, min_cons_strand_depth,
+    def __init__(self, min_cons_freq, min_cons_depth, min_cons_strand_depth,
                  min_cons_strand_bias):
         """
         Construct a consensus base caller object with various filter settings
@@ -426,6 +426,9 @@ class ConsensusCaller(object):
             fraction is the number of high-quality consensus supporting reads.
             The denominator of this fraction is the total number of high-quality
             reads.
+        min_cons_depth : int
+            Minimum number of high-quality reads supporting the consensus to
+            make a call.  This impacts both variant calls and reference calls.
         min_cons_strand_depth : int
             Minimum number of high-quality reads supporting the consensus which
             must be present on both forward and reverse strands separately to
@@ -439,11 +442,13 @@ class ConsensusCaller(object):
             quality consensus supporting reads.
         """
         self.min_cons_freq = min_cons_freq
+        self.min_cons_depth = min_cons_depth
         self.min_cons_strand_depth = min_cons_strand_depth
         self.min_cons_strand_bias = min_cons_strand_bias
 
         self.fail_raw_depth = "RawDpth"
         self.fail_freq = "VarFreq" + str(int(100 * min_cons_freq))
+        self.fail_depth = "Depth" + str(min_cons_depth)
         self.fail_strand_depth = "StrDpth" + str(min_cons_strand_depth)
         self.fail_strand_bias = "StrBias" + str(int(100 * min_cons_strand_bias))
 
@@ -462,6 +467,7 @@ class ConsensusCaller(object):
         """
         return [(self.fail_raw_depth, "No read depth"),
                 (self.fail_freq, "Variant base frequency below %.2f" % self.min_cons_freq),
+                (self.fail_depth, "Less than %i supporting reads" % self.min_cons_depth),
                 (self.fail_strand_depth, "Less than %i variant-supporing reads on at least one strand" % self.min_cons_strand_depth),
                 (self.fail_strand_bias, "Fraction of variant supporting reads below %.2f on one strand" % self.min_cons_strand_bias),
                ]
@@ -488,33 +494,39 @@ class ConsensusCaller(object):
         Examples
         --------
         >>> r = Record(['ID', 42, 'G', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
-        >>> caller = ConsensusCaller(0.5, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.5, 0, 0, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('A', None)
-        >>> caller = ConsensusCaller(0.6, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.6, 0, 0, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('A', ['VarFreq60'])
-        >>> caller = ConsensusCaller(0.0, 5, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 8, 4, 0.0) # freq, depth, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('A', None)
+        >>> caller = ConsensusCaller(0.0, 9, 4, 0.0) # freq, depth, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('A', ['Depth9'])
+        >>> caller = ConsensusCaller(0.0, 0, 5, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('A', ['StrDpth5'])
         >>> r = Record(['ID', 42, 'G', 14, 'aAAAAAAA...,,,', '00001111222333'], 15)
-        >>> caller = ConsensusCaller(0.0, 0, 0.2) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 0, 0, 0.2) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('A', ['StrBias20'])
         >>> r = Record(['ID', 42, 'G', 14, 'aaaAAAAA...,,,', '00001111222333'], 15)
-        >>> caller = ConsensusCaller(0.0, 4, 0.4) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 9, 4, 0.4) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
-        ('A', ['StrDpth4', 'StrBias40'])
+        ('A', ['Depth9', 'StrDpth4', 'StrBias40'])
         >>> r = Record(['ID', 42, 'G', 14, 'aaaAAA....,,,,', '00011122223333'], 15)
-        >>> caller = ConsensusCaller(0.0, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 0, 0, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('G', None)
         >>> r = Record(['ID', 42, 'g', 14, 'aaaAAA....,,,,', '00011122223333'], 15)
-        >>> caller = ConsensusCaller(0.0, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 0, 0, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('g', None)
         >>> r = Record(['ID', 42, 'g', 0], 15) # zero depth
-        >>> caller = ConsensusCaller(0.0, 5, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 0, 5, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('-', ['RawDpth'])
         """
@@ -535,7 +547,12 @@ class ConsensusCaller(object):
             failed_filters = failed_filters or []
             failed_filters.append(self.fail_freq)
 
-        # Filter: allele minimum depth on each strand
+        # Filter: minimum supporting depth
+        if good_cons_depth < self.min_cons_depth:
+            failed_filters = failed_filters or []
+            failed_filters.append(self.fail_depth)
+
+        # Filter: minimum supporting depth on each strand
         if fwd_good_cons_depth < self.min_cons_strand_depth or \
            rev_good_cons_depth < self.min_cons_strand_depth:
             failed_filters = failed_filters or []

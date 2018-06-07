@@ -180,7 +180,8 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         """
         command_line = "call_consensus -f -l " + os.path.join(self.__class__.directory_run_result, 'snplist.txt') + \
                        " --vcfRefName lambda_virus.fasta" + \
-                       " --vcfFailedSnpGt 1" + \
+                       " --vcfFailedSnpGt ." + \
+                       " --minConsDpth 3" + \
                        " dummyAllPileupFile"
         args = cfsan_snp_pipeline.parse_command_line(command_line)
 

@@ -553,6 +553,8 @@ Specifies options passed to the merge_sites command.
     MergeSites_ExtraParams="--verbose 1"
 
 
+.. _CallConsensus-ExtraParams-label:
+
 CallConsensus_ExtraParams
 -------------------------
 Specifies options passed to the call_consensus command.
@@ -566,6 +568,9 @@ Specifies options passed to the call_consensus command.
     are discarded.
 ``--minConsFreq``
     Consensus frequency. Mimimum fraction of high-quality reads supporting the consensus to make a call.
+``--minConsDpth``
+    Consensus depth. Minimum number of high-quality reads supporting the consensus to make a call.
+    This impacts both variant calls and reference calls.
 ``--minConsStrdDpth``
     Consensus strand depth. Minimum number of high-quality reads supporting the consensus which must be present
     on both the forward and reverse strands to make a call
@@ -587,7 +592,7 @@ Specifies options passed to the call_consensus command.
 
 **Example**::
 
-    CallConsensus_ExtraParams="--verbose 1 --minBaseQual 15 --vcfFileName consensus.vcf"
+    CallConsensus_ExtraParams="--minBaseQual 15 --minConsDpth 3 --vcfFileName consensus.vcf"
 
 
 SnpMatrix_ExtraParams

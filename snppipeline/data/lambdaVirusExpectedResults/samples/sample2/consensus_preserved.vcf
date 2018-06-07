@@ -1,6 +1,6 @@
 ##fileformat=VCFv4.2
-##fileDate=20180530
-##source=CFSAN SNP-Pipeline 2.0.0b12.dev1
+##fileDate=20180606
+##source=CFSAN SNP-Pipeline 2.0.0b14
 ##reference=lambda_virus.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -15,6 +15,7 @@
 ##FILTER=<ID=PASS,Description="All filters passed">
 ##FILTER=<ID=RawDpth,Description="No read depth">
 ##FILTER=<ID=VarFreq60,Description="Variant base frequency below 0.60">
+##FILTER=<ID=Depth3,Description="Less than 3 supporting reads">
 ##FILTER=<ID=StrDpth0,Description="Less than 0 variant-supporing reads on at least one strand">
 ##FILTER=<ID=StrBias0,Description="Fraction of variant supporting reads below 0.00 on one strand">
 ##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">

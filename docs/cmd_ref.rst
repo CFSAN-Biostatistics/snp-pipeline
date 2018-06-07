@@ -348,8 +348,9 @@ call_consensus
 ::
 
   usage: cfsan_snp_pipeline call_consensus [-h] [-f] [-l FILE] [-e FILE]
-                                           [-o FILE] [-q INT] [-c FREQ] [-d INT]
-                                           [-b FREQ] [--vcfFileName NAME]
+                                           [-o FILE] [-q INT] [-c FREQ] [-D INT]
+                                           [-d INT] [-b FREQ]
+                                           [--vcfFileName NAME]
                                            [--vcfRefName NAME] [--vcfAllPos]
                                            [--vcfPreserveRefCase]
                                            [--vcfFailedSnpGt {.,0,1}] [-v 0..5]
@@ -385,6 +386,9 @@ call_consensus
                           Consensus frequency. Mimimum fraction of high-quality
                           reads supporting the consensus to make a call.
                           (default: 0.6)
+    -D INT, --minConsDpth INT
+                          Consensus depth. Minimum number of high-quality reads
+                          supporting the consensus to make a call. (default: 1)
     -d INT, --minConsStrdDpth INT
                           Consensus strand depth. Minimum number of high-quality
                           reads supporting the consensus which must be present

@@ -1,6 +1,6 @@
 ##fileformat=VCFv4.2
-##fileDate=20180530
-##source=CFSAN SNP-Pipeline 2.0.0b12.dev1
+##fileDate=20180606
+##source=CFSAN SNP-Pipeline 2.0.0b14
 ##reference=lambda_virus.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -15,6 +15,7 @@
 ##FILTER=<ID=PASS,Description="All filters passed">
 ##FILTER=<ID=RawDpth,Description="No read depth">
 ##FILTER=<ID=VarFreq60,Description="Variant base frequency below 0.60">
+##FILTER=<ID=Depth3,Description="Less than 3 supporting reads">
 ##FILTER=<ID=StrDpth0,Description="Less than 0 variant-supporing reads on at least one strand">
 ##FILTER=<ID=StrBias0,Description="Fraction of variant supporting reads below 0.00 on one strand">
 ##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">
@@ -107,7 +108,7 @@ gi|9626243|ref|NC_001416.1|	27412	.	C	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:A
 gi|9626243|ref|NC_001416.1|	27834	.	C	A	.	PASS	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:17:0:16:0:0:11:5:PASS
 gi|9626243|ref|NC_001416.1|	28045	.	G	.	.	PASS	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:30:30:0:15:15:0:0:PASS
 gi|9626243|ref|NC_001416.1|	28362	.	T	.	.	PASS	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:24:24:0:9:15:0:0:PASS
-gi|9626243|ref|NC_001416.1|	29265	.	T	*	.	PASS	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:1:0:1:0:0:1:0:PASS
+gi|9626243|ref|NC_001416.1|	29265	.	T	*	.	Depth3	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:1:0:1:0:0:1:0:Depth3
 gi|9626243|ref|NC_001416.1|	29411	.	T	.	.	PASS	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:15:15:0:9:6:0:0:PASS
 gi|9626243|ref|NC_001416.1|	29435	.	T	A	.	PASS	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:14:0:14:0:0:10:4:PASS
 gi|9626243|ref|NC_001416.1|	29891	.	G	.	.	PASS	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:31:30:1:17:13:0:1:PASS

@@ -62,6 +62,9 @@ def call_consensus(args):
         minConsFreq : float
             Consensus frequency. Mimimum fraction of high-quality reads
             supporting the consensus to make a call.
+        minConsDpth : int
+            Minimum number of high-quality reads supporting the consensus to
+            make a call.  This impacts both variant calls and reference calls.
         minConsStrdDpth : int
             Consensus strand depth. Minimum number of high-quality reads
             supporting the consensus which must be present on both the
@@ -83,7 +86,8 @@ def call_consensus(args):
     args.consensusFile = 'consensus.fasta'
     args.minBaseQual = 15
     args.minConsFreq = 0.6
-    args.minConsStrdDpth = 4
+    args.minConsDpth = 3
+    args.minConsStrdDpth = 1
     args.minConsStrdBias = 0.10
     args.vcfFailedSnpGt = '.'
     call_consensus(args)
@@ -136,6 +140,7 @@ def call_consensus(args):
     position_consensus_base_dict = dict()
 
     caller = pileup.ConsensusCaller(args.minConsFreq,
+                                    args.minConsDpth,
                                     args.minConsStrdDpth,
                                     args.minConsStrdBias)
 

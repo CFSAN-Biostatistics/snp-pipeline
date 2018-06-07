@@ -360,6 +360,7 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     help["output"]         = """Output file. Relative or absolute path to the consensus fasta file for this sample."""
     help["minBaseQual"]    = """Mimimum base quality score to count a read. All other snp filters take effect after the low-quality reads are discarded."""
     help["minConsFreq"]    = """Consensus frequency. Mimimum fraction of high-quality reads supporting the consensus to make a call."""
+    help["minConsDpth"]    = """Consensus depth. Minimum number of high-quality reads supporting the consensus to make a call."""
     help["minConsStrdDpth"]= """Consensus strand depth. Minimum number of high-quality reads supporting the consensus which must be present on both the
                                 forward and reverse strands to make a call."""
     help["minConsStrdBias"]= """Strand bias. Minimum fraction of the high-quality consensus-supporting reads which must be present on both the
@@ -389,6 +390,7 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.add_argument("-o", "--output",             dest="consensusFile",      type=str,            default="consensus.fasta",  metavar="FILE", help=help["output"])
     subparser.add_argument("-q", "--minBaseQual",        dest="minBaseQual",        type=int,            default=0,                  metavar="INT",  help=help["minBaseQual"])
     subparser.add_argument("-c", "--minConsFreq",        dest="minConsFreq",        type=minConsFreq,    default=0.60,               metavar="FREQ", help=help["minConsFreq"])
+    subparser.add_argument("-D", "--minConsDpth",        dest="minConsDpth",        type=int,            default=1,                  metavar="INT",  help=help["minConsDpth"])
     subparser.add_argument("-d", "--minConsStrdDpth",    dest="minConsStrdDpth",    type=int,            default=0,                  metavar="INT",  help=help["minConsStrdDpth"])
     subparser.add_argument("-b", "--minConsStrdBias",    dest="minConsStrdBias",    type=minConsStrdBias,default=0,                  metavar="FREQ", help=help["minConsStrdBias"])
     subparser.add_argument(      "--vcfFileName",        dest="vcfFileName",        type=str,            default=None,               metavar="NAME", help=help["vcfFileName"])

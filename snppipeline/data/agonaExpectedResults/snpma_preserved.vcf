@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.2
 ##FILTER=<ID=PASS,Description="All filters passed">
-##fileDate=20180530
-##source=CFSAN SNP-Pipeline 2.0.0b12.dev1
+##fileDate=20180606
+##source=CFSAN SNP-Pipeline 2.0.0b14
 ##reference=NC_011149.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -15,12 +15,13 @@
 ##FORMAT=<ID=FT,Number=1,Type=String,Description="Genotype filters using the same codes as the FILTER data element">
 ##FILTER=<ID=RawDpth,Description="No read depth">
 ##FILTER=<ID=VarFreq60,Description="Variant base frequency below 0.60">
+##FILTER=<ID=Depth3,Description="Less than 3 supporting reads">
 ##FILTER=<ID=StrDpth0,Description="Less than 0 variant-supporing reads on at least one strand">
 ##FILTER=<ID=StrBias0,Description="Fraction of variant supporting reads below 0.00 on one strand">
 ##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">
 ##contig=<ID=gi|197247352|ref|NC_011149.1|>
 ##bcftools_mergeVersion=1.8+htslib-1.8
-##bcftools_mergeCommand=merge -o 2.0.0b12.dev1/snpma_preserved.vcf --merge all --info-rules NS:sum 2.0.0b12.dev1/tmp.vcf.BjOlv7/ERR178926.vcf.gz 2.0.0b12.dev1/tmp.vcf.BjOlv7/ERR178929.vcf.gz 2.0.0b12.dev1/tmp.vcf.BjOlv7/SRR1566386.vcf.gz 2.0.0b12.dev1/tmp.vcf.BjOlv7/SRR2566901.vcf.gz 2.0.0b12.dev1/tmp.vcf.BjOlv7/SRR3664651.vcf.gz 2.0.0b12.dev1/tmp.vcf.BjOlv7/SRR3665129.vcf.gz; Date=Wed May 30 12:13:04 2018
+##bcftools_mergeCommand=merge -o 2.0.0b14/snpma_preserved.vcf --merge all --info-rules NS:sum 2.0.0b14/tmp.vcf.yFp1Bz/ERR178926.vcf.gz 2.0.0b14/tmp.vcf.yFp1Bz/ERR178929.vcf.gz 2.0.0b14/tmp.vcf.yFp1Bz/SRR1566386.vcf.gz 2.0.0b14/tmp.vcf.yFp1Bz/SRR2566901.vcf.gz 2.0.0b14/tmp.vcf.yFp1Bz/SRR3664651.vcf.gz 2.0.0b14/tmp.vcf.yFp1Bz/SRR3665129.vcf.gz; Date=Wed Jun  6 15:32:23 2018
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	ERR178926	ERR178929	SRR1566386	SRR2566901	SRR3664651	SRR3665129
 gi|197247352|ref|NC_011149.1|	682	.	A	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:46:0:46:0:0:24:22:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
 gi|197247352|ref|NC_011149.1|	684	.	T	C	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:47:1:46:1:0:24:22:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
@@ -1217,7 +1218,7 @@ gi|197247352|ref|NC_011149.1|	678446	.	G	T	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:
 gi|197247352|ref|NC_011149.1|	681002	.	T	C	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:60:0:60:0:0:31:29:PASS	1:75:2:73:2:0:41:32:PASS	1:129:0:129:0:0:72:57:PASS	1:53:0:53:0:0:35:18:PASS	1:25:0:25:0:0:23:2:PASS	1:38:0:38:0:0:33:5:PASS
 gi|197247352|ref|NC_011149.1|	688777	.	G	T	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:56:0:56:0:0:27:29:PASS	1:30:0:30:0:0:16:14:PASS	1:81:0:81:0:0:48:33:PASS	1:51:0:51:0:0:37:14:PASS	1:27:0:27:0:0:17:10:PASS	1:33:0:33:0:0:27:6:PASS
 gi|197247352|ref|NC_011149.1|	701093	.	C	T	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:37:37:0:26:11:0:0:PASS	1:44:0:44:0:0:17:27:PASS	0:130:130:0:81:49:0:0:PASS	0:47:47:0:32:15:0:0:PASS	0:26:26:0:17:9:0:0:PASS	0:34:34:0:30:4:0:0:PASS
-gi|197247352|ref|NC_011149.1|	715008	.	A	G	.	PASS	NS=3	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	1:10:0:10:0:0:10:0:PASS	.:.:.:.:.:.:.:.:.	1:2:0:2:0:0:2:0:PASS	1:2:0:2:0:0:2:0:PASS
+gi|197247352|ref|NC_011149.1|	715008	.	A	G	.	Depth3	NS=3	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	1:10:0:10:0:0:10:0:PASS	.:.:.:.:.:.:.:.:.	.:2:0:2:0:0:2:0:Depth3	.:2:0:2:0:0:2:0:Depth3
 gi|197247352|ref|NC_011149.1|	732181	.	C	T	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:48:48:0:34:14:0:0:PASS	0:62:62:0:34:28:0:0:PASS	0:115:115:0:90:25:0:0:PASS	1:48:0:48:0:0:41:7:PASS	0:30:30:0:26:4:0:0:PASS	1:34:0:34:0:0:34:0:PASS
 gi|197247352|ref|NC_011149.1|	738539	.	T	G	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:71:71:0:39:32:0:0:PASS	0:79:79:0:33:46:0:0:PASS	1:111:0:111:0:0:59:52:PASS	0:49:49:0:35:14:0:0:PASS	0:24:24:0:15:9:0:0:PASS	0:38:38:0:30:8:0:0:PASS
 gi|197247352|ref|NC_011149.1|	754539	.	G	A	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:11:0:11:0:0:2:9:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
@@ -1745,7 +1746,7 @@ gi|197247352|ref|NC_011149.1|	1950537	.	A	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:A
 gi|197247352|ref|NC_011149.1|	1950899	.	A	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:51:2:49:0:2:20:29:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
 gi|197247352|ref|NC_011149.1|	1952539	.	G	A	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:64:64:0:24:40:0:0:PASS	0:72:72:0:22:50:0:0:PASS	1:103:0:103:0:0:60:43:PASS	0:80:80:0:60:20:0:0:PASS	0:35:35:0:28:7:0:0:PASS	0:61:61:0:50:11:0:0:PASS
 gi|197247352|ref|NC_011149.1|	1972582	.	G	T	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:40:40:0:19:21:0:0:PASS	1:54:0:54:0:0:39:15:PASS	0:69:69:0:37:32:0:0:PASS	0:45:45:0:33:12:0:0:PASS	0:27:27:0:19:8:0:0:PASS	0:35:35:0:29:6:0:0:PASS
-gi|197247352|ref|NC_011149.1|	1989744	.	A	G	.	PASS	NS=5	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	0:1:1:0:0:1:0:0:PASS	1:11:0:11:0:0:0:11:PASS	0:4:4:0:0:4:0:0:PASS	0:2:2:0:0:2:0:0:PASS	0:1:1:0:0:1:0:0:PASS
+gi|197247352|ref|NC_011149.1|	1989744	.	A	G	.	Depth3	NS=5	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	0:1:1:0:0:1:0:0:Depth3	1:11:0:11:0:0:0:11:PASS	0:4:4:0:0:4:0:0:PASS	0:2:2:0:0:2:0:0:Depth3	0:1:1:0:0:1:0:0:Depth3
 gi|197247352|ref|NC_011149.1|	2008704	.	C	A	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:70:70:0:39:31:0:0:PASS	1:35:0:35:0:0:15:20:PASS	0:62:62:0:26:36:0:0:PASS	0:28:28:0:17:11:0:0:PASS	0:16:16:0:9:7:0:0:PASS	0:5:5:0:4:1:0:0:PASS
 gi|197247352|ref|NC_011149.1|	2027799	.	T	C	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:32:1:31:1:0:12:19:PASS	0:37:37:0:11:26:0:0:PASS	0:53:53:0:8:45:0:0:PASS	0:29:29:0:19:10:0:0:PASS	0:12:12:0:6:6:0:0:PASS	0:26:26:0:16:10:0:0:PASS
 gi|197247352|ref|NC_011149.1|	2028071	.	C	T	.	PASS	NS=6	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:37:0:35:0:0:17:18:PASS	0:38:38:0:25:13:0:0:PASS	0:45:45:0:41:4:0:0:PASS	0:12:12:0:10:2:0:0:PASS	0:9:9:0:8:1:0:0:PASS	0:12:12:0:11:1:0:0:PASS

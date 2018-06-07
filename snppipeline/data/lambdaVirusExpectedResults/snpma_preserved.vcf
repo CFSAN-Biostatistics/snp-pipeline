@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.2
 ##FILTER=<ID=PASS,Description="All filters passed">
-##fileDate=20180530
-##source=CFSAN SNP-Pipeline 2.0.0b12.dev1
+##fileDate=20180606
+##source=CFSAN SNP-Pipeline 2.0.0b14
 ##reference=lambda_virus.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -15,12 +15,13 @@
 ##FORMAT=<ID=FT,Number=1,Type=String,Description="Genotype filters using the same codes as the FILTER data element">
 ##FILTER=<ID=RawDpth,Description="No read depth">
 ##FILTER=<ID=VarFreq60,Description="Variant base frequency below 0.60">
+##FILTER=<ID=Depth3,Description="Less than 3 supporting reads">
 ##FILTER=<ID=StrDpth0,Description="Less than 0 variant-supporing reads on at least one strand">
 ##FILTER=<ID=StrBias0,Description="Fraction of variant supporting reads below 0.00 on one strand">
 ##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">
 ##contig=<ID=gi|9626243|ref|NC_001416.1|>
 ##bcftools_mergeVersion=1.8+htslib-1.8
-##bcftools_mergeCommand=merge -o 2.0.0b12.dev1/snpma_preserved.vcf --merge all --info-rules NS:sum 2.0.0b12.dev1/tmp.vcf.Oy9j8E/sample1.vcf.gz 2.0.0b12.dev1/tmp.vcf.Oy9j8E/sample2.vcf.gz 2.0.0b12.dev1/tmp.vcf.Oy9j8E/sample3.vcf.gz 2.0.0b12.dev1/tmp.vcf.Oy9j8E/sample4.vcf.gz; Date=Wed May 30 11:49:20 2018
+##bcftools_mergeCommand=merge -o 2.0.0b14/snpma_preserved.vcf --merge all --info-rules NS:sum 2.0.0b14/tmp.vcf.OAEqhK/sample1.vcf.gz 2.0.0b14/tmp.vcf.OAEqhK/sample2.vcf.gz 2.0.0b14/tmp.vcf.OAEqhK/sample3.vcf.gz 2.0.0b14/tmp.vcf.OAEqhK/sample4.vcf.gz; Date=Wed Jun  6 15:10:03 2018
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample1	sample2	sample3	sample4
 gi|9626243|ref|NC_001416.1|	403	.	G	A	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:28:0:28:0:0:14:14:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
 gi|9626243|ref|NC_001416.1|	550	.	G	A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:22:21:1:13:8:0:1:PASS	0:29:29:0:15:14:0:0:PASS	0:31:31:0:14:17:0:0:PASS	1:27:0:27:0:0:15:12:PASS
@@ -132,7 +133,7 @@ gi|9626243|ref|NC_001416.1|	27825	.	A	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:A
 gi|9626243|ref|NC_001416.1|	27834	.	C	A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:17:16:1:5:11:0:1:PASS	0:33:33:0:18:15:0:0:PASS	1:17:0:16:0:0:11:5:PASS	0:22:21:1:11:10:1:0:PASS
 gi|9626243|ref|NC_001416.1|	28045	.	G	T	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:26:24:2:15:9:0:2:PASS	1:23:0:23:0:0:11:12:PASS	0:30:30:0:15:15:0:0:PASS	0:19:19:0:9:10:0:0:PASS
 gi|9626243|ref|NC_001416.1|	28362	.	T	C	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:25:25:0:8:17:0:0:PASS	1:20:0:20:0:0:12:8:PASS	0:24:24:0:9:15:0:0:PASS	0:13:13:0:13:0:0:0:PASS
-gi|9626243|ref|NC_001416.1|	29265	.	T	*,C	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:24:24:0:13:11:0:0:PASS	0:21:21:0:13:8:0:0:PASS	1:1:0:1:0:0:1:0:PASS	2:28:0:27:0:0:9:18:PASS
+gi|9626243|ref|NC_001416.1|	29265	.	T	*,C	.	Depth3	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:24:24:0:13:11:0:0:PASS	0:21:21:0:13:8:0:0:PASS	.:1:0:1:0:0:1:0:Depth3	2:28:0:27:0:0:9:18:PASS
 gi|9626243|ref|NC_001416.1|	29411	.	T	C	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:29:29:0:19:10:0:0:PASS	1:31:0:31:0:0:15:16:PASS	0:15:15:0:9:6:0:0:PASS	0:36:35:1:17:18:1:0:PASS
 gi|9626243|ref|NC_001416.1|	29435	.	T	A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:34:34:0:17:17:0:0:PASS	0:29:27:2:12:15:1:1:PASS	1:14:0:14:0:0:10:4:PASS	0:33:32:1:15:17:1:0:PASS
 gi|9626243|ref|NC_001416.1|	29891	.	G	C	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:21:0:21:0:0:9:12:PASS	0:19:19:0:10:9:0:0:PASS	0:31:30:1:17:13:0:1:PASS	0:29:28:1:15:13:1:0:PASS

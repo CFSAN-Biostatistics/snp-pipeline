@@ -45,6 +45,8 @@ History
   detected.  See :ref:`SamtoolsMpileup-ExtraParams-label`.
 * Increased the minimum required variant-supporting depth to call variants in phase 1 with VarScan.
   See :ref:`VarscanMpileup2snp_ExtraParams-label`.
+* Increased the minimum required supporting depth to make a call in phase 2 with the consensus caller.
+  See :ref:`CallConsensus-ExtraParams-label`.
 * Added a ``--threads`` option to the map_reads script.  This should only be used when building custom :ref:`step-by-step-workflows`.
 * Updated the included datasets.
 * Documented the tested versions of other software used by the pipeline.  See :ref:`installation-label`.

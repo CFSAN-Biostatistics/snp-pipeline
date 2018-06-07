@@ -4,7 +4,7 @@ VCF file writer.  Typical workflow would follow a pattern like this:
 import vcf_writer
 import pileup
 
-caller = pileup.ConsensusCaller(min_freq, min_strand_depth, min_strand_bias)
+caller = pileup.ConsensusCaller(min_freq, min_depth, min_strand_depth, min_strand_bias)
 pileup_reader = pileup.Reader(file, min_base_quality, chrom_position_set=None)
 writer = vcf_writer.SingleSampleWriter(out_file)
 filters = caller.get_filter_descriptions()
@@ -153,7 +153,7 @@ class SingleSampleWriter(object):
         Examples
         --------
         >>> writer = SingleSampleWriter("/dev/null")
-        >>> caller = pileup.ConsensusCaller(0.5, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = pileup.ConsensusCaller(0.5, 1, 0, 0.0) # freq, depth, strand_depth, strand_bias
         >>> filters = caller.get_filter_descriptions()
         >>> writer.write_header("dummy-sample-name", filters, "dummy_reference-name")
         >>>
