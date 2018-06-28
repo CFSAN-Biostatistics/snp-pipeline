@@ -51,6 +51,7 @@ History
 * Updated the included datasets.
 * Documented the tested versions of other software used by the pipeline.  See :ref:`installation-label`.
 * Fixed compatibility with Python 3 when running with Grid Engine.
+* Fixed merge_vcf failure when merging many VCF files.  Increased the number of open file descriptors when needed.
 
 
 
