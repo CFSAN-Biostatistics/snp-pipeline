@@ -1,6 +1,6 @@
 ##fileformat=VCFv4.2
-##fileDate=20180606
-##source=CFSAN SNP-Pipeline 2.0.0b14
+##fileDate=20180720
+##source=CFSAN SNP-Pipeline 2.0.0
 ##reference=lambda_virus.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">

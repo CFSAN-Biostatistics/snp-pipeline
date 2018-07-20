@@ -3,7 +3,7 @@
 History
 -------
 
-2.0.0 (2018-04-xx) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
+2.0.0 (2018-07-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Changes Impacting Backwards Compatibility:**
