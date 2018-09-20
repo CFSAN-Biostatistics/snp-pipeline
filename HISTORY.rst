@@ -3,6 +3,13 @@
 History
 -------
 
+2.0.1 (2018-09-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Fixed the Picard dependency check and improved the error messages when Picard or GATK
+  dependency errors are reported.
+
+
 2.0.0 (2018-07-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

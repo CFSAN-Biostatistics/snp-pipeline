@@ -481,25 +481,34 @@ def run(args):
     picard_required = os.environ["RemoveDuplicateReads"] == "true" or  os.environ["EnableLocalRealignment"] == "true"
     if picard_required:
         jar_file_path = utils.find_path_in_path_list("picard", "CLASSPATH")
-        if jar_file_path:
-            stdout = command.run("java -jar " + jar_file_path + " 2>&1")
-        if not jar_file_path or "error" in stdout.lower():
+        if not jar_file_path:
             utils.report_error("CLASSPATH is not configured with the path to picard.jar")
             found_all_dependencies = False
+        else:
+            stdout = command.run("java -jar " + jar_file_path + " 2>&1")
+            if stdout.lower().startswith("error"):
+	        utils.report_error(stdout)
+                found_all_dependencies = False
 
     gatk_required = os.environ["EnableLocalRealignment"] == "true"
     if gatk_required:
         jar_file_path = utils.find_path_in_path_list("GenomeAnalysisTK", "CLASSPATH")
-        if jar_file_path:
-            stdout = command.run("java -jar " + jar_file_path + " --version 2>&1")
-        if not jar_file_path or "error" in stdout.lower():
+        if not jar_file_path:
             utils.report_error("CLASSPATH is not configured with the path to GenomeAnalysisTK.jar")
             found_all_dependencies = False
         else:
-            stdout = command.run("java -jar " + jar_file_path + " -T IndelRealigner --version 2>&1")
-            if "error" in stdout.lower():
-                utils.report_error("The installed GATK version does not support indel realignment.  Try installing an older release prior to GATK v4.")
+            stdout = command.run("java -jar " + jar_file_path + " --version 2>&1")
+            if stdout.lower().startswith("error"):
+	        utils.report_error(stdout)
                 found_all_dependencies = False
+            else:
+                stdout = command.run("java -jar " + jar_file_path + " -T IndelRealigner --version 2>&1")
+                if "not a valid command" in stdout.lower() or "indelrealigner is no longer included" in stdout.lower():
+                    utils.report_error("The installed GATK version does not support indel realignment.  Try installing an older release prior to GATK v4.")
+                    found_all_dependencies = False
+                elif "user error has occurred" in stdout.lower():
+                    utils.report_error(stdout)
+                    found_all_dependencies = False
 
     if not found_all_dependencies:
         utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")
