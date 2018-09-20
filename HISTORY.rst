@@ -3,6 +3,12 @@
 History
 -------
 
+2.0.2 (2018-09-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Fixed inconsistent indentation problem when running with Python 3.
+
+
 2.0.1 (2018-09-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -487,7 +487,7 @@ def run(args):
         else:
             stdout = command.run("java -jar " + jar_file_path + " 2>&1")
             if stdout.lower().startswith("error"):
-	        utils.report_error(stdout)
+                utils.report_error(stdout)
                 found_all_dependencies = False
 
     gatk_required = os.environ["EnableLocalRealignment"] == "true"
@@ -499,7 +499,7 @@ def run(args):
         else:
             stdout = command.run("java -jar " + jar_file_path + " --version 2>&1")
             if stdout.lower().startswith("error"):
-	        utils.report_error(stdout)
+                utils.report_error(stdout)
                 found_all_dependencies = False
             else:
                 stdout = command.run("java -jar " + jar_file_path + " -T IndelRealigner --version 2>&1")
