@@ -7,6 +7,8 @@ run all the sequential steps of the pipeline in the correct order.
 from __future__ import print_function
 from __future__ import absolute_import
 
+from jobrunner import JobRunner
+from jobrunner import JobRunnerException
 import os
 import psutil
 import re
@@ -18,8 +20,6 @@ import traceback
 
 from snppipeline import command
 from snppipeline import fastq
-from snppipeline.job_runner import JobRunner
-from snppipeline.job_runner import JobRunnerException
 from snppipeline import utils
 from snppipeline.utils import log_error
 

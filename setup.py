@@ -20,6 +20,7 @@ else:
 # Control which 3rd party packages should be installed
 # depending on the python version
 install_requires = [
+    'jobrunner',
     'PyVCF>=0.6.7',
     'setuptools', # needed during execution to load pkg_resources
     'psutil',
@@ -47,7 +48,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='2.0.2',
+    version='2.1.0a1',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',
@@ -70,7 +71,7 @@ setup(
         'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
     entry_points={'console_scripts': ['cfsan_snp_pipeline = snppipeline.cfsan_snp_pipeline:main',
-                                      'qarrayrun = snppipeline.qarrayrun:main'] },
+                                     ] },
     scripts=[
         'scripts/run_snp_pipeline.sh',
         'scripts/prepReference.sh',
