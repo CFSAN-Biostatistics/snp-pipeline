@@ -60,9 +60,8 @@ the following lines (or something similiar) to your .bashrc file::
 
 Step 4 - Python
 ---------------
-The SNP pipeline is compatible with python version 2.6, 2.7, 3.3, 3.4, and 3.5.  The pipeline has not been tested on other python versions.
-If you do not already have python installed, you should install version 2.7.  You can either build from source
-or install a precompiled version with your Linux package manager.
+The SNP pipeline is compatible with python version 2.7, 3.4, 3.5, 3.6 and 3.7.  The pipeline has not been tested on other python versions.
+You can either build from source or install a precompiled version with your Linux package manager.
 
 
 Step 5 - Pip

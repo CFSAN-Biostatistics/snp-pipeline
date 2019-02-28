@@ -7,7 +7,9 @@ History
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Added dependency on jobrunner and qarrayrun Python packages.  These modules were formerly
   part of the CFSAN SNP Pipeline and have been released as separate packages.
-
+* Dropped support for Python 2.6 and 3.3 as some of the external packages used by the pipeline
+  have stopped supporting these.
+* Added support for Python 3.6 and 3.7.
 
 
 2.0.2 (2018-09-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_

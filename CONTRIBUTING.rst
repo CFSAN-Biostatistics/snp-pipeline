@@ -88,8 +88,6 @@ Ready to contribute? Here's how to set up `snp-pipeline` for local development.
 
     $ python setup.py test
     $ tox
-    - or - 
-    $ . run_tests.sh -c # source this script to test other python versions without using tox
 
    To get tox, just pip install it into your virtualenv. 
 
@@ -122,7 +120,7 @@ Before you submit a pull request, check that it meets these guidelines:
 #. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-#. The pull request should work for Python 2.6, 2.7, 3.3, 3.4, and 3.5, and for PyPI.
+#. The pull request should work for Python 2.7, 3.4, 3.5, 3.6 and 3.7, and for PyPI.
 
 Tips
 ----

@@ -46,9 +46,14 @@ def grep_not_matching(in_path, out_path, not_match_list):
 class SnpPipelineTest(unittest.TestCase):
     '''Unit test for snppipeline.'''
 
+    @classmethod
+    def setUpClass(cls):
+        print("*" * 80)
+        print("Python version = " + sys.version)
+        print("*" * 80)
+
     def setUpOnce(self):
         """Create the list of sample directories"""
-        print("Python version = " + sys.version)
         samples_directory = os.path.join(self.directory_run_result, 'samples')
         subdir_list = [os.path.join(samples_directory, subdir) for subdir in os.listdir(samples_directory)]
 
@@ -150,7 +155,6 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         if not SnpPipelineLambdaVirusTest.all_setup_done:
             self.setUpOnce()
             self.compare_file('metrics.tsv')
-
 
     def test_1_filter_regions(self):
         """Run filter_regions and verify var.flt_preserved.vcf and var.flt_removed.vcf contains expected contents for each sample.
