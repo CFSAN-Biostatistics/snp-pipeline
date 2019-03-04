@@ -127,16 +127,20 @@ def filter_regions(args):
     utils.print_arguments(args)
 
     #==========================================================================
-    # Validate some parameters
+    # Get arguments from Argparse namespace
     #==========================================================================
     edge_length = args.edgeLength
     window_size_list = args.windowSizeList
     max_num_snps_list = args.maxSnpsList
+    sample_directories_list_path = args.sampleDirsFile
+    out_group_list_path = args.outGroupFile
+    vcf_file_name = args.vcfFileName
+    ref_fasta_path = args.refFastaFile
+    force_flag = args.forceFlag
 
     #==========================================================================
     # Prep work
     #==========================================================================
-    sample_directories_list_path = args.sampleDirsFile
     bad_file_count = utils.verify_non_empty_input_files("File of sample directories", [sample_directories_list_path])
     if bad_file_count > 0:
         utils.global_error(None)
@@ -147,7 +151,6 @@ def filter_regions(args):
     sorted_list_of_sample_directories = sorted(unsorted_list_of_sample_directories)
 
     input_file_list = list()
-    out_group_list_path = args.outGroupFile
     sorted_list_of_outgroup_samples = list()
     if out_group_list_path is not None:
         bad_file_count = utils.verify_non_empty_input_files("File of outgroup samples", [out_group_list_path])
@@ -165,7 +168,6 @@ def filter_regions(args):
     #==========================================================================
     # Validate inputs
     #==========================================================================
-    vcf_file_name = args.vcfFileName
     list_of_vcf_files = [os.path.join(dir, vcf_file_name) for dir in sorted_list_of_sample_directories]
     input_file_list.extend(list_of_vcf_files)
 
@@ -175,7 +177,7 @@ def filter_regions(args):
     elif bad_file_count > 0:
         utils.sample_error("Error: %d VCF files were missing or empty." % bad_file_count, continue_possible=True)
 
-    bad_file_count = utils.verify_non_empty_input_files("Reference file", [args.refFastaFile])
+    bad_file_count = utils.verify_non_empty_input_files("Reference file", [ref_fasta_path])
     if bad_file_count > 0:
         utils.global_error(None)
 
@@ -183,12 +185,12 @@ def filter_regions(args):
     # Get contigs' length from the reference fasta file
     #==========================================================================
     try:
-        handle = open(args.refFastaFile, "r")
+        handle = open(ref_fasta_path, "r")
         contig_length_dict = dict()
         for record in SeqIO.parse(handle, "fasta"):
             #build contig_length_dict
             contig_length_dict[record.id] = len(record.seq)
-        input_file_list.append(args.refFastaFile)
+        input_file_list.append(ref_fasta_path)
     except:
         utils.global_error("Error: cannot open the reference fastq file, or fail to read the contigs in the reference fastq file.")
     else:
@@ -208,7 +210,7 @@ def filter_regions(args):
         removed_vcf_file_path = vcf_file_path[:-4] + "_removed.vcf"
         preserved_needs_rebuild = utils.target_needs_rebuild(input_file_list, preserved_vcf_file_path)
         removed_needs_rebuild = utils.target_needs_rebuild(input_file_list, removed_vcf_file_path)
-        need_rebuild_dict[vcf_file_path] = args.forceFlag or preserved_needs_rebuild or removed_needs_rebuild
+        need_rebuild_dict[vcf_file_path] = force_flag or preserved_needs_rebuild or removed_needs_rebuild
 
     if not any(need_rebuild_dict.values()):
         utils.verbose_print("All preserved and removed vcf files are already freshly built.  Use the -f option to force a rebuild.")
