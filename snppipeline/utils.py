@@ -128,7 +128,7 @@ def print_arguments(args):
     """
     verbose_print("Options:")
     options_dict = vars(args)
-    for key in list(options_dict.keys()):
+    for key in sorted(list(options_dict)):
         if key in ["subparser_name", "func", "excepthook"]:
             continue
         verbose_print("    %s=%s" % (key, options_dict[key]))
