@@ -157,6 +157,7 @@ class SingleSampleWriter(object):
         >>> filters = caller.get_filter_descriptions()
         >>> writer.write_header("dummy-sample-name", filters, "dummy_reference-name")
         >>>
+        >>> # Verify alternate allele is identified and called when it is the most common base
         >>> r = pileup.Record(['ID', 42, 'G', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None, '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
@@ -164,6 +165,7 @@ class SingleSampleWriter(object):
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='1', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='PASS'))
         >>>
+        >>> # Verify lowercase reference converted to uppercase when preserve_ref_case is False by default
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None, '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
@@ -195,6 +197,8 @@ class SingleSampleWriter(object):
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='1', SDP=14, RD=6, AD=8, RDF=3, RDR=3, ADF=4, ADR=4, FT='Fail'))
         >>>
+        >>> # Verify the ref is called and no alternate allele is identified when it is not the most common base
+        >>> # TODO: Fix this.  The alternate allele should be identified.
         >>> r = pileup.Record(['ID', 42, 'G', 14, 'gaaaGGGG...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None, '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
@@ -202,6 +206,7 @@ class SingleSampleWriter(object):
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='0', SDP=14, RD=11, AD=3, RDF=7, RDR=4, ADF=0, ADR=3, FT='PASS'))
         >>>
+        >>> # Verify no alternate allele when there is no evidence of variation
         >>> r = pileup.Record(['ID', 42, 'g', 14, 'ggggGGGG...,,,', '00001111222333'], 15)
         >>> v = writer._make_vcf_record_from_pileup(r, None, '.')
         >>> v.CHROM, v.POS, v.ID, v.REF, v.ALT, v.QUAL, v.FILTER, v.INFO, v.FORMAT
@@ -209,8 +214,8 @@ class SingleSampleWriter(object):
         >>> v.samples[0]
         Call(sample=None, VcfCallData(GT='0', SDP=14, RD=14, AD=0, RDF=7, RDR=7, ADF=0, ADR=0, FT='PASS'))
         >>>
+        >>> # Verify lowercase reference is preserved when preserve_ref_case is True
         >>> writer.close()
-        >>>
         >>> writer = SingleSampleWriter("/dev/null", preserve_ref_case=True)
         >>> filters = caller.get_filter_descriptions()
         >>> writer.write_header("dummy-sample-name", filters, "dummy_reference-name")
