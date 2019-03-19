@@ -8,7 +8,7 @@ for record in reader:
     chrom = record.chrom
     pos = record.position
     ref = record.reference_base
-    most_common = record.most_common_base
+    most_common = record.most_common_good_bases[0]
     alt, fail_reasons = caller.call_consensus(record)
     depth = record.raw_depth
     good_depth = record.good_depth
@@ -64,8 +64,8 @@ class Record(object):
         reference_base : str
             The reference base for the chromosome at this position.
             The upper/lower case of the base in the pileup file is preserved.
-        most_common_base : str or None
-            The most commonly occurring base (A,C,G,T,N,*) after discarding low-quality bases.
+        most_common_good_bases : list of str or None
+            The sorted list of most commonly occurring bases (A,C,G,T,N,*) after discarding low-quality bases.
             Always uppercase if there is any good depth, otherwise None.
             The * character represents a deletion.
         raw_depth : int
@@ -102,8 +102,12 @@ class Record(object):
         42
         >>> r.reference_base
         'G'
-        >>> r.most_common_base
+        >>> len(r.most_common_good_bases)
+        2
+        >>> r.most_common_good_bases[0]
         'A'
+        >>> r.most_common_good_bases[1]
+        'G'
         >>> r.raw_depth
         9
         >>> r.good_depth
@@ -129,8 +133,12 @@ class Record(object):
         42
         >>> r.reference_base
         'G'
-        >>> r.most_common_base
+        >>> len(r.most_common_good_bases)
+        2
+        >>> r.most_common_good_bases[0]
         'A'
+        >>> r.most_common_good_bases[1]
+        'G'
         >>> r.raw_depth
         9
         >>> r.good_depth
@@ -164,8 +172,16 @@ class Record(object):
         0
         >>> sorted([(b, r.base_good_depth[b]) for b in r.base_good_depth])
         []
-        >>> print(r.most_common_base)
+        >>> print(r.most_common_good_bases)
         None
+        >>>
+        >>> # Verify most_common_good_bases sort order
+        >>> r = Record(['ID', 1, 'A', 20, 'TTccAAGG', '22E?;9HF;H8EDGHHI?GH'], 15)
+        >>> r.most_common_good_bases
+        ['A', 'C', 'G', 'T']
+        >>> r = Record(['ID', 1, 'A', 20, 'TTtccAAAGG', '22E?;9HF;H8EDGHHI?GH'], 15)
+        >>> r.most_common_good_bases
+        ['A', 'T', 'C', 'G']
         """
         if isinstance(arg, str):
             self._init_from_line(arg, min_base_quality)
@@ -214,7 +230,7 @@ class Record(object):
             self.base_good_depth = Counter()
             self.forward_base_good_depth = Counter()
             self.reverse_base_good_depth = Counter()
-            self.most_common_base = None
+            self.most_common_good_bases = None
             return
 
         bases_str = split_line[4]
@@ -242,9 +258,12 @@ class Record(object):
         # Get counts of bases regardless of strand
         self.base_good_depth = Counter(bases_str.upper())
         if self.good_depth < 1:
-            self.most_common_base = None
+            self.most_common_good_bases = None
         else:
-            self.most_common_base = self.base_good_depth.most_common(1)[0][0]
+            bases_freq_list = self.base_good_depth.items()  # list of (base, freq) tuples
+            # sort 1st by freq descending, 2nd by base alphabetically for deterministic sort
+            bases_freq_list = sorted(bases_freq_list, key=lambda tup: (-tup[1], tup[0]))
+            self.most_common_good_bases = [base for base, freq in bases_freq_list]
 
         # Get counts of bases on each strand
         forward_bases_str = ''.join([c for c in bases_str if c <= 'Z'])
@@ -253,7 +272,6 @@ class Record(object):
         self.reverse_good_depth = len(reverse_bases_str)
         self.forward_base_good_depth = Counter(forward_bases_str)
         self.reverse_base_good_depth = Counter(reverse_bases_str.upper())
-
 
     @staticmethod # Doesn't use self
     def _strip_unwanted_base_patterns(bases_str):
@@ -319,8 +337,8 @@ class Record(object):
         reference_base : str
             The reference base for the chromosome at this position.
             The upper/lower case of the base in the pileup file is preserved.
-        most_common_base : str or None
-            The most commonly occurring base (A,C,G,T,N,*) after discarding low-quality bases.
+        most_common_good_bases : list of str or None
+            The sorted list of most commonly occurring bases (A,C,G,T,N,*) after discarding low-quality bases.
             Always uppercase if there is any good depth, otherwise None.
             The * character represents a deletion.
         raw_depth : int
@@ -351,7 +369,7 @@ class Record(object):
         r = "chrom=" + self.chrom
         r += " position=" + str(self.position)
         r += " reference_base=" + self.reference_base
-        r += " most_common_base=" + str(self.most_common_base)
+        r += " most_common_good_bases=" + str(self.most_common_good_bases)
         r += " raw_depth=" + str(self.raw_depth)
         r += " good_depth=" + str(self.good_depth)
         r += " forward_good_depth=" + str(self.forward_good_depth)
@@ -452,7 +470,6 @@ class ConsensusCaller(object):
         self.fail_strand_depth = "StrDpth" + str(min_cons_strand_depth)
         self.fail_strand_bias = "StrBias" + str(int(100 * min_cons_strand_bias))
 
-
     def get_filter_descriptions(self):
         """
         Return a list of tuples of filters and corresponding descriptions.
@@ -530,10 +547,11 @@ class ConsensusCaller(object):
         >>> caller.call_consensus(r)
         ('-', ['RawDpth'])
         """
-        consensus_base = record.most_common_base
-        if consensus_base is None:
+        if record.most_common_good_bases is None:
             failed_filters = [self.fail_raw_depth]
             return ('-', failed_filters)
+
+        consensus_base = record.most_common_good_bases[0]
 
         failed_filters = None
 

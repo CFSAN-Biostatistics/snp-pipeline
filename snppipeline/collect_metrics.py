@@ -81,8 +81,9 @@ def count_vcf_file_snps(file_path):
         reader = vcf.VCFReader(f)
         for record in reader:
             num_records += 1
-            if not record.is_snp: # is ALT not in [A,C,G,T,N,*] ?
-                continue
+            for alt in record.ALT:
+                if alt not in ['A', 'C', 'G', 'T', 'N', '*']:
+                    continue
             if record.ALT == record.REF:
                 continue
             for sample in record.samples:

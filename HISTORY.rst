@@ -11,6 +11,18 @@ History
   have stopped supporting these.
 * Added support for Python 3.6 and 3.7.
 
+* VCF file generation: identify multiple alternate alleles per sample. The AD, ADF, and ADR
+  depths are comma-separated and ordered in the same order as the alternate alleles.
+* VCF file generation: identify the alternate allele and alternate allele depth regardless of
+  whether the alternate allele is the consensus call.
+* VCF file generation: fixed a software defect causing unreproducible VCF file results when a
+  sample has multiple alleles with identical depth. Older versions of the SNP Pipeline sometimes
+  identified different alternate alleles and different genotype on different runs with the same
+  datasets. In some cases, older versions of the SNP Pipeline incorrectly called the reference
+  allele when the snp call failed one or more filters. This change only affects VCF files. The
+  snp matrix file was unaffected by the software defect.
+
+
 
 2.0.2 (2018-09-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
