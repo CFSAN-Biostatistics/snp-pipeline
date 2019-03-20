@@ -312,6 +312,7 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.add_argument("-w", "--window_size", dest="windowSizeList", type=int, default=[1000], nargs='*', metavar="WINDOW_SIZE",  help="The length of the window in which the number of SNPs should be no more than max_num_snp.")
     subparser.add_argument("-m", "--max_snp",     dest="maxSnpsList",    type=int, default=[3],    nargs='*', metavar="MAX_NUM_SNPs", help="The maximum number of SNPs allowed in a window.")
     subparser.add_argument("-g", "--out_group",   dest="outGroupFile",   type=str, default=None,          metavar="OUT_GROUP",    help="Relative or absolute path to the file indicating outgroup samples, one sample ID per line.")
+    subparser.add_argument("-a", "--all",         dest="acrossSamples",  action="store_true",                                     help="Dense regions found in any sample are filtered from all of the samples.")
     subparser.add_argument("-v", "--verbose",     dest="verbose",        type=int, default=1,             metavar="0..5",         help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=filter_regions.filter_regions)

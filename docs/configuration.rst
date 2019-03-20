@@ -534,6 +534,8 @@ Specifies options passed to the filter_regions command.
   The maximum number of SNPs allowed in a window.
 ``--out_group``
     Relative or absolute path to the file indicating outgroup samples, one sample ID per line.
+``--all``
+    Dense regions found in any sample are filtered from all of the samples.
 
 You can filter snps more than once by specifying multiple window sizes and max snps.  For example "-m 3 2 -w 1000 100" will filter more than 3 snps in 1000 bases and also more than 2 snps in 100 bases.
 
