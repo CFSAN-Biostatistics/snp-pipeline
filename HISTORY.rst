@@ -10,7 +10,6 @@ History
 * Dropped support for Python 2.6 and 3.3 as some of the external packages used by the pipeline
   have stopped supporting these.
 * Added support for Python 3.6 and 3.7.
-
 * VCF file generation: identify multiple alternate alleles per sample. The AD, ADF, and ADR
   depths are comma-separated and ordered in the same order as the alternate alleles.
 * VCF file generation: identify the alternate allele and alternate allele depth regardless of
@@ -21,6 +20,11 @@ History
   datasets. In some cases, older versions of the SNP Pipeline incorrectly called the reference
   allele when the snp call failed one or more filters. This change only affects VCF files. The
   snp matrix file was unaffected by the software defect.
+* The default behavior of the SNP Filtering does not filter dense regions found in a sample from
+  all the other samples anymore.  Instead, the dense regions are filtered from each sample
+  independently of all the other samples. This change increases the snp distance between samples.
+  The old behavior removing dense snp regions from all samples is still available by customizing
+  the configuration file.  See :ref:`snp-filtering-label` for a detailed explanation.
 
 
 

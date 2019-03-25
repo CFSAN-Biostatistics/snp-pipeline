@@ -537,7 +537,7 @@ Specifies options passed to the filter_regions command.
 ``--all``
     Dense regions found in any sample are filtered from all of the samples.
 
-You can filter snps more than once by specifying multiple window sizes and max snps.  For example "-m 3 2 -w 1000 100" will filter more than 3 snps in 1000 bases and also more than 2 snps in 100 bases.
+You can filter snps more than once by specifying multiple window sizes and max snps.  For example "--max_snp 3 2 --window_size 1000 100" will filter more than 3 snps in 1000 bases and also more than 2 snps in 100 bases.
 
 **Example**::
 

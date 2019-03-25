@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.2
 ##FILTER=<ID=PASS,Description="All filters passed">
-##fileDate=20190318
-##source=CFSAN SNP-Pipeline 2.0.3
+##fileDate=20190320
+##source=CFSAN SNP-Pipeline 2.1.0a5
 ##reference=lambda_virus.fasta
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -21,21 +21,21 @@
 ##FILTER=<ID=Region,Description="Position is in dense region of snps or near the end of the contig.">
 ##contig=<ID=gi|9626243|ref|NC_001416.1|>
 ##bcftools_mergeVersion=1.8+htslib-1.8
-##bcftools_mergeCommand=merge -o 2.0.3/snpma_preserved.vcf --merge all --info-rules NS:sum 2.0.3/tmp.vcf.k5uak3b3/sample1.vcf.gz 2.0.3/tmp.vcf.k5uak3b3/sample2.vcf.gz 2.0.3/tmp.vcf.k5uak3b3/sample3.vcf.gz 2.0.3/tmp.vcf.k5uak3b3/sample4.vcf.gz; Date=Mon Mar 18 14:52:06 2019
+##bcftools_mergeCommand=merge -o 2.1.0a5/snpma_preserved.vcf --merge all --info-rules NS:sum 2.1.0a5/tmp.vcf.eacbos0j/sample1.vcf.gz 2.1.0a5/tmp.vcf.eacbos0j/sample2.vcf.gz 2.1.0a5/tmp.vcf.eacbos0j/sample3.vcf.gz 2.1.0a5/tmp.vcf.eacbos0j/sample4.vcf.gz; Date=Wed Mar 20 11:36:31 2019
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample1	sample2	sample3	sample4
 gi|9626243|ref|NC_001416.1|	403	.	G	A	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:28:0:28:0:0:14:14:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
 gi|9626243|ref|NC_001416.1|	550	.	G	N,A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:22:21:1,.:13:8:0,.:1,.:PASS	0:29:29:.,.:15:14:.,.:.,.:PASS	0:31:31:.,.:14:17:.,.:.,.:PASS	2:27:0:.,27:0:0:.,15:.,12:PASS
 gi|9626243|ref|NC_001416.1|	586	.	C	G,N	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:18:18:.,.:12:6:.,.:.,.:PASS	0:27:27:.,.:13:14:.,.:.,.:PASS	0:39:39:.,.:16:23:.,.:.,.:PASS	1:28:0:26,2:0:0:17,1:9,1:PASS
 gi|9626243|ref|NC_001416.1|	753	.	G	A,N	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:25:0:24,1:0:0:16,1:8,0:PASS	0:28:28:.,.:11:17:.,.:.,.:PASS	0:26:24:.,2:13:11:.,0:.,2:PASS	0:25:25:.,.:13:12:.,.:.,.:PASS
 gi|9626243|ref|NC_001416.1|	1019	.	C	T	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:22:0:22:0:0:8:14:Region
-gi|9626243|ref|NC_001416.1|	1079	.	T	C,N	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:27:0:26,1:0:0:10,0:16,1:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
-gi|9626243|ref|NC_001416.1|	1540	.	A	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:24:0:24:0:0:13:11:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
+gi|9626243|ref|NC_001416.1|	1079	.	T	C,N,G	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:27:0:26,1,.:0:0:10,0,.:16,1,.:PASS	0:22:22:.,.,.:10:12:.,.,.:.,.,.:PASS	0:32:30:.,1,1:16:14:.,1,0:.,0,1:PASS	0:27:27:.,.,.:11:16:.,.,.:.,.,.:PASS
+gi|9626243|ref|NC_001416.1|	1540	.	A	G	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:24:0:24:0:0:13:11:PASS	0:28:28:.:10:18:.:.:PASS	0:21:21:.:10:11:.:.:PASS	0:30:30:.:15:15:.:.:PASS
 gi|9626243|ref|NC_001416.1|	1620	.	G	A	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:21:0:21:0:0:8:13:Region
 gi|9626243|ref|NC_001416.1|	1650	.	G	C	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:27:0:27:0:0:11:16:Region
 gi|9626243|ref|NC_001416.1|	1788	.	A	T	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:16:0:16:0:0:9:7:Region
-gi|9626243|ref|NC_001416.1|	1804	.	G	C	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:23:0:23:0:0:11:12:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
-gi|9626243|ref|NC_001416.1|	2123	.	G	C	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:23:0:23:0:0:11:12:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
-gi|9626243|ref|NC_001416.1|	2439	.	C	T	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:17:0:17:0:0:8:9:Region	.:.:.:.:.:.:.:.:.
+gi|9626243|ref|NC_001416.1|	1804	.	G	C	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:23:0:23:0:0:11:12:PASS	0:5:5:.:4:1:.:.:PASS	0:14:14:.:7:7:.:.:PASS	0:18:18:.:7:11:.:.:PASS
+gi|9626243|ref|NC_001416.1|	2123	.	G	C	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:23:0:23:0:0:11:12:PASS	0:20:20:.:10:10:.:.:PASS	0:23:23:.:10:13:.:.:PASS	0:28:28:.:13:15:.:.:PASS
+gi|9626243|ref|NC_001416.1|	2439	.	C	T	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:24:24:.:13:11:.:.:PASS	0:19:19:.:12:7:.:.:PASS	1:17:0:17:0:0:8:9:PASS	0:28:28:.:11:17:.:.:PASS
 gi|9626243|ref|NC_001416.1|	2452	.	A	T	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:25:1:24:1:0:14:10:Region
 gi|9626243|ref|NC_001416.1|	2599	.	C	A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:28:28:.:16:12:.:.:PASS	1:25:0:25:0:0:8:17:PASS	0:24:24:.:12:12:.:.:PASS	0:19:19:.:8:11:.:.:PASS
 gi|9626243|ref|NC_001416.1|	3063	.	G	N,C,A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:27:26:1,.,.:16:10:1,.,.:0,.,.:PASS	0:27:26:.,1,.:17:9:.,0,.:.,1,.:PASS	0:25:24:.,1,.:11:13:.,0,.:.,1,.:PASS	3:22:0:1,.,21:0:0:0,.,10:1,.,11:PASS
@@ -44,9 +44,9 @@ gi|9626243|ref|NC_001416.1|	3648	.	C	T,N	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:AD
 gi|9626243|ref|NC_001416.1|	3656	.	T	G	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:25:0:25:0:0:13:12:PASS	0:22:22:.:9:13:.:.:PASS	0:24:24:.:12:12:.:.:PASS	0:29:29:.:19:10:.:.:PASS
 gi|9626243|ref|NC_001416.1|	3678	.	C	T	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:18:18:.:8:10:.:.:PASS	1:21:1:20:1:0:11:9:PASS	0:24:24:.:15:9:.:.:PASS	0:22:22:.:11:11:.:.:PASS
 gi|9626243|ref|NC_001416.1|	4977	.	G	A	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:25:0:25:0:0:13:12:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
-gi|9626243|ref|NC_001416.1|	5142	.	C	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:19:0:19:0:0:5:14:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
-gi|9626243|ref|NC_001416.1|	5336	.	G	T	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:14:0:14:0:0:7:7:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
-gi|9626243|ref|NC_001416.1|	5462	.	C	T,N	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:25:0:23,2:0:0:18,1:5,1:Region	.:.:.:.:.:.:.:.:.
+gi|9626243|ref|NC_001416.1|	5142	.	C	N,A,G	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:25:22:2,1,.:12:10:2,1,.:0,0,.:PASS	3:19:0:.,.,19:0:0:.,.,5:.,.,14:PASS	0:23:23:.,.,.:13:10:.,.,.:.,.,.:PASS	0:26:26:.,.,.:9:17:.,.,.:.,.,.:PASS
+gi|9626243|ref|NC_001416.1|	5336	.	G	T,N	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:24:24:.,.:12:12:.,.:.,.:PASS	1:14:0:14,.:0:0:7,.:7,.:PASS	0:20:19:.,1:12:7:.,1:.,0:PASS	0:33:33:.,.:11:22:.,.:.,.:PASS
+gi|9626243|ref|NC_001416.1|	5462	.	C	T,N	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:26:26:.,.:14:12:.,.:.,.:PASS	0:14:14:.,.:8:6:.,.:.,.:PASS	1:25:0:23,2:0:0:18,1:5,1:PASS	0:32:32:.,.:10:22:.,.:.,.:PASS
 gi|9626243|ref|NC_001416.1|	5482	.	G	A	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:20:0:20:0:0:9:11:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
 gi|9626243|ref|NC_001416.1|	5516	.	T	A	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:18:0:18:0:0:10:8:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
 gi|9626243|ref|NC_001416.1|	5800	.	G	A	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:21:0:21:0:0:5:16:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
@@ -124,11 +124,11 @@ gi|9626243|ref|NC_001416.1|	25645	.	C	G	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR
 gi|9626243|ref|NC_001416.1|	26173	.	G	N,C	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:19:18:1,.:8:10:1,.:0,.:PASS	2:21:0:.,21:0:0:.,10:.,11:PASS	0:31:28:3,.:11:17:2,.:1,.:PASS	0:25:25:.,.:11:14:.,.:.,.:PASS
 gi|9626243|ref|NC_001416.1|	26728	.	A	T	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:21:21:.:14:7:.:.:PASS	0:28:28:.:12:16:.:.:PASS	1:25:0:25:0:0:13:12:PASS	0:22:22:.:9:13:.:.:PASS
 gi|9626243|ref|NC_001416.1|	26972	.	A	T	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:22:1:21:1:0:11:10:Region
-gi|9626243|ref|NC_001416.1|	27412	.	C	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:17:0:17:0:0:7:10:Region	.:.:.:.:.:.:.:.:.
+gi|9626243|ref|NC_001416.1|	27412	.	C	G	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:25:25:.:8:17:.:.:PASS	0:24:24:.:13:11:.:.:PASS	1:17:0:17:0:0:7:10:PASS	0:15:15:.:7:8:.:.:PASS
 gi|9626243|ref|NC_001416.1|	27539	.	A	C	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:12:0:12:0:0:6:6:Region
-gi|9626243|ref|NC_001416.1|	27661	.	T	C,N	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:25:0:24,1:0:0:14,1:10,0:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
+gi|9626243|ref|NC_001416.1|	27661	.	T	C,N	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:23:23:.,.:14:9:.,.:.,.:PASS	1:25:0:24,1:0:0:14,1:10,0:PASS	0:15:15:.,.:7:8:.,.:.,.:PASS	0:19:19:.,.:11:8:.,.:.,.:PASS
 gi|9626243|ref|NC_001416.1|	27722	.	C	A	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:28:0:28:0:0:16:12:Region
-gi|9626243|ref|NC_001416.1|	27790	.	A	C,N	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:20:0:19,1:0:0:8,1:11,0:Region	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.
+gi|9626243|ref|NC_001416.1|	27790	.	A	C,N	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	1:20:0:19,1:0:0:8,1:11,0:PASS	0:29:28:1,.:14:14:1,.:0,.:PASS	0:23:23:.,.:12:11:.,.:.,.:PASS	0:20:20:.,.:14:6:.,.:.,.:PASS
 gi|9626243|ref|NC_001416.1|	27825	.	A	G	.	Region	NS=1	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:.:.:.:.:.:.:.:.	.:23:0:23:0:0:14:9:Region
 gi|9626243|ref|NC_001416.1|	27834	.	C	N,A	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:17:16:1,.:5:11:0,.:1,.:PASS	0:33:33:.,.:18:15:.,.:.,.:PASS	2:17:0:1,16:0:0:0,11:1,5:PASS	0:22:21:1,.:11:10:1,.:0,.:PASS
 gi|9626243|ref|NC_001416.1|	28045	.	G	A,N,T	.	PASS	NS=4	GT:SDP:RD:AD:RDF:RDR:ADF:ADR:FT	0:26:24:1,1,.:15:9:0,0,.:1,1,.:PASS	3:23:0:.,.,23:0:0:.,.,11:.,.,12:PASS	0:30:30:.,.,.:15:15:.,.,.:.,.,.:PASS	0:19:19:.,.,.:9:10:.,.,.:.,.,.:PASS

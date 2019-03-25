@@ -1,5 +1,5 @@
 Sample	Fastq_Files	Fastq_File_Size	Machine	Flowcell	Number_of_Reads	Duplicate_Reads	Percent_of_Reads_Mapped	Percent_Proper_Pair	Average_Insert_Size	Average_Pileup_Depth	Phase1_SNPs	Phase1_Preserved_SNPs	Phase2_SNPs	Phase2_Preserved_SNPs	Missing_SNP_Matrix_Positions	Missing_Preserved_SNP_Matrix_Positions	Excluded_Sample	Excluded_Preserved_Sample	Warnings_and_Errors
-"sample1"	"sample1_1.fastq, sample1_2.fastq"	4818902			20000	102	94.55	90.45	286.5	23.69	46	32	46	32	0	0			
-"sample2"	"sample2_1.fastq, sample2_2.fastq"	4813480			20000	88	94.78	91.12	284.3	23.70	44	41	44	41	0	0			
+"sample1"	"sample1_1.fastq, sample1_2.fastq"	4818902			20000	102	94.55	90.45	286.5	23.69	46	37	46	37	0	0			
+"sample2"	"sample2_1.fastq, sample2_2.fastq"	4813480			20000	88	94.78	91.12	284.3	23.70	44	44	44	44	0	0			
 "sample4"	"sample4_1.fastq, sample4_2.fastq"	4783620			20000	102	94.44	89.83	398.8	23.20	37	28	37	28	0	0			
-"sample3"	"sample3_1.fastq, sample3_2.fastq"	4774974			20000	105	94.43	89.62	317.3	23.05	39	36	39	36	1	1			
+"sample3"	"sample3_1.fastq, sample3_2.fastq"	4774974			20000	105	94.43	89.62	317.3	23.05	39	39	39	39	1	1			

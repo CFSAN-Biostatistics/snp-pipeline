@@ -262,7 +262,8 @@ filter_regions
   usage: cfsan_snp_pipeline filter_regions [-h] [-f] [-n NAME] [-l EDGE_LENGTH]
                                            [-w [WINDOW_SIZE [WINDOW_SIZE ...]]]
                                            [-m [MAX_NUM_SNPs [MAX_NUM_SNPs ...]]]
-                                           [-g OUT_GROUP] [-v 0..5] [--version]
+                                           [-g OUT_GROUP] [-a] [-v 0..5]
+                                           [--version]
                                            sampleDirsFile refFastaFile
   
   Remove abnormally dense SNPs from the input VCF file, save the reserved SNPs
@@ -293,6 +294,8 @@ filter_regions
                           Relative or absolute path to the file indicating
                           outgroup samples, one sample ID per line. (default:
                           None)
+    -a, --all             Dense regions found in any sample are filtered from
+                          all of the samples. (default: False)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit

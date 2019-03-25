@@ -2568,8 +2568,12 @@ testFilterRegionsOutgroup()
     # Copy the supplied test data to a work area:
     cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
+    # set the --all flag so there will be differences
+    cfsan_snp_pipeline data configurationFile $tempDir
+    echo "FilterRegions_ExtraParams=--edge_length 500 --window_size 1000 125 15 --max_snp 3 2 1 --all" >> "$tempDir/snppipeline.conf"
+
     # Run the pipeline, specifing the locations of samples and the reference
-    run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
+    run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
 
     # Verify no errors
     verifyNonExistingFile "$tempDir/error.log"
@@ -2603,8 +2607,8 @@ testFilterRegionsOutgroup()
     outgroup="sample4" # this test only works when sample 4 is the outgroup
     echo $outgroup > "$tempDir/outgroup.txt"
 
-    # Re-run cfsan_snp_pipeline filter_regions --
-    cfsan_snp_pipeline filter_regions --out_group "$tempDir/outgroup.txt" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterRegions.log"
+    # Re-run cfsan_snp_pipeline filter_region
+    cfsan_snp_pipeline filter_regions --all --out_group "$tempDir/outgroup.txt" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterRegions.log"
 
     # Verify log files
     verifyNonEmptyReadableFile "$logDir/filterRegions.log"
@@ -5941,9 +5945,9 @@ testAlreadyFreshOutputs()
     assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.5"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.69"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
-    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=37"
     assertFileContains "$tempDir/samples/sample1/metrics" "snps=46"
-    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=37"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=0"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0"
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample="
@@ -6080,9 +6084,9 @@ testAlreadyFreshOutputs()
     assertFileNotContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.5"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.69"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=37"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "snps=46"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "snpsPreserved=37"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "missingPos=0"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0"
 
@@ -6162,7 +6166,7 @@ testRunSnpPipelineExcessiveSnps()
     # Verify no weird freshness skips
     assertFileNotContains "$tempDir/run_snp_pipeline.log" "Use the -f option to force a rebuild"
 
-	# Verify each pipeline stage runs to completion
+    # Verify each pipeline stage runs to completion
     logDir=$(echo $(ls -d $tempDir/logs*))
     assertFileContains "$logDir/indexRef.log" "cfsan_snp_pipeline index_ref finished"
     assertFileContains "$logDir/mapReads.log-1" "cfsan_snp_pipeline map_reads finished"
@@ -6185,19 +6189,19 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$logDir/distance_preserved.log" "cfsan_snp_pipeline distance finished"
 
     # Verify output
-    # After removing the abnormal high-density snps, sample1 has more than 40 snps, so it is included in the analysis - non-preserved only
-    # After removing the abnormal high-density snps, sample2 has more than 40 snps, so it is included in the analysis - both non-preserved and preserved
+    # After removing the abnormal high-density snps, sample1 has more than 40 snps, so it is excluded in the analysis - non-preserved only
+    # After removing the abnormal high-density snps, sample2 has more than 40 snps, so it is excluded in the analysis - both non-preserved and preserved
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample=Excluded$"
     assertFileContains "$tempDir/samples/sample2/metrics" "excludedSample=Excluded$"
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSamplePreserved=$"
     assertFileContains "$tempDir/samples/sample2/metrics" "excludedSamplePreserved=Excluded$"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
     assertFileContains "$tempDir/samples/sample2/metrics" "phase1Snps=44"
-    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
-    assertFileContains "$tempDir/samples/sample2/metrics" "phase1SnpsPreserved=41"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=37"
+    assertFileContains "$tempDir/samples/sample2/metrics" "phase1SnpsPreserved=44"
     assertFileContains "$tempDir/samples/sample1/metrics" "snps=$"
     assertFileContains "$tempDir/samples/sample2/metrics" "snps=$"
-    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=37$"
     assertFileContains "$tempDir/samples/sample2/metrics" "snpsPreserved=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
     assertFileContains "$tempDir/samples/sample2/metrics" "missingPos=$"

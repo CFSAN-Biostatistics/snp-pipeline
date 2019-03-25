@@ -270,6 +270,7 @@ def filter_regions_across_samples(list_of_vcf_files, contig_length_dict, sorted_
             continue
 
         sample_ID = utils.sample_id_from_file(vcf_file_path)
+        utils.verbose_print("Processing sample %s" % sample_ID)
         if sample_ID in sorted_list_of_outgroup_samples:
             write_outgroup_preserved_and_removed_vcf_files(vcf_file_path, vcf_reader)
         else:
@@ -294,9 +295,6 @@ def filter_regions_across_samples(list_of_vcf_files, contig_length_dict, sorted_
             continue
 
         write_preserved_and_removed_vcf_files(vcf_file_path, bad_regions_dict)
-
-
-
 
 
 def filter_regions_per_sample(list_of_vcf_files, contig_length_dict, sorted_list_of_outgroup_samples, force_flag, edge_length, window_size_list, max_num_snps_list, ref_fasta_path, out_group_list_path):
@@ -324,8 +322,66 @@ def filter_regions_per_sample(list_of_vcf_files, contig_length_dict, sorted_list
     out_group_list_path : str
         Path to the file indicating outgroup samples, one sample ID per line.
     """
-    pass
+    #==========================================================================
+    # Prep work
+    #==========================================================================
+    input_file_list = list()
+    input_file_list.append(ref_fasta_path)
+    if out_group_list_path:
+        input_file_list.append(out_group_list_path)
 
+    #==========================================================================
+    # Which samples need rebuild?
+    #
+    # Any changed or new input file will trigger rebuild for all samples because
+    # the bad regions are combined across all samples.  However, a missing
+    # output file will only cause rebuild of the missing file.
+    #==========================================================================
+    need_rebuild_dict = dict()
+    for vcf_file_path in list_of_vcf_files:
+        preserved_vcf_file_path = vcf_file_path[:-4] + "_preserved.vcf"
+        removed_vcf_file_path = vcf_file_path[:-4] + "_removed.vcf"
+        input_files = input_file_list + [vcf_file_path]
+        preserved_needs_rebuild = utils.target_needs_rebuild(input_files, preserved_vcf_file_path)
+        removed_needs_rebuild = utils.target_needs_rebuild(input_files, removed_vcf_file_path)
+        need_rebuild_dict[vcf_file_path] = force_flag or preserved_needs_rebuild or removed_needs_rebuild
+
+    if not any(need_rebuild_dict.values()):
+        utils.verbose_print("All preserved and removed vcf files are already freshly built.  Use the -f option to force a rebuild.")
+        return
+
+    #==========================================================================
+    # Find all bad regions in one sample at a time
+    #==========================================================================
+    for vcf_file_path in list_of_vcf_files:
+        if not need_rebuild_dict[vcf_file_path]:
+            continue
+        try:
+            vcf_reader_handle = open(vcf_file_path, 'r')
+            vcf_reader = vcf.Reader(vcf_reader_handle)
+        except:
+            utils.sample_error("Error: Cannot open the input vcf file: %s." % vcf_file_path, continue_possible=True)
+            continue
+
+        sample_ID = utils.sample_id_from_file(vcf_file_path)
+        utils.verbose_print("Processing sample %s" % sample_ID)
+        if sample_ID in sorted_list_of_outgroup_samples:
+            write_outgroup_preserved_and_removed_vcf_files(vcf_file_path, vcf_reader)
+        else:
+            # The bad_regions_dict holds the bad regions for this sample
+            # Key is the contig ID, and the value is a list of bad region tuples (start_position, end_position).
+            bad_regions_dict = dict()
+            collect_dense_regions(vcf_reader, bad_regions_dict, contig_length_dict, edge_length, max_num_snps_list, window_size_list)
+
+            # Combine all bad regions for each contig
+            for contig, regions in bad_regions_dict.items():
+                combined_regions = utils.merge_regions(regions)
+                bad_regions_dict[contig] = combined_regions
+
+            # Write the output files
+            write_preserved_and_removed_vcf_files(vcf_file_path, bad_regions_dict)
+
+        vcf_reader_handle.close()
 
 
 def collect_dense_regions(vcf_reader, bad_regions_dict, contig_length_dict, edge_length, max_num_snps_list, window_size_list):
