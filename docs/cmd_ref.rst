@@ -205,12 +205,15 @@ map_reads
 
 ::
 
-  usage: cfsan_snp_pipeline map_reads [-h] [-f] [-v 0..5] [--version]
+  usage: cfsan_snp_pipeline map_reads [-h] [-f] [-v 0..5] [--threads INT]
+                                      [--version]
                                       referenceFile sampleFastqFile1
                                       [sampleFastqFile2]
   
   Align the sequence reads for a specified sample to a specified reference
-  genome. The output is written to the file "reads.sam" in the sample directory.
+  genome. The reads are sorted, duplicates marked, and realigned around indels.
+  The output is written to the file "reads.sorted.deduped.indelrealigned.bam" in
+  the sample directory.
   
   positional arguments:
     referenceFile         Relative or absolute path to the reference fasta file
@@ -224,6 +227,7 @@ map_reads
                           and are newer than inputs (default: False)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
+    --threads INT         Number of CPU cores to use (default: 8)
     --version             show program's version number and exit
 
 call_sites
@@ -256,8 +260,10 @@ filter_regions
 ::
 
   usage: cfsan_snp_pipeline filter_regions [-h] [-f] [-n NAME] [-l EDGE_LENGTH]
-                                           [-w WINDOW_SIZE] [-m MAX_NUM_SNPs]
-                                           [-g OUT_GROUP] [-v 0..5] [--version]
+                                           [-w [WINDOW_SIZE [WINDOW_SIZE ...]]]
+                                           [-m [MAX_NUM_SNPs [MAX_NUM_SNPs ...]]]
+                                           [-g OUT_GROUP] [-a] [-v 0..5]
+                                           [--version]
                                            sampleDirsFile refFastaFile
   
   Remove abnormally dense SNPs from the input VCF file, save the reserved SNPs
@@ -278,19 +284,25 @@ filter_regions
     -l EDGE_LENGTH, --edge_length EDGE_LENGTH
                           The length of the edge regions in a contig, in which
                           all SNPs will be removed. (default: 500)
-    -w WINDOW_SIZE, --window_size WINDOW_SIZE
+    -w [WINDOW_SIZE [WINDOW_SIZE ...]], --window_size [WINDOW_SIZE [WINDOW_SIZE ...]]
                           The length of the window in which the number of SNPs
-                          should be no more than max_num_snp. (default: 1000)
-    -m MAX_NUM_SNPs, --max_snp MAX_NUM_SNPs
+                          should be no more than max_num_snp. (default: [1000])
+    -m [MAX_NUM_SNPs [MAX_NUM_SNPs ...]], --max_snp [MAX_NUM_SNPs [MAX_NUM_SNPs ...]]
                           The maximum number of SNPs allowed in a window.
-                          (default: 3)
+                          (default: [3])
     -g OUT_GROUP, --out_group OUT_GROUP
                           Relative or absolute path to the file indicating
                           outgroup samples, one sample ID per line. (default:
                           None)
+    -a, --all             Dense regions found in any sample are filtered from
+                          all of the samples. (default: False)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
+  
+  You can filter snps more than once by specifying multiple window sizes and max
+  snps. For example "-m 3 2 -w 1000 100" will filter more than 3 snps in 1000
+  bases and also more than 2 snps in 100 bases.
 
 merge_sites
 ------------------------
@@ -339,8 +351,9 @@ call_consensus
 ::
 
   usage: cfsan_snp_pipeline call_consensus [-h] [-f] [-l FILE] [-e FILE]
-                                           [-o FILE] [-q INT] [-c FREQ] [-d INT]
-                                           [-b FREQ] [--vcfFileName NAME]
+                                           [-o FILE] [-q INT] [-c FREQ] [-D INT]
+                                           [-d INT] [-b FREQ]
+                                           [--vcfFileName NAME]
                                            [--vcfRefName NAME] [--vcfAllPos]
                                            [--vcfPreserveRefCase]
                                            [--vcfFailedSnpGt {.,0,1}] [-v 0..5]
@@ -376,6 +389,9 @@ call_consensus
                           Consensus frequency. Mimimum fraction of high-quality
                           reads supporting the consensus to make a call.
                           (default: 0.6)
+    -D INT, --minConsDpth INT
+                          Consensus depth. Minimum number of high-quality reads
+                          supporting the consensus to make a call. (default: 1)
     -d INT, --minConsStrdDpth INT
                           Consensus strand depth. Minimum number of high-quality
                           reads supporting the consensus which must be present

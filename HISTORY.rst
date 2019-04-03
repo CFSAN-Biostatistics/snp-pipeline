@@ -3,6 +3,96 @@
 History
 -------
 
+2.1.0 (2019-03-??) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Added dependency on jobrunner and qarrayrun Python packages.  These modules were formerly
+  part of the CFSAN SNP Pipeline and have been released as separate packages.
+* Dropped support for Python 2.6 and 3.3 as some of the external packages used by the pipeline
+  have stopped supporting these.
+* Added support for Python 3.6 and 3.7.
+* VCF file generation: identify multiple alternate alleles per sample. The AD, ADF, and ADR
+  depths are comma-separated and ordered in the same order as the alternate alleles.
+* VCF file generation: identify the alternate allele and alternate allele depth regardless of
+  whether the alternate allele is the consensus call.
+* VCF file generation: fixed a software defect causing unreproducible VCF file results when a
+  sample has multiple alleles with identical depth. Older versions of the SNP Pipeline sometimes
+  identified different alternate alleles and different genotype on different runs with the same
+  datasets. In some cases, older versions of the SNP Pipeline incorrectly called the reference
+  allele when the snp call failed one or more filters. This change only affects VCF files. The
+  snp matrix file was unaffected by the software defect.
+* The default behavior of the SNP Filtering does not filter dense regions found in a sample from
+  all the other samples anymore.  Instead, the dense regions are filtered from each sample
+  independently of all the other samples. This change increases the snp distance between samples.
+  The old behavior removing dense snp regions from all samples is still available by customizing
+  the configuration file.  See :ref:`snp-filtering-label` for a detailed explanation.
+
+
+
+2.0.2 (2018-09-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Fixed inconsistent indentation problem when running with Python 3.
+
+
+2.0.1 (2018-09-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Fixed the Picard dependency check and improved the error messages when Picard or GATK
+  dependency errors are reported.
+
+
+2.0.0 (2018-07-20) - `docs <http://snp-pipeline.readthedocs.io/en/2.0-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Changes Impacting Backwards Compatibility:**
+
+* Moved the bam file creation functionality from the call_sites command to the
+  map_reads command.  The map_reads command takes fastq files as input (as before) and
+  produces a finished bam file.  The call_sites command now only creates a pileup and finds
+  high-confidence variant sites.
+* Added local realignment around indels.  This is an optional step enabled by default.
+  When enabled, local realignment creates a dependency on Picard and GATK.  See
+  :ref:`local-realignment-label`.
+* The pipeline uses multiple CPU threads when running SAMtools.
+* SAMtools version 1.4 or higher is required.  Older versions are not supported anymore.
+* When running in an HPC environment, the pipeline is configured to use 20 CPU threads by
+  default when mapping reads to the reference.  You can change this by configuring the
+  :ref:`CpuCoresPerProcessOnHPC-label` parameter.
+* When running on a workstation, the pipeline is configured to use 8 CPU threads by
+  default when mapping reads to the reference.  You can change this by configuring the
+  :ref:`CpuCoresPerProcessOnWorkstation-label` parameter.
+* Changed the algorithm used to compute the Average Insert Size metric.  The new algorithm uses
+  SAMtools stats.  In most cases the average insert size will be larger than before.
+* Added a new metric called ``Percent Proper Pair`` which measures the percentage of all reads that
+  are aligned to the reference in the proper orientation and within the expected paired-end distance.
+  See :ref:`metrics-usage-label`.
+* Fixed a bug causing non-compliance with the VCF version 4.1 specification.  Prior to this
+  fix, the VCF files sometimes wrongly contained ``-`` characters in the ALT field to represent
+  deletions.  VCF files are now generated according to the VCF version 4.2 specification, and deletions,
+  if present, are represented with ``*`` characters.
+
+**Other Changes:**
+
+* Increased the configurable map quality threshold to exclude poorly mapped reads from analysis.
+  See :ref:`SamtoolsSamFilter-ExtraParams-label`.
+* Enhanced the SNP density filter to find dense regions of SNPs in multiple window sizes, each with
+  a different number of allowed snps.  See :ref:`FilterRegions-ExtraParams-label`.
+* Changed the SAMtools mpileup options to include read alignments that are not properly paired.
+  This change increases the number of detected snps.  It also increases the effectiveness of the
+  density filter by causing the removal of snps in dense regions that would not otherwise have been
+  detected.  See :ref:`SamtoolsMpileup-ExtraParams-label`.
+* Increased the minimum required variant-supporting depth to call variants in phase 1 with VarScan.
+  See :ref:`VarscanMpileup2snp_ExtraParams-label`.
+* Increased the minimum required supporting depth to make a call in phase 2 with the consensus caller.
+  See :ref:`CallConsensus-ExtraParams-label`.
+* Added a ``--threads`` option to the map_reads script.  This should only be used when building custom :ref:`step-by-step-workflows`.
+* Updated the included datasets.
+* Documented the tested versions of other software used by the pipeline.  See :ref:`installation-label`.
+* Fixed compatibility with Python 3 when running with Grid Engine.
+* Fixed merge_vcf failure when merging many VCF files.  Increased the number of open file descriptors when needed.
+
+
+
 1.0.1 (2017-09-28) - `docs <http://snp-pipeline.readthedocs.io/en/1.0-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

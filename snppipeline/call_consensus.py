@@ -62,6 +62,9 @@ def call_consensus(args):
         minConsFreq : float
             Consensus frequency. Mimimum fraction of high-quality reads
             supporting the consensus to make a call.
+        minConsDpth : int
+            Minimum number of high-quality reads supporting the consensus to
+            make a call.  This impacts both variant calls and reference calls.
         minConsStrdDpth : int
             Consensus strand depth. Minimum number of high-quality reads
             supporting the consensus which must be present on both the
@@ -83,7 +86,8 @@ def call_consensus(args):
     args.consensusFile = 'consensus.fasta'
     args.minBaseQual = 15
     args.minConsFreq = 0.6
-    args.minConsStrdDpth = 4
+    args.minConsDpth = 3
+    args.minConsStrdDpth = 1
     args.minConsStrdBias = 0.10
     args.vcfFailedSnpGt = '.'
     call_consensus(args)
@@ -136,6 +140,7 @@ def call_consensus(args):
     position_consensus_base_dict = dict()
 
     caller = pileup.ConsensusCaller(args.minConsFreq,
+                                    args.minConsDpth,
                                     args.minConsStrdDpth,
                                     args.minConsStrdBias)
 
@@ -164,9 +169,13 @@ def call_consensus(args):
         if (chrom, pos) in snp_positions:
             if fail_reasons:
                 position_consensus_base_dict[(chrom, pos)] = '-'
+            elif consensus_base == '*':
+                # In the fasta file, deletions are represented with dash '-'.
+                position_consensus_base_dict[(chrom, pos)] = '-'
             else:
                 position_consensus_base_dict[(chrom, pos)] = consensus_base
 
+        # Write to VCF file
         if vcf_file_name:
             writer.write_from_pileup(pileup_record, fail_reasons, args.vcfFailedSnpGt)
     if vcf_file_name:
@@ -174,10 +183,10 @@ def call_consensus(args):
 
     utils.verbose_print("called consensus positions = %i" % (len(position_consensus_base_dict)))
 
+    # Write the consensus calls to a fasta file
     consensus_list = [position_consensus_base_dict.get(key, '-') for key in snp_list]
     consensus_str = ''.join(consensus_list)
     snp_seq_record = SeqRecord(Seq(consensus_str), id=sample_name, description="")
 
-    # Write the consensus calls to a fasta file
     with open(consensus_file_path, "w") as fasta_file_object:
         SeqIO.write([snp_seq_record], fasta_file_object, "fasta")

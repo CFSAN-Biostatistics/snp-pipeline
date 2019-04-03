@@ -22,34 +22,46 @@ Step 2 - Executable Software Dependencies
 -----------------------------------------
 You should have the following software installed before using the SNP Pipeline.
 
-    * Bowtie2_, a tool for aligning reads to long reference sequences
-    * SMALT_, a tool for aligning reads to long reference sequences
-    * SAMtools_, utilities for manipulating alignments in the SAM format
-    * Picard_, a set of tools for manipulating sequencing data in SAM/BAM/CRAM/VCF format
-    * VarScan_, a tool to detect variants in NGS data
-    * tabix_, a generic indexer for tab-delimited genome position files
-    * bgzip, part of the tabix package, bgzip is a block compression utility
-    * BcfTools_, utilities for variant calling and manipulating VCFs and BCFs
-    * fastq-dump_, an SRA Toolkit utility for fetching samples from NCBI SRA
+=========== ============== ===============================================================
+Software    Tested Version      Description
+=========== ============== ===============================================================
+Bowtie2_    2.3.4.1        A tool for aligning reads to long reference sequences
+SMALT_      0.7.6          A tool for aligning reads to long reference sequences
+SAMtools_   1.8            Utilities for manipulating alignments in the SAM format
+Picard_     2.18.4         A set of tools for manipulating sequence data
+GATK_       3.8-1-0        Variant discovery and genotyping tools
+VarScan_    2.3.9          A tool to detect variants in NGS data
+tabix_      1.8            A generic indexer for tab-delimited genome position files
+bgzip       1.8            Part of the tabix package, bgzip is a block compression utility
+BcfTools_   1.8            Utilities for variant calling and manipulating VCFs and BCFs
+fastq-dump_ 2.8.1          An SRA Toolkit utility for fetching samples from NCBI SRA
+=========== ============== ===============================================================
+
+Note: the versions above are tested and known to work together. Other versions may also work.
 
 Note: you will need either Bowtie2 or SMALT.  You do not have to install both.
 However, the included result files were generated with Bowtie2.  Your results may differ
 when using SMALT.
 
+Note: Picard is required when removing deplicate reads and when realigning reads around indels.
+Both of these functions are enabled by default, but can be disabled in the configuration file.
+
+Note: GATK is required when realigning reads around indels, which is enabled by default,
+but can be disabled in the configuration file.
+
 Step 3 - Environment Variables
 ------------------------------
-Define the CLASSPATH environment variable to specify the location of the Picard and VarScan jar files.  Add
+Define the CLASSPATH environment variable to specify the location of the Picard, VarScan, and GATK jar files.  Add
 the following lines (or something similiar) to your .bashrc file::
 
+    export CLASSPATH=~/software/varscan.v2.3.9/VarScan.jar:$CLASSPATH
     export CLASSPATH=~/software/picard/picard.jar:$CLASSPATH
-    export CLASSPATH=~/software/varscan.v2.3.9/VarScan.v2.3.9.jar:$CLASSPATH
-
+    export CLASSPATH=~/software/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef/GenomeAnalysisTK.jar:$CLASSPATH
 
 Step 4 - Python
 ---------------
-The SNP pipeline requires python version 2.6, 2.7, 3.3, 3.4, or 3.5.  The pipeline has not been tested on other python versions.
-If you do not already have python installed, you should install version 2.7.  You can either build from source
-or install a precompiled version with your Linux package manager.
+The SNP pipeline is compatible with python version 2.7, 3.4, 3.5, 3.6 and 3.7.  The pipeline has not been tested on other python versions.
+You can either build from source or install a precompiled version with your Linux package manager.
 
 
 Step 5 - Pip
@@ -139,11 +151,12 @@ You may need to upgrade your Java Runtime Environment (JRE) to run Picard.
 
 
 .. _Bowtie2: http://sourceforge.net/projects/bowtie-bio/files/bowtie2/
-.. _SAMtools: http://sourceforge.net/projects/samtools/files/
+.. _SAMtools: http://www.htslib.org/download/
 .. _Picard: https://broadinstitute.github.io/picard/command-line-overview.html
+.. _GATK: https://software.broadinstitute.org/gatk/download/archive
 .. _VarScan: http://sourceforge.net/projects/varscan/files/
-.. _tabix: http://www.htslib.org/doc/tabix.html
-.. _BcfTools: http://sourceforge.net/projects/samtools/files/samtools/1.1/
+.. _tabix: http://www.htslib.org/download/
+.. _BcfTools: http://www.htslib.org/download/
 .. _fastq-dump: http://www.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software
 .. _Biopython: http://biopython.org/wiki/Download
 .. _SMALT: http://sourceforge.net/projects/smalt/files

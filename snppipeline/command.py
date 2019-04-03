@@ -7,6 +7,12 @@ from __future__ import absolute_import
 import subprocess
 import sys
 
+# Determine how to decode bytes
+std_encoding = sys.stdout.encoding
+if std_encoding is None:
+    std_encoding = sys.stdin.encoding
+if std_encoding is None:
+    std_encoding = "utf-8"
 
 def run(command, outfile=None):
     """Run a specified command as a separate process.
@@ -67,7 +73,7 @@ def run(command, outfile=None):
         stdout, stderr = proc.communicate()
         exitcode = proc.returncode
         if sys.version_info > (3,):
-            stdout = stdout.decode("utf-8")  # Python 3 stdout is bytes, not str
+            stdout = stdout.decode(std_encoding)  # Python 3 stdout is bytes, not str
         return stdout
     elif outfile == sys.stdout:
         subprocess.check_call(command, shell=True)

@@ -1,7 +1,7 @@
-Sample	Fastq_Files	Fastq_File_Size	Machine	Flowcell	Number_of_Reads	Duplicate_Reads	Percent_of_Reads_Mapped	Average_Insert_Size	Average_Pileup_Depth	Phase1_SNPs	Phase1_Preserved_SNPs	Phase2_SNPs	Phase2_Preserved_SNPs	Missing_SNP_Matrix_Positions	Missing_Preserved_SNP_Matrix_Positions	Excluded_Sample	Excluded_Preserved_Sample	Warnings_and_Errors
-"SRR1566386"	"SRR1566386_1.fastq.gz, SRR1566386_2.fastq.gz"	520967526	HWI-ST1029	H92ARADXX	5894610	139115	96.95	376.53	109.14	58	55	69	56	23	14			
-"ERR178926"	"ERR178926_1.fastq.gz, ERR178926_2.fastq.gz"	374173501			5535944	235987	90.81	223.20	56.89	77	56	78	57	16	16			
-"ERR178929"	"ERR178929_1.fastq.gz, ERR178929_2.fastq.gz"	352247451			5227518	132299	93.83	299.67	67.06	2935	113	2948	115	23	15			
-"SRR2566901"	"SRR2566901_1.fastq.gz, SRR2566901_2.fastq.gz"	348733244	M02070	A87H3	1923636	32449	96.23	358.08	62.52	91	71	104	74	9	2			
-"SRR3665129"	"SRR3665129_1.fastq.gz, SRR3665129_2.fastq.gz"	277478988	M00696	A8B8P	1608852	23767	90.64	278.29	38.48	58	51	85	58	18	12			
-"SRR3664651"	"SRR3664651_1.fastq.gz, SRR3664651_2.fastq.gz"	204241482	M00696	A6WV8	1088268	8514	82.79	339.03	29.10	86	77	92	83	0	0			
+Sample	Fastq_Files	Fastq_File_Size	Machine	Flowcell	Number_of_Reads	Duplicate_Reads	Percent_of_Reads_Mapped	Percent_Proper_Pair	Average_Insert_Size	Average_Pileup_Depth	Phase1_SNPs	Phase1_Preserved_SNPs	Phase2_SNPs	Phase2_Preserved_SNPs	Missing_SNP_Matrix_Positions	Missing_Preserved_SNP_Matrix_Positions	Excluded_Sample	Excluded_Preserved_Sample	Warnings_and_Errors
+"SRR1566386"	"SRR1566386_1.fastq.gz, SRR1566386_2.fastq.gz"	520967526	HWI-ST1029	H92ARADXX	5894610	132784	96.95	95.53	371.2	107.08	60	56	60	56	2	3			
+"ERR178926"	"ERR178926_1.fastq.gz, ERR178926_2.fastq.gz"	374173501			5535944	207547	90.81	79.22	1002.3	61.20	57	53	57	53	6	5			
+"ERR178929"	"ERR178929_1.fastq.gz, ERR178929_2.fastq.gz"	352247451			5227518	119910	93.83	91.67	399.6	65.43	2489	114	2489	114	7	8			
+"SRR2566901"	"SRR2566901_1.fastq.gz, SRR2566901_2.fastq.gz"	348733244	M02070	A87H3	1923636	29517	96.23	94.20	410.0	60.38	66	60	68	62	1	2			
+"SRR3665129"	"SRR3665129_1.fastq.gz, SRR3665129_2.fastq.gz"	277478988	M00696	A8B8P	1608852	21260	90.64	86.79	378.6	37.86	50	46	60	54	2	3			
+"SRR3664651"	"SRR3664651_1.fastq.gz, SRR3664651_2.fastq.gz"	204241482	M00696	A6WV8	1088268	7539	82.79	80.47	397.1	28.35	62	57	67	61	2	2			

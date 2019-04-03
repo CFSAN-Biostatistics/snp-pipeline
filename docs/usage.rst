@@ -670,17 +670,19 @@ Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/lambda_virus.fasta
+    export SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads --threads $numCores reference/lambda_virus.fasta
 
 Step 5 - Find the sites having high-confidence SNPs::
 
     # Process the samples in parallel using all CPU cores
+    export SamtoolsMpileup_ExtraParams="-q 0 -Q 13 -A"
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores cfsan_snp_pipeline call_sites reference/lambda_virus.fasta
 
 Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-    cfsan_snp_pipeline filter_regions -n var.flt.vcf sampleDirectories.txt reference/lambda_virus.fasta
+    cfsan_snp_pipeline filter_regions --window_size 1000 125 15 --max_snp 3 2 1 -n var.flt.vcf sampleDirectories.txt reference/lambda_virus.fasta
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -690,8 +692,8 @@ Step 7 - Combine the SNP positions across all samples into the SNP list file::
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --minConsDpth 3 --vcfFileName consensus.vcf --vcfRefName lambda_virus.fasta -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --minConsDpth 3 --vcfFileName consensus_preserved.vcf --vcfRefName lambda_virus.fasta -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
@@ -809,17 +811,19 @@ Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/NC_011149.fasta
+    export SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads --threads $numCores reference/NC_011149.fasta
 
 Step 5 - Find the sites having high-confidence SNPs::
 
     # Process the samples in parallel using all CPU cores
+    export SamtoolsMpileup_ExtraParams="-q 0 -Q 13 -A"
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores cfsan_snp_pipeline call_sites reference/NC_011149.fasta
 
 Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-    cfsan_snp_pipeline filter_regions -n var.flt.vcf sampleDirectories.txt reference/NC_011149.fasta
+    cfsan_snp_pipeline filter_regions --window_size 1000 125 15 --max_snp 3 2 1 -n var.flt.vcf sampleDirectories.txt reference/NC_011149.fasta
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -829,8 +833,8 @@ Step 7 - Combine the SNP positions across all samples into the SNP list file::
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --minConsDpth 3 --vcfFileName consensus.vcf --vcfRefName NC_011149.fasta -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --minConsDpth 3 --vcfFileName consensus_preserved.vcf --vcfRefName NC_011149.fasta -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
@@ -944,17 +948,19 @@ Step 4 - Align the samples to the reference::
 
     # Align each sample, one at a time, using all CPU cores
     export Bowtie2Align_ExtraParams="--reorder -X 1000"
-    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads reference/my_reference.fasta
+    export SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
+    cat sampleFullPathNames.txt | xargs -n 2 -L 1 cfsan_snp_pipeline map_reads --threads $numCores reference/my_reference.fasta
 
 Step 5 - Find the sites having high-confidence SNPs::
 
     # Process the samples in parallel using all CPU cores
+    export SamtoolsMpileup_ExtraParams="-q 0 -Q 13 -A"
     export VarscanMpileup2snp_ExtraParams="--min-var-freq 0.90"
     cat sampleDirectories.txt | xargs -n 1 -P $numCores cfsan_snp_pipeline call_sites reference/my_reference.fasta
 
 Step 6 - Identify regions with abnormal SNP density and remove SNPs in these regions::
 
-    cfsan_snp_pipeline filter_regions -n var.flt.vcf sampleDirectories.txt reference/my_reference.fasta
+    cfsan_snp_pipeline filter_regions --window_size 1000 125 15 --max_snp 3 2 1 -n var.flt.vcf sampleDirectories.txt reference/my_reference.fasta
 
 Step 7 - Combine the SNP positions across all samples into the SNP list file::
 
@@ -964,8 +970,8 @@ Step 7 - Combine the SNP positions across all samples into the SNP list file::
 Step 8 - Call the consensus base at SNP positions for each sample::
 
     # Process the samples in parallel using all CPU cores
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
-    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist.txt --minConsDpth 3 --vcfFileName consensus.vcf -o XX/consensus.fasta XX/reads.all.pileup
+    cat sampleDirectories.txt | xargs -n 1 -P $numCores -I XX cfsan_snp_pipeline call_consensus -l snplist_preserved.txt --minConsDpth 3 --vcfFileName consensus_preserved.vcf -o XX/consensus_preserved.fasta -e XX/var.flt_removed.vcf XX/reads.all.pileup
 
 Step 9 - Create the SNP matrix::
 
@@ -1054,6 +1060,29 @@ More information about the Picard MarkDuplicates tool can be found here:
 See also :ref:`configuration-label`.
 
 
+.. _local-realignment-label:
+
+Local Realignment
+-----------------
+When reads are mapped to the reference, each read is mapped independently.  The reads may be misaligned
+around insertions or deletions.  The local realignment process attempts to minimize the total number of
+mismatched bases in all the reads around the indels.
+
+The reads are realigned with the ``GATK`` software (prior to version 4.0) which must be installed for this
+functionality.  It is a two step process.  First, the pipeline identifies regions where indels are likely.
+Then, the reads are realigned in the identified regions.
+
+Local realignment can be a time-consuming process.  You can disable this step by configuring
+the ``EnableLocalRealignment`` parameter in the configuration file.
+
+More information about the GATK indel realigner can be found here:
+
+* https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_indels_IndelRealigner.php
+* https://software.broadinstitute.org/gatk/documentation/article.php?id=38
+
+See also :ref:`configuration-label`.
+
+
 .. _snp-filtering-label:
 
 SNP Filtering
@@ -1072,13 +1101,37 @@ files are named with the ``_preserved`` suffix, for example:
 Other output files are named similarly.
 
 The SNP filtering is performed by the ``filter_regions`` command.  It runs after the phase 1 SNP detection and impacts
-all subsequent processing steps.  Abnormal regions are identified in each sample individually, and then SNPs in those
-regions are removed from *all* samples.  Therefore, if you add or remove a sample from your analysis it may affect the
-final SNPs detected in all other samples.  See :ref:`cmd-ref-snp-filter`.
+all subsequent processing steps.  Abnormal regions are identified in each sample individually by default. If you choose
+to do so, the dense regions found in any sample can be filtered from all the other samples with the ``--all`` command
+line option. See :ref:`FilterRegions-ExtraParams-label`. In this mode, if you add or remove a sample from your analysis
+it may affect the final SNPs detected in all other samples.
+
+The drawing below depicts the behavior of the SNP Filtering.
+
+.. image:: DenseSnps.png
+
+Sample 2 has enough snps in close proximity to form a dense region shown in red. These snps are filtered regardless of the
+``--all`` option.
+
+Sample 4 has enough snps in close proximity to form a dense region shown in red. These snps are filtered regardless of the
+``--all`` option.
+
+Sample 1 has two snps which by themselves do not form a dense region, but when the ``--all`` option is used, the snps
+are engulfed by the dense region in sample 2 and removed.
+
+Sample 3 has two snps which by themselves do not form a dense region.  When the ``--all`` option is used, the blue snp
+is engulfed by the dense region in sample 4 and removed.  The green snp is not filtered regardless of the ``--all``
+option because it is not within a dense region of any other sample.  Merely being nearby a dense region in another
+sample does not cause snp filtering.
+
+As you increase the number of samples in your analysis, the dense regions cover more areas of the genome and may
+cause filtering of numerous snps.
 
 The sensitivity of the SNP filtering can be controlled with parameters in the configuration file by setting values in
 ``FilterRegions_ExtraParams``.  You can control the length of end-of-contig trimming, dense region window size, and
-maximum snps allowed within the window.  See :ref:`configuration-label`.
+maximum snps allowed within the window.  It's possible to configure the SNP filter to find dense regions in multiple
+window sizes, each with a different maximum allowed number of SNPs.  For example, you can allow no more than 3 SNPs
+per 1000 bases and 2 SNPs per 100 bases.  See :ref:`configuration-label`.
 
 
 SNP Filtering With Outgroups
@@ -1150,64 +1203,78 @@ per metric.  The tabulated metrics file is named metrics.tsv by default.
 The metrics are:
 
 +-------------------------+------------------------------------------------------------------+
-| Column                  | | Description                                                    |
+| | Metric                | | Description                                                    |
 +=========================+==================================================================+
-| Sample                  | | The name of the directory containing the sample fastq files.   |
+| | Sample                | | The name of the directory containing the sample fastq files.   |
 +-------------------------+------------------------------------------------------------------+
-| Fastq Files             | | Comma separated list of fastq file names in the sample         |
+| | Fastq Files           | | Comma separated list of fastq file names in the sample         |
 |                         | | directory.                                                     |
 +-------------------------+------------------------------------------------------------------+
-| Fastq File Size         | | The sum of the sizes of the fastq files. This will be the      |
+| | Fastq File Size       | | The sum of the sizes of the fastq files. This will be the      |
 |                         | | compressed size if the files are compressed.                   |
 +-------------------------+------------------------------------------------------------------+
-| Machine                 | | The sequencing instrument ID extracted from the compressed     |
+| | Machine               | | The sequencing instrument ID extracted from the compressed     |
 |                         | | fastq.gz file header.  If the fastq files are not compressed,  |
 |                         | | the machine ID is not captured.                                |
 +-------------------------+------------------------------------------------------------------+
-| Flowcell                | | The flowcell used during the sequencing run, extracted from    |
+| | Flowcell              | | The flowcell used during the sequencing run, extracted from    |
 |                         | | the compressed fastq.gz file header. If the fastq files are    |
 |                         | | not compressed, the flowcell is not captured.                  |
 +-------------------------+------------------------------------------------------------------+
-| Number of Reads         | | The number of reads in the SAM file.  When using paired fastq  |
+| | Number of Reads       | | The number of reads in the SAM file.  When using paired fastq  |
 |                         | | files, this number will be twice the number of reads reported  |
 |                         | | by bowtie.                                                     |
 +-------------------------+------------------------------------------------------------------+
-| Duplicate Reads         | | The number of reads marked as duplicates.  These reads are not |
+| | Duplicate Reads       | | The number of reads marked as duplicates.  These reads are not |
 |                         | | included in the pileup and are not used to call snps.  When    |
 |                         | | a set of duplicate reads is found, only the highest-quality    |
 |                         | | read in the set is retained.                                   |
 +-------------------------+------------------------------------------------------------------+
-| Percent of Reads Mapped | | The percentage of reference-aligned reads in the SAM file.     |
+| | Percent of Reads      | | The percentage of reference-aligned reads in the SAM file.     |
+| | Mapped                | |                                                                |
 +-------------------------+------------------------------------------------------------------+
-| Average Insert Size     | | The average observed template length of mapped paired reads as |
-|                         | | captured by SAMtools view TLEN value. This metric is not       |
-|                         | | calculated for unpaired reads.                                 |
+| | Percent Proper Pair   | | The percentage of all reads in the SAM file that are aligned   |
+|                         | | to the reference in the proper orientation and within the      |
+|                         | | expected paired-end distance.  The Percent Proper Pair metric  |
+|                         | | is less than 100% when there are discordant alignments,        |
+|                         | | unpaired alignments, or reads that are not mapped at all.      |
+|                         | | This metric reflects the state of the alignment immediately    |
+|                         | | after the mapping, however, subsequent steps of the pipeline   |
+|                         | | remove the reads with low mapping quality, which has the       |
+|                         | | effect of increasing the percentage of proper pairs prior to   |
+|                         | | calling snps.                                                  |
 +-------------------------+------------------------------------------------------------------+
-| Average Pileup Depth    | | The average depth of coverage in the sample pileup file.  This |
+| | Average Insert Size   | | The average insert size of mapped paired reads in the SAM file |
+|                         | | as reported by SAMtools stats.  Discordant alignments will     |
+|                         | | increase the average insert size because by definition,        |
+|                         | | discordant alignments are not within the expected paired-end   |
+|                         | | distance.                                                      |
++-------------------------+------------------------------------------------------------------+
+| | Average Pileup Depth  | | The average depth of coverage in the sample pileup file.  This |
 |                         | | is calculated as the sum of the depth of the pileup across all |
 |                         | | pileup positions divided by the number of positions in the     |
 |                         | | reference.                                                     |
 +-------------------------+------------------------------------------------------------------+
-| Phase1 SNPs             | | The number of phase 1 SNPs found for this sample.  The count   |
+| | Phase1 SNPs           | | The number of phase 1 SNPs found for this sample.  The count   |
 |                         | | is computed as the number of SNP records in the VCF file       |
 |                         | | generated by the phase 1 snp caller (VarScan).                 |
 +-------------------------+------------------------------------------------------------------+
-| Phase1 Preserved SNPs   | | The number of phase 1 SNPs found by VarScan and preserved by   |
+| | Phase1 Preserved SNPs | | The number of phase 1 SNPs found by VarScan and preserved by   |
 |                         | | SNP Filtering.  The count is computed as the number of SNP     |
 |                         | | records in the preserved VCF file generated by the             |
 |                         | | ``filter_regions`` command.                                    |
 +-------------------------+------------------------------------------------------------------+
-| Phase2 SNPs             | | The number of phase 2 SNPs found for this sample.  The count   |
+| | Phase2 SNPs           | | The number of phase 2 SNPs found for this sample.  The count   |
 |                         | | is computed as the number of SNP records in the VCF file       |
 |                         | | generated by the consensus caller.                             |
 +-------------------------+------------------------------------------------------------------+
-| Phase2 Preserved SNPs   | | The number of phase 2 SNPs found for this sample and preserved |
+| | Phase2 Preserved SNPs | | The number of phase 2 SNPs found for this sample and preserved |
 |                         | | by SNP Filtering.  The count is computed as the number of SNP  |
 |                         | | records in the preserved VCF file generated by the consensus   |
 |                         | | caller.                                                        |
 +-------------------------+------------------------------------------------------------------+
-| Missing SNP Matrix      | | The number of positions in the SNP matrix for which a          |
-| Positions               | | consensus base could not be called for this sample.  The       |
+| | Missing SNP Matrix    | | The number of positions in the SNP matrix for which a          |
+| | Positions             | | consensus base could not be called for this sample.  The       |
 |                         | | inability to call a consensus base is caused by either a       |
 |                         | | pileup file with no coverage at a SNP position, or by          |
 |                         | | insufficient agreement among the pileup bases at the SNP       |
@@ -1215,8 +1282,8 @@ The metrics are:
 |                         | | position to make a consensus call is controlled by the         |
 |                         | | ``minConsFreq`` parameter.                                     |
 +-------------------------+------------------------------------------------------------------+
-| Missing Preserved SNP   | | The number of positions in the preserved SNP matrix for which  |
-| Matrix Positions        | | a consensus base could not be called for this sample.  The     |
+| | Missing Preserved SNP | | The number of positions in the preserved SNP matrix for which  |
+| | Matrix Positions      | | a consensus base could not be called for this sample.  The     |
 |                         | | inability to call a consensus base is caused by either a       |
 |                         | | pileup file with no coverage at a SNP position, or by          |
 |                         | | insufficient agreement among the pileup bases at the SNP       |
@@ -1224,15 +1291,15 @@ The metrics are:
 |                         | | position to make a consensus call is controlled by the         |
 |                         | | ``minConsFreq`` parameter.                                     |
 +-------------------------+------------------------------------------------------------------+
-| Excluded Sample         | | When a sample has an excessive number of snps exceeding the    |
+| | Excluded Sample       | | When a sample has an excessive number of snps exceeding the    |
 |                         | | ``MaxSnps`` parameter value, this metric will have the value   |
 |                         | | ``Excluded``.  Otherwise, this metric is blank.                |
 +-------------------------+------------------------------------------------------------------+
-| Excluded Preserved      | | When a sample has an excessive number of preserved snps        |
-| Sample                  | | exceeding the ``MaxSnps`` parameter value, this metric will    |
+| | Excluded Preserved    | | When a sample has an excessive number of preserved snps        |
+| | Sample                | | exceeding the ``MaxSnps`` parameter value, this metric will    |
 |                         | | have the value ``Excluded``.  Otherwise, this metric is blank. |
 +-------------------------+------------------------------------------------------------------+
-| Warnings and Errors     | | A list of warnings or errors encountered while collecting the  |
+| | Warnings and Errors   | | A list of warnings or errors encountered while collecting the  |
 |                         | | metrics.                                                       |
 +-------------------------+------------------------------------------------------------------+
 

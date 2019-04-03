@@ -7,6 +7,8 @@ run all the sequential steps of the pipeline in the correct order.
 from __future__ import print_function
 from __future__ import absolute_import
 
+from jobrunner import JobRunner
+from jobrunner import JobRunnerException
 import os
 import psutil
 import re
@@ -18,8 +20,6 @@ import traceback
 
 from snppipeline import command
 from snppipeline import fastq
-from snppipeline.job_runner import JobRunner
-from snppipeline.job_runner import JobRunnerException
 from snppipeline import utils
 from snppipeline.utils import log_error
 
@@ -253,140 +253,6 @@ def persist_sorted_sample_dirs_file(samples_parent_dir, sample_dirs_file):
             print(directory, file=f)
 
 
-def configure_process_threads(extra_params_env_var, threads_option, default_threads_per_process, max_cpu_cores):
-    """Detect the user-configured number of allowed threads for a process and compute the
-    corresponding number of allowed processes given the maximum allowed number of CPUs.
-
-    The named environment variable is parsed to detect a user-setting for the number of threads per process.
-    If not found, the environment variable is modified with a default setting.
-
-    If the user requests a number of threads that is greater than the max_cpu_cores, the number of allowed
-    threads will be set to the max_cpu_cores.
-
-    Parameters
-    ----------
-    extra_params_env_var : str
-        Name of an environment variable the user can set with embedded command line options
-        to configure the number of threads for a process.
-    threads_option : str
-        The exact spelling of a command line option to set the number of threads, for example "-n".
-    default_threads_per_process : int
-        The number of threads to use if the user did not set a preferred value in the named
-        environment variable.
-    max_cpu_cores : int or None
-        The maximum allowed number of CPU cores to consume by all instances of the process.
-        If set the None, it implies no limit to the number of CPU cores that can be used.
-
-    Returns
-    -------
-    max_processes : int or None
-        The computed maximum number of allowed concurrent processes, or None to allow unlimited.
-    threads_per_process : int
-        The number of threads per process instance.  This will either be the value previously
-        configured by the user in the named environment variable, or the default value passed
-        as an argument.
-
-    Examples
-    --------
-    # env var not set, max CPU not set
-    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, None)
-    (None, 8)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '-n 8'
-
-    # env var not set, max CPU set, not multiple of threads
-    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 20)
-    (2, 8)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '-n 8'
-
-    # env var not set, max CPU set, multiple of threads
-    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 24)
-    (3, 8)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '-n 8'
-
-    # env var exists but option not set, max CPU not set
-    >>> os.environ["SmaltAlign_ExtraParams"] = "--version"
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 9, None)
-    (None, 9)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '--version -n 9'
-
-    # env var exists, option set, max CPU not set
-    >>> os.environ["SmaltAlign_ExtraParams"] = "--version -n 10"
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, None)
-    (None, 10)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '--version -n 10'
-
-    # env var exists, option set, max CPU set, not multiple of threads
-    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 22)
-    (2, 10)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '-n 10 --version'
-
-    # env var exists, option set, max CPU set, multiple of threads
-    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 30)
-    (3, 10)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '-n 10 --version'
-
-    # env var exists, option set, max CPU set, max CPU == desired threads
-    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 4 --version"
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 4)
-    (1, 4)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '-n 4 --version'
-
-    # env var exists, option set, max CPU set, max CPU less than desired threads
-    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 2)
-    (1, 2)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '-n 2 --version'
-
-    # env var exists but option not set, max CPU less than default number of threads
-    >>> os.environ["SmaltAlign_ExtraParams"] = "--version"
-    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 9, 7)
-    (1, 7)
-    >>> os.environ["SmaltAlign_ExtraParams"]
-    '--version -n 7'
-    """
-    regex_str = threads_option + "[ \t]*([0-9]+)"
-    extra_params = os.environ.get(extra_params_env_var, "")
-    match = re.search(regex_str, extra_params)
-    if match:
-        configured_threads_per_process = int(match.group(1))
-        threads_per_process = configured_threads_per_process
-    else:
-        threads_per_process = default_threads_per_process
-
-    if max_cpu_cores is None:
-        max_processes = None
-    elif max_cpu_cores >= threads_per_process:
-        max_processes = int(max_cpu_cores / threads_per_process)
-    else:
-        max_processes = 1
-        threads_per_process = max_cpu_cores
-
-    threads_option += ' ' + str(threads_per_process)
-    if match and threads_per_process != configured_threads_per_process:
-        extra_params = re.sub(regex_str, threads_option, extra_params)
-        os.environ[extra_params_env_var] = extra_params
-    elif not match:
-        if extra_params:
-            extra_params += ' '
-        os.environ[extra_params_env_var] = extra_params + threads_option
-
-    return max_processes, threads_per_process
-
-
 def validate_properties(properties):
     """Verify the previously read properties are from the latest version of the properties file.
 
@@ -402,7 +268,9 @@ def validate_properties(properties):
               "Use this command:\n" \
               "    cfsan_snp_pipeline data configurationFile  # this will overwrite an existing snppipeline.conf file!!!"
 
-    required_parameters = ["StopOnSampleError", "MaxCpuCores", "MaxSnps", "RemoveDuplicateReads"]
+    required_parameters = ["StopOnSampleError", "MaxCpuCores", "CpuCoresPerProcessOnHPC", "CpuCoresPerProcessOnWorkstation",
+                           "MaxSnps", "RemoveDuplicateReads", "EnableLocalRealignment",
+                           ]
     for p in required_parameters:
         if not p in properties:
             utils.fatal_error(message)
@@ -437,6 +305,7 @@ def run(args):
     global log_dir
     global job_queue_mgr
 
+    start_time = time.time()
     # Where are we running: grid, torque, or None (local)
     job_queue_mgr = args.jobQueueMgr
 
@@ -528,17 +397,47 @@ def run(args):
         num_local_cpu_cores = psutil.cpu_count()
         max_cpu_cores = min(num_local_cpu_cores, max_cpu_cores) if max_cpu_cores else num_local_cpu_cores
 
+    # How many CPU cores per process?
+    if job_queue_mgr is None: # workstation
+        cpu_cores_per_process = config_params.get("CpuCoresPerProcessOnWorkstation", None)
+        if cpu_cores_per_process:
+            try:
+                cpu_cores_per_process = int(cpu_cores_per_process)
+                if cpu_cores_per_process < 1:
+                    utils.fatal_error("Config file error in CpuCoresPerProcessOnWorkstation parameter: %s is less than one." % cpu_cores_per_process)
+            except ValueError:
+                utils.fatal_error("Config file error in CpuCoresPerProcessOnWorkstation parameter: %s is not a valid number." % cpu_cores_per_process)
+        else:
+            cpu_cores_per_process = min(num_local_cpu_cores, max_cpu_cores)
+    else: # HPC
+        cpu_cores_per_process = config_params.get("CpuCoresPerProcessOnHPC", None)
+        if not cpu_cores_per_process:
+            utils.fatal_error("Config file error. CpuCoresPerProcessOnHPC parameter must be set to a value.")
+        else:
+            try:
+                cpu_cores_per_process = int(cpu_cores_per_process)
+                if cpu_cores_per_process < 1:
+                    utils.fatal_error("Config file error in CpuCoresPerProcessOnHPC parameter: %s is less than one." % cpu_cores_per_process)
+            except ValueError:
+                utils.fatal_error("Config file error in CpuCoresPerProcessOnHPC parameter: %s is not a valid number." % cpu_cores_per_process)
+
     # Put the configuration parameters into the process environment variables
     os.environ["Bowtie2Build_ExtraParams"] = config_params.get("Bowtie2Build_ExtraParams", "")
     os.environ["SmaltIndex_ExtraParams"] = config_params.get("SmaltIndex_ExtraParams", "")
+    os.environ["CreateSequenceDictionary_ExtraParams"] = config_params.get("CreateSequenceDictionary_ExtraParams", "")
     os.environ["SamtoolsFaidx_ExtraParams"] = config_params.get("SamtoolsFaidx_ExtraParams", "")
     os.environ["Bowtie2Align_ExtraParams"] = config_params.get("Bowtie2Align_ExtraParams", "")
     os.environ["SmaltAlign_ExtraParams"] = config_params.get("SmaltAlign_ExtraParams", "")
     os.environ["SamtoolsSamFilter_ExtraParams"] = config_params.get("SamtoolsSamFilter_ExtraParams", "")
     os.environ["SamtoolsSort_ExtraParams"] = config_params.get("SamtoolsSort_ExtraParams", "")
+    os.environ["SamtoolsIndex_ExtraParams"] = config_params.get("SamtoolsIndex_ExtraParams", "")
     os.environ["RemoveDuplicateReads"] = config_params.get("RemoveDuplicateReads", "").lower() or "true"
-    os.environ["PicardMarkDuplicates_ExtraParams"] = config_params.get("PicardMarkDuplicates_ExtraParams", "")
     os.environ["PicardJvm_ExtraParams"] = config_params.get("PicardJvm_ExtraParams", "")
+    os.environ["PicardMarkDuplicates_ExtraParams"] = config_params.get("PicardMarkDuplicates_ExtraParams", "")
+    os.environ["EnableLocalRealignment"] = config_params.get("EnableLocalRealignment", "").lower() or "true"
+    os.environ["GatkJvm_ExtraParams"] = config_params.get("GatkJvm_ExtraParams", "")
+    os.environ["RealignerTargetCreator_ExtraParams"] = config_params.get("RealignerTargetCreator_ExtraParams", "")
+    os.environ["IndelRealigner_ExtraParams"] = config_params.get("IndelRealigner_ExtraParams", "")
     os.environ["SamtoolsMpileup_ExtraParams"] = config_params.get("SamtoolsMpileup_ExtraParams", "")
     os.environ["VarscanMpileup2snp_ExtraParams"] = config_params.get("VarscanMpileup2snp_ExtraParams", "")
     os.environ["VarscanJvm_ExtraParams"] = config_params.get("VarscanJvm_ExtraParams", "")
@@ -553,26 +452,69 @@ def run(args):
     os.environ["CombineMetrics_ExtraParams"] = config_params.get("CombineMetrics_ExtraParams", "")
 
     # Verify the dependencies are available on the path
-    dependencies = ["cfsan_snp_pipeline", snp_pipeline_aligner, "samtools", "java", "tabix", "bgzip", "bcftools"]
+    print("Checking dependencies...")
+
+    dependencies = ["cfsan_snp_pipeline", snp_pipeline_aligner, "java", "tabix", "bgzip", "bcftools"]
     found_all_dependencies = True
     for executable in dependencies:
         if not utils.which(executable):
             utils.report_error(executable + " is not on the path")
             found_all_dependencies = False
 
-    stdout = command.run("java net.sf.varscan.VarScan 2>&1")
-    if "Error" in stdout:
-        utils.report_error("CLASSPATH is not configured with the path to VarScan")
+    if not utils.which("samtools"):
+        utils.report_error("samtools is not on the path")
+        found_all_dependencies = False
+    else:
+        version_str = utils.extract_version_str("SAMtools", "samtools 2>&1 > /dev/null")
+        samtools_version = version_str.split()[-1] # just the number
+        if samtools_version < "1.4":
+            utils.report_error("The installed %s is not supported.  Version 1.4 or higher is required." % version_str)
+            found_all_dependencies = False
+
+    jar_file_path = utils.find_path_in_path_list("VarScan", "CLASSPATH")
+    if jar_file_path:
+        stdout = command.run("java -jar " + jar_file_path + " 2>&1")
+    if not jar_file_path or "error" in stdout.lower():
+        utils.report_error("CLASSPATH is not configured with the path to VarScan.jar")
         found_all_dependencies = False
 
-    if os.environ["RemoveDuplicateReads"] == "true":
-        stdout = command.run("java picard.cmdline.PicardCommandLine 2>&1")
-        if "Error" in stdout:
-            utils.report_error("CLASSPATH is not configured with the path to Picard")
+    picard_required = os.environ["RemoveDuplicateReads"] == "true" or  os.environ["EnableLocalRealignment"] == "true"
+    if picard_required:
+        jar_file_path = utils.find_path_in_path_list("picard", "CLASSPATH")
+        if not jar_file_path:
+            utils.report_error("CLASSPATH is not configured with the path to picard.jar")
             found_all_dependencies = False
+        else:
+            stdout = command.run("java -jar " + jar_file_path + " 2>&1")
+            if stdout.lower().startswith("error"):
+                utils.report_error(stdout)
+                found_all_dependencies = False
+
+    gatk_required = os.environ["EnableLocalRealignment"] == "true"
+    if gatk_required:
+        jar_file_path = utils.find_path_in_path_list("GenomeAnalysisTK", "CLASSPATH")
+        if not jar_file_path:
+            utils.report_error("CLASSPATH is not configured with the path to GenomeAnalysisTK.jar")
+            found_all_dependencies = False
+        else:
+            stdout = command.run("java -jar " + jar_file_path + " --version 2>&1")
+            if stdout.lower().startswith("error"):
+                utils.report_error(stdout)
+                found_all_dependencies = False
+            else:
+                stdout = command.run("java -jar " + jar_file_path + " -T IndelRealigner --version 2>&1")
+                if "not a valid command" in stdout.lower() or "indelrealigner is no longer included" in stdout.lower():
+                    utils.report_error("The installed GATK version does not support indel realignment.  Try installing an older release prior to GATK v4.")
+                    found_all_dependencies = False
+                elif "user error has occurred" in stdout.lower():
+                    utils.report_error(stdout)
+                    found_all_dependencies = False
 
     if not found_all_dependencies:
         utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")
+    else:
+        print("OK")
+
 
     # Process the sample directory command line option
     # TODO: detect broken fastq symlinks
@@ -694,11 +636,24 @@ def run(args):
         extra_params_env_var = "Bowtie2Align_ExtraParams"
         threads_option = "-p"
 
-    max_processes, threads_per_process = configure_process_threads(extra_params_env_var, threads_option, 8, max_cpu_cores)
+    aligner_max_processes, aligner_threads_per_process = utils.configure_process_threads(extra_params_env_var, threads_option, cpu_cores_per_process, max_cpu_cores)
+    samfilter_max_processes, samfilter_threads_per_process = utils.configure_process_threads("SamtoolsSamFilter_ExtraParams", ["-@", "--threads"], cpu_cores_per_process, max_cpu_cores)
+    samsort_max_processes, samsort_threads_per_process = utils.configure_process_threads("SamtoolsSort_ExtraParams", ["-@", "--threads"], cpu_cores_per_process, max_cpu_cores)
+    samindex_max_processes, samindex_threads_per_process = utils.configure_process_threads("SamtoolsIndex_ExtraParams", ["-@"], cpu_cores_per_process, max_cpu_cores)
+    realigner_max_processes, realigner_threads_per_process = utils.configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], cpu_cores_per_process, max_cpu_cores)
+
+    # There are multiple processes within map_reads, each with multiple threads.
+    # The CPU allocation must be enough for the process needing the largest number of threads.
+    max_processes_list = [aligner_max_processes, samfilter_max_processes, samsort_max_processes, samindex_max_processes, realigner_max_processes]
+    if all([i is None for i in max_processes_list]):
+        max_processes = None
+    else:
+        max_processes = min([i for i in max_processes_list if i is not None])
+    threads_per_process = max(aligner_threads_per_process, samfilter_threads_per_process, samsort_threads_per_process, samindex_threads_per_process, realigner_threads_per_process)
 
     parallel_environment = config_params.get("GridEngine_PEname", None)
     log_file = os.path.join(log_dir, "mapReads.log")
-    command_line = "cfsan_snp_pipeline map_reads" + force_flag + reference_file_path + " {1} {2}"
+    command_line = "cfsan_snp_pipeline map_reads --threads " + str(threads_per_process) + force_flag + reference_file_path + " {1} {2}"
     job_id_map_reads = runner.run_array(command_line, "mapReads", log_file, sample_full_path_names_file, max_processes=max_processes, wait_for=[job_id_index_ref], threads=threads_per_process, parallel_environment=parallel_environment)
 
     progress("Step 4 - Find sites with SNPs in each sample")
@@ -844,3 +799,7 @@ def run(args):
     # Exit here to prevent showing the "cfsan_snp_pipeline run finished" message.  The jobs are queued, not finished yet.
     if job_queue_mgr is not None: # HPC
         sys.exit(0)
+    else:
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print("Elapsed time =", elapsed_time)

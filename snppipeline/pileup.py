@@ -2,13 +2,13 @@
 Pileup file parser.  Typical workflow would follow a pattern like this:
 
 import pileup as pileup
-caller = pileup.ConsensusCaller(min_freq, min_strand_depth, min_strand_bias)
+caller = pileup.ConsensusCaller(min_freq, min_depth, min_strand_depth, min_strand_bias)
 reader = pileup.Reader(file, min_base_quality, chrom_position_set=None)
 for record in reader:
     chrom = record.chrom
     pos = record.position
     ref = record.reference_base
-    most_common = record.most_common_base
+    most_common = record.most_common_good_bases[0]
     alt, fail_reasons = caller.call_consensus(record)
     depth = record.raw_depth
     good_depth = record.good_depth
@@ -64,9 +64,10 @@ class Record(object):
         reference_base : str
             The reference base for the chromosome at this position.
             The upper/lower case of the base in the pileup file is preserved.
-        most_common_base : str or None
-            The most commonly occurring base after discarding low-quality bases.
+        most_common_good_bases : list of str or None
+            The sorted list of most commonly occurring bases (A,C,G,T,N,*) after discarding low-quality bases.
             Always uppercase if there is any good depth, otherwise None.
+            The * character represents a deletion.
         raw_depth : int
             The total depth of reads regardless of base quality.
         good_depth : int
@@ -79,15 +80,18 @@ class Record(object):
             The total depth of all reads on the reverse strand where the base
             quality meets or exceeds the min_base_quality.
         base_good_depth : Counter
-            Count of depth per base (A,C,G,T,N,-) on both forward and reverse
+            Count of depth per base (A,C,G,T,N,*) on both forward and reverse
             strands combined where the base quality meets or exceeds the
             min_base_quality.
+            The * character represents a deletion.
         forward_base_good_depth : Counter
-            Count of depth per base (A,C,G,T,N,-) on forward strand only where the
+            Count of depth per base (A,C,G,T,N,*) on forward strand only where the
             base quality meets or exceeds the min_base_quality.
+            The * character represents a deletion.
         reverse_base_good_depth : Counter
-            Count of depth per base (A,C,G,T,N,-) on reverse strand only where the
+            Count of depth per base (A,C,G,T,N,*) on reverse strand only where the
             base quality meets or exceeds the min_base_quality.
+            The * character represents a deletion.
 
         Examples
         -------
@@ -98,8 +102,12 @@ class Record(object):
         42
         >>> r.reference_base
         'G'
-        >>> r.most_common_base
+        >>> len(r.most_common_good_bases)
+        2
+        >>> r.most_common_good_bases[0]
         'A'
+        >>> r.most_common_good_bases[1]
+        'G'
         >>> r.raw_depth
         9
         >>> r.good_depth
@@ -125,8 +133,12 @@ class Record(object):
         42
         >>> r.reference_base
         'G'
-        >>> r.most_common_base
+        >>> len(r.most_common_good_bases)
+        2
+        >>> r.most_common_good_bases[0]
         'A'
+        >>> r.most_common_good_bases[1]
+        'G'
         >>> r.raw_depth
         9
         >>> r.good_depth
@@ -135,6 +147,8 @@ class Record(object):
         4
         >>> r.reverse_good_depth
         4
+        >>> sorted([(b, r.base_good_depth[b]) for b in r.base_good_depth])
+        [('A', 5), ('G', 3)]
         >>> r.base_good_depth['A'], r.base_good_depth['T'], r.base_good_depth['G'], r.base_good_depth['C'],
         (5, 0, 3, 0)
         >>> fwd = r.forward_base_good_depth
@@ -147,7 +161,7 @@ class Record(object):
         >>>
         >>>
         >>> r = Record(['ID', 628640, 'A', 20, '**.,,.,.............', '22E?;9HF;H8EDGHHI?GH'], 15)
-        >>> r.base_good_depth['-']
+        >>> r.base_good_depth['*']
         2
         >>> r = Record(['gi|197247352|ref|NC_011149.1|', '4663812', 'T', '0'], 15)
         >>> r.good_depth
@@ -156,8 +170,18 @@ class Record(object):
         0
         >>> r.reverse_good_depth
         0
-        >>> print(r.most_common_base)
+        >>> sorted([(b, r.base_good_depth[b]) for b in r.base_good_depth])
+        []
+        >>> print(r.most_common_good_bases)
         None
+        >>>
+        >>> # Verify most_common_good_bases sort order
+        >>> r = Record(['ID', 1, 'A', 20, 'TTccAAGG', '22E?;9HF;H8EDGHHI?GH'], 15)
+        >>> r.most_common_good_bases
+        ['A', 'C', 'G', 'T']
+        >>> r = Record(['ID', 1, 'A', 20, 'TTtccAAAGG', '22E?;9HF;H8EDGHHI?GH'], 15)
+        >>> r.most_common_good_bases
+        ['A', 'T', 'C', 'G']
         """
         if isinstance(arg, str):
             self._init_from_line(arg, min_base_quality)
@@ -206,7 +230,7 @@ class Record(object):
             self.base_good_depth = Counter()
             self.forward_base_good_depth = Counter()
             self.reverse_base_good_depth = Counter()
-            self.most_common_base = None
+            self.most_common_good_bases = None
             return
 
         bases_str = split_line[4]
@@ -227,9 +251,6 @@ class Record(object):
 
         self.good_depth = len(bases_list)
 
-        # Substitute - for * (deletion supported by this read)
-        bases_str = bases_str.replace('*', '-')
-
         # Substitute reference bases markers with letter
         bases_str = bases_str.replace('.', self.reference_base.upper())
         bases_str = bases_str.replace(',', self.reference_base.lower())
@@ -237,9 +258,12 @@ class Record(object):
         # Get counts of bases regardless of strand
         self.base_good_depth = Counter(bases_str.upper())
         if self.good_depth < 1:
-            self.most_common_base = None
+            self.most_common_good_bases = None
         else:
-            self.most_common_base = self.base_good_depth.most_common(1)[0][0]
+            bases_freq_list = self.base_good_depth.items()  # list of (base, freq) tuples
+            # sort 1st by freq descending, 2nd by base alphabetically for deterministic sort
+            bases_freq_list = sorted(bases_freq_list, key=lambda tup: (-tup[1], tup[0]))
+            self.most_common_good_bases = [base for base, freq in bases_freq_list]
 
         # Get counts of bases on each strand
         forward_bases_str = ''.join([c for c in bases_str if c <= 'Z'])
@@ -248,7 +272,6 @@ class Record(object):
         self.reverse_good_depth = len(reverse_bases_str)
         self.forward_base_good_depth = Counter(forward_bases_str)
         self.reverse_base_good_depth = Counter(reverse_bases_str.upper())
-
 
     @staticmethod # Doesn't use self
     def _strip_unwanted_base_patterns(bases_str):
@@ -301,6 +324,61 @@ class Record(object):
 
         return bases_str
 
+    def __repr__(self):
+        """Return an unambiguous string representation of a pileup Record. This
+        methid is used for developer debugging and troubleshooting.
+
+        Attributes
+        ==========
+        chrom : str
+            Chromosome.
+        position : int
+            One-based position of this record.
+        reference_base : str
+            The reference base for the chromosome at this position.
+            The upper/lower case of the base in the pileup file is preserved.
+        most_common_good_bases : list of str or None
+            The sorted list of most commonly occurring bases (A,C,G,T,N,*) after discarding low-quality bases.
+            Always uppercase if there is any good depth, otherwise None.
+            The * character represents a deletion.
+        raw_depth : int
+            The total depth of reads regardless of base quality.
+        good_depth : int
+            The total depth of all reads where the base quality meets or
+            exceeds the min_base_quality.
+        forward_good_depth : int
+            The total depth of all reads on the forward strand where the base
+            quality meets or exceeds the min_base_quality.
+        reverse_good_depth : int
+            The total depth of all reads on the reverse strand where the base
+            quality meets or exceeds the min_base_quality.
+        base_good_depth : Counter
+            Count of depth per base (A,C,G,T,N) on both forward and reverse
+            strands combined where the base quality meets or exceeds the
+            min_base_quality.
+            The * character represents a deletion.
+        forward_base_good_depth : Counter
+            Count of depth per base (A,C,G,T,N) on forward strand only where the
+            base quality meets or exceeds the min_base_quality.
+            The * character represents a deletion.
+        reverse_base_good_depth : Counter
+            Count of depth per base (A,C,G,T,N) on reverse strand only where the
+            base quality meets or exceeds the min_base_quality.
+            The * character represents a deletion.
+        """
+        r = "chrom=" + self.chrom
+        r += " position=" + str(self.position)
+        r += " reference_base=" + self.reference_base
+        r += " most_common_good_bases=" + str(self.most_common_good_bases)
+        r += " raw_depth=" + str(self.raw_depth)
+        r += " good_depth=" + str(self.good_depth)
+        r += " forward_good_depth=" + str(self.forward_good_depth)
+        r += " reverse_good_depth=" + str(self.reverse_good_depth)
+        r += " base_good_depth=" + str(self.base_good_depth)
+        r += " forward_base_good_depth=" + str(self.forward_base_good_depth)
+        r += " reverse_base_good_depth=" + str(self.reverse_base_good_depth)
+        return r
+
 
 class Reader(object):
     def __init__(self, file_path, min_base_quality, chrom_position_set=None):
@@ -352,7 +430,7 @@ class Reader(object):
 
 
 class ConsensusCaller(object):
-    def __init__(self, min_cons_freq, min_cons_strand_depth,
+    def __init__(self, min_cons_freq, min_cons_depth, min_cons_strand_depth,
                  min_cons_strand_bias):
         """
         Construct a consensus base caller object with various filter settings
@@ -366,6 +444,9 @@ class ConsensusCaller(object):
             fraction is the number of high-quality consensus supporting reads.
             The denominator of this fraction is the total number of high-quality
             reads.
+        min_cons_depth : int
+            Minimum number of high-quality reads supporting the consensus to
+            make a call.  This impacts both variant calls and reference calls.
         min_cons_strand_depth : int
             Minimum number of high-quality reads supporting the consensus which
             must be present on both forward and reverse strands separately to
@@ -379,14 +460,15 @@ class ConsensusCaller(object):
             quality consensus supporting reads.
         """
         self.min_cons_freq = min_cons_freq
+        self.min_cons_depth = min_cons_depth
         self.min_cons_strand_depth = min_cons_strand_depth
         self.min_cons_strand_bias = min_cons_strand_bias
 
         self.fail_raw_depth = "RawDpth"
         self.fail_freq = "VarFreq" + str(int(100 * min_cons_freq))
+        self.fail_depth = "Depth" + str(min_cons_depth)
         self.fail_strand_depth = "StrDpth" + str(min_cons_strand_depth)
         self.fail_strand_bias = "StrBias" + str(int(100 * min_cons_strand_bias))
-
 
     def get_filter_descriptions(self):
         """
@@ -402,6 +484,7 @@ class ConsensusCaller(object):
         """
         return [(self.fail_raw_depth, "No read depth"),
                 (self.fail_freq, "Variant base frequency below %.2f" % self.min_cons_freq),
+                (self.fail_depth, "Less than %i supporting reads" % self.min_cons_depth),
                 (self.fail_strand_depth, "Less than %i variant-supporing reads on at least one strand" % self.min_cons_strand_depth),
                 (self.fail_strand_bias, "Fraction of variant supporting reads below %.2f on one strand" % self.min_cons_strand_bias),
                ]
@@ -428,40 +511,47 @@ class ConsensusCaller(object):
         Examples
         --------
         >>> r = Record(['ID', 42, 'G', 14, 'aaaaAAAA...,,,', '00001111222333'], 15)
-        >>> caller = ConsensusCaller(0.5, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.5, 0, 0, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('A', None)
-        >>> caller = ConsensusCaller(0.6, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.6, 0, 0, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('A', ['VarFreq60'])
-        >>> caller = ConsensusCaller(0.0, 5, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 8, 4, 0.0) # freq, depth, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('A', None)
+        >>> caller = ConsensusCaller(0.0, 9, 4, 0.0) # freq, depth, strand_depth, strand_bias
+        >>> caller.call_consensus(r)
+        ('A', ['Depth9'])
+        >>> caller = ConsensusCaller(0.0, 0, 5, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('A', ['StrDpth5'])
         >>> r = Record(['ID', 42, 'G', 14, 'aAAAAAAA...,,,', '00001111222333'], 15)
-        >>> caller = ConsensusCaller(0.0, 0, 0.2) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 0, 0, 0.2) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('A', ['StrBias20'])
         >>> r = Record(['ID', 42, 'G', 14, 'aaaAAAAA...,,,', '00001111222333'], 15)
-        >>> caller = ConsensusCaller(0.0, 4, 0.4) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 9, 4, 0.4) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
-        ('A', ['StrDpth4', 'StrBias40'])
+        ('A', ['Depth9', 'StrDpth4', 'StrBias40'])
         >>> r = Record(['ID', 42, 'G', 14, 'aaaAAA....,,,,', '00011122223333'], 15)
-        >>> caller = ConsensusCaller(0.0, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 0, 0, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('G', None)
         >>> r = Record(['ID', 42, 'g', 14, 'aaaAAA....,,,,', '00011122223333'], 15)
-        >>> caller = ConsensusCaller(0.0, 0, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 0, 0, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('g', None)
         >>> r = Record(['ID', 42, 'g', 0], 15) # zero depth
-        >>> caller = ConsensusCaller(0.0, 5, 0.0) # freq, strand_depth, strand_bias
+        >>> caller = ConsensusCaller(0.0, 0, 5, 0.0) # freq, depth, strand_depth, strand_bias
         >>> caller.call_consensus(r)
         ('-', ['RawDpth'])
         """
-        consensus_base = record.most_common_base
-        if consensus_base is None:
+        if record.most_common_good_bases is None:
             failed_filters = [self.fail_raw_depth]
             return ('-', failed_filters)
+
+        consensus_base = record.most_common_good_bases[0]
 
         failed_filters = None
 
@@ -475,7 +565,12 @@ class ConsensusCaller(object):
             failed_filters = failed_filters or []
             failed_filters.append(self.fail_freq)
 
-        # Filter: allele minimum depth on each strand
+        # Filter: minimum supporting depth
+        if good_cons_depth < self.min_cons_depth:
+            failed_filters = failed_filters or []
+            failed_filters.append(self.fail_depth)
+
+        # Filter: minimum supporting depth on each strand
         if fwd_good_cons_depth < self.min_cons_strand_depth or \
            rev_good_cons_depth < self.min_cons_strand_depth:
             failed_filters = failed_filters or []

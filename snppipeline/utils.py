@@ -128,7 +128,7 @@ def print_arguments(args):
     """
     verbose_print("Options:")
     options_dict = vars(args)
-    for key in list(options_dict.keys()):
+    for key in sorted(list(options_dict)):
         if key in ["subparser_name", "func", "excepthook"]:
             continue
         verbose_print("    %s=%s" % (key, options_dict[key]))
@@ -253,6 +253,61 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+def remove_file(filename):
+    """Remove a file without complaints if the file does not exist.
+
+    Parameters
+    ----------
+    path : str
+        File path to create.
+
+    Raises
+    ------
+    OSError if an error occurs (other than the file not existing)
+    """
+    try:
+        os.remove(filename)
+    except OSError as e:
+        if e.errno != errno.ENOENT: # No such file or directory
+            raise # Re-raise exception if a different error occurred
+
+
+def add_file_suffix(path, suffix, enable=True):
+    """Insert a suffix at the end of a file name, but before the file extension.
+
+    Parameters
+    ----------
+    path : str
+        File path with a file extension.
+    suffix : str
+        Suffix to add to the file name.
+    enable : bool, optional defaults to True
+        If not True, the path is returned unchanged.
+
+    Returns
+    -------
+    path : str
+        Modified file path.
+
+    Examples
+    -------
+    # disabled
+    >>> add_file_suffix("aaa/bbb/ccc", ".suffix", enable=False)
+    'aaa/bbb/ccc'
+
+    # No extension
+    >>> add_file_suffix("aaa/bbb/ccc", ".suffix", enable=True)
+    'aaa/bbb/ccc.suffix'
+
+    # Extension
+    >>> add_file_suffix("aaa/bbb/ccc.txt", ".suffix", enable=True)
+    'aaa/bbb/ccc.suffix.txt'
+    """
+    if enable:
+        path_without_extension, extension = os.path.splitext(path)
+        path = path_without_extension + suffix + extension
+    return path
 
 
 def read_properties(prop_file_path, recognize_vars=False):
@@ -736,7 +791,7 @@ def verify_existing_input_files(error_prefix, file_list, error_handler=None, con
     return len(err_messages)
 
 
-def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, continue_possible=False):
+def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, continue_possible=False, empty_ok=False):
     """Verify each file in a list of files exists and is non-empty.
     Missing or empty files are reported in the verbose log.
 
@@ -757,6 +812,8 @@ def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, co
         Only used when error_handler is "sample".  Indicates if it is possible
         to continue execution.  Setting this flag true may allow the code
         to continue without exiting if configured to do so.
+    empty_ok : bool, optional, defaults to False
+        Flag to allow empty files in special cases.
 
     Returns
     -------
@@ -772,7 +829,7 @@ def verify_non_empty_input_files(error_prefix, file_list, error_handler=None, co
         if not os.path.isfile(file_path):
             err_messages.append("%s %s does not exist." % (error_prefix, file_path))
             continue
-        if os.path.getsize(file_path) == 0:
+        if not empty_ok and os.path.getsize(file_path) == 0:
             err_messages.append("%s %s is empty." % (error_prefix, file_path))
             continue
 
@@ -860,7 +917,7 @@ def global_error_on_missing_file(file_path, program):
         global_error("Error: %s is empty after running %s." % (file_path, program))
 
 
-def sample_error_on_missing_file(file_path, program):
+def sample_error_on_missing_file(file_path, program, empty_ok=False):
     """Generate a sample error if a specified file is missing or empty after
     running a named program.
 
@@ -870,15 +927,17 @@ def sample_error_on_missing_file(file_path, program):
         Path to the file to check
     program : str
         Name of the program that should have created the file.
+    empty_ok : bool, optional, defaults to False
+        Flag to allow empty files in special cases.
 
     Returns
     -------
     None
-        If the file is missing or empty, this function does not return, the program exits.
+        If the file is missing or (empty and not empty_ok), this function does not return, the program exits.
     """
     if not os.path.isfile(file_path):
         sample_error("Error: %s does not exist after running %s." % (file_path, program))
-    if os.path.getsize(file_path) == 0:
+    if not empty_ok and os.path.getsize(file_path) == 0:
         sample_error("Error: %s is empty after running %s." % (file_path, program))
 
 
@@ -909,9 +968,12 @@ def target_needs_rebuild(source_files, target_file):
     """Determine if a target file needs a fresh rebuild, i.e. the target does
     not exist or its modification time is older than any of its source files.
 
-    Args:
-        source_files : relative or absolute path to a list of files
-        target_file : relative or absolute path to target file
+    Parameters
+    ----------
+    source_files : list of str
+        Relative or absolute path to a list of files.
+    target_file : str
+        Relative or absolute path to target file.
     """
     if not os.path.isfile(target_file):
         return True
@@ -1093,42 +1155,7 @@ def calculate_sequence_distance(seq1, seq2, case_insensitive=True):
     return mismatches
 
 
-#Both sort_coord and concensus are to combine bad regions
-#as a lexical parsing problem.
-def sort_coord(regions):
-    """Given a list of regions, return a sorted list of starting and ending
-    positions where each position is tagged with 's' or 'e' to indicate
-    start or end.
-
-    Parameters
-    ----------
-    regions : list of tuples
-        List of (start, end) position integers.
-
-    Returns
-    -------
-    coords : list of tuples
-        List of (tag, position) where tag is 's' or 'e' sorted by position, then tag.
-    """
-    coords = []
-    #add each start/end position into a new array as a tuple where the
-    #first element represents whether it is a start or end
-    for coord in regions:
-        coords.append(('s', coord[0]))
-        coords.append(('e', coord[1]))
-
-    #sort by start and end first. In case of event where
-    #a start and end coordinate are the same, we want the start
-    #coordinate to come first.
-    coords.sort(key=lambda x: x[0], reverse=True)
-
-    #sort by coordinate
-    coords.sort(key=lambda x: x[1])
-
-    return coords
-
-
-def consensus(coords):
+def merge_regions(regions):
     """Coalesce regions.
 
     Scans a sorted list of region starting and ending positions looking
@@ -1137,61 +1164,116 @@ def consensus(coords):
 
     Parameters
     ----------
-    coords : list of tuples
-        List of (tag, position) where tag is 's' or 'e' sorted by position, then tag.
+    regions : list of tuples
+        List of (start, end) position integers.
 
     Returns
     -------
     regions : list of tuples
-        List of (start, end) position integers.
+        List of merged (start, end) position integers.
+
+    Examples
+    --------
+    >>> # Empty list
+    >>> merge_regions([])
+    []
+
+    >>> # Only one region
+    >>> merge_regions([(10,20)])
+    [(10, 20)]
+
+    >>> # Discard contained region at left
+    >>> merge_regions([(10,20), (10,15)])
+    [(10, 20)]
+
+    >>> # Discard contained region at right
+    >>> merge_regions([(10,20), (15,20)])
+    [(10, 20)]
+
+    >>> # Discard contained region exact match
+    >>> merge_regions([(10,20), (10,20)])
+    [(10, 20)]
+
+    >>> # Discard contained region fully contained
+    >>> merge_regions([(10,20), (11,19)])
+    [(10, 20)]
+
+    >>> # Extend region by overlap right
+    >>> merge_regions([(10,20), (15,25)])
+    [(10, 25)]
+
+    >>> # Extend region by overlap left
+    >>> merge_regions([(10,20), (5,15)])
+    [(5, 20)]
+
+    >>> # Extend immediately adjacent region by extension
+    >>> merge_regions([(10,20), (21,30)])
+    [(10, 30)]
+
+    >>> # No overlap
+    >>> merge_regions([(40,50), (25,30)])
+    [(25, 30), (40, 50)]
+
+    >>> # Single position region : discard contained region
+    >>> merge_regions([(40,50), (40,40)])
+    [(40, 50)]
+
+    >>> # Single position region : discard contained region
+    >>> merge_regions([(40,50), (50,50)])
+    [(40, 50)]
+
+    >>> # Single position region : discard contained region
+    >>> merge_regions([(40,50), (41,41)])
+    [(40, 50)]
+
+    >>> # Single position region : discard contained region
+    >>> merge_regions([(40,50), (49,49)])
+    [(40, 50)]
+
+    >>> # Single position region : extend immediately adjacent region by extension
+    >>> merge_regions([(10,10), (11,21)])
+    [(10, 21)]
+
+    >>> # Single position region : extend immediately adjacent region by extension
+    >>> merge_regions([(10,20), (21,21)])
+    [(10, 21)]
+
+    >>> # Single position region : merge two immediately adjacent single-position regions
+    >>> merge_regions([(20,20), (21,21)])
+    [(20, 21)]
+
+    >>> # Single position region : no overlap
+    >>> merge_regions([(40,50), (60,60)])
+    [(40, 50), (60, 60)]
+
+    >>> # Single position region : no overlap
+    >>> merge_regions([(40,40), (50,60)])
+    [(40, 40), (50, 60)]
+
+    >>> # Single position region : no overlap
+    >>> merge_regions([(40,40), (50,50)])
+    [(40, 40), (50, 50)]
     """
-    count = 0
-    posA = 0
-    out = []
-    for pos in coords:
-        if count == 0:
-            posA = pos[1]
-        if pos[0] == 's':
-            count += 1
-        if pos[0] == 'e':
-            count -= 1
-
-        if count == 0:
-            out.append((posA, pos[1]))
-
-    return out
-
-
-def overlap(coords):
-    """A simple lexical tokenizer to find overlap.
-    """
-    count = 0
-    posA = 0
-
-    #this will tell you how many 'levels' there are
-    #to the current overlap. Essentially how many
-    #features makes up the overlap.
-    level = 1
-    out = []
-    for pos in coords:
-        if pos[0] == 's':
-            count = 1
-            level += 1
-            posA = pos[1]
-        if pos[0] == 'e':
-            level -= 1
-            count -= 1
-
-        if count == 0:
-            # Only output overlap if there are more than 1 feature making up the overlap
-            if level > 1:
-                out.append((posA, pos[1], level))
-
-    return out
+    if len(regions) == 0:
+        return regions
+    regions = sorted(regions)
+    merged_regions = list()
+    merged_regions.append(regions[0])
+    for region in regions[1:]:
+        last_merged_region = merged_regions[-1]
+        last_merged_region_start, last_merged_region_end = last_merged_region
+        region_start, region_end = region
+        if region_start >= last_merged_region_start and region_end <= last_merged_region_end:
+            pass # discard region contained in the last region
+        elif region_start <= (last_merged_region_end + 1) and region_end > last_merged_region_end:
+            merged_regions[-1] = (last_merged_region_start, region_end) # extend last region by overlapping or adjacent region
+        else:
+            merged_regions.append(region) # add non-overlapping region to sorted list
+    return merged_regions
 
 
 def in_region(pos, regions):
-    """Find whether a position is included in a bad region.
+    """Find whether a position is included in a region.
 
     Parameters
     ----------
@@ -1204,9 +1286,269 @@ def in_region(pos, regions):
     -------
     bool
         True if the position is within an of the regions, False otherwise.
+
+    Examples
+    --------
+    # Empty list
+    >>> in_region(1, [])
+    False
+
+    # In list
+    >>> in_region(10, [(3, 5), (9, 12)])
+    True
+
+    # Not in list
+    >>> in_region(10, [(3, 5), (11, 12)])
+    False
     """
     for region in regions:
         if (pos >= region[0]) and (pos <= region[1]):
             return True
 
     return False
+
+
+def compute_num_processes_and_threads(max_cpu_cores, threads_per_process):
+    """Compute the number of allowed processes and threads given the maximum allowed
+    number of CPUs and requested number of threads per process.
+
+    Parameters
+    ----------
+    max_cpu_cores : int or None
+        The maximum allowed number of CPU cores to consume by all instances of the process.
+        If set the None, it implies no limit to the number of CPU cores that can be used.
+    threads_per_process : int
+        The user-requested number of threads to use.
+
+    Returns
+    -------
+    num_processes : int or None
+        The computed maximum number of allowed concurrent processes, or None to allow unlimited.
+    threads_per_process : int
+        The number of threads per process instance which might be less than requested if the
+        number of allowed cpus is less than the requested number of threads.
+
+    Examples
+    --------
+    # max CPU not set
+    >>> compute_num_processes_and_threads(None, 8)
+    (None, 8)
+
+    # max CPU set, not multiple of threads
+    >>> compute_num_processes_and_threads(20, 8)
+    (2, 8)
+
+    # max CPU set, multiple of threads
+    >>> compute_num_processes_and_threads(24, 8)
+    (3, 8)
+
+    # max CPU less than desired threads
+    >>> compute_num_processes_and_threads(2, 8)
+    (1, 2)
+    """
+    if max_cpu_cores is None:
+        num_processes = None
+    elif max_cpu_cores >= threads_per_process:
+        num_processes = int(max_cpu_cores / threads_per_process)
+    else:
+        num_processes = 1
+        threads_per_process = max_cpu_cores
+    return num_processes, threads_per_process
+
+
+def configure_process_threads(extra_params_env_var, threads_option, default_threads_per_process, max_cpu_cores):
+    """Detect the user-configured number of allowed threads for a process and compute the
+    corresponding number of allowed processes given the maximum allowed number of CPUs.
+
+    The named environment variable is parsed to detect a user-setting for the number of threads per process.
+    If not found, the environment variable is modified with a default setting.
+
+    If the user requests a number of threads that is greater than the max_cpu_cores, the number of allowed
+    threads will be set to the max_cpu_cores.
+
+    Parameters
+    ----------
+    extra_params_env_var : str
+        Name of an environment variable the user can set with embedded command line options
+        to configure the number of threads for a process.
+    threads_option : str, or list of str
+        The exact spelling of a command line option to set the number of threads, for example "-n".
+        This parameter can also be a list of command line options when there is more than one way to
+        specify the number of threads, for example, ["-nt", "--num_threads"].
+    default_threads_per_process : int
+        The number of threads to use if the user did not set a preferred value in the named
+        environment variable.
+    max_cpu_cores : int or None
+        The maximum allowed number of CPU cores to consume by all instances of the process.
+        If set the None, it implies no limit to the number of CPU cores that can be used.
+
+    Returns
+    -------
+    max_processes : int or None
+        The computed maximum number of allowed concurrent processes, or None to allow unlimited.
+    threads_per_process : int
+        The number of threads per process instance.  This will either be the value previously
+        configured by the user in the named environment variable, or the default value passed
+        as an argument.
+
+    Examples
+    --------
+    # env var not set, max CPU not set
+    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, None)
+    (None, 8)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 8'
+
+    # env var not set, max CPU set, not multiple of threads
+    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 20)
+    (2, 8)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 8'
+
+    # env var not set, max CPU set, multiple of threads
+    >>> _ = os.environ.pop("SmaltAlign_ExtraParams", None)
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 24)
+    (3, 8)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 8'
+
+    # env var exists but option not set, max CPU not set
+    >>> os.environ["SmaltAlign_ExtraParams"] = "--version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 9, None)
+    (None, 9)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '--version -n 9'
+
+    # env var exists, option set, max CPU not set
+    >>> os.environ["SmaltAlign_ExtraParams"] = "--version -n 10"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, None)
+    (None, 10)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '--version -n 10'
+
+    # env var exists, option set, max CPU set, not multiple of threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 22)
+    (2, 10)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 10 --version'
+
+    # env var exists, option set, max CPU set, multiple of threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 30)
+    (3, 10)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 10 --version'
+
+    # env var exists, option set, max CPU set, max CPU == desired threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 4 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 4)
+    (1, 4)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 4 --version'
+
+    # env var exists, option set, max CPU set, max CPU less than desired threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "-n 10 --version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 8, 2)
+    (1, 2)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '-n 2 --version'
+
+    # env var exists but option not set, max CPU less than default number of threads
+    >>> os.environ["SmaltAlign_ExtraParams"] = "--version"
+    >>> configure_process_threads("SmaltAlign_ExtraParams", "-n", 9, 7)
+    (1, 7)
+    >>> os.environ["SmaltAlign_ExtraParams"]
+    '--version -n 7'
+
+    # Two different ways to configure the number of threads
+    >>> os.environ["RealignerTargetCreator_ExtraParams"] = "-nt 7"
+    >>> configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], 8, 24)
+    (3, 7)
+    >>> os.environ["RealignerTargetCreator_ExtraParams"] = "--num_threads 7"
+    >>> configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], 8, 24)
+    (3, 7)
+    """
+    threads_options = [threads_option] if type(threads_option) is str else threads_option
+    match = False
+    for threads_option in threads_options:
+        regex_str = threads_option + "[ \t]*([0-9]+)"
+        extra_params = os.environ.get(extra_params_env_var, "")
+        match = re.search(regex_str, extra_params)
+        if match:
+            break # stop looking for thread control options in the command line as soon as we find the first one
+    if match:
+        configured_threads_per_process = int(match.group(1))
+        threads_per_process = configured_threads_per_process
+    else:
+        threads_per_process = default_threads_per_process
+
+    max_processes, threads_per_process = compute_num_processes_and_threads(max_cpu_cores, threads_per_process)
+
+    threads_option += ' ' + str(threads_per_process)
+    if match and threads_per_process != configured_threads_per_process:
+        extra_params = re.sub(regex_str, threads_option, extra_params)
+        os.environ[extra_params_env_var] = extra_params
+    elif not match:
+        if extra_params:
+            extra_params += ' '
+        os.environ[extra_params_env_var] = extra_params + threads_option
+
+    return max_processes, threads_per_process
+
+
+def find_path_in_path_list(search_item, env_var, case_sensitive=False):
+    """Search a colon-separated environment variable for a specified string.
+    Return the path containing the string.
+
+    Parameters
+    ----------
+    search_item : str
+        The string to search for in the path.  This string should have enough
+        characters to uniquely identify the path, but it does not have to be the
+        entire path to the file.  Any unique substring will work.  Typically, the
+        basename of the file is enough.
+    env_var : str
+        Name of the environment variable containing the path with the search item.
+    case_sensitive : bool, optional, defaults to False
+        When false, the search will be case insensitive, so any combination of
+        uppercase/lowercase search item is fine.
+
+    Returns
+    -------
+    path : str
+        The path to the jar file as specified in the environment variable if found.
+        Returns None if not found.
+
+    Examples
+    --------
+    >>> os.environ["TESTPATH"] = "/a/a/picard.jar:/b/b/gatk.jar:/c/c/VarScan.jar"
+    >>> find_path_in_path_list("missing", "TESTPATH") is None
+    True
+    >>> find_path_in_path_list("Picard", "TESTPATH") # first, case insensitive
+    '/a/a/picard.jar'
+    >>> find_path_in_path_list("Gatk", "TESTPATH") # middle, case insensitive
+    '/b/b/gatk.jar'
+    >>> find_path_in_path_list("varscan", "TESTPATH") # last, case insensitive
+    '/c/c/VarScan.jar'
+    >>> find_path_in_path_list("picard", "TESTPATH", case_sensitive=True) # first, case sensitive
+    '/a/a/picard.jar'
+    >>> find_path_in_path_list("gatk", "TESTPATH", case_sensitive=True) # middle, case sensitive
+    '/b/b/gatk.jar'
+    >>> find_path_in_path_list("VarScan", "TESTPATH", case_sensitive=True) # last, case sensitive
+    '/c/c/VarScan.jar'
+    """
+    paths = os.environ.get(env_var, "")
+    if not case_sensitive:
+        search_item = search_item.lower()
+
+    paths = paths.split(':')
+    for path in paths:
+        path_to_search = path.lower() if not case_sensitive else path
+        if search_item in path_to_search:
+            return path
+
+    return None
+

@@ -7,6 +7,7 @@ This is the top-level script for the collection of cfsan_snp_pipeline tools.
 from __future__ import absolute_import
 
 import argparse
+import psutil
 import sys
 import textwrap
 
@@ -263,14 +264,23 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     # -------------------------------------------------------------------------
     # Create the parser for the "map_reads" command
     # -------------------------------------------------------------------------
+    def threads(value):
+        ivalue = int(value)
+        num_local_cpu_cores = psutil.cpu_count()
+        if ivalue < 1 or ivalue > (2 * num_local_cpu_cores):
+            raise argparse.ArgumentTypeError("Number of threads must be between %d and %d" % (1, 2 * num_local_cpu_cores))
+        return ivalue
+
     description = """Align the sequence reads for a specified sample to a specified reference genome.
-                     The output is written to the file "reads.sam" in the sample directory."""
+                     The reads are sorted, duplicates marked, and realigned around indels.
+                     The output is written to the file "reads.sorted.deduped.indelrealigned.bam" in the sample directory."""
     subparser = subparsers.add_parser("map_reads", help="Align reads to the reference", description=description, formatter_class=formatter_class)
     subparser.add_argument(dest="referenceFile",    type=str, help="Relative or absolute path to the reference fasta file")
     subparser.add_argument(dest="sampleFastqFile1", type=str, help="Relative or absolute path to the fastq file")
     subparser.add_argument(dest="sampleFastqFile2", type=str, help="Optional relative or absolute path to the mate fastq file, if paired", nargs="?")
     subparser.add_argument("-f", "--force",   dest="forceFlag", action="store_true", help="Force processing even when result files already exist and are newer than inputs")
     subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--threads", dest="threads",   type=threads, default=8, metavar="INT", help="Number of CPU cores to use")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=map_reads.map_reads)
     subparser.set_defaults(excepthook=utils.handle_sample_exception)
@@ -292,15 +302,17 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     # Create the parser for the "filter_regions" command
     # -------------------------------------------------------------------------
     description = "Remove abnormally dense SNPs from the input VCF file, save the reserved SNPs into a new VCF file, and save the removed SNPs into another VCF file."
-    subparser = subparsers.add_parser("filter_regions", help="Remove abnormally dense SNPs from all samples", description=description, formatter_class=formatter_class)
+    epilog = 'You can filter snps more than once by specifying multiple window sizes and max snps.  For example "-m 3 2 -w 1000 100" will filter more than 3 snps in 1000 bases and also more than 2 snps in 100 bases.'
+    subparser = subparsers.add_parser("filter_regions", help="Remove abnormally dense SNPs from all samples", description=description, formatter_class=formatter_class, epilog=epilog)
     subparser.add_argument(                       dest="sampleDirsFile", type=str,                                                help="Relative or absolute path to file containing a list of directories -- one per sample")
     subparser.add_argument(                       dest="refFastaFile",   type=str,                                                help="Relative or absolute path to the reference fasta file")
     subparser.add_argument("-f", "--force",       dest="forceFlag",      action="store_true",                                     help="Force processing even when result files already exist and are newer than inputs")
     subparser.add_argument("-n", "--vcfname",     dest="vcfFileName",    type=str, default="var.flt.vcf", metavar="NAME",         help="File name of the input VCF files which must exist in each of the sample directories")
     subparser.add_argument("-l", "--edge_length", dest="edgeLength",     type=int, default=500,           metavar="EDGE_LENGTH",  help="The length of the edge regions in a contig, in which all SNPs will be removed.")
-    subparser.add_argument("-w", "--window_size", dest="windowSize",     type=int, default=1000,          metavar="WINDOW_SIZE",  help="The length of the window in which the number of SNPs should be no more than max_num_snp.")
-    subparser.add_argument("-m", "--max_snp",     dest="maxSNP",         type=int, default=3,             metavar="MAX_NUM_SNPs", help="The maximum number of SNPs allowed in a window.")
+    subparser.add_argument("-w", "--window_size", dest="windowSizeList", type=int, default=[1000], nargs='*', metavar="WINDOW_SIZE",  help="The length of the window in which the number of SNPs should be no more than max_num_snp.")
+    subparser.add_argument("-m", "--max_snp",     dest="maxSnpsList",    type=int, default=[3],    nargs='*', metavar="MAX_NUM_SNPs", help="The maximum number of SNPs allowed in a window.")
     subparser.add_argument("-g", "--out_group",   dest="outGroupFile",   type=str, default=None,          metavar="OUT_GROUP",    help="Relative or absolute path to the file indicating outgroup samples, one sample ID per line.")
+    subparser.add_argument("-a", "--all",         dest="acrossSamples",  action="store_true",                                     help="Dense regions found in any sample are filtered from all of the samples.")
     subparser.add_argument("-v", "--verbose",     dest="verbose",        type=int, default=1,             metavar="0..5",         help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=filter_regions.filter_regions)
@@ -349,6 +361,7 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     help["output"]         = """Output file. Relative or absolute path to the consensus fasta file for this sample."""
     help["minBaseQual"]    = """Mimimum base quality score to count a read. All other snp filters take effect after the low-quality reads are discarded."""
     help["minConsFreq"]    = """Consensus frequency. Mimimum fraction of high-quality reads supporting the consensus to make a call."""
+    help["minConsDpth"]    = """Consensus depth. Minimum number of high-quality reads supporting the consensus to make a call."""
     help["minConsStrdDpth"]= """Consensus strand depth. Minimum number of high-quality reads supporting the consensus which must be present on both the
                                 forward and reverse strands to make a call."""
     help["minConsStrdBias"]= """Strand bias. Minimum fraction of the high-quality consensus-supporting reads which must be present on both the
@@ -378,6 +391,7 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.add_argument("-o", "--output",             dest="consensusFile",      type=str,            default="consensus.fasta",  metavar="FILE", help=help["output"])
     subparser.add_argument("-q", "--minBaseQual",        dest="minBaseQual",        type=int,            default=0,                  metavar="INT",  help=help["minBaseQual"])
     subparser.add_argument("-c", "--minConsFreq",        dest="minConsFreq",        type=minConsFreq,    default=0.60,               metavar="FREQ", help=help["minConsFreq"])
+    subparser.add_argument("-D", "--minConsDpth",        dest="minConsDpth",        type=int,            default=1,                  metavar="INT",  help=help["minConsDpth"])
     subparser.add_argument("-d", "--minConsStrdDpth",    dest="minConsStrdDpth",    type=int,            default=0,                  metavar="INT",  help=help["minConsStrdDpth"])
     subparser.add_argument("-b", "--minConsStrdBias",    dest="minConsStrdBias",    type=minConsStrdBias,default=0,                  metavar="FREQ", help=help["minConsStrdBias"])
     subparser.add_argument(      "--vcfFileName",        dest="vcfFileName",        type=str,            default=None,               metavar="NAME", help=help["vcfFileName"])
@@ -498,14 +512,19 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
 
     # Special validation
     if args.subparser_name == "filter_regions":
+        if len(args.windowSizeList) != len(args.maxSnpsList):
+            utils.global_error("Error: you must specify the same number of arguments for window size and max snps.")
+
+        for window_size in args.windowSizeList:
+            if window_size < 1:
+                utils.global_error("Error: the length of the window must be a positive integer, and the input is %d." % window_size)
+
+        for max_snps in args.maxSnpsList:
+            if max_snps < 1:
+                utils.global_error("Error: the maximum number of SNPs allowed must be a positive integer, and the input is %d." % max_snps)
+
         if (args.edgeLength < 1):
             utils.global_error("Error: the length of the edge regions must be a positive integer, and the input is %d." % args.edgeLength)
-
-        if (args.windowSize < 1):
-            utils.global_error("Error: the length of the window must be a positive integer, and the input is %d." % args.windowSize)
-
-        if (args.maxSNP < 1):
-            utils.global_error("Error: the maximum number of SNPs allowed must be a positive integer, and the input is %d." % args.maxSNP)
 
     return args
 

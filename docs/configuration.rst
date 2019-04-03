@@ -51,6 +51,8 @@ samples.
     StopOnSampleError=false
 
 
+.. _MaxCpuCores-label:
+
 MaxCpuCores
 -----------
 Controls the number of CPU cores used by the SNP Pipeline.  This parameter controls
@@ -66,6 +68,54 @@ processes.
 **Example**::
 
     MaxCpuCores=2
+
+
+.. _CpuCoresPerProcessOnHPC-label:
+
+CpuCoresPerProcessOnHPC
+-----------------------
+Controls how many CPU cores are concurrently used per
+process when running multi-threaded processes on Grid or Torque.  This parameter
+affects bowtie2, smalt, samtools, and GATK.  You can set this parameter in one place
+instead of setting special options in multiple places for bowtie, smalt, samtools, and GATK.
+The pipeline will automatically use this setting whenever processes use multiple CPU cores.
+You should set this parameter to the typical number of CPUs available on the compute nodes
+in your HPC cluster.  The :ref:`MaxCpuCores-label` parameter takes precedence over
+CpuCoresPerProcessOnHPC.  If you set CpuCoresPerProcessOnHPC higher than MaxCpuCores, you will
+only get MaxCpuCores threads per process.
+
+**Default**:
+
+    Do not leave this parameter unset.
+
+**Example**::
+
+    CpuCoresPerProcessOnHPC=16
+
+
+.. _CpuCoresPerProcessOnWorkstation-label:
+
+CpuCoresPerProcessOnWorkstation
+-------------------------------
+Controls how many CPU cores are concurrently used per
+process when running multi-threaded processes on your workstation.  This parameter
+affects bowtie2, smalt, samtools, and GATK.  You can set this parameter in one place
+instead of setting special options in multiple places for bowtie, smalt, samtools, and GATK.
+The pipeline will automatically use this setting whenever processes use multiple CPU cores.
+You should set this parameter to some even division of the number of CPUs on your workstation.
+When this parameter is less than the number of CPU cores in your workstation, multiple
+processes will be launched, each using the number of cores specified here.
+The :ref:`MaxCpuCores-label` parameter takes precedence over CpuCoresPerProcessOnWorkstation.
+If you set CpuCoresPerProcessOnWorkstation higher than MaxCpuCores, you will
+only get MaxCpuCores threads per process.
+
+**Default**:
+
+    When this parameter is not set to a value, all CPU cores are consumed by one process, instead of splitting the CPU cores between multiple processes.
+
+**Example**::
+
+    CpuCoresPerProcessOnWorkstation=8
 
 
 MaxSnps
@@ -137,6 +187,19 @@ can be specified.
     SamtoolsFaidx_ExtraParams=""
 
 
+CreateSequenceDictionary_ExtraParams
+------------------------------------
+
+Specifies options passed to the Picard CreateSequenceDictionary indexer.  Any of the CreateSequenceDictionary options
+can be specified.
+
+**Default**: none
+
+**Example**::
+
+    CreateSequenceDictionary_ExtraParams=""
+
+
 Bowtie2Align_ExtraParams
 ------------------------
 
@@ -145,18 +208,24 @@ can be specified.
 
 **Default**:
 
-|   If you do not specify the ``-p`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
-|      There is no way to completely suppress the -p option.
-|   If Bowtie2Align_ExtraParams is not set to any value, the ``--reorder`` option is enabled by default.
-|      Any value, even a single space, will suppress this default option.
+| If you do not specify the -p option, the CFSAN SNP Pipeline will automatically set the number
+| of threads using the values :ref:`CpuCoresPerProcessOnHPC-label` and :ref:`CpuCoresPerProcessOnWorkstation-label`.
+| To disable bowtie2 multithreading, specify "-p 1".
+|
+| If Bowtie2Align_ExtraParams is not set to any value, the ``--reorder`` option is enabled by default.
+| Any value, even a single space, will suppress this default option.
 |
 
 **Parameter Notes**:
 
-| ``-p``        : bowtie2 uses the specified number of parallel search threads
-| ``--reorder`` : generate output records in the same order as the reads in the input file
-| ``-X``        : maximum inter-mate fragment length for valid concordant paired-end alignments
-|
+``-p threads``
+  Bowtie2 uses the specified number of parallel search threads. Setting this option is not recommended.
+  The recommended way to control threads per process is by setting :ref:`CpuCoresPerProcessOnHPC-label`
+  and :ref:`CpuCoresPerProcessOnWorkstation-label`.
+``--reorder``
+  Generate output records in the same order as the reads in the input file.
+``-X distance``
+  Maximum inter-mate fragment length for valid concordant paired-end alignments.
 
 **Example**::
 
@@ -171,25 +240,35 @@ can be specified.
 
 **Default**:
 
-|   If you do not specify the ``-n`` option, it defaults to 8 threads on an HPC or all cpu cores otherwise.
-|      There is no way to completely suppress the -n option.
-|   If SmaltAlign_ExtraParams is not set to any value, the ``-O`` option is enabled by default.
-|      Any value, even a single space, will suppress this default option.
+| If you do not specify the -n option, the CFSAN SNP Pipeline will automatically set the number
+| of threads using the values :ref:`CpuCoresPerProcessOnHPC-label` and :ref:`CpuCoresPerProcessOnWorkstation-label`.
+| To disable smalt multithreading, specify "-n 1".
+|
+| If SmaltAlign_ExtraParams is not set to any value, the ``-O`` option is enabled by default.
+| Any value, even a single space, will suppress this default option.
 |
 
 **Parameter Notes**:
 
-| ``-n`` : number of parallel alignment threads
-| ``-O`` : generate output records in the same order as the reads in the input file
-| ``-i`` : maximum insert size for paired-end reads
-| ``-r`` : random number seed, if seed < 0 reads with multiple best mappings are reported as 'not mapped'
-| ``-y`` : filters output alignments by a threshold in the number of exactly matching nucleotides
-|
+``-n threads``
+  Number of parallel alignment threads. Setting this option is not recommended.
+  The recommended way to control threads per process is by setting :ref:`CpuCoresPerProcessOnHPC-label`
+  and :ref:`CpuCoresPerProcessOnWorkstation-label`.
+``-O``
+  Generate output records in the same order as the reads in the input file.
+``-i size``
+  Maximum insert size for paired-end reads.
+``-r seed``
+  Random number seed, if seed < 0 reads with multiple best mappings are reported as 'not mapped'.
+``-y fraction``
+  Filters output alignments by a threshold in the number of exactly matching nucleotides
 
 **Example**::
 
     SmaltAlign_ExtraParams="-O -i 1000 -r 1"
 
+
+.. _SamtoolsSamFilter-ExtraParams-label:
 
 SamtoolsSamFilter_ExtraParams
 -----------------------------
@@ -199,17 +278,26 @@ Any of the SAMtools view options can be specified.
 **Default**:
 
 | If SamtoolsSamFilter_ExtraParams is not set, the "-F 4" option is enabled by default.
-|    Any value, even a single space, will suppress the -F option.
+| Any value, even a single space, will suppress the -F option.
+|
+| If you do not specify the -@ option, the CFSAN SNP Pipeline will set the number of threads
+| using the values :ref:`CpuCoresPerProcessOnHPC-label` and :ref:`CpuCoresPerProcessOnWorkstation-label`.
 |
 
 **Parameter Notes**:
 
-| ``-F 4``      : discard unmapped reads
-|
+``-F 4``
+  Exclude unmapped reads.
+``-q threshold``
+  Exclude reads with map quality below threshold.
+``-@ threads``
+  Number of parallel threads. Setting this option is not recommended.
+  The recommended way to control threads per process is by setting :ref:`CpuCoresPerProcessOnHPC-label`
+  and :ref:`CpuCoresPerProcessOnWorkstation-label`.
 
 **Example**::
 
-    SamtoolsSamFilter_ExtraParams="-F 4"
+    SamtoolsSamFilter_ExtraParams="-F 4 -q 30"
 
 
 SamtoolsSort_ExtraParams
@@ -217,11 +305,48 @@ SamtoolsSort_ExtraParams
 Specifies options passed to the SAMtools sort tool when sorting the BAM file.
 Any of the SAMtools sort options can be specified.
 
-**Default**: None
+**Default**:
+
+| If you do not specify the -@ option, the CFSAN SNP Pipeline will set the number of threads
+| using the values :ref:`CpuCoresPerProcessOnHPC-label` and :ref:`CpuCoresPerProcessOnWorkstation-label`.
+|
+
+**Parameter Notes**:
+
+``-@ threads``
+  Number of parallel threads. Setting this option is not recommended.
+  The recommended way to control threads per process is by setting :ref:`CpuCoresPerProcessOnHPC-label`
+  and :ref:`CpuCoresPerProcessOnWorkstation-label`.
 
 **Example**::
 
     SamtoolsSort_ExtraParams=""
+
+
+SamtoolsIndex_ExtraParams
+-------------------------
+Specifies options passed to the SAMtools index tool when indexing the BAM file.
+Any of the SAMtools index options can be specified.
+
+**Default**:
+
+| If you do not specify the -@ option, the CFSAN SNP Pipeline will set the number of threads
+| using the values :ref:`CpuCoresPerProcessOnHPC-label` and :ref:`CpuCoresPerProcessOnWorkstation-label`.
+|
+
+**Parameter Notes**:
+
+``-@ threads``
+  SPECIAL NOTE: ordinarily, we recommended specifying the threads with the
+  the :ref:`CpuCoresPerProcessOnHPC-label` and :ref:`CpuCoresPerProcessOnWorkstation-label` parameters.
+  However, when we tested samtools index on a Lustre file system, we found it
+  runs slower with multiple threads.  For this reason, we recommend customizing this parameter for
+  your environment.
+
+
+**Example**::
+
+    SamtoolsIndex_ExtraParams="-@ 2"
 
 
 RemoveDuplicateReads
@@ -236,17 +361,6 @@ and calling snps.
 **Example**::
 
     RemoveDuplicateReads=false
-
-
-PicardMarkDuplicates_ExtraParams
---------------------------------
-Specifies options passed to the Picard MarkDuplicates tool when removing duplicate reads.
-
-**Default**: None
-
-**Example**::
-
-    PicardMarkDuplicates_ExtraParams="DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH"
 
 
 PicardJvm_ExtraParams
@@ -266,6 +380,84 @@ Any of the JVM options can be specified.
     PicardJvm_ExtraParams="-Xmx300m"
 
 
+PicardMarkDuplicates_ExtraParams
+--------------------------------
+Specifies options passed to the Picard MarkDuplicates tool when removing duplicate reads.
+
+**Default**: None
+
+**Example**::
+
+    PicardMarkDuplicates_ExtraParams="DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH"
+
+
+EnableLocalRealignment
+----------------------
+Controls whether the pipeline realigns reads around indels prior to creating the pileup
+and calling snps.
+
+**Default**:
+
+    When this parameter is not set to a value, the pipeline realigns reads around indels.
+
+**Example**::
+
+    EnableLocalRealignment=false
+
+
+GatkJvm_ExtraParams
+-------------------
+Specifies options passed to the GATK Java Virtual Machine.
+Any of the JVM options can be specified.
+
+**Default**: None
+
+**Parameter Notes**:
+
+| ``-Xmx3500m``  : use 3500 MB memory (modify as needed)
+|
+
+**Example**::
+
+    GatkJvm_ExtraParams="-Xmx3500m"
+
+
+RealignerTargetCreator_ExtraParams
+----------------------------------
+Specifies options passed to the GATK RealignerTargetCreator tool.
+
+**Default**:
+
+| If you do not specify the -nt option, the CFSAN SNP Pipeline will set the number of threads
+| using the values :ref:`CpuCoresPerProcessOnHPC-label` and :ref:`CpuCoresPerProcessOnWorkstation-label`.
+| To disable RealignerTargetCreator multithreading, specify "-nt 1".
+|
+
+**Parameter Notes**:
+
+``-nt threads``
+  Number of parallel threads. Setting this option is not recommended.
+  The recommended way to control threads per process is by setting :ref:`CpuCoresPerProcessOnHPC-label`
+  and :ref:`CpuCoresPerProcessOnWorkstation-label`.
+
+**Example**::
+
+    RealignerTargetCreator_ExtraParams="--minReadsAtLocus 7"
+
+
+IndelRealigner_ExtraParams
+--------------------------
+Specifies options passed to the GATK IndelRealigner tool.
+
+**Default**: None
+
+**Example**::
+
+    IndelRealigner_ExtraParams="--consensusDeterminationModel USE_READS"
+
+
+.. _SamtoolsMpileup-ExtraParams-label:
+
 SamtoolsMpileup_ExtraParams
 ---------------------------
 Specifies options passed to the SAMtools mpileup tool.
@@ -278,12 +470,15 @@ Any of the SAMtools mpileup options can be specified.
 | ``-q``    : minimum mapping quality for an alignment to be used
 | ``-Q``    : minimum base quality for a base to be considered
 | ``-x``    : disable read-pair overlap detection
+| ``-A``    : include alignments that are not proper-pairs
 |
 
 **Example**::
 
-    SamtoolsMpileup_ExtraParams="-q 0 -Q 13"
+    SamtoolsMpileup_ExtraParams="-q 0 -Q 13 -A"
 
+
+.. _VarscanMpileup2snp_ExtraParams-label:
 
 VarscanMpileup2snp_ExtraParams
 ------------------------------
@@ -296,11 +491,12 @@ Any of the Varscan mpileup2snp options can be specified.
 
 | ``--min-avg-qual`` : minimum base quality at a position to count a read
 | ``--min-var-freq`` : minimum variant allele frequency threshold
+| ``--min-reads2``   : minimum supporting reads at a position to call variants
 |
 
 **Example**::
 
-    VarscanMpileup2snp_ExtraParams="--min-avg-qual 15 --min-var-freq 0.90"
+    VarscanMpileup2snp_ExtraParams="--min-avg-qual 15 --min-var-freq 0.90 --min-reads2 5"
 
 
 VarscanJvm_ExtraParams
@@ -320,6 +516,8 @@ Any of the JVM options can be specified.
     VarscanJvm_ExtraParams="-Xmx300m"
 
 
+.. _FilterRegions-ExtraParams-label:
+
 FilterRegions_ExtraParams
 ------------------------------
 Specifies options passed to the filter_regions command.
@@ -336,10 +534,14 @@ Specifies options passed to the filter_regions command.
   The maximum number of SNPs allowed in a window.
 ``--out_group``
     Relative or absolute path to the file indicating outgroup samples, one sample ID per line.
+``--all``
+    Dense regions found in any sample are filtered from all of the samples.
+
+You can filter snps more than once by specifying multiple window sizes and max snps.  For example "--max_snp 3 2 --window_size 1000 100" will filter more than 3 snps in 1000 bases and also more than 2 snps in 100 bases.
 
 **Example**::
 
-    FilterRegions_ExtraParams="--edge_length 500 --window_size 1000 --max_snp 3 --out_group /path/to/outgroupSamples.txt"
+    FilterRegions_ExtraParams="--edge_length 500 --window_size 1000 125 15 --max_snp 3 2 1 --out_group /path/to/outgroupSamples.txt"
 
 
 MergeSites_ExtraParams
@@ -352,6 +554,8 @@ Specifies options passed to the merge_sites command.
 
     MergeSites_ExtraParams="--verbose 1"
 
+
+.. _CallConsensus-ExtraParams-label:
 
 CallConsensus_ExtraParams
 -------------------------
@@ -366,6 +570,9 @@ Specifies options passed to the call_consensus command.
     are discarded.
 ``--minConsFreq``
     Consensus frequency. Mimimum fraction of high-quality reads supporting the consensus to make a call.
+``--minConsDpth``
+    Consensus depth. Minimum number of high-quality reads supporting the consensus to make a call.
+    This impacts both variant calls and reference calls.
 ``--minConsStrdDpth``
     Consensus strand depth. Minimum number of high-quality reads supporting the consensus which must be present
     on both the forward and reverse strands to make a call
@@ -387,7 +594,7 @@ Specifies options passed to the call_consensus command.
 
 **Example**::
 
-    CallConsensus_ExtraParams="--verbose 1 --minBaseQual 15 --vcfFileName consensus.vcf"
+    CallConsensus_ExtraParams="--minBaseQual 15 --minConsDpth 3 --vcfFileName consensus.vcf"
 
 
 SnpMatrix_ExtraParams

@@ -6,6 +6,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import os
+import resource
 import shutil
 import sys
 import tempfile
@@ -63,7 +64,8 @@ def merge_vcfs(args):
         if not bad:
             good_vcf_files.append(vcf_file)
 
-    if len(good_vcf_files) == 0:
+    num_vcf_files = len(good_vcf_files)
+    if num_vcf_files == 0:
         utils.global_error("There are no vcf files to merge.")
 
     #==========================================================================
@@ -73,6 +75,18 @@ def merge_vcfs(args):
     if not args.forceFlag and not needs_rebuild:
         verbose_print("# Multi-VCF file is already freshly created.  Use the -f option to force a rebuild.")
         return
+
+    #==========================================================================
+    # Increase the maximum number of open file descriptors if needed
+    #==========================================================================
+    needed_file_handles = num_vcf_files + 4 # Determined by testing
+    soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
+    if needed_file_handles > hard_limit:
+        utils.global_error("Error: unable to merge the VCF files. %i open files handles are needed, but the hard limit is only %i." % (needed_file_handles, hard_limit))
+
+    if needed_file_handles > soft_limit:
+        verbose_print("# %s Increasing number of open file descriptors from %i to %i" % (utils.timestamp(), soft_limit, needed_file_handles))
+        resource.setrlimit(resource.RLIMIT_NOFILE, (needed_file_handles, hard_limit))
 
     #==========================================================================
     # Copy, Compress, Index, Merge
