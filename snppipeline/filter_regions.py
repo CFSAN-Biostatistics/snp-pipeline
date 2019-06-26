@@ -333,9 +333,8 @@ def filter_regions_per_sample(list_of_vcf_files, contig_length_dict, sorted_list
     #==========================================================================
     # Which samples need rebuild?
     #
-    # Any changed or new input file will trigger rebuild for all samples because
-    # the bad regions are combined across all samples.  However, a missing
-    # output file will only cause rebuild of the missing file.
+    # Any changed or new input file will trigger rebuild only for that sample.
+    # A missing output file will only cause rebuild of the missing file.
     #==========================================================================
     need_rebuild_dict = dict()
     for vcf_file_path in list_of_vcf_files:

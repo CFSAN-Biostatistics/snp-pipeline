@@ -1101,31 +1101,30 @@ files are named with the ``_preserved`` suffix, for example:
 Other output files are named similarly.
 
 The SNP filtering is performed by the ``filter_regions`` command.  It runs after the phase 1 SNP detection and impacts
-all subsequent processing steps.  Abnormal regions are identified in each sample individually by default. If you choose
-to do so, the dense regions found in any sample can be filtered from all the other samples with the ``--all`` command
-line option. See :ref:`FilterRegions-ExtraParams-label`. In this mode, if you add or remove a sample from your analysis
-it may affect the final SNPs detected in all other samples.
+all subsequent processing steps.
+
+Dense regions found in any sample are filtered from all the other samples by default. In this mode, if you add or remove
+a sample from your analysis it may affect the final SNPs detected in all other samples. If you choose to do so, the dense
+regions can be filtered from each sample individually with the ``--mode each`` command line option.
+See :ref:`FilterRegions-ExtraParams-label`.
 
 The drawing below depicts the behavior of the SNP Filtering.
 
 .. image:: DenseSnps.png
 
 Sample 2 has enough snps in close proximity to form a dense region shown in red. These snps are filtered regardless of the
-``--all`` option.
+``--mode`` option.
 
 Sample 4 has enough snps in close proximity to form a dense region shown in red. These snps are filtered regardless of the
-``--all`` option.
+``--mode`` option.
 
-Sample 1 has two snps which by themselves do not form a dense region, but when the ``--all`` option is used, the snps
+Sample 1 has two snps which by themselves do not form a dense region, but when the ``--mode all`` option is used, the snps
 are engulfed by the dense region in sample 2 and removed.
 
-Sample 3 has two snps which by themselves do not form a dense region.  When the ``--all`` option is used, the blue snp
-is engulfed by the dense region in sample 4 and removed.  The green snp is not filtered regardless of the ``--all``
+Sample 3 has two snps which by themselves do not form a dense region.  When the ``--mode all`` option is used, the blue snp
+is engulfed by the dense region in sample 4 and removed.  The green snp is not filtered regardless of the ``--mode``
 option because it is not within a dense region of any other sample.  Merely being nearby a dense region in another
 sample does not cause snp filtering.
-
-As you increase the number of samples in your analysis, the dense regions cover more areas of the genome and may
-cause filtering of numerous snps.
 
 The sensitivity of the SNP filtering can be controlled with parameters in the configuration file by setting values in
 ``FilterRegions_ExtraParams``.  You can control the length of end-of-contig trimming, dense region window size, and

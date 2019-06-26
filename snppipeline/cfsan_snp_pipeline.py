@@ -312,7 +312,7 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.add_argument("-w", "--window_size", dest="windowSizeList", type=int, default=[1000], nargs='*', metavar="WINDOW_SIZE",  help="The length of the window in which the number of SNPs should be no more than max_num_snp.")
     subparser.add_argument("-m", "--max_snp",     dest="maxSnpsList",    type=int, default=[3],    nargs='*', metavar="MAX_NUM_SNPs", help="The maximum number of SNPs allowed in a window.")
     subparser.add_argument("-g", "--out_group",   dest="outGroupFile",   type=str, default=None,          metavar="OUT_GROUP",    help="Relative or absolute path to the file indicating outgroup samples, one sample ID per line.")
-    subparser.add_argument("-a", "--all",         dest="acrossSamples",  action="store_true",                                     help="Dense regions found in any sample are filtered from all of the samples.")
+    subparser.add_argument("-M", "--mode",        dest="mode",           choices=["all", "each"], default="all",                  help="Control whether dense snp regions found in any sample are filtered from all of the samples, or each sample independently.")
     subparser.add_argument("-v", "--verbose",     dest="verbose",        type=int, default=1,             metavar="0..5",         help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=filter_regions.filter_regions)
@@ -321,7 +321,7 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     # -------------------------------------------------------------------------
     # Create the parser for the "merge_sites" command
     # -------------------------------------------------------------------------
-    description = "Combine the SNP positions across all samples into a single unified SNP list file identifing the positions and sample names where SNPs were called."
+    description = "Combine the SNP positions across all samples into a single unified SNP list file identifying the positions and sample names where SNPs were called."
     subparser = subparsers.add_parser("merge_sites", help="Prepare the list of sites having SNPs", description=description, formatter_class=formatter_class)
     subparser.add_argument(                   dest="sampleDirsFile", type=str,                        help="Relative or absolute path to file containing a list of directories -- one per sample")
     subparser.add_argument(                   dest="filteredSampleDirsFile", type=str,                help="Relative or absolute path to the output file that will be created containing the filtered list of sample directories -- one per sample.  The samples in this file are those without an excessive number of snps.  See the --maxsnps parameter.")

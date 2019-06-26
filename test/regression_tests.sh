@@ -2502,16 +2502,16 @@ testFilterRegionsMissingVcfRaiseSampleErrorStopUnset()
 }
 
 
-# Verify the filter_regions command uses all the input vcf files to produce the outputs
+# Verify the filter_regions (--mode all) command produces the correct outputs using all the input vcf files to produce the outputs
 # even when some of the samples are already fresh.
-testFilterRegionsPartialRebuild()
+testFilterRegionsPartialRebuildModeAll()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
     cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
-    # Run the pipeline, specifing the locations of samples and the reference
+    # Run the pipeline, specifying the locations of samples and the reference
     run_snp_pipeline.sh -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
 
     # Verify no errors
@@ -2538,11 +2538,13 @@ testFilterRegionsPartialRebuild()
     rm -rf $logDir
     mkdir -p $logDir
 
-    # Remove the results for one of the samples
+    # Remove the output file for one of the samples.
+    # Any changed or new input file will trigger rebuild for all samples because the bad regions are
+    # combined across all samples.  However, a missing output file will only cause rebuild of the missing file.
     rm $tempDir/samples/sample1/var.flt_preserved.vcf
 
     # Re-run cfsan_snp_pipeline filter_regions -- this should only rebuild results for sample1, but it should use the var.flt.vcf input file for all samples
-    cfsan_snp_pipeline filter_regions "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterRegions.log"
+    cfsan_snp_pipeline filter_regions --window_size 1000 125 15 --max_snp 3 2 1 --mode all "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterRegions.log"
 
     # Verify log files
     verifyNonEmptyReadableFile "$logDir/filterRegions.log"
@@ -2560,17 +2562,81 @@ testFilterRegionsPartialRebuild()
     assertIdenticalFiles "$tempDir/samples/sample4/var.flt_removed.vcf" "$tempDir/expectedResults/samples/sample4/var.flt_removed.vcf" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
 }
 
-# Verify the filter_regions command produces different results when one of the samples is an outgroup.
-testFilterRegionsOutgroup()
+# Verify the filter_regions (--mode each) command produces the correct outputs using separate input vcf files to produce the outputs
+# even when some of the samples are already fresh.
+testFilterRegionsPartialRebuildModeEach()
 {
     tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
 
     # Copy the supplied test data to a work area:
     cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
 
-    # set the --all flag so there will be differences
+    # set the --mode each option
     cfsan_snp_pipeline data configurationFile $tempDir
-    echo "FilterRegions_ExtraParams=--edge_length 500 --window_size 1000 125 15 --max_snp 3 2 1 --all" >> "$tempDir/snppipeline.conf"
+    echo "FilterRegions_ExtraParams=--edge_length 500 --window_size 1000 125 15 --max_snp 3 2 1 --mode each" >> "$tempDir/snppipeline.conf"
+
+    # Run the pipeline, specifying the custom configuration file, locations of samples, and the reference
+    run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+
+    # Force timestamps to change so outputs are newer than inputs.
+    # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
+    touch -d '-12 day' $tempDir/reference/*.fasta
+    touch -d '-11 day' $tempDir/reference/*.bt2
+    touch -d '-10 day' $tempDir/samples/*/*.fastq
+    touch -d  '-9 day' $tempDir/samples/*/reads.sam
+    touch -d  '-8 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-7 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.deduped.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.sorted.deduped.bai
+    touch -d  '-4 day' $tempDir/samples/*/reads.sorted.deduped.indelrealigned.bam
+    touch -d  '-3 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-2 day' $tempDir/samples/*/var.flt.vcf
+    touch -d  '-1 day' $tempDir/samples/*/var.flt_preserved.vcf
+    touch -d  '-1 day' $tempDir/samples/*/var.flt_removed.vcf
+
+    # Remove unwanted log files
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    rm -rf $logDir
+    mkdir -p $logDir
+
+    # Rename the output file for one of the samples.
+    # Any changed or new input file will trigger rebuild only for that sample.
+    # A missing output file will only cause rebuild of the missing file.
+    mv "$tempDir/samples/sample1/var.flt_preserved.vcf" "$tempDir/samples/sample1/var.flt_preserved.vcf.save"
+    mv "$tempDir/samples/sample1/var.flt_removed.vcf" "$tempDir/samples/sample1/var.flt_removed.vcf.save"
+
+    # Re-run cfsan_snp_pipeline filter_regions -- this should only rebuild results for sample1, but it should use the var.flt.vcf input file for all samples
+    cfsan_snp_pipeline filter_regions --window_size 1000 125 15 --max_snp 3 2 1 --mode each "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterRegions.log"
+
+    # Verify log files
+    verifyNonEmptyReadableFile "$logDir/filterRegions.log"
+    assertFileNotContains "$logDir/filterRegions.log" "already freshly built"
+
+    # Verify only sample1 is processed
+    assertFileContains "$logDir/filterRegions.log" "Processing sample sample1"
+    assertFileNotContains "$logDir/filterRegions.log" "Processing sample sample2"
+    assertFileNotContains "$logDir/filterRegions.log" "Processing sample sample3"
+    assertFileNotContains "$logDir/filterRegions.log" "Processing sample sample4"
+
+    # Verify rerun produces same results as first run
+    assertIdenticalFiles "$tempDir/samples/sample1/var.flt_preserved.vcf" "$tempDir/samples/sample1/var.flt_preserved.vcf.save" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample1/var.flt_removed.vcf" "$tempDir/samples/sample1/var.flt_removed.vcf.save" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+}
+
+# Verify the filter_regions (--mode all) command produces different results when one of the samples is an outgroup.
+testFilterRegionsOutgroupModeAll()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
+
+    # set the --mode all option so there will be differences
+    cfsan_snp_pipeline data configurationFile $tempDir
+    echo "FilterRegions_ExtraParams=--edge_length 500 --window_size 1000 125 15 --max_snp 3 2 1 --mode all" >> "$tempDir/snppipeline.conf"
 
     # Run the pipeline, specifing the locations of samples and the reference
     run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
@@ -2608,7 +2674,7 @@ testFilterRegionsOutgroup()
     echo $outgroup > "$tempDir/outgroup.txt"
 
     # Re-run cfsan_snp_pipeline filter_region
-    cfsan_snp_pipeline filter_regions --all --out_group "$tempDir/outgroup.txt" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterRegions.log"
+    cfsan_snp_pipeline filter_regions --mode all --out_group "$tempDir/outgroup.txt" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterRegions.log"
 
     # Verify log files
     verifyNonEmptyReadableFile "$logDir/filterRegions.log"
@@ -2629,6 +2695,78 @@ testFilterRegionsOutgroup()
     verifyEmptyFile $tempDir/samples/$outgroup/var.flt_removed.noheader
 }
 
+# Verify the filter_regions (--mode each) command produces correct results when one of the samples is an outgroup.
+testFilterRegionsOutgroupModeEach()
+{
+    tempDir=$(mktemp -d -p "$SHUNIT_TMPDIR")
+
+    # Copy the supplied test data to a work area:
+    cfsan_snp_pipeline data lambdaVirusInputs $tempDir/originalInputs
+
+    # set the --mode each option
+    cfsan_snp_pipeline data configurationFile $tempDir
+    echo "FilterRegions_ExtraParams=--edge_length 500 --window_size 1000 125 15 --max_snp 3 2 1 --mode each" >> "$tempDir/snppipeline.conf"
+
+    # Run the pipeline, specifying the locations of samples and the reference
+    run_snp_pipeline.sh -c "$tempDir/snppipeline.conf" -m copy -o "$tempDir" -s "$tempDir/originalInputs/samples" "$tempDir/originalInputs/reference/lambda_virus.fasta" &> /dev/null
+
+    # Verify no errors
+    verifyNonExistingFile "$tempDir/error.log"
+
+    # Remember the output when there are no outgroups
+    for d in $tempDir/samples/*; do
+        verifyNonEmptyReadableFile $d/var.flt_preserved.vcf
+        mv $d/var.flt_preserved.vcf $d/var.flt_preserved.vcf.save
+    done
+
+    # Force timestamps to change so outputs are newer than inputs.
+    # The files are small, quickly processed, and timestamps might not differ when we expect they will differ.
+    touch -d '-11 day' $tempDir/reference/*.fasta
+    touch -d '-10 day' $tempDir/reference/*.bt2
+    touch -d  '-9 day' $tempDir/samples/*/*.fastq
+    touch -d  '-8 day' $tempDir/samples/*/reads.sam
+    touch -d  '-7 day' $tempDir/samples/*/reads.unsorted.bam
+    touch -d  '-6 day' $tempDir/samples/*/reads.sorted.bam
+    touch -d  '-5 day' $tempDir/samples/*/reads.sorted.deduped.bam
+    touch -d  '-4 day' $tempDir/samples/*/reads.sorted.deduped.bai
+    touch -d  '-3 day' $tempDir/samples/*/reads.sorted.deduped.indelrealigned.bam
+    touch -d  '-2 day' $tempDir/samples/*/reads.all.pileup
+    touch -d  '-1 day' $tempDir/samples/*/var.flt.vcf
+
+    # Remove unwanted log files
+    logDir=$(echo $(ls -d $tempDir/logs*))
+    rm -rf $logDir
+    mkdir -p $logDir
+
+    # One of the samples is an outgroup
+    outgroup="sample4"
+    echo $outgroup > "$tempDir/outgroup.txt"
+
+    # Re-run cfsan_snp_pipeline filter_region
+    cfsan_snp_pipeline filter_regions --mode each --out_group "$tempDir/outgroup.txt" "$tempDir/sampleDirectories.txt" "$tempDir/reference/lambda_virus.fasta" > "$logDir/filterRegions.log"
+
+    # Verify log files
+    verifyNonEmptyReadableFile "$logDir/filterRegions.log"
+    assertFileNotContains "$logDir/filterRegions.log" "already freshly built"
+    assertFileContains "$logDir/filterRegions.log" "cfsan_snp_pipeline filter_regions finished"
+
+    # Verify all preserved vcf files, except the outgroup itself, are identical when there is an outgroup
+    verifyNonEmptyReadableFile "$tempDir/samples/sample1/var.flt_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample2/var.flt_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample3/var.flt_preserved.vcf"
+    verifyNonEmptyReadableFile "$tempDir/samples/sample4/var.flt_preserved.vcf"
+    assertIdenticalFiles "$tempDir/samples/sample1/var.flt_preserved.vcf" "$tempDir/samples/sample1/var.flt_preserved.vcf.save" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample2/var.flt_preserved.vcf" "$tempDir/samples/sample2/var.flt_preserved.vcf.save" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertIdenticalFiles "$tempDir/samples/sample3/var.flt_preserved.vcf" "$tempDir/samples/sample3/var.flt_preserved.vcf.save" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+    assertDifferentFiles "$tempDir/samples/sample4/var.flt_preserved.vcf" "$tempDir/samples/sample4/var.flt_preserved.vcf.save" --ignore-matching-lines=##fileDate --ignore-matching-lines=##source
+
+    # Verify the outgroup sample preserved vcf matches the original varscan output
+    assertIdenticalFiles $tempDir/samples/$outgroup/var.flt_preserved.vcf $tempDir/samples/$outgroup/var.flt.vcf
+
+    # Verify the outgroup sample removed vcf contains only a header
+    grep -v "^#" $tempDir/samples/$outgroup/var.flt_removed.vcf > $tempDir/samples/$outgroup/var.flt_removed.noheader
+    verifyEmptyFile $tempDir/samples/$outgroup/var.flt_removed.noheader
+}
 
 # Verify the cfsan_snp_pipeline merge_sites script traps attempts to write to unwritable file
 tryMergeSitesPermissionTrap()
@@ -5945,9 +6083,9 @@ testAlreadyFreshOutputs()
     assertFileContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.5"
     assertFileContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.69"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
-    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=37"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
     assertFileContains "$tempDir/samples/sample1/metrics" "snps=46"
-    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=37"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=0"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0"
     assertFileContains "$tempDir/samples/sample1/metrics" "excludedSample="
@@ -6084,9 +6222,9 @@ testAlreadyFreshOutputs()
     assertFileNotContains "$tempDir/samples/sample1/metrics" "aveInsertSize=286.5"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "avePileupDepth=23.69"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=37"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "snps=46"
-    assertFileNotContains "$tempDir/samples/sample1/metrics" "snpsPreserved=37"
+    assertFileNotContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "missingPos=0"
     assertFileNotContains "$tempDir/samples/sample1/metrics" "missingPosPreserved=0"
 
@@ -6197,11 +6335,11 @@ testRunSnpPipelineExcessiveSnps()
     assertFileContains "$tempDir/samples/sample2/metrics" "excludedSamplePreserved=Excluded$"
     assertFileContains "$tempDir/samples/sample1/metrics" "phase1Snps=46"
     assertFileContains "$tempDir/samples/sample2/metrics" "phase1Snps=44"
-    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=37"
-    assertFileContains "$tempDir/samples/sample2/metrics" "phase1SnpsPreserved=44"
+    assertFileContains "$tempDir/samples/sample1/metrics" "phase1SnpsPreserved=32"
+    assertFileContains "$tempDir/samples/sample2/metrics" "phase1SnpsPreserved=41"
     assertFileContains "$tempDir/samples/sample1/metrics" "snps=$"
     assertFileContains "$tempDir/samples/sample2/metrics" "snps=$"
-    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=37$"
+    assertFileContains "$tempDir/samples/sample1/metrics" "snpsPreserved=32$"
     assertFileContains "$tempDir/samples/sample2/metrics" "snpsPreserved=$"
     assertFileContains "$tempDir/samples/sample1/metrics" "missingPos=$"
     assertFileContains "$tempDir/samples/sample2/metrics" "missingPos=$"

@@ -20,11 +20,10 @@ History
   datasets. In some cases, older versions of the SNP Pipeline incorrectly called the reference
   allele when the snp call failed one or more filters. This change only affects VCF files. The
   snp matrix file was unaffected by the software defect.
-* The default behavior of the SNP Filtering does not filter dense regions found in a sample from
-  all the other samples anymore.  Instead, the dense regions are filtered from each sample
-  independently of all the other samples. This change increases the snp distance between samples.
-  The old behavior removing dense snp regions from all samples is still available by customizing
-  the configuration file.  See :ref:`snp-filtering-label` for a detailed explanation.
+* Added the capability to control whether dense regions are filtered from each sample
+  independently or removed from all samples. The default behavior removes dense snp
+  regions from all samples, matching the behavior of previous releases.  See :ref:`snp-filtering-label`
+  for a detailed explanation.
 
 
 
