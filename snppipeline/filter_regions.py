@@ -113,7 +113,9 @@ def filter_regions(args):
             Default is 1000.
         maxSNP: the maximum number of SNPs allowed in a window of a size defined in
             windowSize. Default is 3.
-        acrossSamples: Dense regions found in any sample are filtered from all samples.
+        mode:
+            all = Dense regions found in any sample are filtered from all samples.
+            each = Dense regions found in any sample are filtered independently from samples.
 
     Raises:
 
@@ -138,7 +140,7 @@ def filter_regions(args):
     window_size_list = args.windowSizeList
     max_num_snps_list = args.maxSnpsList
     out_group_list_path = args.outGroupFile
-    filter_across_samples = args.acrossSamples
+    filter_across_samples = args.mode == "all"
 
     #==========================================================================
     # Validate inputs
@@ -260,8 +262,6 @@ def filter_regions_across_samples(list_of_vcf_files, contig_length_dict, sorted_
     # Key is the contig ID, and the value is a list of bad region tuples (start_position, end_position).
     bad_regions_dict = dict()
     for vcf_file_path in list_of_vcf_files:
-        if not need_rebuild_dict[vcf_file_path]:
-            continue
         try:
             vcf_reader_handle = open(vcf_file_path, 'r')
             vcf_reader = vcf.Reader(vcf_reader_handle)
