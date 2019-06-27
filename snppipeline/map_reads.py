@@ -184,7 +184,7 @@ def map_reads(args):
 
             # Don't use the -i 1000 option if the fastq file is unpaired
             if not sample_fastq_file2:
-                smalt_align_params = re.sub("-i[ ]+[0-9]+", '', smalt_align_extra_params) # regex substitute
+                smalt_align_extra_params = re.sub("-i[ ]+[0-9]+", '', smalt_align_extra_params) # regex substitute
 
             command_line = "smalt map " + smalt_align_extra_params + " " + reference_base_path + " " + sample_fastq_file1 + " " + (sample_fastq_file2 or "")
 
