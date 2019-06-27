@@ -15,6 +15,7 @@ from snppipeline import command
 from snppipeline import utils
 from snppipeline.utils import verbose_print
 
+
 def merge_vcfs(args):
     """Merge the per-sample VCF files.
 
@@ -93,7 +94,7 @@ def merge_vcfs(args):
     #==========================================================================
 
     # If there is only one good sample, just copy the consensus VCF file to the snpma.vcf file
-    if len(good_vcf_files) ==  1:
+    if len(good_vcf_files) == 1:
         shutil.copy(good_vcf_files[0], merged_vcf_file)
         return
 

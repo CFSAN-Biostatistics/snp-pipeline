@@ -11,7 +11,6 @@ from jobrunner import JobRunner
 from jobrunner import JobRunnerException
 import os
 import psutil
-import re
 import shutil
 import subprocess
 import sys
@@ -272,7 +271,7 @@ def validate_properties(properties):
                            "MaxSnps", "RemoveDuplicateReads", "EnableLocalRealignment",
                            ]
     for p in required_parameters:
-        if not p in properties:
+        if p not in properties:
             utils.fatal_error(message)
 
 
@@ -478,7 +477,7 @@ def run(args):
         utils.report_error("CLASSPATH is not configured with the path to VarScan.jar")
         found_all_dependencies = False
 
-    picard_required = os.environ["RemoveDuplicateReads"] == "true" or  os.environ["EnableLocalRealignment"] == "true"
+    picard_required = os.environ["RemoveDuplicateReads"] == "true" or os.environ["EnableLocalRealignment"] == "true"
     if picard_required:
         jar_file_path = utils.find_path_in_path_list("picard", "CLASSPATH")
         if not jar_file_path:
@@ -514,7 +513,6 @@ def run(args):
         utils.fatal_error("Check the SNP Pipeline installation instructions here: http://snp-pipeline.readthedocs.org/en/latest/installation.html")
     else:
         print("OK")
-
 
     # Process the sample directory command line option
     # TODO: detect broken fastq symlinks

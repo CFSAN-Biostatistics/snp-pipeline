@@ -14,6 +14,7 @@ if std_encoding is None:
 if std_encoding is None:
     std_encoding = "utf-8"
 
+
 def run(command, outfile=None):
     """Run a specified command as a separate process.
 

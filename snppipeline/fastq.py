@@ -110,6 +110,7 @@ ILLUMINA_MISEQ_REGEX = re.compile(ILLUMINA_MISEQ_PATTERN)
 ILLUMINA_HISEQ_REGEX = re.compile(ILLUMINA_HISEQ_PATTERN)
 ILLUMINA_NEXTSEQ_REGEX = re.compile(ILLUMINA_NEXTSEQ_PATTERN)
 
+
 def instrument_name_to_instrument_type(instrument_name):
     """Given an instrument_name, determine the sequencing instrument type.
 
@@ -210,6 +211,7 @@ ILLUMINA_FASTQ_SEQ_ID_REGEX4 = re.compile("@[SE]RR[A-Z0-9\-.]+[ _]" + ILLUMINA_I
 
 # Named tuple to contain fastq metadata
 FastqSeqTags = collections.namedtuple("FastqSeqTags", "platform instrument_type instrument run flow_cell lane")
+
 
 def parse_seqid_line(seqid_line):
     """Examine a fastq sequence id line and extract various metadata tags.
@@ -419,6 +421,7 @@ def extract_metadata_tags(fastq_path):
 
 # Named tuple to contain read group tags parsed from fastq metadata
 ReadGroupTags = collections.namedtuple("ReadGroupTags", "ID SM LB PL PU")
+
 
 def construct_read_group_tags(fastq_path, sample_name):
     """Examine a fastq file and construct read group tags from the

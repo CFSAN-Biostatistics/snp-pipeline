@@ -8,7 +8,6 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import os
-import psutil
 import re
 import shutil
 import sys
@@ -177,7 +176,7 @@ def map_reads(args):
             version_str = utils.extract_version_str("smalt", "smalt version")
 
             # Substitute the default parameters if the user did not specify smalt parameters
-            os.environ["SmaltAlign_ExtraParams"] = os.environ.get("SmaltAlign_ExtraParams") or  "-O"
+            os.environ["SmaltAlign_ExtraParams"] = os.environ.get("SmaltAlign_ExtraParams") or "-O"
 
             # Set the number of threads to use
             utils.configure_process_threads("SmaltAlign_ExtraParams", "-n", num_threads, None)
@@ -324,7 +323,6 @@ def map_reads(args):
             utils.sample_error_on_missing_file(bam_index_file, "samtools index")
             verbose_print("")
 
-
     #==========================================================================
     # Identify targets for realignment
     #==========================================================================
@@ -336,7 +334,6 @@ def map_reads(args):
         if not args.forceFlag and not needs_rebuild:
             verbose_print("# Realign targets file is already freshly created for %s.  Use the -f option to force a rebuild." % sample_id)
         else:
-            classpath = os.environ.get("CLASSPATH")
             gatk_jvm_extra_params = os.environ.get("GatkJvm_ExtraParams") or ""
             tmpdir = os.environ.get("TMPDIR") or os.environ.get("TMP_DIR")
             if tmpdir and "-Djava.io.tmpdir" not in gatk_jvm_extra_params:
@@ -344,9 +341,9 @@ def map_reads(args):
 
             # Set the number of threads to use
             utils.configure_process_threads("RealignerTargetCreator_ExtraParams", ["-nt", "--num_threads"], num_threads, None)
-            realigner_target_creator_extra_params= os.environ["RealignerTargetCreator_ExtraParams"]
+            realigner_target_creator_extra_params = os.environ["RealignerTargetCreator_ExtraParams"]
 
-            command_line = "java " + gatk_jvm_extra_params + " -jar " + gatk_jar_file_path + " -T RealignerTargetCreator -R " + reference_file_path + " -I " + input_file + " -o " + realign_targets_file  + ' ' + realigner_target_creator_extra_params
+            command_line = "java " + gatk_jvm_extra_params + " -jar " + gatk_jar_file_path + " -T RealignerTargetCreator -R " + reference_file_path + " -I " + input_file + " -o " + realign_targets_file + ' ' + realigner_target_creator_extra_params
             verbose_print("# Identify targets for realignment.")
             verbose_print("# %s %s" % (utils.timestamp(), command_line))
             verbose_print("# %s" % gatk_version_str)
@@ -371,7 +368,7 @@ def map_reads(args):
                 gatk_jvm_extra_params += " -Djava.io.tmpdir=" + tmpdir
 
             indel_realigner_extra_params = os.environ.get("IndelRealigner_ExtraParams") or ""
-            command_line = "java " + gatk_jvm_extra_params + " -jar " + gatk_jar_file_path + " -T IndelRealigner -R " + reference_file_path + " -targetIntervals " + realign_targets_file + " -I " + input_file + " -o " + output_file  + ' ' + indel_realigner_extra_params
+            command_line = "java " + gatk_jvm_extra_params + " -jar " + gatk_jar_file_path + " -T IndelRealigner -R " + reference_file_path + " -targetIntervals " + realign_targets_file + " -I " + input_file + " -o " + output_file + ' ' + indel_realigner_extra_params
             verbose_print("# Realign around indels")
             verbose_print("# %s %s" % (utils.timestamp(), command_line))
             verbose_print("# %s" % gatk_version_str)

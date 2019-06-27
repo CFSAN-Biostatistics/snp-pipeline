@@ -10,12 +10,13 @@ import doctest
 import glob
 import os
 import sys
-if sys.version_info < (2,7,):
+if sys.version_info < (2, 7,):
     import unittest2 as unittest
 else:
     import unittest
 
 import snppipeline as source_package
+
 
 def load_module_by_path(path):
     """Load a python module from its path.
@@ -57,6 +58,7 @@ def file_contains_doctests(path):
                 return True
     return False
 
+
 def load_tests(loader, tests, pattern):
     """Run doctests for all modules"""
     source_dir = os.path.dirname(source_package.__path__[0])
@@ -68,6 +70,7 @@ def load_tests(loader, tests, pattern):
         module = load_module_by_path(python_source_file)
         tests.addTests(doctest.DocTestSuite(module))
     return tests
+
 
 if __name__ == "__main__":
     unittest.main()

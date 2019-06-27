@@ -254,6 +254,7 @@ def mkdir_p(path):
         else:
             raise
 
+
 def remove_file(filename):
     """Remove a file without complaints if the file does not exist.
 
@@ -1551,4 +1552,3 @@ def find_path_in_path_list(search_item, env_var, case_sensitive=False):
             return path
 
     return None
-

@@ -104,7 +104,6 @@ def index_ref(args):
         command.run(command_line, sys.stdout)
         utils.global_error_on_missing_file(target_file, "samtools faidx")
 
-
     # Create the reference dict file used later by GATK
     enable_local_realignment = os.environ.get("EnableLocalRealignment", "true").lower() == "true"
     if enable_local_realignment:

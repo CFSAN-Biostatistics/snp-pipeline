@@ -3,7 +3,6 @@
 from __future__ import print_function
 import sys
 import unittest
-import argparse
 import filecmp
 import os
 import subprocess
@@ -61,7 +60,6 @@ class SnpPipelineTest(unittest.TestCase):
             for subdir in sorted(subdir_list):
                 path_file_object.write("%s\n" % subdir)
 
-
     def compare_file(self, file_to_compare, not_match_str_list=None):
         """Compare a generated file to the expected results.
         """
@@ -71,18 +69,17 @@ class SnpPipelineTest(unittest.TestCase):
         correct_result_file = os.path.join(self.directory_correct, file_to_compare)
         self.assertTrue(os.path.isfile(correct_result_file), "The known correct result file does not exist: %s" % file_to_compare)
         if not_match_str_list:
-            correct_result_file2 = os.path.join(self.directory_correct, file_to_compare+"2")
+            correct_result_file2 = os.path.join(self.directory_correct, file_to_compare + "2")
             grep_not_matching(correct_result_file, correct_result_file2, not_match_str_list)
             correct_result_file = correct_result_file2
 
-            result_file2 = os.path.join(self.directory_run_result, file_to_compare+"2")
+            result_file2 = os.path.join(self.directory_run_result, file_to_compare + "2")
             grep_not_matching(result_file, result_file2, not_match_str_list)
             result_file = result_file2
 
         # Compare files
         match = filecmp.cmp(correct_result_file, result_file, shallow=False)
         self.assertTrue(match, "Incorrect file contents: %s" % file_to_compare)
-
 
     def run_function_test(self, funct, args, file_to_compare, not_match_str_list=None):
         """Test one function and compare the generated file to the expected results.
@@ -135,8 +132,6 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         SnpPipelineTest.setUpOnce(self)
         SnpPipelineLambdaVirusTest.all_setup_done = True
 
-
-
     @staticmethod
     def tearDownAll():
         """
@@ -145,10 +140,8 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         """
         TempDirectory.cleanup_all()
 
-
     def __init__(self, *args):
         super(SnpPipelineLambdaVirusTest, self).__init__(*args)
-
 
     def setUp(self):
         """Setup"""
@@ -164,10 +157,9 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
                        os.path.join(self.__class__.directory_run_result, "reference", "lambda_virus.fasta")
         args = cfsan_snp_pipeline.parse_command_line(command_line)
 
-        for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
+        for dir in ['samples/sample1', 'samples/sample2', 'samples/sample3', 'samples/sample4']:
             self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, os.path.join(dir, 'var.flt_preserved.vcf'))
             self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, os.path.join(dir, 'var.flt_removed.vcf'))
-
 
     def test_2_merge_sites(self):
         """Run merge_sites and verify snplist.txt contains expected contents.
@@ -177,7 +169,6 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
                        os.path.join(self.__class__.directory_run_result, 'filteredSampleDirectories.txt')
         args = cfsan_snp_pipeline.parse_command_line(command_line)
         self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'snplist.txt')
-
 
     def test_3_call_consensus(self):
         """Run call_consensus and verify consensus.fasta and consensus.vcf contain expected contents for each sample.
@@ -191,7 +182,7 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 
         ignore_lines = ["##fileDate", "##source"]
 
-        for dir in ['samples/sample1', 'samples/sample2','samples/sample3','samples/sample4']:
+        for dir in ['samples/sample1', 'samples/sample2', 'samples/sample3', 'samples/sample4']:
             args.allPileupFile = os.path.join(self.__class__.directory_run_result, dir, 'reads.all.pileup')
             args.consensusFile = os.path.join(self.__class__.directory_run_result, dir, 'consensus.fasta')
             args.vcfFileName = None
@@ -199,15 +190,13 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
             args.vcfFileName = 'consensus.vcf'
             self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, os.path.join(dir, 'consensus.vcf'), ignore_lines)
 
-
     def test_4_create_snp_matrix(self):
         """Run snp_matrix and verify snpma.fasta contains expected contents.
         """
         command_line = "snp_matrix -f -o " + os.path.join(self.__class__.directory_run_result, 'snpma.fasta') + ' ' + \
-                        os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt')
+                       os.path.join(self.__class__.directory_run_result, 'sampleDirectories.txt')
         args = cfsan_snp_pipeline.parse_command_line(command_line)
         self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'snpma.fasta')
-
 
     def test_5_create_snp_reference_seq(self):
         """Run create_snp_reference_seq and verify referenceSNP.fasta contains expected contents.
@@ -218,7 +207,6 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         args = cfsan_snp_pipeline.parse_command_line(command_line)
         self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'referenceSNP.fasta')
 
-
     def test_6_calculate_snp_distances(self):
         """Run calculate_snp_distances and verify snp_distance_pairwise.tsv contains expected contents.
         """
@@ -226,7 +214,6 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
                        "--pairs " + os.path.join(self.__class__.directory_run_result, 'snp_distance_pairwise.tsv')
         args = cfsan_snp_pipeline.parse_command_line(command_line)
         self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'snp_distance_pairwise.tsv')
-
 
     def test_7_calculate_snp_distances(self):
         """Run calculate_snp_distances and verify snp_distance_matrix.tsv contains expected contents.
@@ -236,12 +223,9 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
         args = cfsan_snp_pipeline.parse_command_line(command_line)
         self.run_function_test(cfsan_snp_pipeline.run_command_from_args, args, 'snp_distance_matrix.tsv')
 
-
     def test_999(self):
         """Tear down"""
         self.tearDownAll()
-
-
 
 
 #TODO uncomment the agona test, and maybe make it optional depending on
@@ -308,5 +292,3 @@ class SnpPipelineLambdaVirusTest(SnpPipelineTest):
 
 if __name__ == "__main__":
     unittest.main()
-
-

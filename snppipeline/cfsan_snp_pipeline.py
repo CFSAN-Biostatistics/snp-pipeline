@@ -30,6 +30,9 @@ from snppipeline import snp_reference
 from snppipeline import collect_metrics
 from snppipeline import combine_metrics
 
+# Ignore flake8 errors in this module
+# flake8: noqa
+
 #==============================================================================
 # Command line driver
 #==============================================================================
