@@ -29,6 +29,7 @@ from snppipeline import distance
 from snppipeline import snp_reference
 from snppipeline import collect_metrics
 from snppipeline import combine_metrics
+from snppipeline import purge
 
 # Ignore flake8 errors in this module
 # flake8: noqa
@@ -198,6 +199,7 @@ def parse_argument_list(argv):
                       each of the sample directories during the
                       execution of the SNP Pipeline""")
 
+    subparser.add_argument("--purge", dest="purge", action="store_true", help='Purge the intermediate output files (the entire "samples" directory) when the pipeline completes successfully.')
     subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=run.run)
@@ -507,6 +509,17 @@ $ cfsan_snp_pipeline data lambdaVirusInputs testLambdaVirus
     subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
     subparser.set_defaults(func=combine_metrics.combine_metrics)
     subparser.set_defaults(excepthook=utils.handle_global_exception)
+
+    # -------------------------------------------------------------------------
+    # Create the parser for the "purge" command
+    # -------------------------------------------------------------------------
+    description = """Purge the intermediate output files in the "samples" directory upon successful completion of a SNP Pipeline run if no errors are encountered."""
+    subparser = subparsers.add_parser("purge", help="Purge the intermediate output files", description=description, formatter_class=formatter_class)
+    subparser.add_argument(dest="work_dir",    type=str, help='Path to the working directory containing the "samples" directory to be recursively deleted')
+    subparser.add_argument("-v", "--verbose", dest="verbose",   type=int, default=1, metavar="0..5", help="Verbose message level (0=no info, 5=lots)")
+    subparser.add_argument("--version", action="version", version="%(prog)s version " + __version__)
+    subparser.set_defaults(func=purge.purge)
+    subparser.set_defaults(excepthook=None)
 
     # -------------------------------------------------------------------------
     # parse the args

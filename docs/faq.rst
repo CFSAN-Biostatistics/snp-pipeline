@@ -62,25 +62,25 @@ install Biopython.  See the :ref:`installation-label` section of this documentat
 A: The SNP Pipeline includes sets of test data with result files.  You can run the pipeline against the
 test data to verify correct results.  Follow the lambda virus workflow steps here: :ref:`all-in-one-workflow-lambda`.
 
-Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix
+Upon successful completion of the pipeline, the snplist.txt file should have 166 entries.  The SNP Matrix
 can be found in snpma.fasta.  It should have the following contents::
 
     >sample1
     AGCACCGGGACCCACGGCGCACGCAAAGATCCGAATTGCAGGGCGTACCTGGACCCCGGT
-    GACGGGGGATCGGGGACTCTTGGTGAGGAACTAAAACGAACATCCACGTTTTCATGGCGA
-    CTGCTTGCCAGGTGTCAGCACATTCCCTATATCGGTGGACACGTA
+    GACGGGGGATCGGGGACTCTTGGTCGAGGAACTAAAACGAACATCCACGTTTTCATGGCG
+    ACTGCTTGCCAGGTGTCAGCACATTCCCTATATCGGTGGACACGTA
     >sample2
     GGCGCTAGGAGGCAAGCCTTGGTCGTGGTTAATAGTTACAAGGCGTGCGCGTACTGCCGT
-    CTCCTACTATCTCTGCCGCCTCTCGCGATCCGGACCGCAACACCAACTCTCTGGTGGCAT
-    CCTCTGAATCGTCGTGAGCATCTCAATTATATATTCGTCCGCGCG
+    CTCCTACTATCTCTGCCGCCTCTCCGCGATCCGGACCGCAACACCAACTCTCTGGTGGCA
+    TCCTCTGAATCGTCGTGAGCATCTCAATTATATATTCGTCCGCGCG
     >sample3
     GGCGCTAGGAGGTACGCTTCGCGTGTGGATCAGCGCTACGGTGCCTATGCGTGACCCGCG
-    GAACTGGGTTCGCGTAAGGCAGTTCAGGTACGGCAACGTAGATCAAAGTTTAGAAACCAT
-    ACTCGTAATCCGCCTGACGCTACTCATTATGTATGTGGACGCCTG
+    GAACTGGGTTCGCGTAAGGCAGTTTCAGGTACGGCAACGTAGATCAAAGT-TAGAAACCA
+    TACTCGTAATCCGCCTGACGCTACTCATTATGTATGTGGACGCCTG
     >sample4
     GAGGTTAACTGGCTCACCTCGCGCGTGTAACAGAGTAATAGGTTGAACGCCTACCCTGGT
-    GACCTGGGACGGCGGACGCCTGTTGAAGTAAGGAAACGATCCTAAGCGTCTTGATGGGAT
-    CCTATTAATCGGCGCGTGCATATTCATCGGACATGTCGAGGGGTG
+    GACCTGGGACGGCGGACGCCTGTTCGAAGTAAGGAAACGATCCTAAGCGTCTTGATGGGA
+    TCCTATTAATCGGCGCGTGCATATTCATCGGACATGTCGAGGGGTG
 
 Note: the expected pipeline results are also included in the distribution.  To fetch the expected result files::
 
@@ -98,8 +98,8 @@ To fetch the expected result files::
 A: Different versions of the executable tools can generate different results.  The test data was generated with
 these versions:
 
-	* bowtie2 2.2.9
-	* samtools 1.3.1
+	* bowtie2 2.3.4.1
+	* samtools 1.8
 	* varscan 2.3.9
 
 **Q: How can I run the SNP Pipeline with a mix of paired and unpaired samples?**

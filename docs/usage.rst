@@ -393,8 +393,8 @@ Step 2 - Run the SNP Pipeline::
 
 Step 3 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 165 entries, and
-the snplist_preserved.txt should have 136 entries. The SNP Matrix can be found in snpma.fasta
+Upon successful completion of the pipeline, the snplist.txt file should have 166 entries, and
+the snplist_preserved.txt should have 137 entries. The SNP Matrix can be found in snpma.fasta
 and snpma_preserved.fasta.  The corresponding reference bases are in the referenceSNP.fasta
 and referenceSNP_preserved.fasta::
 
@@ -476,8 +476,8 @@ Step 2 - Run the SNP Pipeline::
 
 Step 3 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 3121 entries, and the snplist_preserved.txt
-should have 249 entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference bases are in the files
+Upon successful completion of the pipeline, the snplist.txt file should have 2620 entries, and the snplist_preserved.txt
+should have 233 entries.  The SNP Matrix can be found in snpma.fasta.  The corresponding reference bases are in the files
 referenceSNP.fasta and referenceSNP_preserved.fasta::
 
     # Verify the result files were created
@@ -577,8 +577,8 @@ Launch the pipeline::
 
 Step 3 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 11,496
-entries, and the snplist_preserved.txt file should have 1,110 entries. The SNP Matrix
+Upon successful completion of the pipeline, the snplist.txt file should have 10,102
+entries, and the snplist_preserved.txt file should have 1,040 entries. The SNP Matrix
 can be found in snpma.fasta and snpma_preserved.fasta.  The corresponding reference
 bases are in the referenceSNP.fasta and referenceSNP_preserved.fasta::
 
@@ -725,7 +725,7 @@ Step 14 - Compute the SNP distances between samples::
 
 Step 15 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 165 entries.  The SNP Matrix
+Upon successful completion of the pipeline, the snplist.txt file should have 166 entries.  The SNP Matrix
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     # Verify the result files were created
@@ -866,7 +866,7 @@ Step 14 - Compute the SNP distances between samples::
 
 Step 15 - View and verify the results:
 
-Upon successful completion of the pipeline, the snplist.txt file should have 3121 entries.  The SNP Matrix
+Upon successful completion of the pipeline, the snplist.txt file should have 2620 entries.  The SNP Matrix
 can be found in snpma.fasta.  The corresponding reference bases are in the referenceSNP.fasta file::
 
     # Verify the result files were created

@@ -300,6 +300,8 @@ def run(args):
             Relative or absolute path to the parent directory of all the sample directories.
         samplesFile : str
             Relative or absolute path to a file listing all of the sample directories.
+       purge : bool
+            Purge the intermediate output files when the pipeline completes successfully.
     """
     global log_dir
     global job_queue_mgr
@@ -790,7 +792,24 @@ def run(args):
     command_line = "cfsan_snp_pipeline combine_metrics" + force_flag + "-n metrics -o " + output_file + ' ' + extra_params + ' ' + sample_dirs_file
     combine_metrics_job_id = runner.run(command_line, "combineMetrics", log_file, wait_for_array=[job_id_collect_metrics])
 
-    # Step 14 - Notify user of any non-fatal errors accumulated during processing
+    # Decide whether to purge the intermediate output files upon successful completion.
+    # Case 1: we are running on the HPC.  We always need to submit the purge task. It will decide to do nothing if there were errors.
+    if job_queue_mgr is not None: # HPC
+        need_purge = args.purge  # need to submit the purge task, it might decide to do nothing if there were errors
+    # Case 2: we are running locally and we know right now whether there were any errors.
+    #     Case 2a: We are configured to stop on error, but the fact that we got this far means there were no errors -- so we need to purge.
+    #     Case 2b: We are configured to ignore errors, so now we look for evidence of errors and purge if there were no errors.
+    else:
+        errors_detected = os.path.isfile(error_output_file)
+        need_purge = args.purge and not errors_detected
+
+    if need_purge:
+        progress("Step 14 - Purge the intermediate output files")
+        log_file = os.path.join(log_dir, "purge.log")
+        command_line = "cfsan_snp_pipeline purge " + work_dir
+        purge_job_id = runner.run(command_line, "purge", log_file, wait_for=[combine_metrics_job_id])
+
+    # Step 15 - Notify user of any non-fatal errors accumulated during processing
     if os.path.isfile(error_output_file) and os.path.getsize(error_output_file) > 0 and not stop_on_error:
         print("\nThere were errors processing some samples.\nSee the log file %s for a summary of errors." % error_output_file, file=sys.stderr)
 

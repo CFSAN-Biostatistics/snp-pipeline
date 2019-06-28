@@ -126,7 +126,13 @@ echo --------------------------- >> x.txt
 echo >> x.txt; echo :: >> x.txt; echo >> x.txt
 cfsan_snp_pipeline combine_metrics -h | sed 's/^/  /' >> x.txt
 
-cat x.txt | 
+echo >> x.txt
+echo purge >> x.txt
+echo --------------------------- >> x.txt
+echo >> x.txt; echo :: >> x.txt; echo >> x.txt
+cfsan_snp_pipeline purge -h | sed 's/^/  /' >> x.txt
+
+cat x.txt |
 sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-2.7/bin/~~' | \
 sed 's~/home/steven.davis/.virtualenvs/snp-pipeline-3.5/bin/~~' | \
 grep -v "# Command           :" | \

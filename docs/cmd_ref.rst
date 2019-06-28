@@ -36,6 +36,7 @@ cfsan_snp_pipeline
       snp_reference    Write reference bases at SNP locations to a fasta file
       collect_metrics  Collect quality and SNP metrics for a sample
       combine_metrics  Merge the per-sample metrics
+      purge            Purge the intermediate output files
   
   optional arguments:
     -h, --help         show this help message and exit
@@ -49,7 +50,7 @@ run
 ::
 
   usage: cfsan_snp_pipeline run [-h] [-f] [-m MODE] [-c FILE] [-Q grid|torque]
-                                [-o DIR] (-s DIR | -S FILE) [-v 0..5]
+                                [-o DIR] (-s DIR | -S FILE) [--purge] [-v 0..5]
                                 [--version]
                                 referenceFile
   
@@ -135,6 +136,9 @@ run
                                 -m option, additional files will be written to
                                 each of the sample directories during the
                                 execution of the SNP Pipeline (default: None)
+    --purge               Purge the intermediate output files (the entire
+                          "samples" directory) when the pipeline completes
+                          successfully. (default: False)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
@@ -262,8 +266,8 @@ filter_regions
   usage: cfsan_snp_pipeline filter_regions [-h] [-f] [-n NAME] [-l EDGE_LENGTH]
                                            [-w [WINDOW_SIZE [WINDOW_SIZE ...]]]
                                            [-m [MAX_NUM_SNPs [MAX_NUM_SNPs ...]]]
-                                           [-g OUT_GROUP] [-a] [-v 0..5]
-                                           [--version]
+                                           [-g OUT_GROUP] [-M {all,each}]
+                                           [-v 0..5] [--version]
                                            sampleDirsFile refFastaFile
   
   Remove abnormally dense SNPs from the input VCF file, save the reserved SNPs
@@ -294,8 +298,10 @@ filter_regions
                           Relative or absolute path to the file indicating
                           outgroup samples, one sample ID per line. (default:
                           None)
-    -a, --all             Dense regions found in any sample are filtered from
-                          all of the samples. (default: False)
+    -M {all,each}, --mode {all,each}
+                          Control whether dense snp regions found in any sample
+                          are filtered from all of the samples, or each sample
+                          independently. (default: all)
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
@@ -314,7 +320,7 @@ merge_sites
                                         sampleDirsFile filteredSampleDirsFile
   
   Combine the SNP positions across all samples into a single unified SNP list
-  file identifing the positions and sample names where SNPs were called.
+  file identifying the positions and sample names where SNPs were called.
   
   positional arguments:
     sampleDirsFile        Relative or absolute path to file containing a list of
@@ -633,6 +639,26 @@ combine_metrics
                           metrics file. (default: metrics.tsv)
     -s, --spaces          Emit column headings with spaces instead of
                           underscores (default: False)
+    -v 0..5, --verbose 0..5
+                          Verbose message level (0=no info, 5=lots) (default: 1)
+    --version             show program's version number and exit
+
+purge
+---------------------------
+
+::
+
+  usage: cfsan_snp_pipeline purge [-h] [-v 0..5] [--version] work_dir
+  
+  Purge the intermediate output files in the "samples" directory upon successful
+  completion of a SNP Pipeline run if no errors are encountered.
+  
+  positional arguments:
+    work_dir              Path to the working directory containing the "samples"
+                          directory to be recursively deleted
+  
+  optional arguments:
+    -h, --help            show this help message and exit
     -v 0..5, --verbose 0..5
                           Verbose message level (0=no info, 5=lots) (default: 1)
     --version             show program's version number and exit
