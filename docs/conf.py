@@ -155,6 +155,14 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# Table width fix for Read the Docs Sphinx theme
+# See https://rackerlabs.github.io/docs-rackspace/tools/rtd-tables.html
+html_context = {
+    'css_files': [
+        '_static/theme_overrides.css',  # override wide tables in RTD theme
+        ],
+     }
+
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 #html_last_updated_fmt = '%b %d, %Y'
