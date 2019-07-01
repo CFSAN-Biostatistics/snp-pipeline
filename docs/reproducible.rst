@@ -135,30 +135,6 @@ On one of our data sets with 116 samples, we observed these results:
 * 36030 snps found when pileups generated with SAMtools 0.1.18
 * 38154 snps found when pileups generated with SAMtools 0.1.19
 
-Correct Results
-===============
-
-As we have constructed our pipeline, we have found problems in
-our own software and in the various packages we use. To this point we
-have found one problem worth mentioning here.
-
-**SAMtools snp pileup difference from genome-wide pileup**
-
-An important processing step in the SNP Pipeline is creation of a pileup
-file per sample containing read pileups at the positions where snps were called
-in *any* of the samples.  This pileup file should be a subset of the genome-wide
-pileup for each sample.  However, the SAMtools software does not generate
-pileup records exactly matching the genome-wide pileup when given a list of
-positions for which the pileup should be generated.  The differences are
-particularly evident at the first few snp positions and cause missing
-values in the SNP matrix. We first noticed this problem when the first or
-last position of the reference sequence was identified as a variant site.
-To work around this problem, the SNP Pipeline
-internally extracts the desired pileup records from the genome-wide pileup.
-
-This SAMtools issue has been reported here: https://github.com/samtools/samtools/issues/282
-
-
 Test Data Sets
 ==============
 

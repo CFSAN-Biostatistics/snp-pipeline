@@ -19,7 +19,7 @@ your user area instead of installing into your global site packages, do this::
 **Q: The SNP Pipeline cannot find VarScan.  How should I install it?**
 
 A: Download the VarScan jar file from SourceForge.  Put the jar file anywhere.  You need read-access to the
-jar file, but not execute-access.  The supplied shell scripts expect the CLASSPATH environment variable to
+jar file, but not execute-access.  Set the CLASSPATH environment variable to
 specify the path to the VarScan jar file.  The CLASSPATH should include the filename, not just the directory.
 Define it like this in your .bashrc file::
 
@@ -54,8 +54,8 @@ Running the Pipeline
 **Q: Nothing works.**
 
 A: Make sure you have the proper dependencies on your path.  Modify your path if necessary to include bowtie,
-samtools, and bcftools.  See the question above about installing VarScan.  In some cases, you may need to manually
-install Biopython.  See the :ref:`installation-label` section of this documentation.
+samtools, and bcftools.  See the question above about installing VarScan.
+See the :ref:`installation-label` section of this documentation.
 
 **Q: How can I verify the pipeline is installed and working properly?**
 
@@ -104,7 +104,7 @@ these versions:
 
 **Q: How can I run the SNP Pipeline with a mix of paired and unpaired samples?**
 
-A: This is handled automatically if you use the run_snp_pipeline.sh script.  If you are running the map_reads command,
+A: This is handled automatically if you use the ``run`` command.  If you are running the ``map_reads`` command,
 run the script once per sample with either 1 fastq file or 2 fastq files.
 For example::
 
@@ -119,7 +119,7 @@ For example::
 
 A: The SNP Pipeline detects freshly built result files and does not rebuild them.  Result files are
 not rebuilt when the file timestamp is newer than all of the input files.  To force a rebuild,
-specfify the ``-f`` option on the command line of any of the tools.  To re-run only some of the steps,
+specify the ``-f`` option on the command line of any of the tools.  To re-run only some of the steps,
 you can either delete the output files for that step or touch the input files for that step.  All
 subsequent processing steps will also be re-run since their results will be out-of-date.
 
@@ -173,7 +173,7 @@ parameters.  This is the recommended way to control CPU cores per process for al
 If you want to allocate a different number of CPU cores for different processes, you can customize
 each command.  For example, you can set the number of bowtie threads with the ``-p`` option and
 the number of samtools threads with the ``-@`` option.  Set the options either in the configuration
-file if you are running run_snp_pipeline.sh, or in the environment variables if you are running the
+file if you are using the ``run`` command, or in the environment variables if you are running the
 map_reads command directly.  ::
 
     Bowtie2Align_ExtraParams = "-p 20"
@@ -196,7 +196,7 @@ processes depends on the :ref:`MaxCpuCores-label` parameter setting.  For exampl
 **Q: How can I control the amount of memory that is used by the Picard, GATK, and VarScan java virtual machines?**
 
 A: The amount of memory used by the java VM can be set by using the ``-Xmx`` java VM option.  Set the
-option either in the configuration file if you are running run_snp_pipeline.sh, or in the VarscanJvm_ExtraParams
+option either in the configuration file if you are using the ``run`` command, or in the VarscanJvm_ExtraParams
 environment variable if you are running the call_sites command directly. For example, to set maximum java heap
 size to 3000 MB::
 

@@ -9,10 +9,10 @@ Each step in the pipeline has a corresponding parameter allowing you to set one
 or more options for each tool in the pipeline.
 
 Parameters can be configured either in a configuration file if you are using the
-``run_snp_pipeline.sh`` script, or in environment variables.
+``run`` command, or in environment variables.
 
-The pipeline comes with a default configuration file.  When you run the run_snp_pipeline.sh
-script without specifying a configuration file, it automatically uses the
+The pipeline comes with a default configuration file.  When you use the ``run``
+command without specifying a configuration file, it automatically uses the
 default supplied configuration file.
 
 To get a copy of the default configuration file, run the following command.  This
@@ -21,14 +21,14 @@ will create a file called ``snppipeline.conf``::
     cfsan_snp_pipeline data configurationFile
 
 To customize the pipeline behavior, edit the configuration file and pass the file to
-the run_snp_pipeline.sh script::
+the ``run`` command::
 
-    run_snp_pipeline.sh -c snppipeline.conf ...
+    cfsan_snp_pipeline run -c snppipeline.conf ...
 
-When the run_snp_pipeline.sh script runs, it copies the configuration file to the
+When the ``run`` command executes, it copies the configuration file to the
 log directory for the run, capturing the configuration used for each run.
 
-If you decide not to use the run_snp_pipeline.sh script, you can still customize the
+If you decide not to use the ``run`` command, you can still customize the
 behavior of the pipeline tools, but you will need to set (and export) environment
 variables with the same names as the parameters in the configuration file.
 
@@ -102,7 +102,7 @@ process when running multi-threaded processes on your workstation.  This paramet
 affects bowtie2, smalt, samtools, and GATK.  You can set this parameter in one place
 instead of setting special options in multiple places for bowtie, smalt, samtools, and GATK.
 The pipeline will automatically use this setting whenever processes use multiple CPU cores.
-You should set this parameter to some even division of the number of CPUs on your workstation.
+You should set this parameter to some even divisor of the number of CPUs on your workstation.
 When this parameter is less than the number of CPU cores in your workstation, multiple
 processes will be launched, each using the number of cores specified here.
 The :ref:`MaxCpuCores-label` parameter takes precedence over CpuCoresPerProcessOnWorkstation.
@@ -696,7 +696,7 @@ Specifies options passed to the combine_metrics command.
 Torque_StripJobArraySuffix
 --------------------------
 Controls stripping the suffix from the job id when specifying Torque job array dependencies.
-It may be necessary to change this parameter if run_snp_pipeline.sh fails with an illegal qsub
+It may be necessary to change this parameter if the pipeline fails with an illegal qsub
 dependency error.
 
 **Example**::
@@ -707,7 +707,7 @@ dependency error.
 GridEngine_StripJobArraySuffix
 ------------------------------
 Controls stripping the suffix from the job id when specifying Grid Engine job array dependencies.
-It may be necessary to change this parameter if run_snp_pipeline.sh fails with an illegal qsub
+It may be necessary to change this parameter if the pipeline fails with an illegal qsub
 dependency error.
 
 **Example**::

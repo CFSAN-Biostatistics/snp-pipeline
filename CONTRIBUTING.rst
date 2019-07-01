@@ -7,7 +7,7 @@ Contributing
 .. highlight:: bash
 
 Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given. 
+little bit helps, and credit will always be given.
 
 You can contribute in many ways:
 
@@ -40,7 +40,7 @@ is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-SNP Pipeline could always use more documentation, whether as part of the 
+SNP Pipeline could always use more documentation, whether as part of the
 official SNP Pipeline docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
@@ -81,7 +81,7 @@ Ready to contribute? Here's how to set up `snp-pipeline` for local development.
 #. Create a branch for local development::
 
     $ git checkout -b name-of-your-bugfix-or-feature
-   
+
    Now you can make your changes locally.
 
 #. When you're done making changes, check that your changes pass the tests, including testing other Python versions::
@@ -89,7 +89,7 @@ Ready to contribute? Here's how to set up `snp-pipeline` for local development.
     $ python setup.py test
     $ tox
 
-   To get tox, just pip install it into your virtualenv. 
+   To get tox, just pip install it into your virtualenv.
 
 #. Run the regression tests::
 
@@ -120,12 +120,12 @@ Before you submit a pull request, check that it meets these guidelines:
 #. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-#. The pull request should work for Python 2.7, 3.4, 3.5, 3.6 and 3.7, and for PyPI.
+#. The pull request should work for Python 2.7, 3.4, 3.5, 3.6, and 3.7.
 
 Tips
 ----
 
 To run a subset of tests::
-  
+
     $ python -m unittest test.test_snppipeline
     $ python -m unittest test.test_utils

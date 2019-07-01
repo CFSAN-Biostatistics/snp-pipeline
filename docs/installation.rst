@@ -6,7 +6,7 @@ Installation
 
 .. highlight:: bash
 
-The SNP Pipeline software package consists of python scripts and shell scripts
+The SNP Pipeline software package consists of python scripts
 with dependencies on executable programs launched by the scripts.
 
 Step 1 - Operating System Requirements
@@ -34,7 +34,6 @@ VarScan_    2.3.9          A tool to detect variants in NGS data
 tabix_      1.8            A generic indexer for tab-delimited genome position files
 bgzip       1.8            Part of the tabix package, bgzip is a block compression utility
 BcfTools_   1.8            Utilities for variant calling and manipulating VCFs and BCFs
-fastq-dump_ 2.8.1          An SRA Toolkit utility for fetching samples from NCBI SRA
 =========== ============== ===============================================================
 
 Note: the versions above are tested and known to work together. Other versions may also work.
@@ -52,7 +51,7 @@ but can be disabled in the configuration file.
 Step 3 - Environment Variables
 ------------------------------
 Define the CLASSPATH environment variable to specify the location of the Picard, VarScan, and GATK jar files.  Add
-the following lines (or something similiar) to your .bashrc file::
+the following lines (or something similar) to your .bashrc file::
 
     export CLASSPATH=~/software/varscan.v2.3.9/VarScan.jar:$CLASSPATH
     export CLASSPATH=~/software/picard/picard.jar:$CLASSPATH
@@ -80,17 +79,7 @@ If pip is not already installed, proceed as follows::
 Note: avoid using sudo when installing pip.  Some users have experienced problems installing and loading packages when pip is installed using sudo.
 
 
-Step 6 - Python Package Dependencies
-------------------------------------
-
-For the most part, the installer automatically installs the necessary python packages used by snp-pipeline.  However,
-not all python packages can be reliably installed automatically.  The packages listed below may need to be manually
-installed if automatic installation fails.  You can either install these packages
-now, or hope for the best and manually install later if the automatic installation fails.
-
-    * Biopython_, a set of tools for biological computation written in Python.
-
-Step 7 - Install the SNP Pipeline Python Package
+Step 6 - Install the SNP Pipeline Python Package
 ------------------------------------------------
 There is more than one way to install the SNP Pipeline depending on whether you intend to work with the source code or just run it.
 
@@ -104,10 +93,6 @@ If you want to run the software without viewing or changing the source code, fol
 At the command line::
 
     $ pip install --user snp-pipeline
-
-Update your .bashrc file with the path to user-installed python packages::
-
-    export PATH=~/.local/bin:$PATH
 
 Or, if you have virtualenvwrapper installed::
 
@@ -157,6 +142,5 @@ You may need to upgrade your Java Runtime Environment (JRE) to run Picard.
 .. _VarScan: http://sourceforge.net/projects/varscan/files/
 .. _tabix: http://www.htslib.org/download/
 .. _BcfTools: http://www.htslib.org/download/
-.. _fastq-dump: http://www.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software
 .. _Biopython: http://biopython.org/wiki/Download
 .. _SMALT: http://sourceforge.net/projects/smalt/files

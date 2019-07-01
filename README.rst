@@ -5,20 +5,20 @@ CFSAN SNP Pipeline
 .. Image showing the PyPI version badge - links to PyPI
 .. image:: https://img.shields.io/pypi/v/snp-pipeline.svg
         :target: https://pypi.python.org/pypi/snp-pipeline
-    
+
 .. Image showing the Travis Continuous Integration test status, commented out for now
 .. .. image:: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline.png?branch=master
 ..        :target: https://travis-ci.org/CFSAN-Biostatistics/snp-pipeline
 
 
-The CFSAN SNP Pipeline is a Python-based system for the production of SNP 
-matrices from sequence data used in the phylogenetic analysis of pathogenic 
+The CFSAN SNP Pipeline is a Python-based system for the production of SNP
+matrices from sequence data used in the phylogenetic analysis of pathogenic
 organisms sequenced from samples of interest to food safety.
 
-The SNP Pipeline was developed by the United States Food 
+The SNP Pipeline was developed by the United States Food
 and Drug Administration, Center for Food Safety and Applied Nutrition.
 
-* Free software: See license below. 
+* Free software: See license below.
 * Documentation: http://snp-pipeline.readthedocs.io/en/latest/readme.html
 * Source Code: https://github.com/CFSAN-Biostatistics/snp-pipeline
 * PyPI Distribution: https://pypi.python.org/pypi/snp-pipeline
@@ -40,14 +40,13 @@ of the sequences.
 This software was developed with the objective of creating high quality
 SNP matrices for sequences from closely-related pathogens, e.g., different
 samples of Salmonella enteriditis from an outbreak investigation. The
-focus on closely related sequences means that this code is not suited for 
+focus on closely related sequences means that this code is not suited for
 the analysis of relatively distantly related organisms, where there is not
 a single reference sequence appropriate for all the organisms for which an
 analysis is desired.
 
-The CFSAN SNP Pipeline is written in a combination of bash and python. The
-code (including the bash scripts) is designed to be straighforward to
-install. Scripts are provided to run the Python code
+The CFSAN SNP Pipeline is written in Python with some embedded bash snippets. The
+code is designed to be straightforward to install and run
 from the command line. A configuration file supports customizing the
 behavior of the pipeline. In situations where additional customization is desired, the
 code is not highly complex and should be easy to modify as necessary.

@@ -8,54 +8,51 @@ Usage
 
 
 
-The SNP Pipeline is run from the Unix command line.  The pipeline consists of a collection
-of shell scripts and python scripts.
+The SNP Pipeline is run from the Unix command line. The pipeline consists of multiple commands.
 
 
-+-----------------------------+--------------------------------------------------------------------+
-| Script                      | | Description                                                      |
-+=============================+====================================================================+
-| run_snp_pipeline.sh         | | This do-it-all script runs the other scripts listed below,       |
-|                             | | comprising all the pipeline steps.  This is the same as running  |
-|                             | | cfsan_snp_pipeline run.                                          |
-+-----------------------------+--------------------------------------------------------------------+
-| cfsan_snp_pipeline          | | This is the main command line tool with subcommands listed below |
-+-----------------------------+--------------------------------------------------------------------+
-| | run                       | | This all-in-one command runs all the necessary pipeline          |
-|                             | | subcommands listed below, in the right order, comprising all the |
-|                             | | pipeline steps                                                   |
-+-----------------------------+--------------------------------------------------------------------+
-| | data                      | | Copies supplied example data to a work directory                 |
-+-----------------------------+--------------------------------------------------------------------+
-| | index_ref                 | | Indexes the reference genome                                     |
-+-----------------------------+--------------------------------------------------------------------+
-| | map_reads                 | | Aligns samples to the reference genome                           |
-+-----------------------------+--------------------------------------------------------------------+
-| | call_sites                | | Finds high-confidence SNPs in each sample                        |
-+-----------------------------+--------------------------------------------------------------------+
-| | filter_regions            | | Remove SNPs in abnormal regions.                                 |
-+-----------------------------+--------------------------------------------------------------------+
-| | merge_sites               | | Combines the SNP positions across all samples into a single      |
-|                             | | unified SNP list file                                            |
-+-----------------------------+--------------------------------------------------------------------+
-| | call_consensus            | | Calls the consensus SNPs for each sample                         |
-+-----------------------------+--------------------------------------------------------------------+
-| | merge_vcfs                | | Creates a multi-sample VCF file with the SNPs found in all       |
-|                             | | samples                                                          |
-+-----------------------------+--------------------------------------------------------------------+
-| | snp_matrix                | | Creates a matrix of SNPs across all samples                      |
-+-----------------------------+--------------------------------------------------------------------+
-| | distance                  | | Computes the SNP distances between all pairs of samples          |
-+-----------------------------+--------------------------------------------------------------------+
-| | snp_reference             | | Writes the reference sequence bases at SNP locations to          |
-|                             | | a fasta file                                                     |
-+-----------------------------+--------------------------------------------------------------------+
-| | collect_metrics           | | Collects useful coverage and variant statistics about            |
-|                             | | each sample                                                      |
-+-----------------------------+--------------------------------------------------------------------+
-| | combine_metrics           | | Creates a table of coverage and variant statistics for           |
-|                             | | all samples                                                      |
-+-----------------------------+--------------------------------------------------------------------+
++---------------------+----------------------------------------------------------------------+
+| Command             | Description                                                          |
++=====================+======================================================================+
+| run_snp_pipeline.sh | This do-it-all script runs the other scripts listed below,           |
+|                     | comprising all the pipeline steps.  This is the same as running      |
+|                     | cfsan_snp_pipeline run.                                              |
++---------------------+----------------------------------------------------------------------+
+| cfsan_snp_pipeline  | This is the main command line tool with subcommands listed below     |
++---------------------+----------------------------------------------------------------------+
+| run                 | This all-in-one command runs all the necessary pipeline subcommands  |
+|                     | listed below, in the right order, comprising all the pipeline steps  |
++---------------------+----------------------------------------------------------------------+
+| data                | Copies supplied example data to a work directory                     |
++---------------------+----------------------------------------------------------------------+
+| index_ref           | Indexes the reference genome                                         |
++---------------------+----------------------------------------------------------------------+
+| map_reads           | Aligns sample reads to the reference genome                          |
++---------------------+----------------------------------------------------------------------+
+| call_sites          | Finds high-confidence SNPs in each sample                            |
++---------------------+----------------------------------------------------------------------+
+| filter_regions      | Remove SNPs in abnormal regions                                      |
++---------------------+----------------------------------------------------------------------+
+| merge_sites         | Combines the SNP positions across all samples into a single          |
+|                     | unified SNP list file                                                |
++---------------------+----------------------------------------------------------------------+
+| call_consensus      | Calls the consensus SNPs for each sample                             |
++---------------------+----------------------------------------------------------------------+
+| merge_vcfs          | Creates a multi-sample VCF file with the SNPs found in all samples   |
++---------------------+----------------------------------------------------------------------+
+| snp_matrix          | Creates a matrix of SNPs across all samples                          |
++---------------------+----------------------------------------------------------------------+
+| distance            | Computes the SNP distances between all pairs of samples              |
++---------------------+----------------------------------------------------------------------+
+| snp_reference       | Writes the reference sequence bases at SNP locations to a fasta file |
++---------------------+----------------------------------------------------------------------+
+| collect_metrics     | Collects useful coverage and variant statistics about each sample    |
++---------------------+----------------------------------------------------------------------+
+| combine_metrics     | Creates a table of coverage and variant statistics for all samples   |
++---------------------+----------------------------------------------------------------------+
+| purge               | Removes the intermediate output files in the "samples" directory     |
+|                     | to save space upon successful completion of a SNP Pipeline run       |
++---------------------+----------------------------------------------------------------------+
 
 
 Inputs
@@ -160,10 +157,10 @@ See :ref:`step-by-step-workflows`.
 All-In-One SNP Pipeline Script
 ------------------------------
 
-Most users should run the SNP Pipeline by launching a single script,
-``run_snp_pipeline.sh``.  This script is easy to use and works equally well on
+Most users should run the SNP Pipeline by executing the ``cfsan_snp_pipeline run`` command.
+This command is easy to use and works equally well on
 your desktop workstation or on a High Performance Computing cluster.  You can
-find examples of using the script in the sections below.
+find examples of using the command in the sections below.
 
 If you need more flexibility, you can run the individual pipeline scripts one
 step at a time (not recommended).  See :ref:`step-by-step-workflows`.
@@ -173,8 +170,7 @@ step at a time (not recommended).  See :ref:`step-by-step-workflows`.
 Logging
 -------
 
-When the SNP Pipeline is launched with the ``run_snp_pipeline.sh`` script,
-it generates log files for each processing step of the pipeline.  The logs for
+The SNP Pipeline generates log files for each processing step of the pipeline.  The logs for
 each pipeline run are stored in a time-stamped directory under the output directory.
 If the pipeline is re-run on the same samples, the old log files are kept and
 a new log directory is created for the new run.  For example, the output
@@ -193,7 +189,7 @@ directory might look like this after two runs::
     -rw------- 1 me group  682 Oct 17 16:38 snpma_preserved.fasta
 
 A log file is created for each step of the pipeline for each sample.  For
-performamnce reasons, the samples are sorted by size and processed largest
+performance reasons, the samples are sorted by size and processed largest
 first.  This sorting is reflected in the naming of the log files.  The log files
 are named with a suffix indicating the sample number::
 
@@ -241,7 +237,7 @@ configuration file used for each run -- capturing the parameters used during the
 Mirrored Inputs
 ---------------
 
-When the SNP Pipeline is launched with the ``run_snp_pipeline.sh`` script, it has the
+The SNP Pipeline has the
 optional capability to create a mirrored copy of the input fasta and fastq files.  You
 might use this feature to avoid polluting the reference directory and sample directories
 with the intermediate files generated by the snp pipeline.  The mirroring function can
@@ -278,7 +274,7 @@ Torque
 ~~~~~~
 To run the SNP Pipeline on torque::
 
-    run_snp_pipeline.sh -Q torque -s mySamplesDir myReference.fasta
+    cfsan_snp_pipeline run -Q torque -s mySamplesDir myReference.fasta
 
 You may need to change the ``Torque_StripJobArraySuffix`` configuration parameter if
 you see qsub illegal dependency errors.
@@ -305,7 +301,7 @@ you see qsub illegal dependency errors.
 
 Then run the pipeline with the -c and -Q command line options::
 
-    run_snp_pipeline.sh -c snppipeline.conf -Q grid -s mySamplesDir myReference.fasta
+    cfsan_snp_pipeline run -c snppipeline.conf -Q grid -s mySamplesDir myReference.fasta
 
 You can pass extra options to the Grid Engine qsub command by configuring the ``GridEngine_QsubExtraParams``
 parameter in the configuration file.  Among other things, you can control which queue the
@@ -340,15 +336,15 @@ To run the SNP Pipeline with Smalt, edit ``snppipeline.conf`` with these setting
 
 Then run the pipeline with the -c command line option::
 
-    run_snp_pipeline.sh -c snppipeline.conf -s mySamplesDir myReference.fasta
+    cfsan_snp_pipeline run -c snppipeline.conf -s mySamplesDir myReference.fasta
 
 See also :ref:`configuration-label`.
 
 
 All-In-One SNP Pipeline Workflows
 ---------------------------------
-The sections below give detailed examples of workflows you can run with the
-all-in-one run_snp_pipeline.sh script.
+The sections below give detailed examples of workflows you can execute with the
+all-in-one ``run`` command.
 
 | :ref:`all-in-one-workflow-lambda`
 | :ref:`all-in-one-workflow-agona`
@@ -388,7 +384,7 @@ Step 2 - Run the SNP Pipeline::
     #
     # Specify the following options:
     #   -s : samples parent directory
-    run_snp_pipeline.sh -s samples reference/lambda_virus.fasta
+    cfsan_snp_pipeline run -s samples reference/lambda_virus.fasta
 
 
 Step 3 - View and verify the results:
@@ -472,7 +468,7 @@ Step 2 - Run the SNP Pipeline::
     #   -m : mirror the input samples and reference files
     #   -o : output directory
     #   -s : samples parent directory
-    run_snp_pipeline.sh -m soft -o outputDirectory -s cleanInputs/samples cleanInputs/reference/NC_011149.fasta
+    cfsan_snp_pipeline run -m soft -o outputDirectory -s cleanInputs/samples cleanInputs/reference/NC_011149.fasta
 
 Step 3 - View and verify the results:
 
@@ -516,9 +512,6 @@ to contamination in stone fruit. It only contains environmental/produce isolates
 though the full investigation contained data obtained from clinical samples as well.
 Due to the large size of the data, the sequences must be downloaded from the NCBI
 SRA.  The instructions below show how to create the data set and process it.
-We do the processing with the run_snp_pipeline.sh script, which does much of the
-work in one step, but provides less insight into (and control of) the analysis
-process.
 
 This workflow illustrates how to run the SNP Pipeline on a High Performance Computing
 cluster (HPC) running the Torque job queue manager.  If you do not have a cluster available,
@@ -562,7 +555,7 @@ Step 2 - Run the SNP Pipeline:
 There are a couple of parameters you may need to adjust for this analysis or other analysis
 work that your do. These parameters are the number of CPU cores that are used, and the
 amount of memory that is used by the java virtual machine.  Both can be set in a
-configuration file you can pass to run_snp_pipeline.sh with the ``-c`` option.
+configuration file you can pass to ``cfsan_snp_pipeline run`` with the ``-c`` option.
 See :ref:`faq-performance-label`.
 
 Launch the pipeline::
@@ -573,7 +566,7 @@ Launch the pipeline::
     #   -Q : HPC job queue manager
     #   -o : output directory
     #   -s : samples parent directory
-    run_snp_pipeline.sh -m soft -Q torque -o outputDirectory -s cleanInputs/samples cleanInputs/reference/CFSAN023463.HGAP.draft.fasta
+    cfsan_snp_pipeline run -m soft -Q torque -o outputDirectory -s cleanInputs/samples cleanInputs/reference/CFSAN023463.HGAP.draft.fasta
 
 Step 3 - View and verify the results:
 
@@ -613,7 +606,7 @@ bases are in the referenceSNP.fasta and referenceSNP_preserved.fasta::
 Step-by-Step Workflows
 ----------------------
 
-The run_snp_pipeline.sh script described above provides a simple and powerful interface
+The ``cfsan_snp_pipeline run`` command described above provides a simple and powerful interface
 for running all the pipeline steps from a single command.  If you need more
 control over the inputs, outputs, or processing steps, you can run the pipeline
 one step at a time, however this is not recommended.
@@ -901,7 +894,7 @@ Step-by-Step Workflow - General Case
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note: the step-by-step workflows are not recommended.  Most users should run the pipeline
-with the all-in-one ``run_snp_pipeline.sh`` command.
+with the all-in-one ``cfsan_snp_pipeline run`` command.
 
 Step 1 - Gather data:
 
@@ -1154,7 +1147,7 @@ Edit ``snppipeline.conf``, and change the ``FilterRegions_ExtraParams`` paramete
 
 Then run the snp pipeline with the -c command line options::
 
-    run_snp_pipeline.sh -c snppipeline.conf  -s mySamplesDir myReference.fasta
+    cfsan_snp_pipeline run -c snppipeline.conf  -s mySamplesDir myReference.fasta
 
 See also :ref:`configuration-label`.
 
@@ -1184,7 +1177,7 @@ Edit ``snppipeline.conf``, and change this setting::
 
 Then run the pipeline with the -c command line option::
 
-    run_snp_pipeline.sh -c snppipeline.conf -s mySamplesDir myReference.fasta
+    cfsan_snp_pipeline run -c snppipeline.conf -s mySamplesDir myReference.fasta
 
 See also :ref:`configuration-label`.
 
@@ -1201,106 +1194,106 @@ per metric.  The tabulated metrics file is named metrics.tsv by default.
 
 The metrics are:
 
-+-------------------------+------------------------------------------------------------------+
-| | Metric                | | Description                                                    |
-+=========================+==================================================================+
-| | Sample                | | The name of the directory containing the sample fastq files.   |
-+-------------------------+------------------------------------------------------------------+
-| | Fastq Files           | | Comma separated list of fastq file names in the sample         |
-|                         | | directory.                                                     |
-+-------------------------+------------------------------------------------------------------+
-| | Fastq File Size       | | The sum of the sizes of the fastq files. This will be the      |
-|                         | | compressed size if the files are compressed.                   |
-+-------------------------+------------------------------------------------------------------+
-| | Machine               | | The sequencing instrument ID extracted from the compressed     |
-|                         | | fastq.gz file header.  If the fastq files are not compressed,  |
-|                         | | the machine ID is not captured.                                |
-+-------------------------+------------------------------------------------------------------+
-| | Flowcell              | | The flowcell used during the sequencing run, extracted from    |
-|                         | | the compressed fastq.gz file header. If the fastq files are    |
-|                         | | not compressed, the flowcell is not captured.                  |
-+-------------------------+------------------------------------------------------------------+
-| | Number of Reads       | | The number of reads in the SAM file.  When using paired fastq  |
-|                         | | files, this number will be twice the number of reads reported  |
-|                         | | by bowtie.                                                     |
-+-------------------------+------------------------------------------------------------------+
-| | Duplicate Reads       | | The number of reads marked as duplicates.  These reads are not |
-|                         | | included in the pileup and are not used to call snps.  When    |
-|                         | | a set of duplicate reads is found, only the highest-quality    |
-|                         | | read in the set is retained.                                   |
-+-------------------------+------------------------------------------------------------------+
-| | Percent of Reads      | | The percentage of reference-aligned reads in the SAM file.     |
-| | Mapped                | |                                                                |
-+-------------------------+------------------------------------------------------------------+
-| | Percent Proper Pair   | | The percentage of all reads in the SAM file that are aligned   |
-|                         | | to the reference in the proper orientation and within the      |
-|                         | | expected paired-end distance.  The Percent Proper Pair metric  |
-|                         | | is less than 100% when there are discordant alignments,        |
-|                         | | unpaired alignments, or reads that are not mapped at all.      |
-|                         | | This metric reflects the state of the alignment immediately    |
-|                         | | after the mapping, however, subsequent steps of the pipeline   |
-|                         | | remove the reads with low mapping quality, which has the       |
-|                         | | effect of increasing the percentage of proper pairs prior to   |
-|                         | | calling snps.                                                  |
-+-------------------------+------------------------------------------------------------------+
-| | Average Insert Size   | | The average insert size of mapped paired reads in the SAM file |
-|                         | | as reported by SAMtools stats.  Discordant alignments will     |
-|                         | | increase the average insert size because by definition,        |
-|                         | | discordant alignments are not within the expected paired-end   |
-|                         | | distance.                                                      |
-+-------------------------+------------------------------------------------------------------+
-| | Average Pileup Depth  | | The average depth of coverage in the sample pileup file.  This |
-|                         | | is calculated as the sum of the depth of the pileup across all |
-|                         | | pileup positions divided by the number of positions in the     |
-|                         | | reference.                                                     |
-+-------------------------+------------------------------------------------------------------+
-| | Phase1 SNPs           | | The number of phase 1 SNPs found for this sample.  The count   |
-|                         | | is computed as the number of SNP records in the VCF file       |
-|                         | | generated by the phase 1 snp caller (VarScan).                 |
-+-------------------------+------------------------------------------------------------------+
-| | Phase1 Preserved SNPs | | The number of phase 1 SNPs found by VarScan and preserved by   |
-|                         | | SNP Filtering.  The count is computed as the number of SNP     |
-|                         | | records in the preserved VCF file generated by the             |
-|                         | | ``filter_regions`` command.                                    |
-+-------------------------+------------------------------------------------------------------+
-| | Phase2 SNPs           | | The number of phase 2 SNPs found for this sample.  The count   |
-|                         | | is computed as the number of SNP records in the VCF file       |
-|                         | | generated by the consensus caller.                             |
-+-------------------------+------------------------------------------------------------------+
-| | Phase2 Preserved SNPs | | The number of phase 2 SNPs found for this sample and preserved |
-|                         | | by SNP Filtering.  The count is computed as the number of SNP  |
-|                         | | records in the preserved VCF file generated by the consensus   |
-|                         | | caller.                                                        |
-+-------------------------+------------------------------------------------------------------+
-| | Missing SNP Matrix    | | The number of positions in the SNP matrix for which a          |
-| | Positions             | | consensus base could not be called for this sample.  The       |
-|                         | | inability to call a consensus base is caused by either a       |
-|                         | | pileup file with no coverage at a SNP position, or by          |
-|                         | | insufficient agreement among the pileup bases at the SNP       |
-|                         | | position.  The minimum fraction of reads that must agree at a  |
-|                         | | position to make a consensus call is controlled by the         |
-|                         | | ``minConsFreq`` parameter.                                     |
-+-------------------------+------------------------------------------------------------------+
-| | Missing Preserved SNP | | The number of positions in the preserved SNP matrix for which  |
-| | Matrix Positions      | | a consensus base could not be called for this sample.  The     |
-|                         | | inability to call a consensus base is caused by either a       |
-|                         | | pileup file with no coverage at a SNP position, or by          |
-|                         | | insufficient agreement among the pileup bases at the SNP       |
-|                         | | position.  The minimum fraction of reads that must agree at a  |
-|                         | | position to make a consensus call is controlled by the         |
-|                         | | ``minConsFreq`` parameter.                                     |
-+-------------------------+------------------------------------------------------------------+
-| | Excluded Sample       | | When a sample has an excessive number of snps exceeding the    |
-|                         | | ``MaxSnps`` parameter value, this metric will have the value   |
-|                         | | ``Excluded``.  Otherwise, this metric is blank.                |
-+-------------------------+------------------------------------------------------------------+
-| | Excluded Preserved    | | When a sample has an excessive number of preserved snps        |
-| | Sample                | | exceeding the ``MaxSnps`` parameter value, this metric will    |
-|                         | | have the value ``Excluded``.  Otherwise, this metric is blank. |
-+-------------------------+------------------------------------------------------------------+
-| | Warnings and Errors   | | A list of warnings or errors encountered while collecting the  |
-|                         | | metrics.                                                       |
-+-------------------------+------------------------------------------------------------------+
++-----------------------+----------------------------------------------------------------+
+| Metric                | Description                                                    |
++=======================+================================================================+
+| Sample                | The name of the directory containing the sample fastq files.   |
++-----------------------+----------------------------------------------------------------+
+| Fastq Files           | Comma separated list of fastq file names in the sample         |
+|                       | directory.                                                     |
++-----------------------+----------------------------------------------------------------+
+| Fastq File Size       | The sum of the sizes of the fastq files. This will be the      |
+|                       | compressed size if the files are compressed.                   |
++-----------------------+----------------------------------------------------------------+
+| Machine               | The sequencing instrument ID extracted from the compressed     |
+|                       | fastq.gz file header.  If the fastq files are not compressed,  |
+|                       | the machine ID is not captured.                                |
++-----------------------+----------------------------------------------------------------+
+| Flowcell              | The flowcell used during the sequencing run, extracted from    |
+|                       | the compressed fastq.gz file header. If the fastq files are    |
+|                       | not compressed, the flowcell is not captured.                  |
++-----------------------+----------------------------------------------------------------+
+| Number of Reads       | The number of reads in the SAM file.  When using paired fastq  |
+|                       | files, this number will be twice the number of reads reported  |
+|                       | by bowtie.                                                     |
++-----------------------+----------------------------------------------------------------+
+| Duplicate Reads       | The number of reads marked as duplicates.  These reads are not |
+|                       | included in the pileup and are not used to call snps.  When    |
+|                       | a set of duplicate reads is found, only the highest-quality    |
+|                       | read in the set is retained.                                   |
++-----------------------+----------------------------------------------------------------+
+| Percent of Reads      | The percentage of reference-aligned reads in the SAM file.     |
+| Mapped                |                                                                |
++-----------------------+----------------------------------------------------------------+
+| Percent Proper Pair   | The percentage of all reads in the SAM file that are aligned   |
+|                       | to the reference in the proper orientation and within the      |
+|                       | expected paired-end distance.  The Percent Proper Pair metric  |
+|                       | is less than 100% when there are discordant alignments,        |
+|                       | unpaired alignments, or reads that are not mapped at all.      |
+|                       | This metric reflects the state of the alignment immediately    |
+|                       | after the mapping, however, subsequent steps of the pipeline   |
+|                       | remove the reads with low mapping quality, which has the       |
+|                       | effect of increasing the percentage of proper pairs prior to   |
+|                       | calling snps.                                                  |
++-----------------------+----------------------------------------------------------------+
+| Average Insert Size   | The average insert size of mapped paired reads in the SAM file |
+|                       | as reported by SAMtools stats.  Discordant alignments will     |
+|                       | increase the average insert size because by definition,        |
+|                       | discordant alignments are not within the expected paired-end   |
+|                       | distance.                                                      |
++-----------------------+----------------------------------------------------------------+
+| Average Pileup Depth  | The average depth of coverage in the sample pileup file.  This |
+|                       | is calculated as the sum of the depth of the pileup across all |
+|                       | pileup positions divided by the number of positions in the     |
+|                       | reference.                                                     |
++-----------------------+----------------------------------------------------------------+
+| Phase1 SNPs           | The number of phase 1 SNPs found for this sample.  The count   |
+|                       | is computed as the number of SNP records in the VCF file       |
+|                       | generated by the phase 1 snp caller (VarScan).                 |
++-----------------------+----------------------------------------------------------------+
+| Phase1 Preserved SNPs | The number of phase 1 SNPs found by VarScan and preserved by   |
+|                       | SNP Filtering.  The count is computed as the number of SNP     |
+|                       | records in the preserved VCF file generated by the             |
+|                       | ``filter_regions`` command.                                    |
++-----------------------+----------------------------------------------------------------+
+| Phase2 SNPs           | The number of phase 2 SNPs found for this sample.  The count   |
+|                       | is computed as the number of SNP records in the VCF file       |
+|                       | generated by the consensus caller.                             |
++-----------------------+----------------------------------------------------------------+
+| Phase2 Preserved SNPs | The number of phase 2 SNPs found for this sample and preserved |
+|                       | by SNP Filtering.  The count is computed as the number of SNP  |
+|                       | records in the preserved VCF file generated by the consensus   |
+|                       | caller.                                                        |
++-----------------------+----------------------------------------------------------------+
+| Missing SNP Matrix    | The number of positions in the SNP matrix for which a          |
+| Positions             | consensus base could not be called for this sample.  The       |
+|                       | inability to call a consensus base is caused by either a       |
+|                       | pileup file with no coverage at a SNP position, or by          |
+|                       | insufficient agreement among the pileup bases at the SNP       |
+|                       | position.  The minimum fraction of reads that must agree at a  |
+|                       | position to make a consensus call is controlled by the         |
+|                       | ``minConsFreq`` parameter.                                     |
++-----------------------+----------------------------------------------------------------+
+| Missing Preserved SNP | The number of positions in the preserved SNP matrix for which  |
+| Matrix Positions      | a consensus base could not be called for this sample.  The     |
+|                       | inability to call a consensus base is caused by either a       |
+|                       | pileup file with no coverage at a SNP position, or by          |
+|                       | insufficient agreement among the pileup bases at the SNP       |
+|                       | position.  The minimum fraction of reads that must agree at a  |
+|                       | position to make a consensus call is controlled by the         |
+|                       | ``minConsFreq`` parameter.                                     |
++-----------------------+----------------------------------------------------------------+
+| Excluded Sample       | When a sample has an excessive number of snps exceeding the    |
+|                       | ``MaxSnps`` parameter value, this metric will have the value   |
+|                       | ``Excluded``.  Otherwise, this metric is blank.                |
++-----------------------+----------------------------------------------------------------+
+| Excluded Preserved    | When a sample has an excessive number of preserved snps        |
+| Sample                | exceeding the ``MaxSnps`` parameter value, this metric will    |
+|                       | have the value ``Excluded``.  Otherwise, this metric is blank. |
++-----------------------+----------------------------------------------------------------+
+| Warnings and Errors   | A list of warnings or errors encountered while collecting the  |
+|                       | metrics.                                                       |
++-----------------------+----------------------------------------------------------------+
 
 
 .. _error-handling-label:
@@ -1329,7 +1322,8 @@ errors regardless of the ``StopOnSampleError`` parameter setting.
 
 When errors stop the execution of the pipeline on Grid Engine or Torque, other non-failing jobs
 in progress will continue until complete.  However, subsequent job steps will not execute and
-instead will remain in the queue.  On Grid Engine ``qstat`` will show output like the following::
+instead will remain in the queue.  On Grid Engine, the ``qstat`` command will show output like
+the following::
 
     3038927 0.55167 mapReads   app_sdavis   Eqw   07/15/2017 16:50:03
     3038928 0.00000 callSites  app_sdavis   hqw   07/15/2017 16:50:04
