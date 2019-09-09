@@ -8,7 +8,6 @@ from __future__ import absolute_import
 from Bio import SeqIO
 import os
 import subprocess
-from tempfile import NamedTemporaryFile
 import vcf
 
 from snppipeline import command
@@ -244,12 +243,12 @@ def collect_metrics(args):
         if not missing_any_metrics:
             verbose_print("Reusing previously calculated number of reads, %mapped, %proper pair, and ave insert size")
         else:
-            tempfile = NamedTemporaryFile(delete=False, dir=sample_dir, prefix="tmp.sam.stats.", mode='w')
+            tempfile_path = os.path.join(sample_dir, "tmp.sam.stats")
             try:
-                command.run("samtools stats " + file, tempfile.name)
+                command.run("samtools stats " + file, tempfile_path)
             except subprocess.CalledProcessError:
                 pass # the error message has already been printed to stderr
-            with open(tempfile.name) as f:
+            with open(tempfile_path) as f:
                 for line in f:
                     lower_line = line.lower()
                     split_line = line.strip().split('\t')
@@ -275,7 +274,7 @@ def collect_metrics(args):
                     if "insert size average:" in lower_line:
                         ave_insert_size = split_line[2]
                         continue
-            os.unlink(tempfile.name)
+            os.unlink(tempfile_path)
             missing_any_metrics = not all([num_reads, percent_reads_mapped, percent_proper_pair, ave_insert_size])
             if missing_any_metrics:
                 missing_list = []
