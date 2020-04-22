@@ -49,8 +49,9 @@ run
 
 ::
 
-  usage: cfsan_snp_pipeline run [-h] [-f] [-m MODE] [-c FILE] [-Q grid|torque]
-                                [-o DIR] (-s DIR | -S FILE) [--purge] [-v 0..5]
+  usage: cfsan_snp_pipeline run [-h] [-f] [-m MODE] [-c FILE]
+                                [-Q grid|slurm|torque] [-o DIR]
+                                (-s DIR | -S FILE) [--purge] [-v 0..5]
                                 [--version]
                                 referenceFile
   
@@ -89,11 +90,11 @@ run
                                 file used for each run is copied into the log
                                 directory, capturing the parameters used during
                                 the run. (default: None)
-    -Q grid|torque, --queue_mgr grid|torque
+    -Q grid|slurm|torque, --queue_mgr grid|slurm|torque
                           Job queue manager for remote parallel job execution in
-                          an HPC environment. Currently "grid" and "torque" are
-                          supported. If not specified, the pipeline will execute
-                          locally. (default: None)
+                          an HPC environment. Currently "grid", "slurm", and
+                          "torque" are supported. If not specified, the pipeline
+                          will execute locally. (default: None)
     -o DIR, --out_dir DIR
                           Output directory for the result files. Additional
                           subdirectories are automatically created under the

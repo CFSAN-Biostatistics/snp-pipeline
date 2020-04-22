@@ -293,7 +293,7 @@ def run(args):
             extra parameters for the tools and scripts within the pipeline.
         jobQueueMgr : str
             Job queue manager for remote parallel job execution in an HPC environment.  Currently
-            "torque" and "grid" are supported.  If not specified, the pipeline will execute locally.
+            "grid", "slurm", and "torque" are supported.  If not specified, the pipeline will execute locally.
         workDir : str
             Output directory for the result files.
         samplesDir : str
@@ -307,7 +307,7 @@ def run(args):
     global job_queue_mgr
 
     start_time = time.time()
-    # Where are we running: grid, torque, or None (local)
+    # Where are we running: grid, slurm, torque, or None (local)
     job_queue_mgr = args.jobQueueMgr
 
     # Erase any left-over error log environment variable from a previous run
@@ -616,6 +616,10 @@ def run(args):
         strip_job_array_suffix = config_params.get("GridEngine_StripJobArraySuffix", "true").lower()
         qsub_extra_params = config_params.get("GridEngine_QsubExtraParams")
         runner = JobRunner(job_queue_mgr, strip_job_array_suffix == "true", qsub_extra_params=qsub_extra_params, verbose=args.verbose >= 4)
+    elif job_queue_mgr == "slurm":
+        strip_job_array_suffix = False
+        qsub_extra_params = config_params.get("Slurm_SbatchExtraParams")
+        runner = JobRunner(job_queue_mgr, strip_job_array_suffix, qsub_extra_params=qsub_extra_params, verbose=args.verbose >= 4)
     else:
         strip_job_array_suffix = config_params.get("Torque_StripJobArraySuffix", "false").lower()
         qsub_extra_params = config_params.get("Torque_QsubExtraParams")
@@ -657,7 +661,7 @@ def run(args):
     job_id_map_reads = runner.run_array(command_line, "mapReads", log_file, sample_full_path_names_file, max_processes=max_processes, wait_for=[job_id_index_ref], threads=threads_per_process, parallel_environment=parallel_environment)
 
     progress("Step 4 - Find sites with SNPs in each sample")
-    if job_queue_mgr in ["grid", "torque"]:
+    if job_queue_mgr in ["grid", "slurm", "torque"]:
         time.sleep(1.0 + float(sample_count) / 150) # workaround torque bug when submitting two large consecutive array jobs, potential bug for grid
 
     log_file = os.path.join(log_dir, "callSites.log")
@@ -676,7 +680,7 @@ def run(args):
 
     progress("Step 6.1 - Merge the SNP sites across all samples into the SNP list file")
     # The mergeSites process creates the filtered list of sample directories.  It is the list of samples not having excessive snps.
-    # When running on a workstation, the file exists at this point during the script execution, but on grid or torque, it has not yet been created. However,
+    # When running on a workstation, the file exists at this point during the script execution, but on HPC, it has not yet been created. However,
     # we know the path to the file regardless of whether it exists yet.
     filtered_sample_dirs_file = sample_dirs_file + ".OrigVCF.filtered"
     # touch $filtered_sample_dirs_file # TODO: why was this touch here in the old run_snp_pipeline.sh script?

@@ -3,6 +3,11 @@
 History
 -------
 
+2.2.0 (2020-04-??) - `docs <http://snp-pipeline.readthedocs.io/en/2.2-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Add support for the SLURM job scheduler.
+
+
 2.1.1 (2019-09-09) - `docs <http://snp-pipeline.readthedocs.io/en/2.1-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Fix incompatibility involving temp file deletion when running the pipeline in Ubuntu VirtualBox on Windows.

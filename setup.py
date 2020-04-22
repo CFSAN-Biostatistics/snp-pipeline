@@ -20,7 +20,7 @@ else:
 # Control which 3rd party packages should be installed
 # depending on the python version
 install_requires = [
-    'jobrunner',
+    'jobrunner>=1.3.0',
     'PyVCF>=0.6.7',
     'setuptools', # needed during execution to load pkg_resources
     'psutil',
@@ -48,7 +48,7 @@ else:
 
 setup(
     name='snp-pipeline',
-    version='2.1.1',
+    version='2.2.0',
     description='Script and functions for SNP matrix construction',
     author='Hugh A. Rand',
     author_email='hugh.rand@fda.hhs.gov',

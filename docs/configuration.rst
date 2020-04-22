@@ -727,6 +727,17 @@ Note: the name of this parameter was PEname in releases prior to 0.4.0.
     GridEngine_PEname="mpi"
 
 
+Slurm_SbatchExtraParams
+--------------------------
+Specifies extra options passed to sbatch when running the SNP Pipeline on the SLURM job scheduler.
+
+**Default**: None
+
+**Example**::
+
+    Slurm_SbatchExtraParams="--time=12:00:00"
+
+
 GridEngine_QsubExtraParams
 --------------------------
 Specifies extra options passed to qsub when running the SNP Pipeline on the Grid Engine job scheduler.

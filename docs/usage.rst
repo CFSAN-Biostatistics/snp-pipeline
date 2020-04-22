@@ -268,19 +268,7 @@ Keep in mind the following limitations when mirroring the inputs.
 High Performance Computing
 --------------------------
 The SNP Pipeline can be executed on a High Performance Computing cluster.  The
-Torque and Grid Engine job queue managers are supported.
-
-Torque
-~~~~~~
-To run the SNP Pipeline on torque::
-
-    cfsan_snp_pipeline run -Q torque -s mySamplesDir myReference.fasta
-
-You may need to change the ``Torque_StripJobArraySuffix`` configuration parameter if
-you see qsub illegal dependency errors.
-
-You can pass extra options to the Torque qsub command by configuring the ``Torque_QsubExtraParams``
-parameter in the configuration file.
+Grid Engine, SLURM, and Torque job queue managers are supported.
 
 Grid Engine
 ~~~~~~~~~~~
@@ -306,6 +294,27 @@ Then run the pipeline with the -c and -Q command line options::
 You can pass extra options to the Grid Engine qsub command by configuring the ``GridEngine_QsubExtraParams``
 parameter in the configuration file.  Among other things, you can control which queue the
 snp-pipeline will use when executing on an HPC with multiple queues.
+
+SLURM
+~~~~~~
+To run the SNP Pipeline on SLURM::
+
+    cfsan_snp_pipeline run -Q slurm -s mySamplesDir myReference.fasta
+
+You can pass extra options to the SLURM sbatch command by configuring the ``Slurm_SbatchExtraParams``
+parameter in the configuration file.
+
+Torque
+~~~~~~
+To run the SNP Pipeline on torque::
+
+    cfsan_snp_pipeline run -Q torque -s mySamplesDir myReference.fasta
+
+You may need to change the ``Torque_StripJobArraySuffix`` configuration parameter if
+you see qsub illegal dependency errors.
+
+You can pass extra options to the Torque qsub command by configuring the ``Torque_QsubExtraParams``
+parameter in the configuration file.
 
 See also: :ref:`faq-performance-label`.
 
@@ -1320,7 +1329,7 @@ after running the pipeline to see a summary of any errors detected during execut
 Note: currently, when using the Torque job queue manager, the pipeline will always stop on
 errors regardless of the ``StopOnSampleError`` parameter setting.
 
-When errors stop the execution of the pipeline on Grid Engine or Torque, other non-failing jobs
+When errors stop the execution of the pipeline on a High Performance Computing cluster, other non-failing jobs
 in progress will continue until complete.  However, subsequent job steps will not execute and
 instead will remain in the queue.  On Grid Engine, the ``qstat`` command will show output like
 the following::

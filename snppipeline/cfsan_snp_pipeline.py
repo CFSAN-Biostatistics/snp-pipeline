@@ -109,8 +109,8 @@ def parse_argument_list(argv):
     def job_queue_manager(value):
         # Accept either upper or lowercase
         lvalue = str(value).lower()
-        if lvalue not in ["grid", "torque"]:
-            raise argparse.ArgumentTypeError("Only the grid and torque job queue managers are currently supported.")
+        if lvalue not in ["grid", "slurm", "torque"]:
+            raise argparse.ArgumentTypeError("Only the grid, slurm, and torque job queue managers are currently supported.")
         return lvalue
 
     description = """Run the SNP Pipeline on a specified data set."""
@@ -148,10 +148,10 @@ def parse_argument_list(argv):
                       directory, capturing the parameters used during
                       the run.""")
 
-    subparser.add_argument("-Q", "--queue_mgr", dest="jobQueueMgr", type=job_queue_manager, metavar="grid|torque",
+    subparser.add_argument("-Q", "--queue_mgr", dest="jobQueueMgr", type=job_queue_manager, metavar="grid|slurm|torque",
         help="""Job queue manager for remote parallel job execution in an HPC environment.
-                Currently "grid" and "torque" are supported.  If not specified, the pipeline
-                will execute locally.""")
+                Currently "grid", "slurm", and "torque" are supported.  If not specified, the
+                pipeline will execute locally.""")
 
     subparser.add_argument("-o", "--out_dir", dest="workDir", type=str, default=".", metavar="DIR",
         help="""Output directory for the result files.

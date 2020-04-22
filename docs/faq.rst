@@ -160,7 +160,7 @@ Performance
 
 A: By default, the pipeline will use all available CPU resources.  You can limit the number of CPU cores the
 pipeline will use with the :ref:`MaxCpuCores-label` parameter in the configuration file.  This works on your workstation and
-also on a high performance computing cluster running Grid Engine or Torque.  See also the questions below.
+also on a high performance computing cluster.  See also the questions below.
 
 **Q: How can I control the number of CPU cores used by the bowtie2, smalt, samtools, and GATK?**
 
