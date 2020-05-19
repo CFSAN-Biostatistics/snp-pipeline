@@ -3,7 +3,7 @@
 History
 -------
 
-2.2.0 (2020-04-??) - `docs <http://snp-pipeline.readthedocs.io/en/2.2-branch/history.html>`_
+2.2.0 (2020-05-19) - `docs <http://snp-pipeline.readthedocs.io/en/2.2-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Add support for the SLURM job scheduler.
 
