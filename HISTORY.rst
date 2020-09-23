@@ -3,9 +3,10 @@
 History
 -------
 
-2.2.1 (2020-09-??) - `docs <http://snp-pipeline.readthedocs.io/en/2.2-branch/history.html>`_
+2.2.1 (2020-09-23) - `docs <http://snp-pipeline.readthedocs.io/en/2.2-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Fix the slurm job id in the log files.
+* Fix the bug preventing the use of samtools 1.10 and higher.
 
 
 2.2.0 (2020-05-19) - `docs <http://snp-pipeline.readthedocs.io/en/2.2-branch/history.html>`_

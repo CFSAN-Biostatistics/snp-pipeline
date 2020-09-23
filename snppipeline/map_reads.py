@@ -8,6 +8,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import os
+from packaging import version as packaging_version
 import re
 import shutil
 import sys
@@ -109,7 +110,7 @@ def map_reads(args):
 
     samtools_version_str = utils.extract_version_str("SAMtools", "samtools 2>&1 > /dev/null")
     samtools_version = samtools_version_str.split()[-1] # just the number
-    if samtools_version < "1.4":
+    if packaging_version.parse(samtools_version) < packaging_version.parse("1.4"):
         utils.global_error("The installed %s is not supported.  Version 1.4 or higher is required." % samtools_version_str)
 
     #==========================================================================
