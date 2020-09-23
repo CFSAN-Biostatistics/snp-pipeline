@@ -10,6 +10,7 @@ from __future__ import absolute_import
 from jobrunner import JobRunner
 from jobrunner import JobRunnerException
 import os
+from packaging import version as packaging_version
 import psutil
 import shutil
 import subprocess
@@ -468,7 +469,7 @@ def run(args):
     else:
         version_str = utils.extract_version_str("SAMtools", "samtools 2>&1 > /dev/null")
         samtools_version = version_str.split()[-1] # just the number
-        if samtools_version < "1.4":
+        if packaging_version.parse(samtools_version) < packaging_version.parse("1.4"):
             utils.report_error("The installed %s is not supported.  Version 1.4 or higher is required." % version_str)
             found_all_dependencies = False
 

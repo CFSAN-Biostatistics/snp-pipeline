@@ -25,6 +25,7 @@ install_requires = [
     'setuptools', # needed during execution to load pkg_resources
     'psutil',
     'Biopython',
+    'packaging',
 ]
 
 # Below needed for Python 2.6
