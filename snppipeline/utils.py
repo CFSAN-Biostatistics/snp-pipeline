@@ -93,9 +93,14 @@ def print_log_header(classpath=False):
     """
     verbose_print("# Command           : %s" % command_line_long())
     verbose_print("# Working Directory : %s" % os.getcwd())
+
     pbs_jobid = os.environ.get("PBS_JOBID")
     sge_jobid = os.environ.get("JOB_ID")
+    slurm_array_job_id = os.environ.get("SLURM_ARRAY_JOB_ID")
+    slurm_job_id = os.environ.get("SLURM_JOBID")
     sge_task_id = os.environ.get("SGE_TASK_ID")
+    slurm_task_id = os.environ.get("SLURM_ARRAY_TASK_ID")
+
     if sge_task_id == "undefined":
         sge_task_id = None
     if pbs_jobid:
@@ -104,6 +109,10 @@ def print_log_header(classpath=False):
         verbose_print("# Job ID            : %s[%s]" % (sge_jobid, sge_task_id))
     elif sge_jobid:
         verbose_print("# Job ID            : %s" % sge_jobid)
+    elif slurm_array_job_id and slurm_task_id:
+        verbose_print("# Job ID            : %s[%s]" % (slurm_array_job_id, slurm_task_id))
+    elif slurm_job_id:
+        verbose_print("# Job ID            : %s" % slurm_job_id)
 
     verbose_print("# Hostname          : %s" % platform.node())
     locale.setlocale(locale.LC_ALL, '')
