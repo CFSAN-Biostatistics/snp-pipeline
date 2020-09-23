@@ -3,6 +3,11 @@
 History
 -------
 
+2.2.1 (2020-09-??) - `docs <http://snp-pipeline.readthedocs.io/en/2.2-branch/history.html>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Fix the slurm job id in the log files.
+
+
 2.2.0 (2020-05-19) - `docs <http://snp-pipeline.readthedocs.io/en/2.2-branch/history.html>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Add support for the SLURM job scheduler.
