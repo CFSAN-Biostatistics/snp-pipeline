@@ -1,0 +1,16 @@
+name: snp-pipeline
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - snp-pipeline
+  - bowtie2
+  - smalt
+  - samtools
+  - picard==2.18.11
+  - varscan==2.4.4
+  - tabix
+  - bcftools
+  - gatk==3.8
+post_activate:
+  - export CLASSPATH=$CONDA_PREFIX/share/picard-2.18.11-0/picard.jar:$CONDA_PREFIX/share/varscan-2.4.4-1/VarScan.jar:$CONDA_PREFIX/opt/gatk-3.8/GenomeAnalysisTK.jar

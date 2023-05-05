@@ -21,7 +21,8 @@ else:
 # depending on the python version
 install_requires = [
     'jobrunner>=1.3.0',
-    'PyVCF>=0.6.7',
+    #'PyVCF>=0.6.7',
+    'PyVCF3~=1.0.3',
     'setuptools', # needed during execution to load pkg_resources
     'psutil',
     'Biopython',
